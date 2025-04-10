@@ -6,7 +6,7 @@ const { path } = useRoute()
 const { data } = await useAsyncData(`content-${path}`, () => queryContent().where({ _path: path }).findOne())
 
 useHead({
-  title: `${data?.value?.title} - Tres`,
+  title: `${data?.value?.title} - 3DVL`,
   meta: [
     {
       hid: 'description',
@@ -74,11 +74,7 @@ useHead({
 <template>
   <main>
     <ClientOnly>
-      <ContentRenderer
-        v-if="data"
-        :value="data"
-        class="w-full h-100vh relative"
-      />
+      <ContentRenderer v-if="data" :value="data" class="w-full h-100vh relative" />
     </ClientOnly>
   </main>
 </template>
