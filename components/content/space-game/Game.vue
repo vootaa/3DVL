@@ -21,7 +21,7 @@ import PetersenGraphPortal from './chainweb/PetersenGraphPortal.vue'
 import ChainWeb3D from './chainweb/ChainWeb3D.vue'
 
 // Import the new composable for placement logic
-import { useTrackPlacement } from './utils/useTrackPlacement'
+import { useTrackPlacement } from './chainweb/utils/useTrackPlacement'
 
 // Define target 't' parameters for portal and chainweb
 const portalT = ref(0.05) // Example: Place portal early
