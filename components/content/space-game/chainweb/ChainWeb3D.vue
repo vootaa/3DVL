@@ -2,11 +2,28 @@
 import { ref, onMounted, computed, watch, inject } from 'vue'
 import { Color, Vector3, Vector2, Euler, InstancedMesh, Object3D, BufferGeometry, BufferAttribute } from 'three'
 import type { GameStore } from '../GameStore'
-import PlasmaNode from './PlasmaNode.vue'
-import PlasmaArc from './PlasmaArc.vue'
 import ConcentricRings from './ConcentricRings.vue'
 import { useRenderLoop, useThree } from '@tresjs/core'
 import { createLayer, generateIntraLayerConnections, generateInterLayerConnections, createRingConfigurations } from './utils/ChainwebTopology'
+
+// Constants
+const DEFAULT_SCALE = 1
+const NUM_LAYERS = 8
+const LAYER_DEPTH_STEP = 0.2
+const LAYER_SCALE_FACTOR_PER_LAYER = 0.05
+const VISIBILITY_DISTANCE_THRESHOLD = 120
+const LOD_DISTANCE_THRESHOLD_HIGH = 80
+const LOD_DISTANCE_THRESHOLD_MEDIUM = 50
+const LOD_LAYERS_HIGH = 3
+const LOD_LAYERS_MEDIUM = 5
+const INNER_RING_ENTRY_DISTANCE_FACTOR = 1.0 // Multiplier for inner ring radius check
+const INNER_RING_Z_DISTANCE_THRESHOLD = 2
+const ROTATION_SPEED_FACTOR = 0.2
+const NODE_BASE_RADIUS = 0.5 // Base radius used in TresSphereGeometry for instancing
+const NODE_SEGMENTS = 12
+const LINE_WIDTH = 1
+const LINE_OPACITY = 0.7
+const CONNECTION_COUNT_LOD_THRESHOLD = 30 // Max connections per layer for LOD
 
 const props = defineProps({
     position: {
@@ -19,7 +36,7 @@ const props = defineProps({
     },
     scale: {
         type: Number,
-        default: 1
+        default: DEFAULT_SCALE
     },
     active: {
         type: Boolean,
@@ -32,8 +49,9 @@ const { camera } = useThree()
 const insideInnerRing = ref(false)
 const emitOnce = ref(false)
 const layers = ref<any[]>([])
-const numLayers = 8
-const ringRadii = [0.15, 0.3, 0.48] // Matching the constants from ChainwebTopology
+const ringRadiiConfig = createRingConfigurations()
+const ringRadii = ringRadiiConfig.map(r => r.radius)
+const innerRingRadius = ringRadii[0] // Assuming first is inner
 
 // Instanced mesh references
 const nodeInstancesRef = ref<InstancedMesh | null>(null)
@@ -45,26 +63,26 @@ const tempObject = new Object3D()
 // Line instances for connections
 const linePositions = ref<Float32Array>(new Float32Array(0))
 const lineColors = ref<Float32Array>(new Float32Array(0))
-const lineGeometryRef = ref(null)
+const lineGeometryRef = ref<BufferGeometry | null>(null) // Initialize as null
 
 // Performance optimization: Only render when player is near
 const isVisible = computed(() => {
     if (!camera.value || !props.active) return false
 
     const distance = camera.value.position.distanceTo(props.position)
-    return distance < 120
+    return distance < VISIBILITY_DISTANCE_THRESHOLD
 })
 
 // Performance optimization: Level of detail based on distance
 const visibleLayers = computed(() => {
-    if (!camera.value) return numLayers
+    if (!camera.value) return NUM_LAYERS
 
     const distance = camera.value.position.distanceTo(props.position)
 
     // Reduce layers when far away
-    if (distance > 80) return 3
-    if (distance > 50) return 5
-    return numLayers
+    if (distance > LOD_DISTANCE_THRESHOLD_HIGH) return LOD_LAYERS_HIGH
+    if (distance > LOD_DISTANCE_THRESHOLD_MEDIUM) return LOD_LAYERS_MEDIUM
+    return NUM_LAYERS
 })
 
 // Generate instances instead of individual nodes
@@ -73,17 +91,20 @@ function prepareInstancedNodes() {
     nodeColors.value = []
     nodeScales.value = []
 
-    // Create instanced data for all nodes across all layers
+    // Create instanced data for all nodes across visible layers
     layers.value.slice(0, visibleLayers.value).forEach(layer => {
         layer.nodes.forEach(node => {
             nodePositions.value.push(node.position)
-            nodeColors.value.push(new Color(node.color))
-            nodeScales.value.push(node.radius / 0.5) // Adjust for the base sphere radius of 0.5
+            nodeColors.value.push(node.color) // Already Color objects from topology
+            nodeScales.value.push(node.radius / NODE_BASE_RADIUS) // Adjust for the base sphere radius
         })
     })
 
     // Update instanced mesh
     if (nodeInstancesRef.value && nodePositions.value.length > 0) {
+        // Ensure count matches data length
+        nodeInstancesRef.value.count = nodePositions.value.length
+
         nodePositions.value.forEach((position, i) => {
             tempObject.position.copy(position)
             tempObject.scale.set(
@@ -93,37 +114,50 @@ function prepareInstancedNodes() {
             )
             tempObject.updateMatrix()
             nodeInstancesRef.value?.setMatrixAt(i, tempObject.matrix)
-            nodeInstancesRef.value?.setColorAt(i, nodeColors.value[i])
+            // Check if instanceColor exists before setting
+            if (nodeInstancesRef.value.instanceColor) {
+                nodeInstancesRef.value.setColorAt(i, nodeColors.value[i])
+            }
         })
 
         nodeInstancesRef.value.instanceMatrix.needsUpdate = true
-        // @ts-ignore - TypeScript doesn't always recognize this property
-        if (nodeInstancesRef.value.instanceColor) nodeInstancesRef.value.instanceColor.needsUpdate = true
+        // Check if instanceColor exists before updating
+        if (nodeInstancesRef.value.instanceColor) {
+            nodeInstancesRef.value.instanceColor.needsUpdate = true
+        }
+    } else if (nodeInstancesRef.value) {
+        // If no nodes are visible, set count to 0
+        nodeInstancesRef.value.count = 0
+        nodeInstancesRef.value.instanceMatrix.needsUpdate = true
+        if (nodeInstancesRef.value.instanceColor) {
+            nodeInstancesRef.value.instanceColor.needsUpdate = true
+        }
     }
 }
 
 // Generate lines for connections
 function prepareConnectionLines() {
-    const visibleConnectionCount = visibleLayers.value < numLayers ? 30 : 60
+    // Determine max connections based on LOD
+    const visibleConnectionCount = visibleLayers.value < NUM_LAYERS ? CONNECTION_COUNT_LOD_THRESHOLD : Infinity
     let lineCount = 0
 
-    // Count total visible connections
+    // Count total visible connections respecting LOD limit
     layers.value.slice(0, visibleLayers.value).forEach(layer => {
         lineCount += Math.min(layer.intraLayerConnections.length, visibleConnectionCount)
 
-        // Count inter-layer connections if not the last layer
+        // Count inter-layer connections if not the last visible layer
         if (layer.id < visibleLayers.value - 1) {
             lineCount += Math.min(layer.interLayerConnections.length, visibleConnectionCount)
         }
     })
 
-    // Prepare buffer for line positions (6 floats per line: 2 vertices * 3 coordinates)
+    // Prepare buffer for line positions and colors
     linePositions.value = new Float32Array(lineCount * 6)
     lineColors.value = new Float32Array(lineCount * 6)
 
     let idx = 0
 
-    // Fill connection data
+    // Fill connection data respecting LOD limit
     layers.value.slice(0, visibleLayers.value).forEach(layer => {
         // Intra-layer connections (within same layer)
         layer.intraLayerConnections.slice(0, visibleConnectionCount).forEach(conn => {
@@ -132,24 +166,13 @@ function prepareConnectionLines() {
 
             if (startNode && endNode) {
                 // Start vertex
-                linePositions.value[idx * 6] = startNode.position.x
-                linePositions.value[idx * 6 + 1] = startNode.position.y
-                linePositions.value[idx * 6 + 2] = startNode.position.z
-
+                linePositions.value.set([startNode.position.x, startNode.position.y, startNode.position.z], idx * 6)
                 // End vertex
-                linePositions.value[idx * 6 + 3] = endNode.position.x
-                linePositions.value[idx * 6 + 4] = endNode.position.y
-                linePositions.value[idx * 6 + 5] = endNode.position.z
-
-                // Color from connection
-                const color = new Color(conn.color)
-                lineColors.value[idx * 6] = color.r
-                lineColors.value[idx * 6 + 1] = color.g
-                lineColors.value[idx * 6 + 2] = color.b
-                lineColors.value[idx * 6 + 3] = color.r
-                lineColors.value[idx * 6 + 4] = color.g
-                lineColors.value[idx * 6 + 5] = color.b
-
+                linePositions.value.set([endNode.position.x, endNode.position.y, endNode.position.z], idx * 6 + 3)
+                // Color
+                const color = conn.color // Already Color object
+                lineColors.value.set([color.r, color.g, color.b], idx * 6)
+                lineColors.value.set([color.r, color.g, color.b], idx * 6 + 3)
                 idx++
             }
         })
@@ -159,28 +182,17 @@ function prepareConnectionLines() {
             layer.interLayerConnections.slice(0, visibleConnectionCount).forEach(conn => {
                 const startNode = layer.nodes.find(n => n.chainId === conn.fromNode)
                 const nextLayer = layers.value[layer.id + 1]
-                const endNode = nextLayer.nodes.find(n => n.chainId === conn.toNode)
+                const endNode = nextLayer?.nodes.find(n => n.chainId === conn.toNode) // Add safe navigation
 
                 if (startNode && endNode) {
                     // Start vertex
-                    linePositions.value[idx * 6] = startNode.position.x
-                    linePositions.value[idx * 6 + 1] = startNode.position.y
-                    linePositions.value[idx * 6 + 2] = startNode.position.z
-
+                    linePositions.value.set([startNode.position.x, startNode.position.y, startNode.position.z], idx * 6)
                     // End vertex
-                    linePositions.value[idx * 6 + 3] = endNode.position.x
-                    linePositions.value[idx * 6 + 4] = endNode.position.y
-                    linePositions.value[idx * 6 + 5] = endNode.position.z
-
-                    // Color from connection
-                    const color = new Color(conn.color)
-                    lineColors.value[idx * 6] = color.r
-                    lineColors.value[idx * 6 + 1] = color.g
-                    lineColors.value[idx * 6 + 2] = color.b
-                    lineColors.value[idx * 6 + 3] = color.r
-                    lineColors.value[idx * 6 + 4] = color.g
-                    lineColors.value[idx * 6 + 5] = color.b
-
+                    linePositions.value.set([endNode.position.x, endNode.position.y, endNode.position.z], idx * 6 + 3)
+                    // Color
+                    const color = conn.color // Already Color object
+                    lineColors.value.set([color.r, color.g, color.b], idx * 6)
+                    lineColors.value.set([color.r, color.g, color.b], idx * 6 + 3)
                     idx++
                 }
             })
@@ -189,20 +201,21 @@ function prepareConnectionLines() {
 
     // Update the line geometry's attributes if it exists
     if (lineGeometryRef.value) {
-        const geometry = lineGeometryRef.value as BufferGeometry
-        geometry.setAttribute('position', new BufferAttribute(linePositions.value, 3))
-        geometry.setAttribute('color', new BufferAttribute(lineColors.value, 3))
-        geometry.attributes.position.needsUpdate = true
-        geometry.attributes.color.needsUpdate = true
+        lineGeometryRef.value.setAttribute('position', new BufferAttribute(linePositions.value, 3))
+        lineGeometryRef.value.setAttribute('color', new BufferAttribute(lineColors.value, 3))
+        lineGeometryRef.value.attributes.position.needsUpdate = true
+        lineGeometryRef.value.attributes.color.needsUpdate = true
+        // Optional: Compute bounding sphere for frustum culling
+        lineGeometryRef.value.computeBoundingSphere()
     }
 }
 
 // Prepare data structure for ChainWeb3D
 onMounted(() => {
     // Initialize layers using ChainwebTopology
-    layers.value = Array(numLayers).fill(null).map((_, layerIndex) => {
-        const zPosition = -0.2 * layerIndex
-        const layerScale = 1 - (layerIndex * 0.05) // Each layer gets slightly smaller for perspective
+    layers.value = Array(NUM_LAYERS).fill(null).map((_, layerIndex) => {
+        const zPosition = -LAYER_DEPTH_STEP * layerIndex * props.scale // Apply scale here? Or let parent scale? Let parent scale.
+        const layerScale = 1 - (layerIndex * LAYER_SCALE_FACTOR_PER_LAYER)
 
         // Create nodes for this layer using the topology utility
         const nodes = createLayer(layerIndex, zPosition, layerScale)
@@ -212,26 +225,22 @@ onMounted(() => {
             zPosition,
             scale: layerScale,
             nodes,
-            intraLayerConnections: [], // Will fill later
-            interLayerConnections: []  // Will fill later
+            intraLayerConnections: [],
+            interLayerConnections: []
         }
     })
 
-    // Generate intra-layer connections (within each layer)
-    layers.value.forEach(layer => {
+    // Generate connections
+    layers.value.forEach((layer, i) => {
         layer.intraLayerConnections = generateIntraLayerConnections(layer.nodes)
+        if (i < NUM_LAYERS - 1) {
+            const targetLayer = layers.value[i + 1]
+            layer.interLayerConnections = generateInterLayerConnections(
+                layer.nodes,
+                targetLayer.nodes
+            )
+        }
     })
-
-    // Generate inter-layer connections (between adjacent layers)
-    for (let i = 0; i < numLayers - 1; i++) {
-        const sourceLayer = layers.value[i]
-        const targetLayer = layers.value[i + 1]
-
-        sourceLayer.interLayerConnections = generateInterLayerConnections(
-            sourceLayer.nodes,
-            targetLayer.nodes
-        )
-    }
 
     // Initial setup of instanced rendering
     prepareInstancedNodes()
@@ -240,22 +249,22 @@ onMounted(() => {
 
 // Check if player is inside innermost ring to trigger acceleration
 const checkPlayerInnerRing = () => {
-    if (!props.active || !gameStore) return
+    if (!props.active || !gameStore || !gameStore.mutation.position) return
 
     const playerPos = gameStore.mutation.position
-    const portalPos = props.position
+    const portalCenterPos = props.position // Center of the first layer
 
-    // Create a 2D vector for XY plane distance check
-    const playerXY = new Vector2(playerPos.x - portalPos.x, playerPos.y - portalPos.y)
-    const distance = playerXY.length()
+    // Create a 2D vector for XY plane distance check relative to the portal center
+    const playerXY = new Vector2(playerPos.x - portalCenterPos.x, playerPos.y - portalCenterPos.y)
+    const distanceXY = playerXY.length()
 
-    // Innermost ring radius adjusted by scale
-    const innerRingRadius = ringRadii[0] * props.scale
+    // Innermost ring radius adjusted by the overall component scale
+    const currentInnerRingRadius = innerRingRadius * props.scale * INNER_RING_ENTRY_DISTANCE_FACTOR
 
-    // Z-distance check to ensure player is close enough to actually be "in" the ring
-    const zDistance = Math.abs(playerPos.z - portalPos.z)
+    // Z-distance check relative to the portal center Z
+    const zDistance = Math.abs(playerPos.z - portalCenterPos.z)
 
-    if (distance < innerRingRadius && zDistance < 2 && !insideInnerRing.value) {
+    if (distanceXY < currentInnerRingRadius && zDistance < INNER_RING_Z_DISTANCE_THRESHOLD && !insideInnerRing.value) {
         insideInnerRing.value = true
 
         // Only emit once per entry
@@ -263,7 +272,7 @@ const checkPlayerInnerRing = () => {
             emitOnce.value = true
             emit('accelerate')
         }
-    } else if ((distance >= innerRingRadius || zDistance >= 2) && insideInnerRing.value) {
+    } else if ((distanceXY >= currentInnerRingRadius || zDistance >= INNER_RING_Z_DISTANCE_THRESHOLD) && insideInnerRing.value) {
         insideInnerRing.value = false
         emitOnce.value = false
     }
@@ -274,25 +283,24 @@ const emit = defineEmits(['accelerate'])
 // Rotation animation
 const rotationY = ref(0)
 
-// Update instanced meshes when visibility changes
+// Update instanced meshes when visibility or layer count changes
 watch(visibleLayers, () => {
     prepareInstancedNodes()
     prepareConnectionLines()
 })
 
 // Update on each frame
-useRenderLoop().onLoop(({ elapsed, delta }) => {
-    if (props.active) {
+useRenderLoop().onLoop(({ delta }) => {
+    // Only update if active and visible
+    if (props.active && isVisible.value) {
         checkPlayerInnerRing()
 
         // Add gentle rotation
-        rotationY.value += delta * 0.2
+        rotationY.value += delta * ROTATION_SPEED_FACTOR
 
-        // Periodically update positions for animation effect
-        if (elapsed % 10 < 0.1) {
-            prepareInstancedNodes()
-            prepareConnectionLines()
-        }
+        // Note: No need to call prepareInstancedNodes/prepareConnectionLines every frame
+        // unless node positions/colors/connections are actively changing dynamically.
+        // Updates are handled by the `watch(visibleLayers)` hook.
     }
 })
 </script>
@@ -303,25 +311,26 @@ useRenderLoop().onLoop(({ elapsed, delta }) => {
         <TresObject3D :rotation="[0, rotationY, 0]">
             <!-- Render visible layers only -->
             <template v-for="layer in layers.slice(0, visibleLayers)" :key="layer.id">
-                <!-- Concentric Rings for each layer, using the ring configurations from topology -->
+                <!-- Concentric Rings for each layer -->
                 <ConcentricRings :position="[0, 0, layer.zPosition]" :scale="layer.scale" :radii="ringRadii"
                     :rotation-speed="0.05 * (1 + layer.id * 0.1)" />
             </template>
 
             <!-- Instanced mesh for all nodes -->
-            <TresInstancedMesh ref="nodeInstancesRef" :count="nodePositions.length"
-                :args="[null, null, nodePositions.length]">
-                <TresSphereGeometry :args="[0.5, 12, 12]" />
-                <TresMeshStandardMaterial :args="[{ vertexColors: true }]" :metalness="0.8" :roughness="0.2" />
+            <TresInstancedMesh ref="nodeInstancesRef" :args="[null, null, 0]"> <!-- Initial count 0 -->
+                <TresSphereGeometry :args="[NODE_BASE_RADIUS, NODE_SEGMENTS, NODE_SEGMENTS]" />
+                <!-- Material with vertexColors enabled -->
+                <TresMeshStandardMaterial :vertexColors="true" :metalness="0.8" :roughness="0.2" />
             </TresInstancedMesh>
 
             <!-- Lines for connections -->
             <TresLineSegments>
+                <!-- Assign geometry ref -->
                 <TresBufferGeometry ref="lineGeometryRef">
-                    <TresFloat32BufferAttribute :attach="['attributes', 'position']" :args="[linePositions, 3]" />
-                    <TresFloat32BufferAttribute :attach="['attributes', 'color']" :args="[lineColors, 3]" />
+                    <!-- Attributes are set dynamically -->
                 </TresBufferGeometry>
-                <TresLineBasicMaterial :vertexColors="true" :opacity="0.7" :transparent="true" :linewidth="1" />
+                <TresLineBasicMaterial :vertexColors="true" :opacity="LINE_OPACITY" :transparent="true"
+                    :linewidth="LINE_WIDTH" />
             </TresLineSegments>
         </TresObject3D>
     </TresObject3D>

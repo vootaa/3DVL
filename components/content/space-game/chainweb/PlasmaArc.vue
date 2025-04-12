@@ -2,6 +2,25 @@
 import { computed, ref, watch } from 'vue'
 import { Color, Vector3, CatmullRomCurve3 } from 'three'
 import { useRenderLoop, useThree } from '@tresjs/core'
+import vertexShader from './shaders/plasma-arc.vert?raw'
+import fragmentShader from './shaders/plasma-arc.frag?raw'
+
+// Constants
+const DEFAULT_THICKNESS = 0.01
+const DEFAULT_ARC_HEIGHT = 0.05
+const DEFAULT_FLOW_SPEED = 1.0
+const DISTANCE_THRESHOLD_LOD_HIGH = 100
+const DISTANCE_THRESHOLD_LOD_MEDIUM = 50
+const SEGMENTS_LOD_HIGH_INTER = 16
+const SEGMENTS_LOD_MEDIUM_INTER = 32
+const SEGMENTS_LOD_LOW_INTER = 64
+const SEGMENTS_LOD_HIGH_SAME = 8
+const SEGMENTS_LOD_MEDIUM_SAME = 16
+const SEGMENTS_LOD_LOW_SAME = 32
+const DISTANCE_THRESHOLD_VISIBILITY = 150
+const RADIAL_SEGMENTS = 8
+const RANDOM_OFFSET_FACTOR = 0.05
+const CTRL_POINT_OFFSET_FACTOR = 0.03
 
 const props = defineProps({
     startPosition: {
@@ -18,7 +37,7 @@ const props = defineProps({
     },
     thickness: {
         type: Number,
-        default: 0.01
+        default: DEFAULT_THICKNESS
     },
     arcType: {
         type: String,
@@ -26,11 +45,11 @@ const props = defineProps({
     },
     arcHeight: {
         type: Number,
-        default: 0.05
+        default: DEFAULT_ARC_HEIGHT
     },
     flowSpeed: {
         type: Number,
-        default: 1.0
+        default: DEFAULT_FLOW_SPEED
     }
 })
 
@@ -52,25 +71,25 @@ const path = computed(() => {
     if (props.arcType === 'inter-layer') {
         // More jagged, lightning-like path for inter-layer connections
         const randOffset = new Vector3(
-            (Math.random() - 0.5) * 0.05,
-            (Math.random() - 0.5) * 0.05,
-            (Math.random() - 0.5) * 0.05
+            (Math.random() - 0.5) * RANDOM_OFFSET_FACTOR,
+            (Math.random() - 0.5) * RANDOM_OFFSET_FACTOR,
+            (Math.random() - 0.5) * RANDOM_OFFSET_FACTOR
         )
         mid.add(randOffset)
 
         // Create two additional control points for more jagged appearance
         const ctrl1 = new Vector3().lerpVectors(start, mid, 0.25)
             .add(new Vector3(
-                (Math.random() - 0.5) * 0.03,
-                (Math.random() - 0.5) * 0.03,
-                (Math.random() - 0.5) * 0.03
+                (Math.random() - 0.5) * CTRL_POINT_OFFSET_FACTOR,
+                (Math.random() - 0.5) * CTRL_POINT_OFFSET_FACTOR,
+                (Math.random() - 0.5) * CTRL_POINT_OFFSET_FACTOR
             ))
 
         const ctrl2 = new Vector3().lerpVectors(mid, end, 0.75)
             .add(new Vector3(
-                (Math.random() - 0.5) * 0.03,
-                (Math.random() - 0.5) * 0.03,
-                (Math.random() - 0.5) * 0.03
+                (Math.random() - 0.5) * CTRL_POINT_OFFSET_FACTOR,
+                (Math.random() - 0.5) * CTRL_POINT_OFFSET_FACTOR,
+                (Math.random() - 0.5) * CTRL_POINT_OFFSET_FACTOR
             ))
 
         return new CatmullRomCurve3([start, ctrl1, mid, ctrl2, end])
@@ -108,7 +127,7 @@ onLoop(({ elapsed }) => {
 // Performance optimization: Adaptive tube segments based on distance
 const { camera } = useThree()
 const tubeSegments = computed(() => {
-    if (!camera.value) return 64
+    if (!camera.value) return SEGMENTS_LOD_LOW_INTER // Default to max segments
 
     // Calculate average distance from camera to both endpoints
     const avgDist = (
@@ -119,14 +138,14 @@ const tubeSegments = computed(() => {
     // Scale segments based on distance and connection type
     if (props.arcType === 'inter-layer') {
         // Inter-layer connections need more segments for jagged appearance
-        if (avgDist > 100) return 16
-        if (avgDist > 50) return 32
-        return 64
+        if (avgDist > DISTANCE_THRESHOLD_LOD_HIGH) return SEGMENTS_LOD_HIGH_INTER
+        if (avgDist > DISTANCE_THRESHOLD_LOD_MEDIUM) return SEGMENTS_LOD_MEDIUM_INTER
+        return SEGMENTS_LOD_LOW_INTER
     } else {
         // Same-chain connections can use fewer segments
-        if (avgDist > 100) return 8
-        if (avgDist > 50) return 16
-        return 32
+        if (avgDist > DISTANCE_THRESHOLD_LOD_HIGH) return SEGMENTS_LOD_HIGH_SAME
+        if (avgDist > DISTANCE_THRESHOLD_LOD_MEDIUM) return SEGMENTS_LOD_MEDIUM_SAME
+        return SEGMENTS_LOD_LOW_SAME
     }
 })
 
@@ -142,65 +161,15 @@ onLoop(() => {
     ) / 2
 
     // Only render if reasonably close to camera
-    isVisible.value = avgDist < 150
+    isVisible.value = avgDist < DISTANCE_THRESHOLD_VISIBILITY
 })
 </script>
 
 <template>
     <TresMesh v-if="isVisible">
-        <TresTubeGeometry :path="path" :tubular-segments="tubeSegments" :radius="thickness" :radial-segments="8"
-            :closed="false" />
-        <TresShaderMaterial :uniforms="uniforms" vertex-shader="
-      varying vec2 vUv;
-      varying vec3 vPosition;
-      
-      void main() {
-        vUv = uv;
-        vPosition = position;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    " fragment-shader="
-      uniform vec3 color;
-      uniform float time;
-      uniform float arcType; // 0.0 for inter-layer, 1.0 for same-chain
-      uniform float flowSpeed;
-      
-      varying vec2 vUv;
-      varying vec3 vPosition;
-      
-      void main() {
-        float v = vUv.x; // Position along the tube
-        
-        if (arcType < 0.5) {
-          // Inter-layer: Electric arc effect
-          float noise = sin(v * 50.0 + time * 5.0 * flowSpeed) * 0.5 + 0.5;
-          float pulse = sin(v * 20.0 - time * 10.0 * flowSpeed) * 0.5 + 0.5;
-          
-          // Edge effect
-          float edge = pow(1.0 - vUv.y, 2.0) * 2.0;
-          
-          // Combine effects
-          vec3 finalColor = color * (1.0 + noise * 0.3) * (0.8 + pulse * 0.4);
-          finalColor *= (0.6 + edge * 0.4);
-          
-          gl_FragColor = vec4(finalColor, 0.9);
-        } else {
-          // Same-chain: Smooth energy flow effect
-          float flow = fract(v * 3.0 - time * flowSpeed);
-          float glow = pow(sin(flow * 3.14159), 2.0) * 0.7 + 0.3;
-          
-          // Core and edge
-          float core = smoothstep(0.4, 0.5, 1.0 - abs(vUv.y - 0.5) * 2.0);
-          float edge = pow(1.0 - abs(vUv.y - 0.5) * 2.0, 2.0);
-          
-          // Combine effects
-          vec3 finalColor = color * (glow * 0.7 + 0.3);
-          finalColor = mix(finalColor, finalColor * 1.5, core);
-          finalColor *= (0.7 + edge * 0.3);
-          
-          gl_FragColor = vec4(finalColor, 0.85);
-        }
-      }
-    " transparent depthWrite />
+        <TresTubeGeometry :path="path" :tubular-segments="tubeSegments" :radius="thickness"
+            :radial-segments="RADIAL_SEGMENTS" :closed="false" />
+        <TresShaderMaterial :uniforms="uniforms" :vertex-shader="vertexShader" :fragment-shader="fragmentShader"
+            transparent depthWrite />
     </TresMesh>
 </template>

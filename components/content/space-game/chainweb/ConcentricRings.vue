@@ -2,6 +2,21 @@
 import { computed, ref } from 'vue'
 import { Color, Vector3 } from 'three'
 import { useRenderLoop, useThree } from '@tresjs/core'
+import vertexShader from './shaders/concentric-rings.vert?raw'
+import fragmentShader from './shaders/concentric-rings.frag?raw'
+
+// Constants
+const DEFAULT_TUBE_WIDTH = 0.005
+const DEFAULT_ROTATION_SPEED = 0.2
+const DEFAULT_RADII = [0.15, 0.3, 0.48]
+const DEFAULT_COLORS = [0x3366ff, 0x44aaff, 0x66ccff]
+const DISTANCE_THRESHOLD_LOD_HIGH = 100
+const DISTANCE_THRESHOLD_LOD_MEDIUM = 50
+const SEGMENTS_LOD_HIGH = 48
+const SEGMENTS_LOD_MEDIUM = 64
+const SEGMENTS_LOD_LOW = 96
+const DISTANCE_THRESHOLD_VISIBILITY = 200
+const RADIAL_SEGMENTS = 8
 
 const props = defineProps({
     position: {
@@ -14,19 +29,19 @@ const props = defineProps({
     },
     radii: {
         type: Array as () => number[],
-        default: () => [0.15, 0.3, 0.48]
+        default: () => [...DEFAULT_RADII] // Use spread to avoid mutation
     },
     tubeWidth: {
         type: Number,
-        default: 0.005
+        default: DEFAULT_TUBE_WIDTH
     },
     rotationSpeed: {
         type: Number,
-        default: 0.2
+        default: DEFAULT_ROTATION_SPEED
     },
     colors: {
         type: Array as () => (string | number)[],
-        default: () => [0x3366ff, 0x44aaff, 0x66ccff]
+        default: () => [...DEFAULT_COLORS] // Use spread to avoid mutation
     }
 })
 
@@ -56,14 +71,14 @@ onLoop(({ elapsed }) => {
 // Performance optimization: Adaptive tube segments based on distance
 const { camera } = useThree()
 const tubularSegments = computed(() => {
-    if (!camera.value) return 96
+    if (!camera.value) return SEGMENTS_LOD_LOW
 
     const distance = camera.value.position.distanceTo(props.position)
 
     // Scale segments based on distance
-    if (distance > 100) return 48
-    if (distance > 50) return 64
-    return 96
+    if (distance > DISTANCE_THRESHOLD_LOD_HIGH) return SEGMENTS_LOD_HIGH
+    if (distance > DISTANCE_THRESHOLD_LOD_MEDIUM) return SEGMENTS_LOD_MEDIUM
+    return SEGMENTS_LOD_LOW
 })
 
 // Performance optimization: Only render when visible
@@ -74,7 +89,7 @@ onLoop(() => {
     const distance = camera.value.position.distanceTo(props.position)
 
     // Only render if reasonably close to camera
-    isVisible.value = distance < 200
+    isVisible.value = distance < DISTANCE_THRESHOLD_VISIBILITY
 })
 </script>
 
@@ -83,61 +98,15 @@ onLoop(() => {
         <!-- Create a ring for each radius -->
         <template v-for="(radius, index) in radii" :key="index">
             <TresMesh>
-                <TresTorusGeometry :args="[radius, tubeWidth, 8, tubularSegments]" :rotation="[Math.PI / 2, 0, 0]" />
+                <TresTorusGeometry :args="[radius, tubeWidth, RADIAL_SEGMENTS, tubularSegments]"
+                    :rotation="[Math.PI / 2, 0, 0]" />
                 <TresShaderMaterial :uniforms="{
                     time: uniforms.time,
                     color: { value: ringColors[index % ringColors.length] },
                     radius: { value: radius },
                     rotationOffset: { value: index * Math.PI / props.radii.length },
                     rotationSpeed: uniforms.rotationSpeed
-                }" vertex-shader="
-          uniform float time;
-          uniform float rotationOffset;
-          uniform float rotationSpeed;
-          
-          varying vec2 vUv;
-          varying vec3 vPosition;
-          
-          void main() {
-            // Apply gentle rotation to add movement
-            float angle = time * rotationSpeed + rotationOffset;
-            vec3 pos = position;
-            mat3 rotationMatrix = mat3(
-              cos(angle), 0.0, sin(angle),
-              0.0, 1.0, 0.0,
-              -sin(angle), 0.0, cos(angle)
-            );
-            pos = rotationMatrix * pos;
-            
-            vUv = uv;
-            vPosition = pos;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-          }
-        " fragment-shader="
-          uniform vec3 color;
-          uniform float time;
-          uniform float radius;
-          
-          varying vec2 vUv;
-          varying vec3 vPosition;
-          
-          void main() {
-            // Energy flow along ring
-            float flow = fract(vUv.x * 8.0 - time * 0.5);
-            float pulse = pow(sin(flow * 3.14159 * 2.0), 2.0) * 0.3 + 0.7;
-            
-            // Shimmer effect
-            float shimmer = sin(vUv.x * 50.0 + time * 3.0) * 0.1 + 0.9;
-            
-            // Combine effects
-            vec3 finalColor = color * pulse * shimmer;
-            
-            // Add some variation based on ring size
-            finalColor *= 0.8 + (radius * 0.5);
-            
-            gl_FragColor = vec4(finalColor, 0.9);
-          }
-        " transparent depthWrite />
+                }" :vertex-shader="vertexShader" :fragment-shader="fragmentShader" transparent depthWrite />
             </TresMesh>
         </template>
     </TresObject3D>

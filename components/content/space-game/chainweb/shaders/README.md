@@ -1,34 +1,24 @@
-# Shader Reference Code
+# ChainWeb Visualization Shaders
 
-This directory contains reference shader code that can be used for advanced visual effects in the ChainWeb visualization components.
+This directory contains the GLSL shader code used by the ChainWeb visualization components (`PlasmaNode`, `PlasmaArc`, `ConcentricRings`).
 
-## Current Status
+## Shaders
 
-The shader code in this directory is currently not directly used in the application. Instead, simpler shader implementations have been included directly in the component files for better maintainability and integration with the Vue component system.
-
-## Intended Purpose
-
-These shader files are kept as reference implementations for:
-
-1. More advanced plasma and glow effects
-2. Advanced particle systems
-3. High-quality connection rendering
-4. Custom post-processing effects
+- **`plasma-node.vert` / `plasma-node.frag`**: Shaders for rendering individual plasma nodes. Used by `PlasmaNode.vue`.
+- **`plasma-arc.vert` / `plasma-arc.frag`**: Shaders for rendering the connections between nodes. Used by `PlasmaArc.vue`.
+- **`concentric-rings.vert` / `concentric-rings.frag`**: Shaders for rendering the guiding concentric rings. Used by `ConcentricRings.vue`.
 
 ## Usage
 
-If you need to implement more complex visual effects, you can:
+These shaders are imported directly into their respective Vue components using Vite's `?raw` import feature:
 
-1. Extract the relevant shader code from these files
-2. Integrate them into the components using TresJS shader components
-3. Adjust uniforms and parameters as needed
+```typescript
+import vertexShader from './shaders/plasma-node.vert?raw'
+import fragmentShader from './shaders/plasma-node.frag?raw'
+```
 
-## Files
+This approach keeps the shader logic separate for better maintainability, syntax highlighting, and potential reuse while ensuring they are bundled with the components.
 
-- `plasma-node.vert/frag`: Advanced shaders for node visualization with complex plasma effects
-- `plasma-arc.vert/frag`: Advanced shaders for electric arc connections with detailed glow
-- `petersen-graph.glsl`: Original shader implementation of the Petersen graph
+## Previous Reference Shaders
 
-## Future Development
-
-For future development, these shaders can be improved and integrated more directly with the component system, potentially using shader modules or a more structured shader management system.
+The original `petersen-graph.glsl` and potentially more complex versions of `plasma-node` and `plasma-arc` shaders might exist in version history but are not currently used directly by the application components. The shaders present here are the ones actively used.

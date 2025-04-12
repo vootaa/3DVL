@@ -2,6 +2,17 @@
 import { computed, ref, watch } from 'vue'
 import { Color, Vector3 } from 'three'
 import { useRenderLoop, useThree } from '@tresjs/core'
+import vertexShader from './shaders/plasma-node.vert?raw'
+import fragmentShader from './shaders/plasma-node.frag?raw'
+
+// Constants
+const DEFAULT_RADIUS = 0.03
+const DEFAULT_SEGMENTS = 16
+const DEFAULT_PULSE_SPEED = 1.5
+const DEFAULT_PULSE_INTENSITY = 0.2
+const DISTANCE_THRESHOLD_LOD = 50
+const LOD_SEGMENTS_MIN = 8
+const LOD_SEGMENTS_REDUCTION_FACTOR = 0.5
 
 const props = defineProps({
     position: {
@@ -14,19 +25,19 @@ const props = defineProps({
     },
     radius: {
         type: Number,
-        default: 0.03
+        default: DEFAULT_RADIUS
     },
     segments: {
         type: Number,
-        default: 16
+        default: DEFAULT_SEGMENTS
     },
     pulseSpeed: {
         type: Number,
-        default: 1.5
+        default: DEFAULT_PULSE_SPEED
     },
     pulseIntensity: {
         type: Number,
-        default: 0.2
+        default: DEFAULT_PULSE_INTENSITY
     }
 })
 
@@ -66,7 +77,9 @@ const adaptiveSegments = computed(() => {
     const distance = camera.value.position.distanceTo(props.position)
 
     // Reduce complexity for distant nodes
-    if (distance > 50) return Math.max(8, Math.floor(props.segments * 0.5))
+    if (distance > DISTANCE_THRESHOLD_LOD) {
+        return Math.max(LOD_SEGMENTS_MIN, Math.floor(props.segments * LOD_SEGMENTS_REDUCTION_FACTOR))
+    }
     return props.segments
 })
 </script>
@@ -74,47 +87,6 @@ const adaptiveSegments = computed(() => {
 <template>
     <TresMesh :position="position">
         <TresSphereGeometry :args="[radius, adaptiveSegments, adaptiveSegments]" />
-        <TresShaderMaterial :uniforms="uniforms" vertex-shader="
-      varying vec3 vNormal;
-      varying vec3 vPosition;
-      
-      void main() {
-        vNormal = normalize(normalMatrix * normal);
-        vPosition = position;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    " fragment-shader="
-      uniform vec3 color;
-      uniform float time;
-      uniform float radius;
-      uniform float pulseSpeed;
-      uniform float pulseIntensity;
-      
-      varying vec3 vNormal;
-      varying vec3 vPosition;
-      
-      void main() {
-        // Base plasma effect
-        float plasma = sin(vPosition.x * 10.0 + time * pulseSpeed) * 
-                       cos(vPosition.y * 10.0 + time * pulseSpeed) * 
-                       sin(vPosition.z * 10.0 + time * pulseSpeed);
-        
-        // Pulse effect
-        float pulse = 1.0 + pulseIntensity * sin(time * pulseSpeed * 2.0);
-        
-        // Edge glow effect
-        float edge = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 2.0);
-        
-        // Combine effects
-        vec3 finalColor = color * (1.0 + 0.3 * plasma) * pulse;
-        finalColor += color * edge * 0.5;
-        
-        // Add brightness at the center
-        float dist = length(vPosition) / radius;
-        finalColor *= 1.0 + (1.0 - min(1.0, dist)) * 0.5;
-        
-        gl_FragColor = vec4(finalColor, 1.0);
-      }
-    " />
+        <TresShaderMaterial :uniforms="uniforms" :vertex-shader="vertexShader" :fragment-shader="fragmentShader" />
     </TresMesh>
 </template>
