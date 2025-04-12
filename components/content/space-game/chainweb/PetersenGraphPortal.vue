@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { Color, Vector3, Euler } from 'three'
-import { useGameStore } from '../GameStore'
+import { gameStore } from '../GameStore'
 import PlasmaNode from './PlasmaNode.vue'
 import PlasmaArc from './PlasmaArc.vue'
 import ConcentricRings from './ConcentricRings.vue'
-import { useRenderLoop, useThree } from '@tresjs/core'
+import { useRenderLoop } from '@tresjs/core'
+import {
+    createLayer,
+    generateIntraLayerConnections,
+    createRingConfigurations,
+    ChainNode,
+    Connection
+} from './utils/ChainwebTopology'
 
 const props = defineProps({
     position: {
@@ -26,16 +33,16 @@ const props = defineProps({
     }
 })
 
-const gameStore = useGameStore()
-const { camera } = useThree()
 const isPlayerInPortal = ref(false)
 const emitOnce = ref(false)
 
-// Configuration for 2D Petersen Graph
-const ringRadii = [0.15, 0.3, 0.48]
-const numNodes = 20
-const nodes = ref<any[]>([])
-const connections = ref<any[]>([])
+// Get rings configuration from topology utility
+const ringConfig = createRingConfigurations()
+const ringRadii = ringConfig.map(ring => ring.radius)
+
+// Using 20 nodes as defined in ChainwebTopology
+const nodes = ref<ChainNode[]>([])
+const connections = ref<Connection[]>([])
 
 // Performance optimization: Only render when player is near
 const isVisible = computed(() => {
@@ -45,59 +52,14 @@ const isVisible = computed(() => {
     return distance < 100
 })
 
-// Create node data structure
+// Create node data structure using the topology utility
 onMounted(() => {
-    // Initialize nodes - 20 nodes distributed across 3 concentric rings
-    nodes.value = Array(numNodes).fill(null).map((_, index) => {
-        const ringIndex = Math.floor(index / 7) // Distribute nodes across rings
-        const radius = ringRadii[ringIndex % ringRadii.length]
-        const angleStep = (2 * Math.PI) / (numNodes / 3)
-        const angle = (index % (numNodes / 3)) * angleStep
+    // Create a single layer (layerId=0) of nodes at z=0 with scale=1
+    nodes.value = createLayer(0, 0, 1)
 
-        return {
-            id: index,
-            chainId: index,
-            position: new Vector3(
-                radius * Math.cos(angle),
-                radius * Math.sin(angle),
-                0
-            ),
-            color: new Color(0.2 + ringIndex * 0.2, 0.5, 0.8).getHex(),
-            radius: 0.015 + Math.random() * 0.01
-        }
-    })
-
-    // Generate Petersen Graph connections (30 connections)
-    connections.value = generatePetersenConnections(nodes.value)
+    // Generate connections within this layer
+    connections.value = generateIntraLayerConnections(nodes.value)
 })
-
-// Function to determine portal connections based on Petersen graph properties
-function generatePetersenConnections(nodes: any[]) {
-    const connections = []
-
-    // Petersen graph connection pattern
-    for (let i = 0; i < nodes.length; i++) {
-        // Connect to nodes at regular intervals in the next ring
-        const nextNodeIndex = (i + 3) % nodes.length
-        connections.push({
-            fromNode: i,
-            toNode: nextNodeIndex,
-            color: new Color(0.6, 0.8, 1.0).getHex()
-        })
-
-        // Add another connection to create 30 total
-        if (i % 2 === 0) {
-            const anotherNodeIndex = (i + 7) % nodes.length
-            connections.push({
-                fromNode: i,
-                toNode: anotherNodeIndex,
-                color: new Color(0.7, 0.9, 1.0).getHex()
-            })
-        }
-    }
-
-    return connections
-}
 
 // Check if player is close to the portal to trigger effects
 const checkPlayerProximity = () => {
@@ -140,17 +102,18 @@ useRenderLoop().onLoop(({ elapsed }) => {
     <TresObject3D v-if="isVisible" :position="position" :rotation="rotation" :scale="[scale, scale, scale]">
         <!-- Apply additional gentle rotation -->
         <TresObject3D :rotation="[0, rotationY, 0]">
-            <!-- Concentric Rings -->
+            <!-- Concentric Rings - use ring configurations from topology -->
             <ConcentricRings :radii="ringRadii" :rotation-speed="0.1" />
 
-            <!-- Plasma Nodes -->
-            <PlasmaNode v-for="node in nodes" :key="node.id" :position="node.position" :color="node.color"
+            <!-- Plasma Nodes using the topology-based node structure -->
+            <PlasmaNode v-for="node in nodes" :key="node.id" :position="node.position" :color="node.color.getHex()"
                 :radius="node.radius" />
 
-            <!-- Plasma Arcs -->
+            <!-- Plasma Arcs using the topology-based connection structure -->
             <PlasmaArc v-for="(connection, index) in connections" :key="index"
                 :start-position="nodes[connection.fromNode].position" :end-position="nodes[connection.toNode].position"
-                :color="connection.color" :thickness="0.008" arc-type="inter-layer" />
+                :color="connection.color.getHex()" :thickness="0.008"
+                :arc-type="connection.type === 0 ? 'intra-layer' : 'inter-layer'" />
         </TresObject3D>
     </TresObject3D>
 </template>
