@@ -97,10 +97,14 @@ gameStore.actions.updateMouse = (mouse) => {
 }
 
 gameStore.actions.shoot = () => {
-    gameStore.lasers = [...gameStore.lasers, Date.now()]
-    clearTimeout(gameStore.mutation.cancelLaserTO)
-    gameStore.mutation.cancelLaserTO = setTimeout(() => gameStore.lasers = gameStore.lasers.filter(t => Date.now() - t <= 1000), 1000)
-    gameStore.actions.playAudio(audio.zap, 0.5)
+    // Only allow shooting in Battle mode
+    if (gameStore.gameMode === GameMode.Battle) {
+        gameStore.lasers = [...gameStore.lasers, Date.now()]
+        clearTimeout(gameStore.mutation.cancelLaserTO)
+        gameStore.mutation.cancelLaserTO = setTimeout(() => gameStore.lasers = gameStore.lasers.filter(t => Date.now() - t <= 1000), 1000)
+        gameStore.actions.playAudio(audio.zap, 0.5)
+    }
+    // In Explore mode, shooting is disabled
 }
 
 gameStore.actions.test = (data) => {
@@ -119,7 +123,7 @@ gameStore.actions.updateMouse = ({ clientX, clientY }) => {
 }
 
 gameStore.actions.update = () => {
-    const { rocks, enemies, mutation } = gameStore
+    const { rocks, enemies, mutation, gameMode } = gameStore
 
     const time = Date.now()
     const t = (mutation.t = ((time - mutation.startTime) % mutation.looptime) / mutation.looptime)
@@ -136,45 +140,51 @@ gameStore.actions.update = () => {
     }
     else if (t > 0.5) warping = false
 
-    // test for hits
-    const rocksHit = rocks.filter(gameStore.actions.test)
-    const enemiesHit = enemies.filter(gameStore.actions.test)
-    const allHit = rocksHit.concat(enemiesHit)
-    const previous = mutation.hits
-    mutation.hits = allHit.length
-    if (previous === 0 && mutation.hits) gameStore.actions.playAudio(audio.click)
-    const lasers = gameStore.lasers
-    if (mutation.hits && lasers.length && time - lasers[lasers.length - 1] < 100) {
-        gameStore.actions.playAudio(new Audio(audio.mp3.explosion), 0.5)
-        const updates: ExplosionData[] = []
-        allHit.forEach(data => updates.push({
-            time: Date.now(),
-            ...data,
-            color: 'white',
-            particles: Array.from({ length: 20 }).fill(0).map(_ => ({
-                position: new Vector3(),
-                dPos: new Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2).normalize().multiplyScalar(.40),
-            })),
-        }))
-        allHit.forEach(data => updates.push({
-            time: Date.now(),
-            ...data,
-            color: 'orange',
-            particles: Array.from({ length: 20 }).fill(0).map(_ => ({
-                position: new Vector3(),
-                dPos: new Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2).normalize().multiplyScalar(.60),
-            })),
-        }))
-        gameStore.explosions = [...gameStore.explosions, ...updates]
+    // Only process hits and collisions in Battle mode
+    if (gameMode === GameMode.Battle) {
+        // test for hits
+        const rocksHit = rocks.filter(gameStore.actions.test)
+        const enemiesHit = enemies.filter(gameStore.actions.test)
+        const allHit = rocksHit.concat(enemiesHit)
+        const previous = mutation.hits
+        mutation.hits = allHit.length
+        if (previous === 0 && mutation.hits) gameStore.actions.playAudio(audio.click)
+        const lasers = gameStore.lasers
+        if (mutation.hits && lasers.length && time - lasers[lasers.length - 1] < 100) {
+            gameStore.actions.playAudio(new Audio(audio.mp3.explosion), 0.5)
+            const updates: ExplosionData[] = []
+            allHit.forEach(data => updates.push({
+                time: Date.now(),
+                ...data,
+                color: 'white',
+                particles: Array.from({ length: 20 }).fill(0).map(_ => ({
+                    position: new Vector3(),
+                    dPos: new Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2).normalize().multiplyScalar(.40),
+                })),
+            }))
+            allHit.forEach(data => updates.push({
+                time: Date.now(),
+                ...data,
+                color: 'orange',
+                particles: Array.from({ length: 20 }).fill(0).map(_ => ({
+                    position: new Vector3(),
+                    dPos: new Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2).normalize().multiplyScalar(.60),
+                })),
+            }))
+            gameStore.explosions = [...gameStore.explosions, ...updates]
 
-        clearTimeout(gameStore.mutation.cancelExplosionTO)
-        gameStore.mutation.cancelExplosionTO = setTimeout(() => {
-            gameStore.explosions = gameStore.explosions.filter(({ time }) => Date.now() - time <= 1000)
+            clearTimeout(gameStore.mutation.cancelExplosionTO)
+            gameStore.mutation.cancelExplosionTO = setTimeout(() => {
+                gameStore.explosions = gameStore.explosions.filter(({ time }) => Date.now() - time <= 1000)
+            }
+                , 1000)
+            gameStore.points = gameStore.points + rocksHit.length * 100 + enemiesHit.length * 200,
+                gameStore.rocks = gameStore.rocks.filter(rock => !rocksHit.find(r => r.guid === rock.guid)),
+                gameStore.enemies = gameStore.enemies.filter(enemy => !enemiesHit.find(e => e.guid === enemy.guid))
         }
-            , 1000)
-        gameStore.points = gameStore.points + rocksHit.length * 100 + enemiesHit.length * 200,
-            gameStore.rocks = gameStore.rocks.filter(rock => !rocksHit.find(r => r.guid === rock.guid)),
-            gameStore.enemies = gameStore.enemies.filter(enemy => !enemiesHit.find(e => e.guid === enemy.guid))
+    } else {
+        // In Explore mode, set hits to 0 to avoid targeting UI
+        mutation.hits = 0
     }
 }
 
