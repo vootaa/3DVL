@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { TresCanvas } from '@tresjs/core'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Color, Vector3, CatmullRomCurve3 } from 'three'
+import { useRenderLoop, useThree } from '@tresjs/core'
+
+// Remove unused imports
+// import { TresCanvas } from '@tresjs/core'
+// import { onMounted } from 'vue'
 
 const props = defineProps({
     startPosition: {
@@ -144,9 +148,6 @@ onLoop(() => {
     // Only render if reasonably close to camera
     isVisible.value = avgDist < 150
 })
-
-// Initialize from @tresjs/core
-import { useRenderLoop, useThree } from '@tresjs/core'
 </script>
 
 <template>

@@ -2,7 +2,7 @@
 import { useLoader, useLoop } from '@tresjs/core'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { inject, shallowRef } from 'vue'
-import type { GameStore } from '../TheExperience.vue'
+import type { GameStore } from '../GameStore'
 import { Box3, Vector3, MeshBasicMaterial, Color, MeshPhongMaterial, Group } from 'three';
 
 const gameStore = inject('gameStore') as GameStore

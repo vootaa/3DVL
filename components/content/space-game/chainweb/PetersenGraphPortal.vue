@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { Color, Vector3, Euler } from 'three'
 import { useGameStore } from '../GameStore'
 import PlasmaNode from './PlasmaNode.vue'

@@ -14,7 +14,6 @@ import Rig from './3d/Rig.vue'
 import Ship from './3d/Ship.vue'
 import { gameStore } from './GameStore'
 import ChainWebVisualizations from './chainweb/ChainWebVisualizations.vue'
-import TrackIntegration from './chainweb/TrackIntegration.vue'
 
 useLoop().onBeforeRender(gameStore.actions.update)
 </script>
@@ -27,7 +26,6 @@ useLoop().onBeforeRender(gameStore.actions.update)
     <Suspense fallback="{null}">
         <TresGroup>
             <ChainWebVisualizations />
-            <TrackIntegration />
             <Rings />
             <Enemies />
             <Planets />

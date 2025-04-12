@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { TresCanvas } from '@tresjs/core'
-import { OrbitControls } from '@tresjs/cientos'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Color, Vector3 } from 'three'
+import { useRenderLoop, useThree } from '@tresjs/core'
+
+// Remove unused imports
+// import { TresCanvas } from '@tresjs/core'
+// import { OrbitControls } from '@tresjs/cientos'
+// import { onMounted } from 'vue'
 
 const props = defineProps({
     position: {
@@ -70,9 +74,6 @@ const adaptiveSegments = computed(() => {
     if (distance > 50) return Math.max(8, Math.floor(props.segments * 0.5))
     return props.segments
 })
-
-// Initialize from @tresjs/core
-import { useRenderLoop, useThree } from '@tresjs/core'
 </script>
 
 <template>
