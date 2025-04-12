@@ -4,6 +4,12 @@ import * as audio from './audio'
 import type { ExplosionData } from './3d/Explosions.vue'
 import { Box3, Clock, Euler, Matrix4, Object3D, PerspectiveCamera, Ray, TubeGeometry, Vector2, Vector3 } from 'three'
 
+// Define game modes
+export enum GameMode {
+    Battle = 'Battle',
+    Explore = 'Explore'
+}
+
 let guid = 0
 const spline = new GrannyKnot()
 const track = new TubeGeometry(spline, 250, 0.2, 10, true)
@@ -19,6 +25,7 @@ export const gameStore = reactive({
     rings: randomRings(30, track),
     camera: new PerspectiveCamera(),
     sound: false,
+    gameMode: GameMode.Battle, // Default to Battle mode
     mutation: {
         t: 0,
         position: new Vector3(),
@@ -53,6 +60,7 @@ export const gameStore = reactive({
         updateMouse: (mouse: { clientX: number; clientY: number }) => { },
         init: (camera: PerspectiveCamera) => { },
         update: () => { },
+        switchGameMode: () => { }, // Method to switch game mode
     },
 })
 
@@ -168,6 +176,33 @@ gameStore.actions.update = () => {
             gameStore.rocks = gameStore.rocks.filter(rock => !rocksHit.find(r => r.guid === rock.guid)),
             gameStore.enemies = gameStore.enemies.filter(enemy => !enemiesHit.find(e => e.guid === enemy.guid))
     }
+}
+
+// Implement the game mode switching method
+gameStore.actions.switchGameMode = () => {
+    // Toggle between Battle and Explore modes
+    gameStore.gameMode = gameStore.gameMode === GameMode.Battle
+        ? GameMode.Explore
+        : GameMode.Battle;
+
+    // Reset game state
+    const currentMode = gameStore.gameMode;
+    const currentSound = gameStore.sound;
+
+    // Reset score
+    gameStore.points = 0;
+
+    // Reset time
+    gameStore.mutation.startTime = Date.now();
+
+    // Clear existing entities
+    gameStore.lasers = [];
+    gameStore.explosions = [];
+
+    // Reset player position
+    gameStore.mutation.t = 0;
+
+    console.log(`Switched to ${gameStore.gameMode} mode`);
 }
 
 export type GameStore = typeof gameStore

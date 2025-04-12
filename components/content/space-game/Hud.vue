@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, shallowRef } from 'vue'
-import type { GameStore } from './GameStore'
+import { GameMode, type GameStore } from './GameStore'
 
 const gameStore = inject('gameStore') as GameStore
 
@@ -9,6 +9,11 @@ const t = Date.now()
 const score = computed(() => (gameStore.points >= 1000 ? `${(gameStore.points / 1000).toFixed(1)}K` : gameStore.points))
 const seconds = shallowRef('0')
 setInterval(() => seconds.value = ((Date.now() - t) / 1000).toFixed(1), 100)
+
+// Add handler for game mode switching
+const switchGameMode = () => {
+    gameStore.actions.switchGameMode()
+}
 </script>
 
 <template>
@@ -17,15 +22,20 @@ setInterval(() => seconds.value = ((Date.now() - t) / 1000).toFixed(1), 100)
         <br>
         {{ gameStore.sound ? 'turn off' : 'turn on' }}
     </div>
-    <div class="base UpperRight">
-        <a href="https://codesandbox.io/p/sandbox/i2160">R3F original by 0xca0a</a>
+
+    <!-- Game mode switch button in top right corner -->
+    <div class="base UpperRight" @click="switchGameMode">
+        game mode
         <br>
-        <a href="https://twitter.com/0xca0a">0xca0a on twitter</a>
+        {{ gameStore.gameMode === GameMode.Battle ? 'switch to explore' : 'switch to battle' }}
     </div>
+
+    <!-- Time and score information in bottom left -->
     <div class="base LowerLeft">
-        <h2>{{ seconds }}</h2>
-        <h1>{{ score }}</h1>
+        <div class="info-line">Time: {{ seconds }} s</div>
+        <div class="info-line">Score: {{ gameStore.gameMode === GameMode.Battle ? score : 0 }}</div>
     </div>
+
     <div class="base Global" />
 </template>
 
@@ -56,19 +66,15 @@ setInterval(() => seconds.value = ((Date.now() - t) / 1000).toFixed(1), 100)
     }
 }
 
+/* Top right button style, matching the sound button */
 .UpperRight {
-    text-align: right;
     top: 40px;
     right: 50px;
     font-size: 2em;
     transform: skew(-5deg, -5deg);
     pointer-events: all;
     cursor: pointer;
-
-    &>a {
-        color: indianred;
-        text-decoration: none;
-    }
+    text-align: right;
 
     @media only screen and (max-width: 900px) {
         font-size: 1.5em;
@@ -76,53 +82,20 @@ setInterval(() => seconds.value = ((Date.now() - t) / 1000).toFixed(1), 100)
 }
 
 .LowerLeft {
-    bottom: 50px;
+    bottom: 40px;
     left: 50px;
-    transform: skew(-5deg, -5deg);
-    width: 200px;
-
-    &>h1 {
-        margin: 0;
-        font-size: 10em;
-        line-height: 1em;
-    }
-
-    &>h2 {
-        margin: 0;
-        font-size: 4em;
-        line-height: 1em;
-    }
-
-    @media only screen and (max-width: 900px) {
-        bottom: 30px;
-
-        &>h1 {
-            font-size: 6em !important;
-        }
-
-        &>h2 {
-            font-size: 3em !important;
-        }
-    }
-}
-
-.LowerRight {
-    bottom: 70px;
-    right: 50px;
     transform: skew(5deg, 5deg);
-    height: 40px;
-    width: 150px;
-    background: black;
+    font-size: 2em;
 
-    &>div {
-        height: 100%;
-        background: indianred;
+    /* Consistent style for info lines */
+    .info-line {
+        margin: 0;
+        line-height: 1.2em;
+        text-align: left;
     }
 
     @media only screen and (max-width: 900px) {
-        bottom: 50px;
-        height: 40px;
-        width: 150px;
+        font-size: 1.5em;
     }
 }
 
