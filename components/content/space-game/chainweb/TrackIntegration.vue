@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch, computed, inject } from 'vue'
 import { Vector3, MathUtils, Matrix4, Euler, InstancedMesh, Color, Object3D } from 'three'
-import { useGameStore } from '../GameStore'
+import type { GameStore } from '../GameStore'
 import PetersenGraphPortal from './PetersenGraphPortal.vue'
 import ChainWeb3D from './ChainWeb3D.vue'
 import * as audio from '../audio'
@@ -35,7 +35,7 @@ const props = defineProps({
     }
 })
 
-const gameStore = useGameStore()
+const gameStore = inject('gameStore') as GameStore
 const portals = ref<Array<{ position: Vector3, rotation: any, scale: number, active: boolean }>>([])
 const chainWebs = ref<Array<{ position: Vector3, rotation: any, scale: number, active: boolean }>>([])
 

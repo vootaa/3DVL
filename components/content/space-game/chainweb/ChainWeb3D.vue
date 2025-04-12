@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, inject } from 'vue'
 import { Color, Vector3, Vector2, Euler, InstancedMesh, Object3D, BufferGeometry, BufferAttribute } from 'three'
-import { useGameStore } from '../GameStore'
+import type { GameStore } from '../GameStore'
 import PlasmaNode from './PlasmaNode.vue'
 import PlasmaArc from './PlasmaArc.vue'
 import ConcentricRings from './ConcentricRings.vue'
 import { useRenderLoop, useThree } from '@tresjs/core'
+import { createLayer, generateIntraLayerConnections, generateInterLayerConnections, createRingConfigurations } from './utils/ChainwebTopology'
 
 const props = defineProps({
     position: {
@@ -26,14 +27,13 @@ const props = defineProps({
     }
 })
 
-const gameStore = useGameStore()
+const gameStore = inject('gameStore') as GameStore
 const { camera } = useThree()
 const insideInnerRing = ref(false)
 const emitOnce = ref(false)
 const layers = ref<any[]>([])
-const nodesPerLayer = 20
 const numLayers = 8
-const ringRadii = [0.15, 0.3, 0.48]
+const ringRadii = [0.15, 0.3, 0.48] // Matching the constants from ChainwebTopology
 
 // Instanced mesh references
 const nodeInstancesRef = ref<InstancedMesh | null>(null)
@@ -104,13 +104,17 @@ function prepareInstancedNodes() {
 
 // Generate lines for connections
 function prepareConnectionLines() {
-    const visibleConnectionCount = visibleLayers.value < numLayers ? 20 : 60
+    const visibleConnectionCount = visibleLayers.value < numLayers ? 30 : 60
     let lineCount = 0
 
     // Count total visible connections
-    layers.value.slice(0, visibleLayers.value - 1).forEach(layer => {
-        lineCount += Math.min(layer.connections.length, visibleConnectionCount)
-        lineCount += layer.sameChainConnections.length
+    layers.value.slice(0, visibleLayers.value).forEach(layer => {
+        lineCount += Math.min(layer.intraLayerConnections.length, visibleConnectionCount)
+
+        // Count inter-layer connections if not the last layer
+        if (layer.id < visibleLayers.value - 1) {
+            lineCount += Math.min(layer.interLayerConnections.length, visibleConnectionCount)
+        }
     })
 
     // Prepare buffer for line positions (6 floats per line: 2 vertices * 3 coordinates)
@@ -120,60 +124,67 @@ function prepareConnectionLines() {
     let idx = 0
 
     // Fill connection data
-    layers.value.slice(0, visibleLayers.value - 1).forEach(layer => {
-        // Inter-layer connections
-        layer.connections.slice(0, visibleConnectionCount).forEach(conn => {
-            const startNode = layer.nodes[conn.fromNode]
-            const endNode = layers.value[conn.toLayer].nodes[conn.toNode]
+    layers.value.slice(0, visibleLayers.value).forEach(layer => {
+        // Intra-layer connections (within same layer)
+        layer.intraLayerConnections.slice(0, visibleConnectionCount).forEach(conn => {
+            const startNode = layer.nodes.find(n => n.chainId === conn.fromNode)
+            const endNode = layer.nodes.find(n => n.chainId === conn.toNode)
 
-            // Start vertex
-            linePositions.value[idx * 6] = startNode.position.x
-            linePositions.value[idx * 6 + 1] = startNode.position.y
-            linePositions.value[idx * 6 + 2] = startNode.position.z
+            if (startNode && endNode) {
+                // Start vertex
+                linePositions.value[idx * 6] = startNode.position.x
+                linePositions.value[idx * 6 + 1] = startNode.position.y
+                linePositions.value[idx * 6 + 2] = startNode.position.z
 
-            // End vertex
-            linePositions.value[idx * 6 + 3] = endNode.position.x
-            linePositions.value[idx * 6 + 4] = endNode.position.y
-            linePositions.value[idx * 6 + 5] = endNode.position.z
+                // End vertex
+                linePositions.value[idx * 6 + 3] = endNode.position.x
+                linePositions.value[idx * 6 + 4] = endNode.position.y
+                linePositions.value[idx * 6 + 5] = endNode.position.z
 
-            // Color (convert from hex)
-            const color = new Color(conn.color)
-            lineColors.value[idx * 6] = color.r
-            lineColors.value[idx * 6 + 1] = color.g
-            lineColors.value[idx * 6 + 2] = color.b
-            lineColors.value[idx * 6 + 3] = color.r
-            lineColors.value[idx * 6 + 4] = color.g
-            lineColors.value[idx * 6 + 5] = color.b
+                // Color from connection
+                const color = new Color(conn.color)
+                lineColors.value[idx * 6] = color.r
+                lineColors.value[idx * 6 + 1] = color.g
+                lineColors.value[idx * 6 + 2] = color.b
+                lineColors.value[idx * 6 + 3] = color.r
+                lineColors.value[idx * 6 + 4] = color.g
+                lineColors.value[idx * 6 + 5] = color.b
 
-            idx++
+                idx++
+            }
         })
 
-        // Same-chain connections
-        layer.sameChainConnections.forEach(conn => {
-            const startNode = layer.nodes[conn.fromNode]
-            const endNode = layers.value[conn.toLayer].nodes[conn.toNode]
+        // Inter-layer connections (between layers)
+        if (layer.id < visibleLayers.value - 1) {
+            layer.interLayerConnections.slice(0, visibleConnectionCount).forEach(conn => {
+                const startNode = layer.nodes.find(n => n.chainId === conn.fromNode)
+                const nextLayer = layers.value[layer.id + 1]
+                const endNode = nextLayer.nodes.find(n => n.chainId === conn.toNode)
 
-            // Start vertex
-            linePositions.value[idx * 6] = startNode.position.x
-            linePositions.value[idx * 6 + 1] = startNode.position.y
-            linePositions.value[idx * 6 + 2] = startNode.position.z
+                if (startNode && endNode) {
+                    // Start vertex
+                    linePositions.value[idx * 6] = startNode.position.x
+                    linePositions.value[idx * 6 + 1] = startNode.position.y
+                    linePositions.value[idx * 6 + 2] = startNode.position.z
 
-            // End vertex
-            linePositions.value[idx * 6 + 3] = endNode.position.x
-            linePositions.value[idx * 6 + 4] = endNode.position.y
-            linePositions.value[idx * 6 + 5] = endNode.position.z
+                    // End vertex
+                    linePositions.value[idx * 6 + 3] = endNode.position.x
+                    linePositions.value[idx * 6 + 4] = endNode.position.y
+                    linePositions.value[idx * 6 + 5] = endNode.position.z
 
-            // Color (convert from hex)
-            const color = new Color(conn.color)
-            lineColors.value[idx * 6] = color.r
-            lineColors.value[idx * 6 + 1] = color.g
-            lineColors.value[idx * 6 + 2] = color.b
-            lineColors.value[idx * 6 + 3] = color.r
-            lineColors.value[idx * 6 + 4] = color.g
-            lineColors.value[idx * 6 + 5] = color.b
+                    // Color from connection
+                    const color = new Color(conn.color)
+                    lineColors.value[idx * 6] = color.r
+                    lineColors.value[idx * 6 + 1] = color.g
+                    lineColors.value[idx * 6 + 2] = color.b
+                    lineColors.value[idx * 6 + 3] = color.r
+                    lineColors.value[idx * 6 + 4] = color.g
+                    lineColors.value[idx * 6 + 5] = color.b
 
-            idx++
-        })
+                    idx++
+                }
+            })
+        }
     })
 
     // Update the line geometry's attributes if it exists
@@ -188,53 +199,38 @@ function prepareConnectionLines() {
 
 // Prepare data structure for ChainWeb3D
 onMounted(() => {
-    // Initialize layers
+    // Initialize layers using ChainwebTopology
     layers.value = Array(numLayers).fill(null).map((_, layerIndex) => {
-        const zPosition = -0.5 * layerIndex
+        const zPosition = -0.2 * layerIndex
         const layerScale = 1 - (layerIndex * 0.05) // Each layer gets slightly smaller for perspective
 
-        // Generate nodes for this layer
-        const nodes = Array(nodesPerLayer).fill(null).map((_, nodeIndex) => {
-            const ringIndex = Math.floor(nodeIndex / 7) // Distribute nodes across rings
-            const radius = ringRadii[ringIndex % ringRadii.length] * layerScale
-            const angleStep = (2 * Math.PI) / (nodesPerLayer / 3)
-            const angle = (nodeIndex % (nodesPerLayer / 3)) * angleStep
-
-            return {
-                id: layerIndex * nodesPerLayer + nodeIndex,
-                chainId: nodeIndex, // Same chainId across layers
-                layerId: layerIndex,
-                position: new Vector3(
-                    radius * Math.cos(angle),
-                    radius * Math.sin(angle),
-                    zPosition
-                ),
-                color: new Color(0.2 + ringIndex * 0.2, 0.5, 0.8).getHex(),
-                radius: 0.015 + Math.random() * 0.01
-            }
-        })
+        // Create nodes for this layer using the topology utility
+        const nodes = createLayer(layerIndex, zPosition, layerScale)
 
         return {
             id: layerIndex,
             zPosition,
             scale: layerScale,
             nodes,
-            // Connections will be generated after all layers are created
-            connections: [],
-            sameChainConnections: []
+            intraLayerConnections: [], // Will fill later
+            interLayerConnections: []  // Will fill later
         }
     })
 
-    // Generate inter-layer connections
+    // Generate intra-layer connections (within each layer)
+    layers.value.forEach(layer => {
+        layer.intraLayerConnections = generateIntraLayerConnections(layer.nodes)
+    })
+
+    // Generate inter-layer connections (between adjacent layers)
     for (let i = 0; i < numLayers - 1; i++) {
         const sourceLayer = layers.value[i]
         const targetLayer = layers.value[i + 1]
 
-        // Generate cross-chain connections (60 per layer pair)
-        sourceLayer.connections = generateInterLayerConnections(sourceLayer, targetLayer)
-
-        // Generate same-chain connections (20 per layer pair - one per chain)
-        sourceLayer.sameChainConnections = generateSameChainConnections(sourceLayer, targetLayer)
+        sourceLayer.interLayerConnections = generateInterLayerConnections(
+            sourceLayer.nodes,
+            targetLayer.nodes
+        )
     }
 
     // Initial setup of instanced rendering
@@ -242,59 +238,9 @@ onMounted(() => {
     prepareConnectionLines()
 })
 
-// Generate connections between adjacent layers
-function generateInterLayerConnections(sourceLayer: any, targetLayer: any) {
-    const connections = []
-
-    // For each node in source layer, create 3 connections to target layer
-    for (let i = 0; i < sourceLayer.nodes.length; i++) {
-        for (let j = 0; j < 3; j++) {
-            // Connect to nodes at regular pattern in the next layer
-            const targetNodeIndex = (i + j * 5) % targetLayer.nodes.length
-
-            connections.push({
-                fromNode: i,
-                fromLayer: sourceLayer.id,
-                toNode: targetNodeIndex,
-                toLayer: targetLayer.id,
-                type: 1, // Inter-layer
-                color: new Color(0.6, 0.8, 1.0).getHex()
-            })
-        }
-    }
-
-    return connections
-}
-
-// Generate connections between same chains in adjacent layers
-function generateSameChainConnections(sourceLayer: any, targetLayer: any) {
-    const connections = []
-
-    // Connect each node to its corresponding chain node in the next layer
-    for (let i = 0; i < sourceLayer.nodes.length; i++) {
-        const sourceNode = sourceLayer.nodes[i]
-
-        // Find node with same chainId in target layer
-        const targetNode = targetLayer.nodes.find(node => node.chainId === sourceNode.chainId)
-
-        if (targetNode) {
-            connections.push({
-                fromNode: i,
-                fromLayer: sourceLayer.id,
-                toNode: targetLayer.nodes.indexOf(targetNode),
-                toLayer: targetLayer.id,
-                type: 2, // Same-chain
-                color: new Color(0.8, 0.9, 0.5).getHex()
-            })
-        }
-    }
-
-    return connections
-}
-
 // Check if player is inside innermost ring to trigger acceleration
 const checkPlayerInnerRing = () => {
-    if (!props.active) return
+    if (!props.active || !gameStore) return
 
     const playerPos = gameStore.mutation.position
     const portalPos = props.position
@@ -357,7 +303,7 @@ useRenderLoop().onLoop(({ elapsed, delta }) => {
         <TresObject3D :rotation="[0, rotationY, 0]">
             <!-- Render visible layers only -->
             <template v-for="layer in layers.slice(0, visibleLayers)" :key="layer.id">
-                <!-- Concentric Rings for each layer -->
+                <!-- Concentric Rings for each layer, using the ring configurations from topology -->
                 <ConcentricRings :position="[0, 0, layer.zPosition]" :scale="layer.scale" :radii="ringRadii"
                     :rotation-speed="0.05 * (1 + layer.id * 0.1)" />
             </template>

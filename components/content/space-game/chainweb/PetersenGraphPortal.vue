@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { Color, Vector3, Euler } from 'three'
-import { gameStore } from '../GameStore'
+import { ref, onMounted, computed, inject } from 'vue'
+import { Vector3, Euler } from 'three'
+import type { GameStore } from '../GameStore'
 import PlasmaNode from './PlasmaNode.vue'
 import PlasmaArc from './PlasmaArc.vue'
 import ConcentricRings from './ConcentricRings.vue'
-import { useRenderLoop } from '@tresjs/core'
+import { useRenderLoop, useThree } from '@tresjs/core'
 import {
     createLayer,
     generateIntraLayerConnections,
     createRingConfigurations,
-    ChainNode,
-    Connection
+    type ChainNode,
+    type Connection
 } from './utils/ChainwebTopology'
 
 const props = defineProps({
@@ -33,6 +33,8 @@ const props = defineProps({
     }
 })
 
+const gameStore = inject('gameStore') as GameStore
+const { camera } = useThree()
 const isPlayerInPortal = ref(false)
 const emitOnce = ref(false)
 
@@ -63,7 +65,7 @@ onMounted(() => {
 
 // Check if player is close to the portal to trigger effects
 const checkPlayerProximity = () => {
-    if (!props.active) return
+    if (!props.active || !gameStore) return
 
     const playerPos = gameStore.mutation.position
     const portalPos = props.position

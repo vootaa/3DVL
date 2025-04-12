@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, inject } from 'vue'
 import TrackIntegration from './TrackIntegration.vue'
-import { useGameStore } from '../GameStore'
+import type { GameStore } from '../GameStore'
 
-const gameStore = useGameStore()
+const gameStore = inject('gameStore') as GameStore
 </script>
 
 <template>

@@ -3,10 +3,6 @@ import { computed, ref, watch } from 'vue'
 import { Color, Vector3, CatmullRomCurve3 } from 'three'
 import { useRenderLoop, useThree } from '@tresjs/core'
 
-// Remove unused imports
-// import { TresCanvas } from '@tresjs/core'
-// import { onMounted } from 'vue'
-
 const props = defineProps({
     startPosition: {
         type: Object as () => Vector3,
