@@ -3,6 +3,7 @@ import { onMounted, shallowRef } from 'vue'
 import { PerspectiveCamera } from 'three'
 import { gameStore } from './GameStore'
 import ChainWebVisualizations from './chainweb/ChainWebVisualizations.vue'
+import TrackIntegration from './chainweb/TrackIntegration.vue'
 
 const camera = shallowRef(new PerspectiveCamera())
 onMounted(() => {
@@ -15,6 +16,9 @@ onMounted(() => {
         <TresCanvas window-size>
             <!-- Add ChainWeb Visualizations -->
             <ChainWebVisualizations />
+
+            <!-- Add ChainWeb Track Integration -->
+            <TrackIntegration />
         </TresCanvas>
     </div>
 </template>

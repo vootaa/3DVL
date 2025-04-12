@@ -1,16 +1,20 @@
 <script setup lang="ts">
-import { TresCanvas, useRenderLoop } from '@tresjs/core'
-import { computed, onMounted, ref, watch } from 'vue'
-import { Color, Vector3 } from 'three'
+import { ref, onMounted, computed, watch } from 'vue'
+import { Color, Vector3, Euler } from 'three'
 import { useGameStore } from '../GameStore'
 import PlasmaNode from './PlasmaNode.vue'
 import PlasmaArc from './PlasmaArc.vue'
 import ConcentricRings from './ConcentricRings.vue'
+import { useRenderLoop, useThree } from '@tresjs/core'
 
 const props = defineProps({
     position: {
         type: Object as () => Vector3,
         default: () => new Vector3(0, 0, 0)
+    },
+    rotation: {
+        type: Object as () => Euler,
+        default: () => new Euler(0, 0, 0)
     },
     scale: {
         type: Number,
@@ -23,13 +27,23 @@ const props = defineProps({
 })
 
 const gameStore = useGameStore()
+const { camera } = useThree()
 const isPlayerInPortal = ref(false)
+const emitOnce = ref(false)
 
 // Configuration for 2D Petersen Graph
 const ringRadii = [0.15, 0.3, 0.48]
 const numNodes = 20
 const nodes = ref<any[]>([])
 const connections = ref<any[]>([])
+
+// Performance optimization: Only render when player is near
+const isVisible = computed(() => {
+    if (!camera.value || !props.active) return false
+
+    const distance = camera.value.position.distanceTo(props.position)
+    return distance < 100
+})
 
 // Create node data structure
 onMounted(() => {
@@ -49,7 +63,7 @@ onMounted(() => {
                 0
             ),
             color: new Color(0.2 + ringIndex * 0.2, 0.5, 0.8).getHex(),
-            radius: 0.02 + Math.random() * 0.01
+            radius: 0.015 + Math.random() * 0.01
         }
     })
 
@@ -87,6 +101,8 @@ function generatePetersenConnections(nodes: any[]) {
 
 // Check if player is close to the portal to trigger effects
 const checkPlayerProximity = () => {
+    if (!props.active) return
+
     const playerPos = gameStore.mutation.position
     const portalPos = props.position
     const distance = playerPos.distanceTo(portalPos)
@@ -94,35 +110,47 @@ const checkPlayerProximity = () => {
     // Trigger portal effect when player is close
     if (distance < 10 && !isPlayerInPortal.value) {
         isPlayerInPortal.value = true
-        // Emit event to trigger transition effect
-        emit('portalEntered')
+
+        // Only emit once per entry
+        if (!emitOnce.value) {
+            emitOnce.value = true
+            emit('portalEntered')
+        }
     } else if (distance >= 10 && isPlayerInPortal.value) {
         isPlayerInPortal.value = false
+        emitOnce.value = false
     }
 }
 
 const emit = defineEmits(['portalEntered'])
 
+// Rotation animation
+const rotationY = ref(0)
+
 // Update on each frame
-useRenderLoop().onLoop(() => {
+useRenderLoop().onLoop(({ elapsed }) => {
     if (props.active) {
         checkPlayerProximity()
+        rotationY.value = Math.sin(elapsed * 0.0005) * 0.2
     }
 })
 </script>
 
 <template>
-    <TresObject3D :position="position" :scale="[scale, scale, scale]">
-        <!-- Concentric Rings -->
-        <ConcentricRings :radii="ringRadii" />
+    <TresObject3D v-if="isVisible" :position="position" :rotation="rotation" :scale="[scale, scale, scale]">
+        <!-- Apply additional gentle rotation -->
+        <TresObject3D :rotation="[0, rotationY, 0]">
+            <!-- Concentric Rings -->
+            <ConcentricRings :radii="ringRadii" :rotation-speed="0.1" />
 
-        <!-- Plasma Nodes -->
-        <PlasmaNode v-for="node in nodes" :key="node.id" :position="node.position" :color="node.color"
-            :radius="node.radius" />
+            <!-- Plasma Nodes -->
+            <PlasmaNode v-for="node in nodes" :key="node.id" :position="node.position" :color="node.color"
+                :radius="node.radius" />
 
-        <!-- Plasma Arcs -->
-        <PlasmaArc v-for="(connection, index) in connections" :key="index"
-            :start-position="nodes[connection.fromNode].position" :end-position="nodes[connection.toNode].position"
-            :color="connection.color" />
+            <!-- Plasma Arcs -->
+            <PlasmaArc v-for="(connection, index) in connections" :key="index"
+                :start-position="nodes[connection.fromNode].position" :end-position="nodes[connection.toNode].position"
+                :color="connection.color" :thickness="0.008" arc-type="inter-layer" />
+        </TresObject3D>
     </TresObject3D>
 </template>

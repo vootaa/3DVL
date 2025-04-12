@@ -1,16 +1,20 @@
 <script setup lang="ts">
-import { useRenderLoop } from '@tresjs/core'
-import { computed, onMounted, ref, watch } from 'vue'
-import { Color, Vector3 } from 'three'
+import { ref, onMounted, computed, watch } from 'vue'
+import { Color, Vector3, Vector2, Euler } from 'three'
 import { useGameStore } from '../GameStore'
 import PlasmaNode from './PlasmaNode.vue'
 import PlasmaArc from './PlasmaArc.vue'
 import ConcentricRings from './ConcentricRings.vue'
+import { useRenderLoop, useThree } from '@tresjs/core'
 
 const props = defineProps({
     position: {
         type: Object as () => Vector3,
         default: () => new Vector3(0, 0, 0)
+    },
+    rotation: {
+        type: Object as () => Euler,
+        default: () => new Euler(0, 0, 0)
     },
     scale: {
         type: Number,
@@ -23,11 +27,33 @@ const props = defineProps({
 })
 
 const gameStore = useGameStore()
+const { camera } = useThree()
 const insideInnerRing = ref(false)
+const emitOnce = ref(false)
 const layers = ref<any[]>([])
 const nodesPerLayer = 20
 const numLayers = 8
 const ringRadii = [0.15, 0.3, 0.48]
+
+// Performance optimization: Only render when player is near
+const isVisible = computed(() => {
+    if (!camera.value || !props.active) return false
+
+    const distance = camera.value.position.distanceTo(props.position)
+    return distance < 120
+})
+
+// Performance optimization: Level of detail based on distance
+const visibleLayers = computed(() => {
+    if (!camera.value) return numLayers
+
+    const distance = camera.value.position.distanceTo(props.position)
+
+    // Reduce layers when far away
+    if (distance > 80) return 3
+    if (distance > 50) return 5
+    return numLayers
+})
 
 // Prepare data structure for ChainWeb3D
 onMounted(() => {
@@ -53,7 +79,7 @@ onMounted(() => {
                     zPosition
                 ),
                 color: new Color(0.2 + ringIndex * 0.2, 0.5, 0.8).getHex(),
-                radius: 0.02 + Math.random() * 0.01
+                radius: 0.015 + Math.random() * 0.01
             }
         })
 
@@ -63,7 +89,8 @@ onMounted(() => {
             scale: layerScale,
             nodes,
             // Connections will be generated after all layers are created
-            connections: []
+            connections: [],
+            sameChainConnections: []
         }
     })
 
@@ -132,9 +159,14 @@ function generateSameChainConnections(sourceLayer: any, targetLayer: any) {
 
 // Check if player is inside innermost ring to trigger acceleration
 const checkPlayerInnerRing = () => {
+    if (!props.active) return
+
     const playerPos = gameStore.mutation.position
     const portalPos = props.position
-    const distance = new Vector2(playerPos.x - portalPos.x, playerPos.y - portalPos.y).length()
+
+    // Create a 2D vector for XY plane distance check
+    const playerXY = new Vector2(playerPos.x - portalPos.x, playerPos.y - portalPos.y)
+    const distance = playerXY.length()
 
     // Innermost ring radius adjusted by scale
     const innerRingRadius = ringRadii[0] * props.scale
@@ -144,67 +176,65 @@ const checkPlayerInnerRing = () => {
 
     if (distance < innerRingRadius && zDistance < 2 && !insideInnerRing.value) {
         insideInnerRing.value = true
-        triggerAcceleration()
+
+        // Only emit once per entry
+        if (!emitOnce.value) {
+            emitOnce.value = true
+            emit('accelerate')
+        }
     } else if ((distance >= innerRingRadius || zDistance >= 2) && insideInnerRing.value) {
         insideInnerRing.value = false
+        emitOnce.value = false
     }
-}
-
-// Trigger acceleration effect
-const triggerAcceleration = () => {
-    // Similar to warp effect in GameStore.ts
-    gameStore.actions.playAudio(audio.warp)
-
-    // Increase speed temporarily
-    const originalFov = gameStore.mutation.fov
-    gameStore.mutation.fov = originalFov * 1.3
-
-    // Return to normal after a short period
-    setTimeout(() => {
-        gameStore.mutation.fov = originalFov
-    }, 2000)
-
-    // Emit event for parent components
-    emit('accelerate')
 }
 
 const emit = defineEmits(['accelerate'])
 
+// Rotation animation
+const rotationY = ref(0)
+
 // Update on each frame
-useRenderLoop().onLoop(() => {
+useRenderLoop().onLoop(({ elapsed, delta }) => {
     if (props.active) {
         checkPlayerInnerRing()
 
-        // Add some rotation to the entire structure
-        rotationY.value += 0.001
+        // Add gentle rotation
+        rotationY.value += delta * 0.2
     }
 })
-
-const rotationY = ref(0)
 </script>
 
 <template>
-    <TresObject3D :position="position" :scale="[scale, scale, scale]" :rotation="[0, rotationY, 0]">
-        <!-- Render all layers -->
-        <template v-for="layer in layers" :key="layer.id">
-            <!-- Concentric Rings for each layer -->
-            <ConcentricRings :position="[0, 0, layer.zPosition]" :scale="layer.scale" :radii="ringRadii" />
+    <TresObject3D v-if="isVisible" :position="position" :rotation="rotation" :scale="[scale, scale, scale]">
+        <!-- Apply additional rotation animation -->
+        <TresObject3D :rotation="[0, rotationY, 0]">
+            <!-- Render visible layers only -->
+            <template v-for="layer in layers.slice(0, visibleLayers)" :key="layer.id">
+                <!-- Concentric Rings for each layer -->
+                <ConcentricRings :position="[0, 0, layer.zPosition]" :scale="layer.scale" :radii="ringRadii"
+                    :rotation-speed="0.05 * (1 + layer.id * 0.1)" />
 
-            <!-- Plasma Nodes for each layer -->
-            <PlasmaNode v-for="node in layer.nodes" :key="node.id" :position="node.position" :color="node.color"
-                :radius="node.radius" />
+                <!-- Plasma Nodes for each layer -->
+                <PlasmaNode v-for="node in layer.nodes" :key="node.id" :position="node.position" :color="node.color"
+                    :radius="node.radius" />
 
-            <!-- Plasma Arcs for inter-layer connections -->
-            <PlasmaArc v-for="(connection, index) in layer.connections" :key="`inter-${index}`"
-                :start-position="layer.nodes[connection.fromNode].position"
-                :end-position="layers[connection.toLayer].nodes[connection.toNode].position" :color="connection.color"
-                :thickness="0.01" arc-type="inter-layer" />
+                <!-- Plasma Arcs for inter-layer connections (limit connections for performance) -->
+                <template v-if="layer.id < numLayers - 1">
+                    <!-- For performance, use a subset of connections when far away -->
+                    <PlasmaArc
+                        v-for="(connection, index) in layer.connections.slice(0, visibleLayers < numLayers ? 20 : 60)"
+                        :key="`inter-${index}`" :start-position="layer.nodes[connection.fromNode].position"
+                        :end-position="layers[connection.toLayer].nodes[connection.toNode].position"
+                        :color="connection.color" :thickness="0.008" arc-type="inter-layer" />
 
-            <!-- Smoother connections for same-chain connections -->
-            <PlasmaArc v-for="(connection, index) in layer.sameChainConnections" :key="`chain-${index}`"
-                :start-position="layer.nodes[connection.fromNode].position"
-                :end-position="layers[connection.toLayer].nodes[connection.toNode].position" :color="connection.color"
-                :thickness="0.02" arc-type="same-chain" />
-        </template>
+                    <!-- Always render same-chain connections as they're important visually -->
+                    <PlasmaArc v-for="(connection, index) in layer.sameChainConnections" :key="`chain-${index}`"
+                        :start-position="layer.nodes[connection.fromNode].position"
+                        :end-position="layers[connection.toLayer].nodes[connection.toNode].position"
+                        :color="connection.color" :thickness="0.012" arc-type="same-chain" :arc-height="0.1"
+                        :flow-speed="1.5" />
+                </template>
+            </template>
+        </TresObject3D>
     </TresObject3D>
 </template>
