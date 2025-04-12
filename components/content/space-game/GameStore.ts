@@ -178,31 +178,45 @@ gameStore.actions.update = () => {
     }
 }
 
-// Implement the game mode switching method
+// Completely reset all game state when switching modes
 gameStore.actions.switchGameMode = () => {
+    // Store current mode before switching
+    const previousMode = gameStore.gameMode;
+
     // Toggle between Battle and Explore modes
     gameStore.gameMode = gameStore.gameMode === GameMode.Battle
         ? GameMode.Explore
         : GameMode.Battle;
 
-    // Reset game state
-    const currentMode = gameStore.gameMode;
-    const currentSound = gameStore.sound;
-
-    // Reset score
+    // Reset score regardless of mode
     gameStore.points = 0;
 
-    // Reset time
+    // Reset time by updating startTime to current time
     gameStore.mutation.startTime = Date.now();
 
     // Clear existing entities
     gameStore.lasers = [];
     gameStore.explosions = [];
 
-    // Reset player position
+    // Reset player position to the start of the track (t=0)
     gameStore.mutation.t = 0;
 
-    console.log(`Switched to ${gameStore.gameMode} mode`);
+    // Immediately update position to match t=0
+    const startPos = track.parameters.path.getPointAt(0);
+    gameStore.mutation.position.copy(startPos.multiplyScalar(gameStore.mutation.scale));
+
+    // Regenerate game entities based on mode
+    if (gameStore.gameMode === GameMode.Battle) {
+        // Full set of rocks and enemies for Battle mode
+        gameStore.rocks = randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5);
+        gameStore.enemies = randomData(10, track, 20, 15, 1);
+    } else {
+        // Empty arrays for Explore mode
+        gameStore.rocks = [];
+        gameStore.enemies = [];
+    }
+
+    console.log(`Switched from ${previousMode} to ${gameStore.gameMode} mode, game fully reset`);
 }
 
 export type GameStore = typeof gameStore

@@ -1,14 +1,36 @@
 <script setup lang="ts">
-import { computed, inject, shallowRef } from 'vue'
+import { computed, inject, ref, watch, onUnmounted } from 'vue'
 import { GameMode, type GameStore } from './GameStore'
 
 const gameStore = inject('gameStore') as GameStore
 
-const t = Date.now()
+// Use ref instead of shallowRef for better reactivity
+const startTime = ref(Date.now())
+const seconds = ref('0')
+
+// Create a computed prop to track the mutation startTime
+const gameStartTime = computed(() => gameStore.mutation.startTime)
+
+// Watch for changes to game start time and reset our timer
+watch(gameStartTime, (newStartTime) => {
+    startTime.value = newStartTime
+    seconds.value = '0'
+})
+
+// Update the timer with respect to the current startTime
+const updateTimer = () => {
+    seconds.value = ((Date.now() - startTime.value) / 1000).toFixed(1)
+}
+
+// Set up interval to update the timer
+const timerInterval = setInterval(updateTimer, 100)
+
+// Clean up interval when component is unmounted
+onUnmounted(() => {
+    clearInterval(timerInterval)
+})
 
 const score = computed(() => (gameStore.points >= 1000 ? `${(gameStore.points / 1000).toFixed(1)}K` : gameStore.points))
-const seconds = shallowRef('0')
-setInterval(() => seconds.value = ((Date.now() - t) / 1000).toFixed(1), 100)
 
 // Add handler for game mode switching
 const switchGameMode = () => {
