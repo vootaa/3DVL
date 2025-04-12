@@ -54,13 +54,13 @@ if (gameStore) {
     <Suspense fallback="{null}">
         <TresGroup>
             {/* Pass gameStore to handlers */}
-            <PetersenGraphPortal v-if="portalActive && gameStore" :position="portalPosition" :rotation="portalRotation"
-                :active="portalActive" @portal-entered="() => handlePortalTransition(gameStore)" />
+            <!-- <PetersenGraphPortal v-if="portalActive && gameStore" :position="portalPosition" :rotation="portalRotation"
+                :active="portalActive" @portal-entered="() => handlePortalTransition(gameStore)" /> -->
             <Rings />
             <Enemies />
             <Planets />
-            <ChainWeb3D v-if="chainwebActive && gameStore" :position="chainwebPosition" :rotation="chainwebRotation"
-                :active="chainwebActive" @accelerate="() => handleAcceleration(gameStore)" />
+            <!-- <ChainWeb3D v-if="chainwebActive && gameStore" :position="chainwebPosition" :rotation="chainwebRotation"
+                :active="chainwebActive" @accelerate="() => handleAcceleration(gameStore)" /> -->
             <Rocks />
             <Rig>
                 <Ship />
