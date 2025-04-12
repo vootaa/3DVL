@@ -1,24 +1,14 @@
-<script setup lang="ts">
-import { computed, ref } from 'vue'
-import { Color, Vector3 } from 'three'
-import { useRenderLoop, useThree } from '@tresjs/core'
-import vertexShader from './shaders/concentric-rings.vert?raw'
-import fragmentShader from './shaders/concentric-rings.frag?raw'
+<script lang="ts">
+import { defineProps } from 'vue'
+import { Vector3 } from 'three'
 
-// Constants
+// Constants needed for prop defaults
 const DEFAULT_TUBE_WIDTH = 0.005
 const DEFAULT_ROTATION_SPEED = 0.2
 const DEFAULT_RADII = [0.15, 0.3, 0.48]
 const DEFAULT_COLORS = [0x3366ff, 0x44aaff, 0x66ccff]
-const DISTANCE_THRESHOLD_LOD_HIGH = 100
-const DISTANCE_THRESHOLD_LOD_MEDIUM = 50
-const SEGMENTS_LOD_HIGH = 48
-const SEGMENTS_LOD_MEDIUM = 64
-const SEGMENTS_LOD_LOW = 96
-const DISTANCE_THRESHOLD_VISIBILITY = 200
-const RADIAL_SEGMENTS = 8
 
-const props = defineProps({
+export default defineProps({
     position: {
         type: Object as () => Vector3,
         default: () => new Vector3(0, 0, 0)
@@ -44,6 +34,33 @@ const props = defineProps({
         default: () => [...DEFAULT_COLORS] // Use spread to avoid mutation
     }
 })
+</script>
+
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { Color } from 'three' // Vector3 is imported in the other script block
+import { useRenderLoop, useThree } from '@tresjs/core'
+import vertexShader from './shaders/concentric-rings.vert?raw'
+import fragmentShader from './shaders/concentric-rings.frag?raw'
+
+// Constants used within setup logic
+const DISTANCE_THRESHOLD_LOD_HIGH = 100
+const DISTANCE_THRESHOLD_LOD_MEDIUM = 50
+const SEGMENTS_LOD_HIGH = 48
+const SEGMENTS_LOD_MEDIUM = 64
+const SEGMENTS_LOD_LOW = 96
+const DISTANCE_THRESHOLD_VISIBILITY = 200
+const RADIAL_SEGMENTS = 8
+
+// Access props defined in the other script block
+const props = defineProps<{
+    position: Vector3
+    scale: number
+    radii: number[]
+    tubeWidth: number
+    rotationSpeed: number
+    colors: (string | number)[]
+}>()
 
 // Convert colors to Three.js colors
 const ringColors = computed(() => {
