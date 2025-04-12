@@ -2,8 +2,6 @@
 
 > 3D Vision Lab for ChainWeb, built with TresJS
 
-Live at [3DVL](https://3dvl.vootaa.com/)
-
 ## Setup
 
 Make sure to install the dependencies:
