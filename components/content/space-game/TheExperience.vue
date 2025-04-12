@@ -19,7 +19,7 @@ useLoop().onBeforeRender(gameStore.actions.update)
 
 <template>
   <TresAmbientLight :intensity="0.25" />
-  <Stars :count="3000" />
+  <Stars :count="1000" />
   <Track />
   <Particles />
   <Suspense fallback="{null}">
