@@ -62,7 +62,7 @@ This specification outlines the implementation of a ChainWeb blockchain visualiz
 - The acceleration effect should affect the camera FOV and movement speed
 - Effects should be triggered by proximity or collision detection
 
-## Multilayer Structure
+## ChainWeb3D Multilayer Structure
 
 The ChainWeb3D visualization consists of multiple layers with the following characteristics:
 
