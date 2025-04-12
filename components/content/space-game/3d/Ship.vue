@@ -2,7 +2,7 @@
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { inject, shallowRef } from 'vue'
 import { useLoader, useLoop } from '@tresjs/core'
-import type { GameStore } from '../GameStore'
+import type { GameStore } from '../Game.vue'
 import { BoxGeometry, Color, Group, MeshBasicMaterial, PointLight, Vector3 } from 'three';
 
 const geometry = new BoxGeometry(1, 1, 40)

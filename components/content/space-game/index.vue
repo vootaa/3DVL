@@ -6,6 +6,7 @@ import Game from './Game.vue'
 import { gameStore } from './GameStore'
 import Hud from './Hud.vue'
 
+
 provide('gameStore', gameStore)
 const camera = shallowRef()
 onMounted(() => { gameStore.actions.init(camera.value) })
@@ -14,7 +15,7 @@ onMounted(() => { gameStore.actions.init(camera.value) })
 <template>
   <div class="full-screen" @pointermove="gameStore.actions.updateMouse" @pointerdown="gameStore.actions.shoot">
     <TresCanvas clear-color="#010104" :linear="true" :flat="true" :antialias="false" :tone-mapping="NoToneMapping"
-      :output-ecoding="SRGBColorSpace">
+      :output-encoding="SRGBColorSpace">
       <TresPerspectiveCamera ref="camera" :position="[0, 0, 2000]" :near="0.01" :far="20000"
         :fov="gameStore.mutation.fov" />
       <TresFog color="#121225" :near="150" :far="600" />
