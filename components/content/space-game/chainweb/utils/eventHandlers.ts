@@ -1,7 +1,7 @@
-import { gameStore } from '../../GameStore'
+import type { GameStore } from '../../GameStore'
 import * as audio from '../../audio'
 
-export const handlePortalTransition = () => {
+export const handlePortalTransition = (gameStore: GameStore) => {
     if (!gameStore) return
     // Visual transition effect
     gameStore.actions.playAudio(audio.warp, 0.7)
@@ -15,7 +15,7 @@ export const handlePortalTransition = () => {
     }, 1500)
 }
 
-export const handleAcceleration = () => {
+export const handleAcceleration = (gameStore: GameStore) => {
     if (!gameStore) return
     // Similar to warp effect in GameStore.ts
     gameStore.actions.playAudio(audio.warp)

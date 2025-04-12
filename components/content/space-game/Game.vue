@@ -13,7 +13,8 @@ import Explosions from './3d/Explosions.vue'
 import Rig from './3d/Rig.vue'
 import Ship from './3d/Ship.vue'
 import SpaceGameEffects from './3d/SpaceGameEffects.vue'
-import { gameStore } from './GameStore'
+
+import type { GameStore } from './GameStore'
 
 // Import Chainweb components directly
 import PetersenGraphPortal from './chainweb/PetersenGraphPortal.vue'
@@ -24,6 +25,9 @@ import { useTrackPlacement } from './chainweb/utils/useTrackPlacement'
 // Import the extracted event handlers
 import { handlePortalTransition, handleAcceleration } from './chainweb/utils/eventHandlers'
 
+// Inject gameStore
+const gameStore = inject('gameStore') as GameStore
+
 // Define target 't' parameters for portal and chainweb
 const portalT = ref(0.05) // Example: Place portal early
 const chainWebT = ref(0.65) // Example: Place ChainWeb3D after rings area
@@ -33,7 +37,13 @@ const { position: portalPosition, rotation: portalRotation, active: portalActive
 const { position: chainwebPosition, rotation: chainwebRotation, active: chainwebActive } = useTrackPlacement(chainWebT)
 
 // Main game loop update
-useLoop().onBeforeRender(gameStore.actions.update)
+// Ensure gameStore is available before using it in the loop
+if (gameStore) {
+    useLoop().onBeforeRender(gameStore.actions.update)
+} else {
+    console.error('GameStore not injected in Game.vue')
+}
+
 </script>
 
 <template>
@@ -43,13 +53,14 @@ useLoop().onBeforeRender(gameStore.actions.update)
     <Particles />
     <Suspense fallback="{null}">
         <TresGroup>
-            <PetersenGraphPortal v-if="portalActive" :position="portalPosition" :rotation="portalRotation"
-                :active="portalActive" @portal-entered="handlePortalTransition" />
+            {/* Pass gameStore to handlers */}
+            <PetersenGraphPortal v-if="portalActive && gameStore" :position="portalPosition" :rotation="portalRotation"
+                :active="portalActive" @portal-entered="() => handlePortalTransition(gameStore)" />
             <Rings />
             <Enemies />
             <Planets />
-            <ChainWeb3D v-if="chainwebActive" :position="chainwebPosition" :rotation="chainwebRotation"
-                :active="chainwebActive" @accelerate="handleAcceleration" />
+            <ChainWeb3D v-if="chainwebActive && gameStore" :position="chainwebPosition" :rotation="chainwebRotation"
+                :active="chainwebActive" @accelerate="() => handleAcceleration(gameStore)" />
             <Rocks />
             <Rig>
                 <Ship />
