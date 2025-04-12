@@ -14,7 +14,6 @@ import Rig from './3d/Rig.vue'
 import Ship from './3d/Ship.vue'
 import SpaceGameEffects from './3d/SpaceGameEffects.vue'
 import { gameStore } from './GameStore'
-import * as audio from './audio' // Import audio functions
 
 // Import Chainweb components directly
 import PetersenGraphPortal from './chainweb/PetersenGraphPortal.vue'
@@ -22,6 +21,8 @@ import ChainWeb3D from './chainweb/ChainWeb3D.vue'
 
 // Import the new composable for placement logic
 import { useTrackPlacement } from './chainweb/utils/useTrackPlacement'
+// Import the extracted event handlers
+import { handlePortalTransition, handleAcceleration } from './chainweb/utils/eventHandlers'
 
 // Define target 't' parameters for portal and chainweb
 const portalT = ref(0.05) // Example: Place portal early
@@ -30,44 +31,6 @@ const chainWebT = ref(0.65) // Example: Place ChainWeb3D after rings area
 // Use the composable to get reactive position, rotation, and active state
 const { position: portalPosition, rotation: portalRotation, active: portalActive } = useTrackPlacement(portalT)
 const { position: chainwebPosition, rotation: chainwebRotation, active: chainwebActive } = useTrackPlacement(chainWebT)
-
-// --- Event Handlers ---
-const handlePortalTransition = () => {
-    if (!gameStore) return
-    // Visual transition effect
-    gameStore.actions.playAudio(audio.warp, 0.7)
-
-    const originalFov = gameStore.mutation.fov
-    gameStore.mutation.fov = originalFov * 1.2
-
-    // Return to normal after transition
-    setTimeout(() => {
-        if (gameStore) gameStore.mutation.fov = originalFov
-    }, 1500)
-}
-
-const handleAcceleration = () => {
-    if (!gameStore) return
-    // Similar to warp effect in GameStore.ts
-    gameStore.actions.playAudio(audio.warp)
-
-    // Store original values
-    const originalFov = gameStore.mutation.fov
-    const originalLooptime = gameStore.mutation.looptime
-
-    // Increase speed by reducing looptime and increasing FOV
-    gameStore.mutation.looptime = originalLooptime * 0.8
-    gameStore.mutation.fov = originalFov * 1.3
-
-    // Return to normal after 2 seconds
-    setTimeout(() => {
-        if (gameStore) {
-            gameStore.mutation.looptime = originalLooptime
-            gameStore.mutation.fov = originalFov
-        }
-    }, 2000)
-}
-// --- End Event Handlers ---
 
 // Main game loop update
 useLoop().onBeforeRender(gameStore.actions.update)
