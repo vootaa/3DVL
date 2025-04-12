@@ -74,19 +74,40 @@ The ChainWeb3D visualization consists of multiple layers with the following char
    - **Connection Types**:
      - PetersenGraphPortal: Electric arcs connect nodes within the same plane
      - ChainWeb3D: Electric arcs connect nodes between adjacent layers
+     - Same-chain connections: Nodes of the same chain ID connect between consecutive layers
 
    - **Arc Quantity**:
      - PetersenGraphPortal: 30 arcs (single directional connections, A→B only)
      - ChainWeb3D: 60 arcs between layers (bi-directional connections, both A→B and B→A)
+     - Same-chain connections: 20 additional connections (one per chain) between consecutive layers
 
    - **Connection Logic**:
      - Implemented in TypeScript to determine which nodes connect
      - Inter-layer connections follow a specific pattern to represent blockchain cross-chain connections
+     - Same-chain connections follow chain ID to create a visual representation of parallel chains
 
 3. **Layer Stack**:
    - Layers are positioned sequentially along the z-axis
-   - Each subsequent layer is slightly smaller to create a tunnel perspective
+   - Each layer radius has slight variations to create tunnel perspective
    - Connections between layers create a 3D mesh structure
+   - Layer radius variations are controlled through dedicated mathematical functions for easy adjustment and debugging
+
+4. **Same-Chain Connection Visualization**:
+   - **Visual Differentiation**:
+     - Same-chain connections should be visually distinct from cross-chain connections
+     - Each of the 20 parallel chains should be individually recognizable
+
+   - **Suggested Rendering Approaches**:
+     - Use tube geometry with energy flow textures along the connection
+     - Implement color gradients aligned with plasma node colors but with increased luminosity
+     - Apply pulsing light effects that travel along the connection path
+     - Use distinct shader parameters to separate from cross-chain electric arcs
+
+   - **Visual Effect Integration**:
+     - Same-chain connections should complement the plasma effect without overwhelming it
+     - Use semi-transparent, smooth glowing tubes rather than jagged electric arcs
+     - Consider using animated particle effects flowing along connection paths
+     - Implement color schemes based on the three concentric ring groups, with different color families for each group while maintaining visual coherence
 
 ## Visual Parameters
 
