@@ -45,11 +45,12 @@ const switchGameMode = () => {
         {{ gameStore.sound ? 'turn off' : 'turn on' }}
     </div>
 
-    <!-- Game mode switch button in top right corner -->
+    <!-- Game mode switch button in top right corner with reset notice -->
     <div class="base UpperRight" @click="switchGameMode">
         game mode
         <br>
         {{ gameStore.gameMode === GameMode.Battle ? 'switch to explore' : 'switch to battle' }}
+        <div class="reset-note">switching will reset game</div>
     </div>
 
     <!-- Time and score information in bottom left -->
@@ -97,6 +98,15 @@ const switchGameMode = () => {
     pointer-events: all;
     cursor: pointer;
     text-align: right;
+
+    /* Style for reset notice */
+    .reset-note {
+        font-size: 0.5em;
+        margin-top: 5px;
+        color: rgba(205, 92, 92, 0.7);
+        /* lighter indianred */
+        font-style: italic;
+    }
 
     @media only screen and (max-width: 900px) {
         font-size: 1.5em;

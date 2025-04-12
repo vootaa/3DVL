@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { inject, shallowRef } from 'vue'
+import { inject, shallowRef, computed } from 'vue'
 import { useLoader, useLoop } from '@tresjs/core'
 import type { GameStore } from '../Game.vue'
+import { GameMode } from '../GameStore'
 import { BoxGeometry, Color, Group, MeshBasicMaterial, PointLight, Vector3 } from 'three';
 
 const geometry = new BoxGeometry(1, 1, 40)
@@ -24,6 +25,9 @@ const laserLight = shallowRef(new PointLight())
 const exhaust = shallowRef(new Group())
 const cross = shallowRef(new Group())
 const target = shallowRef(new Group())
+
+// Add computed property to check current game mode
+const isBattleMode = computed(() => gameStore.gameMode === GameMode.Battle)
 
 useLoop().onBeforeRender(() => {
   main.value.position.z = Math.sin(clock.getElapsedTime() * 40) * Math.PI * 0.2
@@ -47,10 +51,18 @@ useLoop().onBeforeRender(() => {
   ray.origin.copy(position)
   ray.direction.copy(direction.negate())
 
-  // ...
+  // Only show crosshair and target in Battle mode
   crossMaterial.color = mutation.hits ? lightgreen : hotpink
-  cross.value.visible = !mutation.hits
-  target.value.visible = !!mutation.hits
+
+  // Hide crosshair in Explore mode
+  if (cross.value) {
+    cross.value.visible = isBattleMode.value && !mutation.hits;
+  }
+
+  // In Battle mode, show target indicator when targeting
+  if (target.value) {
+    target.value.visible = isBattleMode.value && !!mutation.hits;
+  }
 })
 </script>
 
