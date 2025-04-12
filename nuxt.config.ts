@@ -12,13 +12,7 @@ export default defineNuxtConfig({
         { name: 'theme-color', content: '#82DBC5' },
         { name: 'keywords', content: 'threejs, vuejs, renderer, vue, three, 3D' },
       ],
-      link: [
-        {
-          rel: 'icon',
-          type: 'image/svg',
-          href: '/flask.svg',
-        },
-      ],
+      link: [],
     },
   },
 

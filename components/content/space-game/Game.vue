@@ -5,7 +5,6 @@ import { useLoop } from '@tresjs/core'
 import Planets from './3d/Planets.vue'
 import Stars from './3d/Stars.vue'
 import Particles from './3d/Particles.vue'
-import Effects from './3d/Effects.vue'
 import Rings from './3d/Rings.vue'
 import Enemies from './3d/Enemies.vue'
 import Rocks from './3d/Rocks.vue'
@@ -13,6 +12,7 @@ import Track from './3d/Track.vue'
 import Explosions from './3d/Explosions.vue'
 import Rig from './3d/Rig.vue'
 import Ship from './3d/Ship.vue'
+import SpaceGameEffects from './3d/SpaceGameEffects.vue'
 import { gameStore } from './GameStore'
 import * as audio from './audio' // Import audio functions
 
@@ -92,7 +92,7 @@ useLoop().onBeforeRender(gameStore.actions.update)
                 <Ship />
             </Rig>
             <Explosions />
-            <Effects />
+            <SpaceGameEffects />
         </TresGroup>
     </Suspense>
 </template>
