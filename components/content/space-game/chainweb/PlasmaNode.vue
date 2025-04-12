@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRenderLoop } from '@tresjs/core'
-import { Color, SphereGeometry, ShaderMaterial, DoubleSide } from 'three'
-import { ref, onMounted, shallowRef, type PropType } from 'vue'
+import { Color, ShaderMaterial, DoubleSide } from 'three'
+import { shallowRef, type PropType } from 'vue'
 import nodeVertexShader from './shaders/plasma-node.vert'
 import nodeFragmentShader from './shaders/plasma-node.frag'
 import type { ChainNode } from './utils/ChainwebTopology'

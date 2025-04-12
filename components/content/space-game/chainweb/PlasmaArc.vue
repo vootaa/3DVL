@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRenderLoop } from '@tresjs/core'
-import { Color, Vector3, CylinderGeometry, TubeGeometry, ShaderMaterial, DoubleSide, CatmullRomCurve3 } from 'three'
-import { ref, onMounted, shallowRef, computed, watch, type PropType } from 'vue'
+import { Color, Vector3, TubeGeometry, ShaderMaterial, DoubleSide, CatmullRomCurve3 } from 'three'
+import { shallowRef, computed, type PropType } from 'vue'
 import arcVertexShader from './shaders/plasma-arc.vert'
 import arcFragmentShader from './shaders/plasma-arc.frag'
 import type { Connection } from './utils/ChainwebTopology'

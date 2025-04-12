@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRenderLoop } from '@tresjs/core'
-import { DoubleSide, MeshBasicMaterial, RingGeometry } from 'three'
-import { ref, computed, shallowRef, type PropType } from 'vue'
+import { DoubleSide } from 'three'
+import { ref, shallowRef, type PropType } from 'vue'
 import type { RingConfiguration } from './utils/ChainwebTopology'
 
 const props = defineProps({
