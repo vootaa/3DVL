@@ -25,7 +25,7 @@ if (gameStore) {
 
 <template>
     <TresAmbientLight :intensity="0.25" />
-    <Stars :count="1000" />
+    <Stars />
     <Track />
     <Particles />
     <Suspense fallback="{null}">

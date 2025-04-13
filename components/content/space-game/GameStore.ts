@@ -220,10 +220,16 @@ gameStore.actions.switchGameMode = () => {
         // Full set of rocks and enemies for Battle mode
         gameStore.rocks = randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5);
         gameStore.enemies = randomData(10, track, 20, 15, 1);
+
+        // Reset particles to full density for Battle mode
+        gameStore.mutation.particles = randomData(1000, track, 100, 1, () => 0.5 + Math.random() * 0.8);
     } else {
         // Empty arrays for Explore mode
         gameStore.rocks = [];
         gameStore.enemies = [];
+
+        // Reduce particles to 10% for a cleaner Explore mode
+        gameStore.mutation.particles = randomData(100, track, 100, 1, () => 0.5 + Math.random() * 0.8);
     }
 
     console.log(`Switched from ${previousMode} to ${gameStore.gameMode} mode, game fully reset`);

@@ -5,7 +5,7 @@ interface Props {
   count: number
 }
 
-const props = withDefaults(defineProps<Props>(), { count: 2000 })
+const props = withDefaults(defineProps<Props>(), { count: 1000 })
 
 const positions = new Float32Array(props.count * 3)
 
@@ -28,11 +28,6 @@ geom.setAttribute('position', new BufferAttribute(positions, 3))
 <template>
   <TresPoints :args="[geom]">
     <TresBufferGeometry :position="[positions, 3]" />
-    <TresPointsMaterial
-      color="#DDEEFF"
-      :size="15"
-      :size-attenuation="true"
-      :fog="false"
-    />
+    <TresPointsMaterial color="#DDEEFF" :size="15" :size-attenuation="true" :fog="false" />
   </TresPoints>
 </template>
