@@ -3,7 +3,7 @@ import { ref, onMounted, computed, watch, inject } from 'vue'
 import { Color, Vector3, Vector2, Euler, InstancedMesh, Object3D, BufferGeometry, BufferAttribute } from 'three'
 import type { GameStore } from '../GameStore'
 import ConcentricRings from './ConcentricRings.vue'
-import { useRenderLoop, useThree } from '@tresjs/core'
+import { useRenderLoop, useTresContext } from '@tresjs/core'
 import { createLayer, generateIntraLayerConnections, generateInterLayerConnections, createRingConfigurations } from './utils/ChainwebTopology'
 
 // Constants
@@ -45,7 +45,7 @@ const props = defineProps({
 })
 
 const gameStore = inject('gameStore') as GameStore
-const { camera } = useThree()
+const { camera } = useTresContext()
 const insideInnerRing = ref(false)
 const emitOnce = ref(false)
 const layers = ref<any[]>([])

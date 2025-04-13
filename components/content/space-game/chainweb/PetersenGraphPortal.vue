@@ -3,7 +3,7 @@ import { ref, onMounted, computed, inject, watch } from 'vue'
 import { Vector3, Euler, Color, InstancedMesh, Object3D, BufferGeometry, BufferAttribute } from 'three'
 import type { GameStore } from '../GameStore'
 import ConcentricRings from './ConcentricRings.vue'
-import { useRenderLoop, useThree } from '@tresjs/core'
+import { useRenderLoop, useTresContext } from '@tresjs/core'
 import {
     createLayer,
     generateIntraLayerConnections,
@@ -43,7 +43,7 @@ const props = defineProps({
 })
 
 const gameStore = inject('gameStore') as GameStore
-const { camera } = useThree()
+const { camera } = useTresContext()
 const isPlayerInPortal = ref(false)
 const emitOnce = ref(false)
 

@@ -39,7 +39,7 @@ export default defineProps({
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { Color } from 'three' // Vector3 is imported in the other script block
-import { useRenderLoop, useThree } from '@tresjs/core'
+import { useRenderLoop, useTresContext } from '@tresjs/core'
 import vertexShader from './shaders/concentric-rings.vert?raw'
 import fragmentShader from './shaders/concentric-rings.frag?raw'
 
@@ -86,7 +86,7 @@ onLoop(({ elapsed }) => {
 })
 
 // Performance optimization: Adaptive tube segments based on distance
-const { camera } = useThree()
+const { camera } = useTresContext()
 const tubularSegments = computed(() => {
     if (!camera.value) return SEGMENTS_LOD_LOW
 

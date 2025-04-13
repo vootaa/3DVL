@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { Color, Vector3 } from 'three'
-import { useRenderLoop, useThree } from '@tresjs/core'
+import { useRenderLoop, useTresContext } from '@tresjs/core'
 import vertexShader from './shaders/plasma-node.vert?raw'
 import fragmentShader from './shaders/plasma-node.frag?raw'
 
@@ -70,7 +70,7 @@ onLoop(({ elapsed }) => {
 })
 
 // Performance optimization: Adaptive segments based on distance from camera
-const { camera } = useThree()
+const { camera } = useTresContext()
 const adaptiveSegments = computed(() => {
     if (!camera.value) return props.segments
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { Color, Vector3, CatmullRomCurve3 } from 'three'
-import { useRenderLoop, useThree } from '@tresjs/core'
+import { useRenderLoop, useTresContext } from '@tresjs/core'
 import vertexShader from './shaders/plasma-arc.vert?raw'
 import fragmentShader from './shaders/plasma-arc.frag?raw'
 
@@ -125,7 +125,7 @@ onLoop(({ elapsed }) => {
 })
 
 // Performance optimization: Adaptive tube segments based on distance
-const { camera } = useThree()
+const { camera } = useTresContext()
 const tubeSegments = computed(() => {
     if (!camera.value) return SEGMENTS_LOD_LOW_INTER // Default to max segments
 
