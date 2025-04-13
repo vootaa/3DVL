@@ -5,7 +5,7 @@ interface Props {
   count: number
 }
 
-const props = withDefaults(defineProps<Props>(), { count: 1000 })
+const props = withDefaults(defineProps<Props>(), { count: 500 })
 
 const positions = new Float32Array(props.count * 3)
 
