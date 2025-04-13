@@ -1,8 +1,8 @@
-import { GrannyKnot } from 'three-stdlib'
-import { reactive, shallowRef } from 'vue'
+import { reactive, shallowRef, onMounted } from 'vue'
 import * as audio from './audio'
 import type { ExplosionData } from './3d/Explosions.vue'
 import { Box3, Clock, Euler, Matrix4, Object3D, PerspectiveCamera, Ray, TubeGeometry, Vector2, Vector3 } from 'three'
+import { GrannyKnot } from 'three/examples/jsm/curves/CurveExtras.js'
 
 // Define game modes
 export enum GameMode {
@@ -53,16 +53,25 @@ export const gameStore = reactive({
     },
 
     actions: {
-        playAudio: (audio: HTMLAudioElement, volume = 1, loop = false) => { },
-        toggleSound: (sound: boolean) => { },
-        shoot: () => { },
-        test: (_data: { size: number; offset: Vector3; scale: number; hit: any; distance: number }) => { },
-        updateMouse: (mouse: { clientX: number; clientY: number }) => { },
-        init: (camera: PerspectiveCamera) => { },
-        update: () => { },
-        switchGameMode: () => { }, // Method to switch game mode
+        playAudio: (audio: HTMLAudioElement, volume?: number, loop?: boolean) => void 0,
+        toggleSound: (sound?: boolean) => void 0,
+        shoot: () => void 0,
+        test: (data: { size: number; offset: Vector3; scale: number; hit: any; distance: number }) => any,
+        updateMouse: (mouse: { clientX: number; clientY: number }) => void 0,
+        init: (camera: PerspectiveCamera) => void 0,
+        update: () => void 0,
+        switchGameMode: () => void 0,
+        getPointAt: (t: number) => any,
     },
 })
+
+gameStore.actions.getPointAt = (t: number) => {
+    t = Math.max(0, Math.min(1, t));
+    const position = track.parameters.path.getPointAt(t).clone();
+    position.multiplyScalar(gameStore.mutation.scale);
+
+    return position;
+};
 
 gameStore.actions.playAudio = (audio: HTMLAudioElement, volume = 1, loop = false) => {
     if (gameStore.sound) {
@@ -88,12 +97,7 @@ gameStore.actions.init = (camera: PerspectiveCamera) => {
     gameStore.mutation.clock.start()
     gameStore.camera = camera
     gameStore.camera.far = 10000
-    gameStore.mutation.clock.start()
     gameStore.actions.toggleSound(gameStore.sound)
-}
-
-gameStore.actions.updateMouse = (mouse) => {
-    gameStore.mutation.mouse.set(mouse.clientX - window.innerWidth / 2, mouse.clientY - window.innerHeight / 2)
 }
 
 gameStore.actions.shoot = () => {
