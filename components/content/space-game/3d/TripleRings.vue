@@ -9,6 +9,6 @@ const gameStore: GameStore = inject('gameStore') as GameStore
 <template>
     <TresGroup>
         <TripleRing v-for="{ position, rotation, scale }, i of gameStore.tripleRings" :key="i" :position="position"
-            :rotation="rotation" :scale="scale" />
+            :rotation="[rotation.x, rotation.y, rotation.z]" :scale="scale" />
     </TresGroup>
 </template>

@@ -3,11 +3,11 @@ import { Color, DoubleSide, MeshBasicMaterial, RingGeometry } from 'three';
 
 const props = defineProps({
     position: {
-        type: Array,
+        type: Array as unknown as () => [number, number, number],
         required: true
     },
     rotation: {
-        type: Object,
+        type: Array as unknown as () => [number, number, number],
         required: true
     },
     scale: {

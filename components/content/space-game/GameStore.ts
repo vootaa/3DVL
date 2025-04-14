@@ -22,6 +22,16 @@ export enum GameMode {
     Explore = 'Explore'
 }
 
+const TRACK_POSITIONS = {
+    START: 0,
+    TRIPLE_RINGS: 0.4,
+    WARP_BEGIN: 0.3,
+    WARP_END: 0.4,
+    WARP_RESET: 0.5,
+    RINGS: 0.6,
+    LOOP: 1.0
+};
+
 let guid = 0
 const spline = new WiderGrannyKnot()
 const track = new TubeGeometry(spline, 200, 0.25, 12, true)
@@ -140,13 +150,13 @@ gameStore.actions.update = () => {
 
     // test for wormhole/warp
     let warping = false
-    if (t > 0.3 && t < 0.4) {
+    if (t > TRACK_POSITIONS.WARP_BEGIN && t < TRACK_POSITIONS.WARP_END) {
         if (!warping) {
             warping = true
             gameStore.actions.playAudio(audio.warp)
         }
     }
-    else if (t > 0.5) warping = false
+    else if (t > TRACK_POSITIONS.WARP_RESET) warping = false
 
     // Only process hits and collisions in Battle mode
     if (gameMode === GameMode.Battle) {
@@ -258,11 +268,11 @@ function randomData(count: number, track: TubeGeometry, radius: number, size: nu
     })
 }
 
-function randomRings(count: number, track: TubeGeometry, startT: number = 0.7) {
+function randomRings(count: number, track: TubeGeometry, startT: number = TRACK_POSITIONS.RINGS) {
     const temp = []
     let t = startT
     for (let i = 0; i < count; i++) {
-        t += 0.003
+        t += 0.001
         const pos = track.parameters.path.getPointAt(t)
         pos.multiplyScalar(15)
         const segments = track.tangents.length
@@ -272,16 +282,16 @@ function randomRings(count: number, track: TubeGeometry, startT: number = 0.7) {
         const matrix = new Matrix4().lookAt(pos, lookAt, track.binormals[pick])
         const rotation = new Euler().setFromRotationMatrix(matrix)
 
-        temp.push({ position: pos.toArray(), rotation, scale: 30 + i * 5 * Math.sin(i * 0.1) * Math.PI / 2 })
+        temp.push({ position: pos.toArray(), rotation, scale: 25 + i * 4 * Math.sin(i * 0.1) * Math.PI / 2 })
     }
     return temp
 }
 
-function randomTripleRings(count: number, track: TubeGeometry, startT: number = 0.4) {
+function randomTripleRings(count: number, track: TubeGeometry, startT: number = TRACK_POSITIONS.TRIPLE_RINGS) {
     const temp = []
     let t = startT
     for (let i = 0; i < count; i++) {
-        t += 0.006
+        t += 0.008
         const pos = track.parameters.path.getPointAt(t)
         pos.multiplyScalar(15)
         const segments = track.tangents.length
