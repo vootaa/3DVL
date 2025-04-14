@@ -12,8 +12,8 @@ import Track from './3d/Track.vue'
 import Explosions from './3d/Explosions.vue'
 import Rig from './3d/Rig.vue'
 import Ship from './3d/Ship.vue'
+import SpaceStation from './3d/SpaceStation.vue'
 import SpaceGameEffects from './3d/SpaceGameEffects.vue'
-
 
 import { gameStore } from './GameStore'
 
@@ -37,6 +37,7 @@ if (gameStore) {
             <Enemies />
             <Planets />
             <Rocks />
+            <SpaceStation />
             <Rig>
                 <Ship />
             </Rig>
