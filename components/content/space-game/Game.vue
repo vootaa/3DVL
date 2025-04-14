@@ -5,6 +5,7 @@ import Planets from './3d/Planets.vue'
 import Stars from './3d/Stars.vue'
 import Particles from './3d/Particles.vue'
 import Rings from './3d/Rings.vue'
+import TripleRings from './3d/TripleRings.vue'
 import Enemies from './3d/Enemies.vue'
 import Rocks from './3d/Rocks.vue'
 import Track from './3d/Track.vue'
@@ -12,6 +13,7 @@ import Explosions from './3d/Explosions.vue'
 import Rig from './3d/Rig.vue'
 import Ship from './3d/Ship.vue'
 import SpaceGameEffects from './3d/SpaceGameEffects.vue'
+
 
 import { gameStore } from './GameStore'
 
@@ -25,11 +27,12 @@ if (gameStore) {
 
 <template>
     <TresAmbientLight :intensity="0.25" />
-    <Stars :count="500" />
+    <Stars :count="300" />
     <Track />
     <Particles />
     <Suspense fallback="{null}">
         <TresGroup>
+            <TripleRings />
             <Rings />
             <Enemies />
             <Planets />

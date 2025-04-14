@@ -22,7 +22,8 @@ export const gameStore = reactive({
     explosions: [] as ExplosionData[],
     rocks: randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5),
     enemies: randomData(10, track, 20, 15, 1),
-    rings: randomRings(30, track),
+    rings: randomRings(30, track, 0.45),
+    tripleRings: randomTripleRings(8, track, 0.3),
     camera: new PerspectiveCamera(),
     sound: false,
     gameMode: GameMode.Battle, // Default to Battle mode
@@ -61,17 +62,8 @@ export const gameStore = reactive({
         init: (camera: PerspectiveCamera) => void 0,
         update: () => void 0,
         switchGameMode: () => void 0,
-        getPointAt: (t: number) => any,
     },
 })
-
-gameStore.actions.getPointAt = (t: number) => {
-    t = Math.max(0, Math.min(1, t));
-    const position = track.parameters.path.getPointAt(t).clone();
-    position.multiplyScalar(gameStore.mutation.scale);
-
-    return position;
-};
 
 gameStore.actions.playAudio = (audio: HTMLAudioElement, volume = 1, loop = false) => {
     if (gameStore.sound) {
@@ -254,9 +246,9 @@ function randomData(count: number, track: TubeGeometry, radius: number, size: nu
     })
 }
 
-function randomRings(count: number, track: TubeGeometry) {
+function randomRings(count: number, track: TubeGeometry, startT: number = 0.45) {
     const temp = []
-    let t = 0.4
+    let t = startT
     for (let i = 0; i < count; i++) {
         t += 0.003
         const pos = track.parameters.path.getPointAt(t)
@@ -267,6 +259,25 @@ function randomRings(count: number, track: TubeGeometry) {
         const lookAt = track.parameters.path.getPointAt((t + 1 / track.parameters.path.getLength()) % 1).multiplyScalar(15)
         const matrix = new Matrix4().lookAt(pos, lookAt, track.binormals[pick])
         const rotation = new Euler().setFromVector3((new Vector3(0, 1, 0).applyMatrix4(matrix)))
+
+        temp.push({ position: pos.toArray(), rotation, scale: 30 + i * 5 * Math.sin(i * 0.1) * Math.PI / 2 })
+    }
+    return temp
+}
+
+function randomTripleRings(count: number, track: TubeGeometry, startT: number = 0.3) {
+    const temp = []
+    let t = startT
+    for (let i = 0; i < count; i++) {
+        t += 0.005
+        const pos = track.parameters.path.getPointAt(t)
+        pos.multiplyScalar(15)
+        const segments = track.tangents.length
+        const pickt = t * segments
+        const pick = Math.floor(pickt)
+        const lookAt = track.parameters.path.getPointAt((t + 1 / track.parameters.path.getLength()) % 1).multiplyScalar(15)
+        const matrix = new Matrix4().lookAt(pos, lookAt, track.binormals[pick])
+        const rotation = new Euler().setFromRotationMatrix(matrix)
 
         temp.push({ position: pos.toArray(), rotation, scale: 30 + i * 5 * Math.sin(i * 0.1) * Math.PI / 2 })
     }
