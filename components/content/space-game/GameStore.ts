@@ -22,8 +22,8 @@ export const gameStore = reactive({
     explosions: [] as ExplosionData[],
     rocks: randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5),
     enemies: randomData(10, track, 20, 15, 1),
-    rings: randomRings(30, track, 0.45),
-    tripleRings: randomTripleRings(8, track, 0.3),
+    rings: randomRings(30, track),
+    tripleRings: randomTripleRings(10, track),
     camera: new PerspectiveCamera(),
     sound: false,
     gameMode: GameMode.Battle, // Default to Battle mode
@@ -246,7 +246,7 @@ function randomData(count: number, track: TubeGeometry, radius: number, size: nu
     })
 }
 
-function randomRings(count: number, track: TubeGeometry, startT: number = 0.45) {
+function randomRings(count: number, track: TubeGeometry, startT: number = 0.35) {
     const temp = []
     let t = startT
     for (let i = 0; i < count; i++) {
@@ -265,11 +265,11 @@ function randomRings(count: number, track: TubeGeometry, startT: number = 0.45) 
     return temp
 }
 
-function randomTripleRings(count: number, track: TubeGeometry, startT: number = 0.3) {
+function randomTripleRings(count: number, track: TubeGeometry, startT: number = 0.5) {
     const temp = []
     let t = startT
     for (let i = 0; i < count; i++) {
-        t += 0.005
+        t += 0.01
         const pos = track.parameters.path.getPointAt(t)
         pos.multiplyScalar(15)
         const segments = track.tangents.length
@@ -279,7 +279,7 @@ function randomTripleRings(count: number, track: TubeGeometry, startT: number = 
         const matrix = new Matrix4().lookAt(pos, lookAt, track.binormals[pick])
         const rotation = new Euler().setFromRotationMatrix(matrix)
 
-        temp.push({ position: pos.toArray(), rotation, scale: 30 + i * 5 * Math.sin(i * 0.1) * Math.PI / 2 })
+        temp.push({ position: pos.toArray(), rotation, scale: 90 })
     }
     return temp
 }
