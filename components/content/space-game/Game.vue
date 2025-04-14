@@ -34,6 +34,7 @@ if (gameStore) {
         <TresGroup>
             <TripleRings />
             <Rings />
+            <PetersenGraph />
             <Enemies />
             <Planets />
             <Rocks />
