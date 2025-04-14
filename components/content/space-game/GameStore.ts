@@ -15,7 +15,6 @@ class WiderGrannyKnot extends GrannyKnot {
     }
 }
 
-
 // Define game modes
 export enum GameMode {
     Battle = 'Battle',
@@ -29,6 +28,7 @@ const TRACK_POSITIONS = {
     WARP_END: 0.4,
     WARP_RESET: 0.5,
     RINGS: 0.6,
+    SPACE_STATION: 0.8,
     LOOP: 1.0
 };
 
@@ -44,8 +44,9 @@ export const gameStore = reactive({
     explosions: [] as ExplosionData[],
     rocks: randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5),
     enemies: randomData(10, track, 20, 15, 1),
-    rings: randomRings(30, track),
-    tripleRings: randomTripleRings(10, track),
+    rings: generateRings(30, track),
+    tripleRings: generateTripleRings(10, track),
+    spaceStation: generateSpaceStationData(track),
     camera: new PerspectiveCamera(),
     sound: false,
     gameMode: GameMode.Battle, // Default to Battle mode
@@ -268,42 +269,99 @@ function randomData(count: number, track: TubeGeometry, radius: number, size: nu
     })
 }
 
-function randomRings(count: number, track: TubeGeometry, startT: number = TRACK_POSITIONS.RINGS) {
-    const temp = []
-    let t = startT
-    for (let i = 0; i < count; i++) {
-        t += 0.001
-        const pos = track.parameters.path.getPointAt(t)
-        pos.multiplyScalar(15)
-        const segments = track.tangents.length
-        const pickt = t * segments
-        const pick = Math.floor(pickt)
-        const lookAt = track.parameters.path.getPointAt((t + 1 / track.parameters.path.getLength()) % 1).multiplyScalar(15)
-        const matrix = new Matrix4().lookAt(pos, lookAt, track.binormals[pick])
-        const rotation = new Euler().setFromRotationMatrix(matrix)
+/**
+ * Calculate position and rotation at a specific point on the track
+ * @param track Track geometry
+ * @param t Track parameter t (0-1)
+ * @param offsetDistance Vertical offset distance (optional)
+ * @param rotationAdjustment Rotation adjustment function (optional)
+ * @returns Position and rotation information
+ */
+function calculateTrackPositionAndRotation(
+    track: TubeGeometry,
+    t: number,
+    offsetDistance: number = 0,
+    rotationAdjustment: ((matrix: Matrix4) => void) | null = null
+) {
+    const pos = track.parameters.path.getPointAt(t);
+    pos.multiplyScalar(15);
 
-        temp.push({ position: pos.toArray(), rotation, scale: 25 + i * 4 * Math.sin(i * 0.1) * Math.PI / 2 })
+    const segments = track.tangents.length;
+    const pickt = t * segments;
+    const pick = Math.floor(pickt);
+
+    const lookAt = track.parameters.path.getPointAt(
+        (t + 1 / track.parameters.path.getLength()) % 1
+    ).multiplyScalar(15);
+
+    // Create orientation matrix
+    const matrix = new Matrix4().lookAt(pos, lookAt, track.binormals[pick]);
+
+    // Apply custom rotation adjustment (if provided)
+    if (rotationAdjustment) {
+        rotationAdjustment(matrix);
     }
-    return temp
+
+    // Extract rotation
+    const rotation = new Euler().setFromRotationMatrix(matrix);
+
+    // Add offset if needed
+    if (offsetDistance !== 0) {
+        const offset = track.binormals[pick].clone().multiplyScalar(offsetDistance);
+        pos.add(offset);
+    }
+
+    return { position: pos, rotation };
 }
 
-function randomTripleRings(count: number, track: TubeGeometry, startT: number = TRACK_POSITIONS.TRIPLE_RINGS) {
-    const temp = []
-    let t = startT
-    for (let i = 0; i < count; i++) {
-        t += 0.008
-        const pos = track.parameters.path.getPointAt(t)
-        pos.multiplyScalar(15)
-        const segments = track.tangents.length
-        const pickt = t * segments
-        const pick = Math.floor(pickt)
-        const lookAt = track.parameters.path.getPointAt((t + 1 / track.parameters.path.getLength()) % 1).multiplyScalar(15)
-        const matrix = new Matrix4().lookAt(pos, lookAt, track.binormals[pick])
-        const rotation = new Euler().setFromRotationMatrix(matrix)
+function generateRings(count: number, track: TubeGeometry, startT: number = TRACK_POSITIONS.RINGS) {
+    const temp = [];
+    let t = startT;
 
-        temp.push({ position: pos.toArray(), rotation, scale: 90 })
+    for (let i = 0; i < count; i++) {
+        t += 0.002;
+        const { position, rotation } = calculateTrackPositionAndRotation(track, t);
+
+        temp.push({
+            position: position.toArray(),
+            rotation,
+            scale: 30 + i * 2 * Math.sin(i * 0.1) * Math.PI / 2
+        });
     }
-    return temp
+
+    return temp;
+}
+
+function generateTripleRings(count: number, track: TubeGeometry, startT: number = TRACK_POSITIONS.TRIPLE_RINGS) {
+    const temp = [];
+    let t = startT;
+
+    for (let i = 0; i < count; i++) {
+        t += 0.008;
+        const { position, rotation } = calculateTrackPositionAndRotation(track, t);
+
+        temp.push({
+            position: position.toArray(),
+            rotation,
+            scale: 100
+        });
+    }
+
+    return temp;
+}
+
+function generateSpaceStationData(track: TubeGeometry, startT: number = TRACK_POSITIONS.SPACE_STATION) {
+    const t = startT;
+
+    // Get position and rotation with offset
+    // Add fourth parameter to make the space station perpendicular to the track
+    const { position, rotation } = calculateTrackPositionAndRotation(track, t, 50);
+
+    return {
+        position: position.toArray(),
+        rotation: rotation,
+        scale: 10
+    };
 }
 
 const camera = shallowRef(new PerspectiveCamera())
