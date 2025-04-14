@@ -4,6 +4,18 @@ import type { ExplosionData } from './3d/Explosions.vue'
 import { Box3, Clock, Euler, Matrix4, Object3D, PerspectiveCamera, Ray, TubeGeometry, Vector2, Vector3 } from 'three'
 import { GrannyKnot } from 'three/examples/jsm/curves/CurveExtras.js'
 
+class WiderGrannyKnot extends GrannyKnot {
+    override getPoint(t: number) {
+        const original = super.getPoint(t);
+        return new Vector3(
+            original.x * 1.6,
+            original.y * 1.3,
+            original.z * 1.15
+        );
+    }
+}
+
+
 // Define game modes
 export enum GameMode {
     Battle = 'Battle',
@@ -11,8 +23,8 @@ export enum GameMode {
 }
 
 let guid = 0
-const spline = new GrannyKnot()
-const track = new TubeGeometry(spline, 250, 0.2, 10, true)
+const spline = new WiderGrannyKnot()
+const track = new TubeGeometry(spline, 200, 0.25, 12, true)
 
 export const gameStore = reactive({
     spline,
@@ -246,7 +258,7 @@ function randomData(count: number, track: TubeGeometry, radius: number, size: nu
     })
 }
 
-function randomRings(count: number, track: TubeGeometry, startT: number = 0.35) {
+function randomRings(count: number, track: TubeGeometry, startT: number = 0.7) {
     const temp = []
     let t = startT
     for (let i = 0; i < count; i++) {
@@ -258,18 +270,18 @@ function randomRings(count: number, track: TubeGeometry, startT: number = 0.35) 
         const pick = Math.floor(pickt)
         const lookAt = track.parameters.path.getPointAt((t + 1 / track.parameters.path.getLength()) % 1).multiplyScalar(15)
         const matrix = new Matrix4().lookAt(pos, lookAt, track.binormals[pick])
-        const rotation = new Euler().setFromVector3((new Vector3(0, 1, 0).applyMatrix4(matrix)))
+        const rotation = new Euler().setFromRotationMatrix(matrix)
 
         temp.push({ position: pos.toArray(), rotation, scale: 30 + i * 5 * Math.sin(i * 0.1) * Math.PI / 2 })
     }
     return temp
 }
 
-function randomTripleRings(count: number, track: TubeGeometry, startT: number = 0.5) {
+function randomTripleRings(count: number, track: TubeGeometry, startT: number = 0.4) {
     const temp = []
     let t = startT
     for (let i = 0; i < count; i++) {
-        t += 0.01
+        t += 0.006
         const pos = track.parameters.path.getPointAt(t)
         pos.multiplyScalar(15)
         const segments = track.tangents.length
