@@ -35,64 +35,56 @@ const score = computed(() => (gameStore.points >= 1000 ? `${(gameStore.points / 
 
 <template>
     <!-- Time and score information in bottom left -->
-    <div class="base LowerLeft">
-        <div class="info-line">Time: {{ seconds }} s</div>
-        <div class="info-line">Score: {{ gameStore.gameMode === GameMode.Battle ? score : 0 }}</div>
+    <div class="score-display">
+        <div class="control-label">STATS</div>
+        <div class="control-value">
+            <div class="info-line">Time: {{ seconds }}s</div>
+            <div class="info-line">Score: {{ gameStore.gameMode === GameMode.Battle ? score : 0 }}</div>
+        </div>
     </div>
-
-    <div class="base Global" />
 </template>
 
 <style lang="css" scoped>
 @import url('https://fonts.googleapis.com/css2?family=Teko:wght@500&display=swap');
 
-.base {
+.score-display {
     position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
+    padding: 10px 15px;
+    color: indianred;
     font-family: 'Teko', sans-serif;
     font-weight: 500;
     font-variant-numeric: slashed-zero tabular-nums;
     text-transform: uppercase;
-    line-height: 1em;
-    pointer-events: none;
-    color: indianred;
+    transform: skew(5deg, -5deg);
+    min-width: 160px;
 }
 
-.LowerLeft {
-    bottom: 40px;
-    left: 50px;
-    transform: skew(5deg, 5deg);
-    font-size: 2em;
+.control-label {
+    font-size: 0.9em;
+    opacity: 0.8;
+}
 
-    /* Consistent style for info lines */
-    .info-line {
-        margin: 0;
-        line-height: 1.2em;
-        text-align: left;
+.control-value {
+    font-size: 1.8em;
+    line-height: 1.1em;
+    margin-top: 2px;
+}
+
+.info-line {
+    margin: 0;
+}
+
+@media only screen and (max-width: 900px) {
+    .score-display {
+        padding: 8px 12px;
     }
 
-    @media only screen and (max-width: 900px) {
+    .control-value {
         font-size: 1.5em;
     }
-}
-
-.Global {
-    box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    user-select: none;
-    overflow: hidden;
-}
-
-body {
-    position: fixed;
-    overflow: hidden;
-    overscroll-behavior-y: none;
 }
 </style>

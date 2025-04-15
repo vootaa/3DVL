@@ -5,9 +5,8 @@ import { onMounted, provide, shallowRef } from 'vue'
 import Game from './Game.vue'
 import { gameStore } from './GameStore'
 import Hud from './Hud.vue'
-import GameMode from './controls/GameMode.vue'
 import SoundControl from './controls/SoundControl.vue'
-import SpeedControl from './controls/SpeedControl.vue'
+import ControlPanel from './controls/ControlPanel.vue'
 
 provide('gameStore', gameStore)
 const camera = shallowRef()
@@ -24,15 +23,18 @@ onMounted(() => { gameStore.actions.init(camera.value) })
       <Game />
     </TresCanvas>
     <Hud />
-    <GameMode />
     <SoundControl />
-    <SpeedControl />
+    <ControlPanel />
   </div>
 </template>
 
 <style scoped>
 .full-screen {
-  width: 100vw;
-  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 </style>

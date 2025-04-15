@@ -128,7 +128,7 @@ void main() {
     uv *= 1.3;
     
     // Rotate the entire graph slowly
-    uv = rotate2D(iTime * 0.2) * uv;
+    uv = rotate2D(iTime * 0.25) * uv;
     
     // Initialize color components
     vec3 linesColor = vec3(0.0);
