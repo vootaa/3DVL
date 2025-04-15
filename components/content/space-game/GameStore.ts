@@ -65,6 +65,7 @@ export const gameStore = reactive({
     spline,
     points: 0,
     health: 100,
+    loopCount: 0,
     lasers: [] as number[],
     explosions: [] as ExplosionData[],
     rocks: randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5),
@@ -79,6 +80,7 @@ export const gameStore = reactive({
     speedMode: SpeedMode.Fast, // Default to Fast mode
     mutation: {
         t: 0,
+        lastT: 0,
         position: new Vector3(),
         startTime: Date.now(),
 
@@ -182,6 +184,12 @@ gameStore.actions.update = () => {
 
     const time = Date.now()
     const t = (mutation.t = ((time - mutation.startTime) % mutation.looptime) / mutation.looptime)
+
+    if (mutation.lastT > 0.9 && t < 0.1) {
+        gameStore.loopCount++
+    }
+    mutation.lastT = t
+
     mutation.position = track.parameters.path.getPointAt(t)
 
     const speedFactor = SPEED_SETTINGS[speedMode].factor
@@ -274,8 +282,9 @@ gameStore.actions.switchGameMode = () => {
         ? GameMode.Explore
         : GameMode.Battle;
 
-    // Reset score regardless of mode
+    // Reset score,loopCount regardless of mode
     gameStore.points = 0;
+    gameStore.loopCount = 0
 
     // Reset time by updating startTime to current time
     gameStore.mutation.startTime = Date.now();

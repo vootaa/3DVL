@@ -38,6 +38,7 @@ const score = computed(() => (gameStore.points >= 1000 ? `${(gameStore.points / 
     <div class="score-display">
         <div class="control-label">STATS DATA</div>
         <div class="control-value">
+            <div class="info-line">Loops: {{ gameStore.loopCount }}</div>
             <div class="info-line">Time: {{ seconds }}s</div>
             <div class="info-line">Score: {{ gameStore.gameMode === GameMode.Battle ? score : 0 }}</div>
         </div>
