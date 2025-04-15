@@ -103,14 +103,6 @@ export const gameStore = reactive({
 
         cancelExplosionTO: setTimeout(() => { }, 1),
         cancelLaserTO: setTimeout(() => { }, 1),
-
-        speedTransition: {
-            active: false,
-            startTime: 0,
-            startLoop: 40 * 1000,
-            targetLoop: 40 * 1000,
-            duration: 1000
-        },
     },
 
     actions: {
@@ -254,22 +246,6 @@ gameStore.actions.update = () => {
         mutation.hits = 0
     }
 
-    if (mutation.speedTransition.active) {
-        const elapsed = Date.now() - mutation.speedTransition.startTime;
-        const progress = Math.min(elapsed / mutation.speedTransition.duration, 1.0);
-
-        const eased = progress < 0.5
-            ? 2 * progress * progress
-            : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-
-        mutation.looptime = mutation.speedTransition.startLoop +
-            eased * (mutation.speedTransition.targetLoop - mutation.speedTransition.startLoop);
-
-        if (progress >= 1.0) {
-            mutation.speedTransition.active = false;
-        }
-    }
-
 }
 
 // Completely reset all game state when switching modes
@@ -321,7 +297,8 @@ gameStore.actions.switchGameMode = () => {
 }
 
 gameStore.actions.switchSpeedMode = () => {
-    const currentLooptime = gameStore.mutation.looptime;
+    const currentT = gameStore.mutation.t;
+    const now = Date.now();
 
     if (gameStore.speedMode === SpeedMode.Fast) {
         gameStore.speedMode = SpeedMode.Slow;
@@ -332,13 +309,8 @@ gameStore.actions.switchSpeedMode = () => {
     }
 
     const targetLooptime = SPEED_SETTINGS[gameStore.speedMode].looptime;
-    gameStore.mutation.speedTransition = {
-        active: true,
-        startTime: Date.now(),
-        startLoop: currentLooptime,
-        targetLoop: targetLooptime,
-        duration: 1000
-    };
+    gameStore.mutation.startTime = now - (currentT * targetLooptime);
+    gameStore.mutation.looptime = targetLooptime;
 
     // Debug information
     console.log(`Speed changed to ${gameStore.speedMode} (${SPEED_SETTINGS[gameStore.speedMode].label})`);
