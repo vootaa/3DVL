@@ -23,7 +23,7 @@ export enum GameMode {
 
 const TRACK_POSITIONS = {
     START: 0,
-    PETERSEN_GRAPH: [0.1, 0.18, 0.25, 0.32],
+    PETERSEN_GRAPH: [0.1, 0.25, 0.55, 0.7],
     TRIPLE_RINGS: 0.4,
     WARP_BEGIN: 0.3,
     WARP_END: 0.4,
@@ -361,7 +361,7 @@ function generatePetersenGraph(track: TubeGeometry) {
         temp.push({
             position: position.toArray(),
             rotation,
-            scale: 50
+            scale: 30
         });
     }
 
