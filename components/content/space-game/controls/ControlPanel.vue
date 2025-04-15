@@ -65,11 +65,16 @@ const speedBars = computed(() => {
     font-weight: 500;
     text-transform: uppercase;
     text-align: right;
-    transform: skew(-5deg, -5deg);
+    transform: skew(-3deg, -3deg);
     pointer-events: all;
     cursor: pointer;
-    min-width: 160px;
+    width: 160px;
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     transition: background 0.2s;
+    box-sizing: border-box;
 }
 
 .control-item:hover {
@@ -77,7 +82,7 @@ const speedBars = computed(() => {
 }
 
 .control-label {
-    font-size: 0.9em;
+    font-size: 1.0em;
     opacity: 0.8;
 }
 
@@ -88,7 +93,7 @@ const speedBars = computed(() => {
 }
 
 .control-hint {
-    font-size: 0.7em;
+    font-size: 0.85em;
     opacity: 0.6;
     font-style: italic;
 }

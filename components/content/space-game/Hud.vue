@@ -36,7 +36,7 @@ const score = computed(() => (gameStore.points >= 1000 ? `${(gameStore.points / 
 <template>
     <!-- Time and score information in bottom left -->
     <div class="score-display">
-        <div class="control-label">STATS</div>
+        <div class="control-label">STATS DATA</div>
         <div class="control-value">
             <div class="info-line">Time: {{ seconds }}s</div>
             <div class="info-line">Score: {{ gameStore.gameMode === GameMode.Battle ? score : 0 }}</div>
@@ -59,12 +59,17 @@ const score = computed(() => (gameStore.points >= 1000 ? `${(gameStore.points / 
     font-weight: 500;
     font-variant-numeric: slashed-zero tabular-nums;
     text-transform: uppercase;
-    transform: skew(5deg, -5deg);
-    min-width: 160px;
+    transform: skew(3deg, -3deg);
+    width: 160px;
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 .control-label {
-    font-size: 0.9em;
+    font-size: 1.0em;
     opacity: 0.8;
 }
 
