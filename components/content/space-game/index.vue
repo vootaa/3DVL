@@ -5,7 +5,9 @@ import { onMounted, provide, shallowRef } from 'vue'
 import Game from './Game.vue'
 import { gameStore } from './GameStore'
 import Hud from './Hud.vue'
-
+import GameMode from './controls/GameMode.vue'
+import SoundControl from './controls/SoundControl.vue'
+import SpeedControl from './controls/SpeedControl.vue'
 
 provide('gameStore', gameStore)
 const camera = shallowRef()
@@ -22,6 +24,9 @@ onMounted(() => { gameStore.actions.init(camera.value) })
       <Game />
     </TresCanvas>
     <Hud />
+    <GameMode />
+    <SoundControl />
+    <SpeedControl />
   </div>
 </template>
 

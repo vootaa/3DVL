@@ -26,15 +26,9 @@ const props = defineProps({
     }
 });
 
-const resolution = computed(() => {
-    const size = 50 * props.planeSize;
-    return new Vector2(size, size);
-});
-
 
 const uniforms = shallowRef({
     iTime: { value: 0.0 },
-    iResolution: { value: resolution },
 });
 
 const meshRef = ref();
@@ -57,7 +51,7 @@ onBeforeRender(({ elapsed, camera }) => {
     }
 
     if (isVisible.value) {
-        uniforms.value.iTime.value = elapsed * 0.1;
+        uniforms.value.iTime.value = elapsed * 0.5;
     }
 });
 
@@ -134,7 +128,7 @@ void main() {
     uv *= 1.3;
     
     // Rotate the entire graph slowly
-    uv = rotate2D(iTime * 0.1) * uv;
+    uv = rotate2D(iTime * 0.2) * uv;
     
     // Initialize color components
     vec3 linesColor = vec3(0.0);

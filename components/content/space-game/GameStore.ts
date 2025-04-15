@@ -21,6 +21,12 @@ export enum GameMode {
     Explore = 'Explore'
 }
 
+export enum SpeedMode {
+    Slow = 'Slow',
+    Normal = 'Normal',
+    Fast = 'Fast'
+}
+
 const TRACK_POSITIONS = {
     START: 0,
     PETERSEN_GRAPH: [0.1, 0.25, 0.55, 0.7],
@@ -31,6 +37,24 @@ const TRACK_POSITIONS = {
     RINGS: 0.6,
     SPACE_STATION: 0.8,
     LOOP: 1.0
+};
+
+export const SPEED_SETTINGS = {
+    [SpeedMode.Slow]: {
+        looptime: 80 * 1000,
+        label: 'SLOW',
+        factor: 0.5
+    },
+    [SpeedMode.Normal]: {
+        looptime: 60 * 1000,
+        label: 'NORMAL',
+        factor: 1.0
+    },
+    [SpeedMode.Fast]: {
+        looptime: 40 * 1000,
+        label: 'FAST',
+        factor: 1.5
+    }
 };
 
 let guid = 0
@@ -52,6 +76,7 @@ export const gameStore = reactive({
     camera: new PerspectiveCamera(),
     sound: false,
     gameMode: GameMode.Battle, // Default to Battle mode
+    speedMode: SpeedMode.Fast, // Default to Fast mode
     mutation: {
         t: 0,
         position: new Vector3(),
@@ -63,7 +88,7 @@ export const gameStore = reactive({
         hits: 0,
 
         particles: randomData(500, track, 100, 1, () => 0.5 + Math.random() * 0.8),
-        looptime: 40 * 1000,
+        looptime: 40 * 1000, // default to fast mode
         binormal: new Vector3(),
         normal: new Vector3(),
         clock: new Clock(false),
@@ -75,7 +100,15 @@ export const gameStore = reactive({
         box: new Box3(),
 
         cancelExplosionTO: setTimeout(() => { }, 1),
-        cancelLaserTO: setTimeout(() => { }, 1)
+        cancelLaserTO: setTimeout(() => { }, 1),
+
+        speedTransition: {
+            active: false,
+            startTime: 0,
+            startLoop: 40 * 1000,
+            targetLoop: 40 * 1000,
+            duration: 1000
+        },
     },
 
     actions: {
@@ -87,6 +120,7 @@ export const gameStore = reactive({
         init: (camera: PerspectiveCamera) => void 0,
         update: () => void 0,
         switchGameMode: () => void 0,
+        switchSpeedMode: () => void 0,
     },
 })
 
@@ -144,12 +178,16 @@ gameStore.actions.updateMouse = ({ clientX, clientY }) => {
 }
 
 gameStore.actions.update = () => {
-    const { rocks, enemies, mutation, gameMode } = gameStore
+    const { rocks, enemies, mutation, gameMode, speedMode } = gameStore
 
     const time = Date.now()
     const t = (mutation.t = ((time - mutation.startTime) % mutation.looptime) / mutation.looptime)
     mutation.position = track.parameters.path.getPointAt(t)
+
+    const speedFactor = SPEED_SETTINGS[speedMode].factor
     mutation.position.multiplyScalar(mutation.scale)
+    gameStore.camera.fov = 70 + (speedFactor - 1.0) * 10
+    gameStore.camera.updateProjectionMatrix()
 
     // test for wormhole/warp
     let warping = false
@@ -207,6 +245,23 @@ gameStore.actions.update = () => {
         // In Explore mode, set hits to 0 to avoid targeting UI
         mutation.hits = 0
     }
+
+    if (mutation.speedTransition.active) {
+        const elapsed = Date.now() - mutation.speedTransition.startTime;
+        const progress = Math.min(elapsed / mutation.speedTransition.duration, 1.0);
+
+        const eased = progress < 0.5
+            ? 2 * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+        mutation.looptime = mutation.speedTransition.startLoop +
+            eased * (mutation.speedTransition.targetLoop - mutation.speedTransition.startLoop);
+
+        if (progress >= 1.0) {
+            mutation.speedTransition.active = false;
+        }
+    }
+
 }
 
 // Completely reset all game state when switching modes
@@ -254,6 +309,30 @@ gameStore.actions.switchGameMode = () => {
     }
 
     console.log(`Switched from ${previousMode} to ${gameStore.gameMode} mode, game fully reset`);
+}
+
+gameStore.actions.switchSpeedMode = () => {
+    const currentLooptime = gameStore.mutation.looptime;
+
+    if (gameStore.speedMode === SpeedMode.Fast) {
+        gameStore.speedMode = SpeedMode.Slow;
+    } else if (gameStore.speedMode === SpeedMode.Slow) {
+        gameStore.speedMode = SpeedMode.Normal;
+    } else {
+        gameStore.speedMode = SpeedMode.Fast;
+    }
+
+    const targetLooptime = SPEED_SETTINGS[gameStore.speedMode].looptime;
+    gameStore.mutation.speedTransition = {
+        active: true,
+        startTime: Date.now(),
+        startLoop: currentLooptime,
+        targetLoop: targetLooptime,
+        duration: 1000
+    };
+
+    // Debug information
+    console.log(`Speed changed to ${gameStore.speedMode} (${SPEED_SETTINGS[gameStore.speedMode].label})`);
 }
 
 export type GameStore = typeof gameStore

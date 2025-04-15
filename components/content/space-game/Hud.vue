@@ -31,28 +31,9 @@ onUnmounted(() => {
 })
 
 const score = computed(() => (gameStore.points >= 1000 ? `${(gameStore.points / 1000).toFixed(1)}K` : gameStore.points))
-
-// Add handler for game mode switching
-const switchGameMode = () => {
-    gameStore.actions.switchGameMode()
-}
 </script>
 
 <template>
-    <div class="base UpperLeft" @click="gameStore.actions.toggleSound(!gameStore.sound)">
-        sound
-        <br>
-        {{ gameStore.sound ? 'turn off' : 'turn on' }}
-    </div>
-
-    <!-- Game mode switch button in top right corner with reset notice -->
-    <div class="base UpperRight" @click="switchGameMode">
-        game mode
-        <br>
-        {{ gameStore.gameMode === GameMode.Battle ? 'switch to explore' : 'switch to battle' }}
-        <div class="reset-note">switching will reset game</div>
-    </div>
-
     <!-- Time and score information in bottom left -->
     <div class="base LowerLeft">
         <div class="info-line">Time: {{ seconds }} s</div>
@@ -74,43 +55,6 @@ const switchGameMode = () => {
     line-height: 1em;
     pointer-events: none;
     color: indianred;
-}
-
-.UpperLeft {
-    top: 40px;
-    left: 50px;
-    font-size: 2em;
-    transform: skew(5deg, 5deg);
-    pointer-events: all;
-    cursor: pointer;
-
-    @media only screen and (max-width: 900px) {
-        font-size: 1.5em;
-    }
-}
-
-/* Top right button style, matching the sound button */
-.UpperRight {
-    top: 40px;
-    right: 50px;
-    font-size: 2em;
-    transform: skew(-5deg, -5deg);
-    pointer-events: all;
-    cursor: pointer;
-    text-align: right;
-
-    /* Style for reset notice */
-    .reset-note {
-        font-size: 0.5em;
-        margin-top: 5px;
-        color: rgba(205, 92, 92, 0.7);
-        /* lighter indianred */
-        font-style: italic;
-    }
-
-    @media only screen and (max-width: 900px) {
-        font-size: 1.5em;
-    }
 }
 
 .LowerLeft {
