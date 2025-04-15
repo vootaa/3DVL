@@ -9,6 +9,6 @@ const gameStore: GameStore = inject('gameStore') as GameStore
 <template>
     <TresGroup>
         <PetersenPlasmaGraph v-for="({ position, rotation, scale }, i) of gameStore.PetersenPlasmaGraph" :key="i"
-            :position="position" :rotation="[rotation.x, rotation.y, rotation.z]" :scale="scale" :plane-size="2" />
+            :position="position" :rotation="[rotation.x, rotation.y, rotation.z]" :scale="scale" />
     </TresGroup>
 </template>

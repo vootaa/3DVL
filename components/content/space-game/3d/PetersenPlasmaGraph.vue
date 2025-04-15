@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue'
-import { DoubleSide, Vector2, AdditiveBlending } from 'three'
+import { DoubleSide, Vector2, AdditiveBlending, Vector3 } from 'three'
 
 const props = defineProps({
     position: {
@@ -17,35 +17,48 @@ const props = defineProps({
     },
     planeSize: {
         type: Number,
-        default: 1
+        default: 20
+    },
+
+    visibilityThreshold: {
+        type: Number,
+        default: 1000
     }
 });
 
-// Create a Vector2 object for resolution
-const resolution = new Vector2(800, 800);
+const resolution = computed(() => {
+    const size = 50 * props.planeSize;
+    return new Vector2(size, size);
+});
+
 
 const uniforms = shallowRef({
     iTime: { value: 0.0 },
     iResolution: { value: resolution },
 });
 
+const meshRef = ref();
+const isVisible = ref(true);
+
 const { onBeforeRender } = useLoop()
-onBeforeRender(({ elapsed }) => {
-    if (uniforms.value) {
+
+onBeforeRender(({ elapsed, camera }) => {
+    if (!meshRef.value || !uniforms.value) return;
+
+    const meshPosition = new Vector3().setFromMatrixPosition(meshRef.value.matrixWorld);
+    const cameraPosition = new Vector3().setFromMatrixPosition(camera.matrixWorld);
+    const distance = meshPosition.distanceTo(cameraPosition);
+
+    const wasVisible = isVisible.value;
+    isVisible.value = distance < props.visibilityThreshold;
+
+    if (wasVisible !== isVisible.value && meshRef.value.material) {
+        meshRef.value.material.visible = isVisible.value;
+    }
+
+    if (isVisible.value) {
         uniforms.value.iTime.value = elapsed * 0.1;
     }
-});
-
-onMounted(() => {
-    const updateResolution = () => {
-        if (uniforms.value) {
-            uniforms.value.iResolution.value.set(window.innerWidth, window.innerHeight);
-        }
-    };
-    window.addEventListener('resize', updateResolution);
-    updateResolution();
-
-    return () => window.removeEventListener('resize', updateResolution);
 });
 
 // Complete fragment shader, including necessary uniform declarations
@@ -168,7 +181,7 @@ void main() {
     uv *= 1.3;
     
     // Rotate the entire graph for dynamic effect
-    uv = rotate2D(iTime * 0.2) * uv;
+    uv = rotate2D(iTime * 0.5) * uv;
     
     // Initialize color
     vec3 finalColor = vec3(0.0);
@@ -180,7 +193,7 @@ void main() {
         vec2 p2 = getNodePosition(CONNECTIONS[i].y);
         
         // Very thin lines
-        float thickness = 0.0015;
+        float thickness = 0.001;
         
         // Draw thin line
         float conn = drawThinLine(uv, p1, p2, thickness);
@@ -237,7 +250,7 @@ const blending = {
 
 <template>
     <TresGroup :position="position" :rotation="rotation" :scale="[scale, scale, scale]">
-        <TresMesh>
+        <TresMesh ref="meshRef">
             <TresPlaneGeometry :args="[planeSize, planeSize, 1, 1]" />
             <TresShaderMaterial v-bind="blending" :uniforms="uniforms" :fragment-shader="fragmentShader"
                 :vertex-shader="vertexShader" :transparent="true" :side="DoubleSide" />

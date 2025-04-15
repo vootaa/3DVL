@@ -23,7 +23,7 @@ export enum GameMode {
 
 const TRACK_POSITIONS = {
     START: 0,
-    PETERSEN_GRAPH: 0.2,
+    PETERSEN_GRAPH: [0.1, 0.18, 0.25, 0.32],
     TRIPLE_RINGS: 0.4,
     WARP_BEGIN: 0.3,
     WARP_END: 0.4,
@@ -47,7 +47,7 @@ export const gameStore = reactive({
     enemies: randomData(10, track, 20, 15, 1),
     rings: generateRings(30, track),
     tripleRings: generateTripleRings(10, track),
-    PetersenPlasmaGraph: generatePetersenGraph(3, track),
+    PetersenPlasmaGraph: generatePetersenGraph(track),
     spaceStation: generateSpaceStationData(track),
     camera: new PerspectiveCamera(),
     sound: false,
@@ -62,7 +62,7 @@ export const gameStore = reactive({
         fov: 70,
         hits: 0,
 
-        particles: randomData(1500, track, 100, 1, () => 0.5 + Math.random() * 0.8),
+        particles: randomData(500, track, 100, 1, () => 0.5 + Math.random() * 0.8),
         looptime: 40 * 1000,
         binormal: new Vector3(),
         normal: new Vector3(),
@@ -352,18 +352,16 @@ function generateTripleRings(count: number, track: TubeGeometry, startT: number 
     return temp;
 }
 
-function generatePetersenGraph(count: number, track: TubeGeometry, startT: number = TRACK_POSITIONS.PETERSEN_GRAPH) {
+function generatePetersenGraph(track: TubeGeometry) {
     const temp = [];
-    let t = startT;
 
-    for (let i = 0; i < count; i++) {
-        t += 0.01;
+    for (const t of TRACK_POSITIONS.PETERSEN_GRAPH) {
         const { position, rotation } = calculateTrackPositionAndRotation(track, t);
 
         temp.push({
             position: position.toArray(),
             rotation,
-            scale: 300 + i * Math.sin(i * 0.2) * 5
+            scale: 50
         });
     }
 
