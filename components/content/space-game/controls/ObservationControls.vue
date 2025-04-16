@@ -112,13 +112,14 @@ onUnmounted(() => {
 <style>
 .observation-controls {
     position: absolute;
-    bottom: 20px;
-    left: 20px;
+    top: 250px;
+    right: 20px;
     z-index: 100;
 }
 
 .poi-buttons {
     display: flex;
+    flex-direction: column;
     gap: 10px;
 }
 
@@ -130,6 +131,8 @@ onUnmounted(() => {
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
+    min-width: 180px;
+    text-align: left;
 }
 
 .poi-button:hover:not([disabled]) {
@@ -150,6 +153,7 @@ onUnmounted(() => {
     padding: 15px;
     border-radius: 8px;
     color: white;
+    min-width: 180px;
 }
 
 .orbit-info {
@@ -165,6 +169,7 @@ onUnmounted(() => {
     border-radius: 4px;
     color: white;
     cursor: pointer;
+    margin-left: 10px;
 }
 
 .orbit-instructions {
