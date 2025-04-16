@@ -72,7 +72,7 @@ export const gameStore = reactive({
     enemies: randomData(10, track, 20, 15, 1),
     rings: generateRings(30, track),
     tripleRings: generateTripleRings(10, track),
-    PetersenPlasmaGraph: generatePetersenGraph(track),
+    PetersenGraphGroup: generatePetersenGraph(track),
     spaceStation: generateSpaceStationData(track),
     camera: new PerspectiveCamera(),
     sound: false,

@@ -6,6 +6,7 @@ import Stars from './3d/Stars.vue'
 import Particles from './3d/Particles.vue'
 import Rings from './3d/Rings.vue'
 import TripleRings from './3d/TripleRings.vue'
+import PetersenGraphGroup from './3d/PetersenGraphGroup.vue'
 import Enemies from './3d/Enemies.vue'
 import Rocks from './3d/Rocks.vue'
 import Track from './3d/Track.vue'
@@ -34,7 +35,7 @@ if (gameStore) {
         <TresGroup>
             <TripleRings />
             <Rings />
-            <PetersenGraph />
+            <PetersenGraphGroup />
             <Enemies />
             <Planets />
             <Rocks />
