@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { inject, shallowRef, computed } from 'vue'
 import { useLoader, useLoop } from '@tresjs/core'
-import type { GameStore } from '../Game.vue'
+import type { GameStore } from '../GameStore'
 import { GameMode } from '../GameStore'
 import { BoxGeometry, Color, Group, MeshBasicMaterial, PointLight, Vector3 } from 'three';
 
@@ -14,7 +14,7 @@ const crossMaterial = new MeshBasicMaterial({ color: hotpink, fog: false })
 const position = new Vector3()
 const direction = new Vector3()
 
-const { nodes } = await useLoader(GLTFLoader, '/models/space-game/ship.gltf')
+const { nodes } = await useLoader(GLTFLoader as any, '/models/space-game/ship.gltf') as any
 const gameStore = inject('gameStore') as GameStore
 const mutation = gameStore.mutation
 const { clock, mouse, ray } = mutation

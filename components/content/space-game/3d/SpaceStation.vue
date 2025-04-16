@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { shallowRef } from 'vue'
 import { useLoader, useLoop } from '@tresjs/core'
 import { MeshStandardMaterial, Color, Group, PointLight } from 'three'
@@ -20,7 +20,7 @@ const props = defineProps({
 });
 
 // Load the space station model with nodes and materials
-const { scene } = await useLoader(GLTFLoader, '/models/space-game/InternationalSpaceStation.glb')
+const { scene } = await useLoader(GLTFLoader as any, '/models/space-game/InternationalSpaceStation.glb') as any
 
 // Create refs for the station group
 const stationLight = shallowRef(new PointLight())
@@ -32,7 +32,7 @@ const stationMaterial = new MeshStandardMaterial({
     roughness: 0.3,
 })
 
-scene.traverse((object) => {
+scene.traverse((object: { isMesh: any; name: string; material: MeshStandardMaterial; }) => {
     if (object.isMesh && object.name === 'InternationalSpaceStation_mesh') {
         object.material = stationMaterial
     }

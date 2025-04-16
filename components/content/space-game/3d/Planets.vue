@@ -2,8 +2,8 @@
 import { useLoader } from '@tresjs/core'
 import { TextureLoader, type Texture } from 'three';
 
-const earth = await useLoader(TextureLoader, '/textures/space-game/earth.jpg') as Texture
-const moon = await useLoader(TextureLoader, '/textures/space-game/moon.png') as Texture
+const earth = await useLoader(TextureLoader as any, '/textures/space-game/earth.jpg') as Texture
+const moon = await useLoader(TextureLoader as any, '/textures/space-game/moon.png') as Texture
 </script>
 
 <template>

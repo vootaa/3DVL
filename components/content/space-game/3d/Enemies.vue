@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useLoader, useLoop } from '@tresjs/core'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { inject, shallowRef } from 'vue'
 import type { GameStore } from '../GameStore'
 import { Box3, Vector3, MeshBasicMaterial, Color, MeshPhongMaterial, Group } from 'three';
@@ -13,7 +13,7 @@ box.setFromCenterAndSize(new Vector3(0, 0, 1), new Vector3(3, 3, 3))
 const glowMaterial = new MeshBasicMaterial({ color: new Color('lightblue') })
 const bodyMaterial = new MeshPhongMaterial({ color: new Color('black') })
 
-const { nodes, materials } = await useLoader(GLTFLoader, '/models/space-game/spacedrone.gltf') as any
+const { nodes, materials } = await useLoader(GLTFLoader as any, '/models/space-game/spacedrone.gltf') as any
 const ref = shallowRef([new Group()])
 
 useLoop().onBeforeRender(() => {

@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { inject, shallowRef } from 'vue'
 import { useLoop, useLoader } from '@tresjs/core'
-import { GLTFLoader } from 'three-stdlib'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { Group } from 'three'
 import type { GameStore } from '../GameStore'
 
 const gameStore: GameStore = inject('gameStore') as GameStore
 const rocksGroupRef = shallowRef(new Group())
 
-const { nodes, materials } = await useLoader(GLTFLoader, '/models/space-game/rock.gltf')
+const { nodes, materials } = await useLoader(GLTFLoader as any, '/models/space-game/rock.gltf') as any
 const { clock } = gameStore.mutation
 
-useLoop().onBeforeRender(({ elapsed }) => {
+useLoop().onBeforeRender(() => {
     let i = 0
     for (const data of gameStore.rocks) {
         const rock = rocksGroupRef.value.children[i]

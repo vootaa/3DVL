@@ -151,18 +151,18 @@ export const gameStore = reactive({
     },
 
     actions: {
-        playAudio: (audio: HTMLAudioElement, volume?: number, loop?: boolean) => void 0,
-        toggleSound: (sound?: boolean) => void 0,
-        shoot: () => void 0,
-        test: (data: { size: number; offset: Vector3; scale: number; hit: any; distance: number }) => any,
-        updateMouse: (mouse: { clientX: number; clientY: number }) => void 0,
-        init: (camera: PerspectiveCamera) => void 0,
-        update: () => void 0,
-        switchGameMode: () => void 0,
-        switchSpeedMode: () => void 0,
-        toggleObservationMode: (pointOfInterestKey: keyof typeof POINTS_OF_INTEREST | null) => void 0,
-        updateOrbitPosition: (horizontalAngle: number, verticalAngle: number) => void 0,
-        resumeJourney: () => void 0,
+        playAudio: null as unknown as (audio: HTMLAudioElement, volume?: number, loop?: boolean) => void,
+        toggleSound: null as unknown as (sound?: boolean) => void,
+        shoot: null as unknown as () => void,
+        test: null as unknown as (data: { size: number; offset: Vector3; scale: number; hit: any; distance: number; }) => boolean,
+        updateMouse: null as unknown as (mouse: { clientX: number; clientY: number }) => void,
+        init: null as unknown as (camera: PerspectiveCamera) => void,
+        update: null as unknown as () => void,
+        switchGameMode: null as unknown as () => void,
+        switchSpeedMode: null as unknown as () => void,
+        toggleObservationMode: null as unknown as (pointOfInterestKey: keyof typeof POINTS_OF_INTEREST | null) => void,
+        updateOrbitPosition: null as unknown as (horizontalAngle: number) => void,
+        resumeJourney: null as unknown as () => void,
     },
 })
 
@@ -204,14 +204,19 @@ gameStore.actions.shoot = () => {
     // In Explore mode, shooting is disabled
 }
 
-gameStore.actions.test = (data) => {
+gameStore.actions.test = (data: { size: number; offset: Vector3; scale: number; hit: any; distance: number; }) => {
     gameStore.mutation.box.min.copy(data.offset)
     gameStore.mutation.box.max.copy(data.offset)
     gameStore.mutation.box.expandByScalar(data.size * data.scale)
     data.hit.set(10000, 10000, 10000)
     const result = gameStore.mutation.ray.intersectBox(gameStore.mutation.box, data.hit)
-    data.distance = gameStore.mutation.ray.origin.distanceTo(data.hit)
-    return result
+
+    if (result) {
+        data.distance = gameStore.mutation.ray.origin.distanceTo(data.hit)
+        return true
+    }
+
+    return false
 }
 
 gameStore.actions.updateMouse = ({ clientX, clientY }) => {
@@ -250,8 +255,8 @@ gameStore.actions.update = () => {
     // Only process hits and collisions in Battle mode
     if (gameMode === GameMode.Battle) {
         // test for hits
-        const rocksHit = rocks.filter(gameStore.actions.test)
-        const enemiesHit = enemies.filter(gameStore.actions.test)
+        const rocksHit = rocks.filter(data => gameStore.actions.test(data))
+        const enemiesHit = enemies.filter(data => gameStore.actions.test(data))
         const allHit = rocksHit.concat(enemiesHit)
         const previous = mutation.hits
         mutation.hits = allHit.length
