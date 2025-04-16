@@ -49,11 +49,11 @@ const TRACK_POSITIONS = {
 
 // Define points of interest for observation
 export const POINTS_OF_INTEREST = {
-    SPACE_STATION: {
-        name: 'Space Station',
-        trackPosition: TRACK_POSITIONS.SPACE_STATION,
-        orbitDistance: 70,
-        orbitSpeed: 0.001
+    PETERSEN_GRAPH: {
+        name: 'Petersen Graph',
+        trackPosition: TRACK_POSITIONS.PETERSEN_GRAPH[0],
+        orbitDistance: 50,
+        orbitSpeed: 0.002
     },
     CHAINWEB_3D: {
         name: 'Chainweb 3D',
@@ -61,12 +61,12 @@ export const POINTS_OF_INTEREST = {
         orbitDistance: 120,
         orbitSpeed: 0.0015
     },
-    PETERSEN_GRAPH: {
-        name: 'Petersen Graph',
-        trackPosition: TRACK_POSITIONS.PETERSEN_GRAPH[0],
-        orbitDistance: 50,
-        orbitSpeed: 0.002
-    }
+    SPACE_STATION: {
+        name: 'Space Station',
+        trackPosition: TRACK_POSITIONS.SPACE_STATION,
+        orbitDistance: 70,
+        orbitSpeed: 0.001
+    },
 };
 
 export const SPEED_SETTINGS = {

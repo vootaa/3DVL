@@ -84,11 +84,11 @@ onUnmounted(() => {
 <template>
     <div v-if="gameStore.gameMode === GameMode.Explore" class="observation-controls">
         <div v-if="gameStore.observationMode === ObservationMode.None">
-            <!-- Points of Interest Buttons -->
+            <div class="poi-header">Observe Points:</div>
             <div class="poi-buttons">
-                <button v-for="(poi, key) in POINTS_OF_INTEREST" :key="key" @click="observePointOfInterest(key)"
+                <button v-for="(poi, key, index) in POINTS_OF_INTEREST" :key="key" @click="observePointOfInterest(key)"
                     :disabled="!isNearPointOfInterest(key)" class="poi-button">
-                    Observe {{ poi.name }}
+                    <span class="poi-number">{{ index + 1 }}</span> {{ poi.name }}
                 </button>
             </div>
         </div>
@@ -117,32 +117,69 @@ onUnmounted(() => {
     z-index: 100;
 }
 
+.poi-header {
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border-radius: 4px 4px 0 0;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 .poi-buttons {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 5px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 0 0 4px 4px;
+}
+
+.poi-number {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    margin-right: 5px;
+    font-size: 0.8em;
+    font-weight: bold;
 }
 
 .poi-button {
     padding: 8px 12px;
-    background: rgba(0, 0, 0, 0.7);
+    background: transparent;
     color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: none;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
-    min-width: 180px;
+    min-width: 160px;
     text-align: left;
+    position: relative;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.poi-button:last-child {
+    border-bottom: none;
 }
 
 .poi-button:hover:not([disabled]) {
-    background: rgba(30, 30, 30, 0.9);
-    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 1);
 }
 
 .poi-button[disabled] {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+.observation-controls>div {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
 }
 
 .orbit-controls {
