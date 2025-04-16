@@ -122,6 +122,7 @@ export const gameStore = reactive({
     spaceStation: generateSpaceStationData(track),
     camera: new PerspectiveCamera(),
     sound: false,
+    showInfoText: true, // state to control text visibility
     gameMode: GameMode.Battle, // Default to Battle mode
     speedMode: SpeedMode.Fast, // Default to Fast mode
     timeManager,
@@ -169,6 +170,7 @@ export const gameStore = reactive({
     actions: {
         playAudio: null as unknown as (audio: HTMLAudioElement, volume?: number, loop?: boolean) => void,
         toggleSound: null as unknown as (sound?: boolean) => void,
+        toggleInfoText: null as unknown as (show?: boolean) => void,
         shoot: null as unknown as () => void,
         test: null as unknown as (data: { size: number; offset: Vector3; scale: number; hit: any; distance: number; }) => boolean,
         updateMouse: null as unknown as (mouse: { clientX: number; clientY: number }) => void,
@@ -652,4 +654,10 @@ gameStore.actions.update = () => {
         gameStore.camera.position.copy(mutation.position);
         gameStore.camera.lookAt(mutation.orbitCenter);
     }
+}
+
+// Add the toggle info text function
+gameStore.actions.toggleInfoText = (show?: boolean) => {
+    if (show !== false && show !== true) show = !gameStore.showInfoText
+    gameStore.showInfoText = show
 }

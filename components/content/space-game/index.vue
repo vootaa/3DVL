@@ -6,6 +6,7 @@ import Game from './Game.vue'
 import { gameStore } from './GameStore'
 import Hud from './Hud.vue'
 import SoundControl from './controls/SoundControl.vue'
+import InfoTextControl from './controls/InfoTextControl.vue'
 import ControlPanel from './controls/ControlPanel.vue'
 import ObservationControls from './controls/ObservationControls.vue';
 
@@ -25,6 +26,7 @@ onMounted(() => { gameStore.actions.init(camera.value) })
     </TresCanvas>
     <Hud />
     <SoundControl />
+    <InfoTextControl />
     <ControlPanel />
     <ObservationControls />
   </div>

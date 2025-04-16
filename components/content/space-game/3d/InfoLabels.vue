@@ -7,7 +7,7 @@ import TextPlane from './TextPlane.vue'
 const gameStore: GameStore = inject('gameStore') as GameStore
 
 const showLabels = computed(() => {
-    return gameStore.gameMode === GameMode.Explore
+    return gameStore.gameMode === GameMode.Explore && gameStore.showInfoText
 })
 </script>
 
