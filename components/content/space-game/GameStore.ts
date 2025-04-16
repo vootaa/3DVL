@@ -89,7 +89,7 @@ export const SPEED_SETTINGS = {
 
 let guid = 0
 const spline = new WiderGrannyKnot()
-const track = new TubeGeometry(spline, 200, 0.25, 12, true)
+const track = new TubeGeometry(spline, 200, 0.15, 10, true)
 
 export const gameStore = reactive({
     spline,
