@@ -48,18 +48,18 @@ const TRACK_POSITIONS = {
 };
 
 const INFO_LABELS = [
-    { t: 0.09, text: "Petersen Graph", color: "#1E90FF" },
-    { t: 0.24, text: "Graph Theory", color: "#FF69B4" },
-    { t: 0.54, text: "Network Structure", color: "#1E90FF" },
-    { t: 0.69, text: "Mathematical Model", color: "#FF69B4" },
-    { t: 0.38, text: "ChainWeb", color: "#FFD700" },
-    { t: 0.41, text: "Blockchain Technology", color: "#FFD700" },
-    { t: 0.43, text: "Kadena", color: "#FFD700" },
-    { t: 0.01, text: "VooTaa Space", color: "#32CD32" },
-    { t: 0.2, text: "Web3 Explorer", color: "#FF4500" },
-    { t: 0.5, text: "Blockchain Visuals", color: "#9370DB" },
-    { t: 0.78, text: "Space Station", color: "#20B2AA" },
-    { t: 0.81, text: "Knowledge Hub", color: "#20B2AA" }
+    { t: 0.095, text: "Petersen Graph", color: "#4286f4" },         // Softer blue to match the space environment
+    { t: 0.245, text: "Graph Theory", color: "#c67eff" },           // Softer purple that harmonizes with stars
+    { t: 0.545, text: "Network Structure", color: "#4286f4" },      // Matching blue
+    { t: 0.695, text: "Mathematical Model", color: "#c67eff" },     // Matching purple
+    { t: 0.395, text: "Chainweb", color: "#e6c86e" },               // Warmer, less saturated gold
+    { t: 0.45, text: "Blockchain", color: "#e6c86e" },              // Matching gold
+    { t: 0.49, text: "Kadena", color: "#e6c86e" },                  // Matching gold
+    { t: 0.59, text: "3D Visual", color: "#7CFC00" },               // Match track color in exploration mode
+    { t: 0.65, text: "Vootaa Lab", color: "#e38846" },              // Warmer orange to match track in battle mode
+    { t: 0.79, text: "Space Station", color: "#9f7bea" },           // Softer purple variant
+    { t: 0.91, text: "Welcome to", color: "#20B2AA" },              // Keep this teal to match observation mode track
+    { t: 0.92, text: "Explore Journey", color: "#20B2AA" }          // Matching teal
 ];
 
 // Define points of interest for observation
@@ -515,7 +515,7 @@ function generateInfoLabels(track: TubeGeometry) {
         const { position, rotation } = calculateTrackPositionAndRotation(
             track,
             t,
-            10,
+            0,
             (matrix) => {
                 matrix.multiply(new Matrix4().makeRotationY(Math.PI));
             }
@@ -528,7 +528,7 @@ function generateInfoLabels(track: TubeGeometry) {
                 y: rotation.y,
                 z: rotation.z
             },
-            scale: 5.0,
+            scale: 4.5,
             text: label.text,
             color: label.color
         });
