@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue'
-import { DoubleSide, Vector2, AdditiveBlending, Vector3 } from 'three'
+import { DoubleSide, AdditiveBlending } from 'three'
 
 const props = defineProps({
     position: {
