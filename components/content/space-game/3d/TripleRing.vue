@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { Color, DoubleSide, MeshBasicMaterial, RingGeometry, SphereGeometry } from 'three';
+import {
+    Color, DoubleSide, MeshBasicMaterial, RingGeometry, SphereGeometry, BufferGeometry,
+    LineBasicMaterial, Float32BufferAttribute, Vector3, Euler
+} from 'three';
 
 const props = defineProps({
     position: {
@@ -57,6 +60,29 @@ const props = defineProps({
     showNodes: {
         type: Boolean,
         default: true
+    },
+    showLayerConnections: {
+        type: Boolean,
+        default: false
+    },
+    nextLayerPosition: {
+        type: Array as unknown as () => [number, number, number],
+        default: () => [0, 0, 0]
+    },
+    nextLayerRotation: {
+        type: Array as unknown as () => [number, number, number],
+        default: () => [0, 0, 0]
+    },
+    nextLayerScale: {
+        type: Number,
+        default: 1
+    },
+    layerId: {
+        type: Number,
+        default: 0
+    }, connectionColor: {
+        type: String,
+        default: 'white'
     }
 });
 
@@ -132,6 +158,132 @@ const nodes = computed(() => {
 
     return result;
 });
+const getNodeWorldPositions = () => {
+    const worldPositions = [];
+
+    const rotation = new Vector3(props.rotation[0], props.rotation[1], props.rotation[2]);
+    const position = new Vector3(props.position[0], props.position[1], props.position[2]);
+    const scale = props.scale;
+
+    for (let i = 0; i < 20; i++) {
+        let angle = ANGLES[i];
+        let radius;
+
+        if (i < 5) {
+            radius = props.middleRadius;
+        } else if (i < 10) {
+            radius = props.innerRadius;
+        } else {
+            radius = props.outerRadius;
+        }
+
+        const localPos = new Vector3(
+            radius * Math.cos(angle) * scale,
+            radius * Math.sin(angle) * scale,
+            0
+        );
+
+        localPos.applyEuler(new Euler(rotation.x, rotation.y, rotation.z));
+
+        const worldPos = new Vector3(
+            localPos.x + position.x,
+            localPos.y + position.y,
+            localPos.z + position.z
+        );
+
+        worldPositions.push(worldPos);
+    }
+
+    return worldPositions;
+};
+
+const getNextLayerNodeWorldPositions = () => {
+    if (!props.showLayerConnections) return [];
+
+    const worldPositions = [];
+
+    const rotation = new Vector3(props.nextLayerRotation[0], props.nextLayerRotation[1], props.nextLayerRotation[2]);
+    const position = new Vector3(props.nextLayerPosition[0], props.nextLayerPosition[1], props.nextLayerPosition[2]);
+    const scale = props.nextLayerScale;
+
+    for (let i = 0; i < 20; i++) {
+        let angle = ANGLES[i];
+        let radius;
+
+        if (i < 5) {
+            radius = props.middleRadius;
+        } else if (i < 10) {
+            radius = props.innerRadius;
+        } else {
+            radius = props.outerRadius;
+        }
+
+        const localPos = new Vector3(
+            radius * Math.cos(angle) * scale,
+            radius * Math.sin(angle) * scale,
+            0
+        );
+
+        localPos.applyEuler(new Euler(rotation.x, rotation.y, rotation.z));
+
+        const worldPos = new Vector3(
+            localPos.x + position.x,
+            localPos.y + position.y,
+            localPos.z + position.z
+        );
+
+        worldPositions.push(worldPos);
+    }
+
+    return worldPositions;
+};
+
+const layerConnections = computed(() => {
+    if (!props.showLayerConnections) return [];
+
+    const connections = [];
+    const currentPositions = getNodeWorldPositions();
+    const nextPositions = getNextLayerNodeWorldPositions();
+
+    if (currentPositions.length === 0 || nextPositions.length === 0) return [];
+
+    for (let i = 0; i < 20; i++) {
+        const geometry = new BufferGeometry();
+
+        const vertices = new Float32Array([
+            currentPositions[i].x, currentPositions[i].y, currentPositions[i].z,
+            nextPositions[i].x, nextPositions[i].y, nextPositions[i].z
+        ]);
+
+        geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));
+
+        connections.push({
+            geometry,
+            material: new LineBasicMaterial({
+                color: getChainColor(i),
+                transparent: true,
+                opacity: 0.7
+            }),
+            chainId: i
+        });
+    }
+
+    return connections;
+});
+
+function getChainColor(chainId: number): Color {
+    if (chainId < 5) {
+        return new Color(props.middleColor).multiplyScalar(0.9);
+    } else if (chainId < 10) {
+        return new Color(props.innerColor).multiplyScalar(0.9);
+    } else {
+        return new Color(props.outerColor).multiplyScalar(0.9);
+    }
+}
+
+defineExpose({
+    getNodeWorldPositions
+});
 </script>
 
 <template>
@@ -143,4 +295,6 @@ const nodes = computed(() => {
         <TresMesh v-for="node in nodes" :key="node.chainId" :geometry="node.geometry" :material="node.material"
             :position="node.position" />
     </TresGroup>
+    <TresLine v-for="connection in layerConnections" :key="`connection-${connection.chainId}`"
+        :geometry="connection.geometry" :material="connection.material" />
 </template>
