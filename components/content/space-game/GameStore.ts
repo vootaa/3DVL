@@ -31,7 +31,7 @@ export enum SpeedMode {
 const TRACK_POSITIONS = {
     START: 0,
     PETERSEN_GRAPH: [0.1, 0.25, 0.55, 0.7],
-    TRIPLE_RINGS: 0.4,
+    Chainweb3D: 0.4,
     WARP_BEGIN: 0.3,
     WARP_END: 0.4,
     WARP_RESET: 0.5,
@@ -72,7 +72,7 @@ export const gameStore = reactive({
     rocks: randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5),
     enemies: randomData(10, track, 20, 15, 1),
     rings: generateRings(30, track),
-    tripleRings: generateTripleRings(10, track),
+    chainweb3D: generateChainweb3D(30, track),
     PetersenGraphGroup: generatePetersenGraph(track),
     spaceStation: generateSpaceStationData(track),
     camera: new PerspectiveCamera(),
@@ -399,12 +399,12 @@ function generateRings(count: number, track: TubeGeometry, startT: number = TRAC
     return temp;
 }
 
-function generateTripleRings(count: number, track: TubeGeometry, startT: number = TRACK_POSITIONS.TRIPLE_RINGS) {
+function generateChainweb3D(count: number, track: TubeGeometry, startT: number = TRACK_POSITIONS.Chainweb3D) {
     const temp = [];
     let t = startT;
 
     for (let i = 0; i < count; i++) {
-        t += 0.008;
+        t += 0.004;
         const { position, rotation } = calculateTrackPositionAndRotation(track, t);
 
         temp.push({
