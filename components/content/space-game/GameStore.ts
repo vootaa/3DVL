@@ -307,9 +307,9 @@ gameStore.actions.switchGameMode = () => {
     const previousMode = gameStore.gameMode;
 
     // Toggle between Battle and Explore modes
-    gameStore.gameMode = gameStore.gameMode === GameMode.Battle
-        ? GameMode.Explore
-        : GameMode.Battle;
+    gameStore.gameMode = gameStore.gameMode === GameMode.Battle ? GameMode.Explore : GameMode.Battle;
+
+    gameStore.chainweb3D = generateChainweb3D(30, track, TRACK_POSITIONS.Chainweb3D, gameStore.gameMode === GameMode.Battle);
 
     // Reset score,loopCount regardless of mode
     gameStore.points = 0;
@@ -450,12 +450,15 @@ function generateRings(count: number, track: TubeGeometry, startT: number = TRAC
     return temp;
 }
 
-function generateChainweb3D(count: number, track: TubeGeometry, startT: number = TRACK_POSITIONS.Chainweb3D) {
+function generateChainweb3D(count: number, track: TubeGeometry, startT: number = TRACK_POSITIONS.Chainweb3D, isBattleMode: boolean = true) {
     const temp = [];
     let t = startT;
 
-    for (let i = 0; i < count; i++) {
-        t += 0.004;
+    const actualCount = isBattleMode ? Math.floor(count / 3) : count;
+    const stepMultiplier = isBattleMode ? 3 : 1;
+
+    for (let i = 0; i < actualCount; i++) {
+        t += 0.004 * stepMultiplier;
         const { position, rotation } = calculateTrackPositionAndRotation(track, t);
 
         temp.push({
