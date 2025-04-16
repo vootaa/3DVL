@@ -65,6 +65,10 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
+    showCrossChainConnections: {
+        type: Boolean,
+        default: false
+    },
     nextLayerPosition: {
         type: Array as unknown as () => [number, number, number],
         default: () => [0, 0, 0]
@@ -80,7 +84,8 @@ const props = defineProps({
     layerId: {
         type: Number,
         default: 0
-    }, connectionColor: {
+    },
+    connectionColor: {
         type: String,
         default: 'white'
     }
