@@ -220,8 +220,10 @@ gameStore.actions.test = (data: { size: number; offset: Vector3; scale: number; 
 }
 
 gameStore.actions.updateMouse = ({ clientX, clientY }) => {
-    gameStore.mutation.mouse.x = clientX - window.innerWidth / 2
-    gameStore.mutation.mouse.y = clientY - window.innerHeight / 2
+    if (gameStore.observationMode === ObservationMode.None) {
+        gameStore.mutation.mouse.x = clientX - window.innerWidth / 2
+        gameStore.mutation.mouse.y = clientY - window.innerHeight / 2
+    }
 }
 
 gameStore.actions.update = () => {
@@ -236,9 +238,9 @@ gameStore.actions.update = () => {
     mutation.lastT = t
 
     mutation.position = track.parameters.path.getPointAt(t)
+    mutation.position.multiplyScalar(mutation.scale)
 
     const speedFactor = SPEED_SETTINGS[speedMode].factor
-    mutation.position.multiplyScalar(mutation.scale)
     gameStore.camera.fov = 70 + (speedFactor - 1.0) * 10
     gameStore.camera.updateProjectionMatrix()
 
@@ -598,8 +600,5 @@ gameStore.actions.update = () => {
         // Point camera at the center point
         gameStore.camera.position.copy(mutation.position);
         gameStore.camera.lookAt(mutation.orbitCenter);
-
-        // Don't advance the track position when in observation mode
-        mutation.t = (mutation.t + 0.0001) % 1; // Small increment to prevent timeline stalling completely
     }
 }

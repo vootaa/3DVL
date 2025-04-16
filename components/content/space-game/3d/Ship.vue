@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { inject, shallowRef, computed } from 'vue'
 import { useLoader, useLoop } from '@tresjs/core'
 import type { GameStore } from '../GameStore'
-import { GameMode } from '../GameStore'
+import { GameMode, ObservationMode } from '../GameStore'
 import { BoxGeometry, Color, Group, MeshBasicMaterial, PointLight, Vector3 } from 'three';
 
 const geometry = new BoxGeometry(1, 1, 40)
@@ -30,26 +30,48 @@ const target = shallowRef(new Group())
 const isBattleMode = computed(() => gameStore.gameMode === GameMode.Battle)
 
 useLoop().onBeforeRender(() => {
-  main.value.position.z = Math.sin(clock.getElapsedTime() * 40) * Math.PI * 0.2
-  main.value.rotation.z += (mouse.x / 500 - main.value.rotation.z) * 0.2
-  main.value.rotation.x += (-mouse.y / 1200 - main.value.rotation.x) * 0.2
-  main.value.rotation.y += (-mouse.x / 1200 - main.value.rotation.y) * 0.2
-  main.value.position.x += (mouse.x / 10 - main.value.position.x) * 0.2
-  main.value.position.y += (25 + -mouse.y / 10 - main.value.position.y) * 0.2
-  exhaust.value.scale.x = 1 + Math.sin(clock.getElapsedTime() * 200)
-  exhaust.value.scale.y = 1 + Math.sin(clock.getElapsedTime() * 200)
+  const time = clock.getElapsedTime();
+  main.value.position.z = Math.sin(time * 40) * Math.PI * 0.2
+
+  if (gameStore.observationMode === ObservationMode.None) {
+    main.value.rotation.z += (mouse.x / 500 - main.value.rotation.z) * 0.2
+    main.value.rotation.x += (-mouse.y / 1200 - main.value.rotation.x) * 0.2
+    main.value.rotation.y += (-mouse.x / 1200 - main.value.rotation.y) * 0.2
+
+    main.value.position.x += (mouse.x / 10 - main.value.position.x) * 0.2
+    main.value.position.y += (25 + -mouse.y / 10 - main.value.position.y) * 0.2
+
+    // Get ships orientation and save it to the stores ray
+    main.value.getWorldPosition(position)
+    main.value.getWorldDirection(direction)
+    ray.origin.copy(position)
+    ray.direction.copy(direction.negate())
+  } else {
+    const centerMouseX = 0;
+    const centerMouseY = 0;
+
+    main.value.rotation.z += (centerMouseX / 500 - main.value.rotation.z) * 0.05
+    main.value.rotation.x += (-centerMouseY / 1200 - main.value.rotation.x) * 0.05
+    main.value.rotation.y += (-centerMouseX / 1200 - main.value.rotation.y) * 0.05
+
+    main.value.position.x += (centerMouseX / 10 - main.value.position.x) * 0.05
+    main.value.position.y += (25 + -centerMouseY / 10 - main.value.position.y) * 0.05
+
+    const period = 3.0;
+    const amplitude = 0.3;
+    main.value.position.x += Math.sin(time / period) * amplitude;
+    main.value.position.y += Math.cos(time / period * 1.3) * amplitude;
+  }
+
+  exhaust.value.scale.x = 1 + Math.sin(time * 200)
+  exhaust.value.scale.y = 1 + Math.sin(time * 200)
+
   if (Array.isArray(laserGroup.value)) {
     for (const g of laserGroup.value) {
       g.position.z -= 20
     }
   }
   laserLight.value.intensity += ((gameStore.lasers.length && Date.now() - gameStore.lasers[gameStore.lasers.length - 1] < 100 ? 200000 : 0) - laserLight.value.intensity) * 0.3
-
-  // Get ships orientation and save it to the stores ray
-  main.value.getWorldPosition(position)
-  main.value.getWorldDirection(direction)
-  ray.origin.copy(position)
-  ray.direction.copy(direction.negate())
 
   // Only show crosshair and target in Battle mode
   crossMaterial.color = mutation.hits ? lightgreen : hotpink
