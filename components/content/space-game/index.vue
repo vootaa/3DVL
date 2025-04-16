@@ -7,6 +7,7 @@ import { gameStore } from './GameStore'
 import Hud from './Hud.vue'
 import SoundControl from './controls/SoundControl.vue'
 import ControlPanel from './controls/ControlPanel.vue'
+import ObservationControls from './controls/ObservationControls.vue';
 
 provide('gameStore', gameStore)
 const camera = shallowRef()
@@ -25,6 +26,7 @@ onMounted(() => { gameStore.actions.init(camera.value) })
     <Hud />
     <SoundControl />
     <ControlPanel />
+    <ObservationControls />
   </div>
 </template>
 

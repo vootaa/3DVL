@@ -28,6 +28,13 @@ export enum SpeedMode {
     Fast = 'Fast'
 }
 
+// Define observation modes
+export enum ObservationMode {
+    None = 'None',        // Normal movement
+    Fixed = 'Fixed',      // Fixed position observation
+    Orbiting = 'Orbiting' // Orbiting around a point of interest
+}
+
 const TRACK_POSITIONS = {
     START: 0,
     PETERSEN_GRAPH: [0.1, 0.25, 0.55, 0.7],
@@ -38,6 +45,28 @@ const TRACK_POSITIONS = {
     RINGS: 0.6,
     SPACE_STATION: 0.8,
     LOOP: 1.0
+};
+
+// Define points of interest for observation
+export const POINTS_OF_INTEREST = {
+    SPACE_STATION: {
+        name: 'Space Station',
+        trackPosition: TRACK_POSITIONS.SPACE_STATION,
+        orbitDistance: 70,
+        orbitSpeed: 0.001
+    },
+    CHAINWEB_3D: {
+        name: 'Chainweb 3D',
+        trackPosition: TRACK_POSITIONS.Chainweb3D,
+        orbitDistance: 120,
+        orbitSpeed: 0.0015
+    },
+    PETERSEN_GRAPH: {
+        name: 'Petersen Graph',
+        trackPosition: TRACK_POSITIONS.PETERSEN_GRAPH[0],
+        orbitDistance: 50,
+        orbitSpeed: 0.002
+    }
 };
 
 export const SPEED_SETTINGS = {
@@ -80,6 +109,10 @@ export const gameStore = reactive({
     gameMode: GameMode.Battle, // Default to Battle mode
     speedMode: SpeedMode.Fast, // Default to Fast mode
     timeManager,
+    observationMode: ObservationMode.None,
+    currentPointOfInterest: null,
+    orbitAngle: 0,
+    orbitHeight: 0,
     mutation: {
         t: 0,
         lastT: 0,
@@ -105,6 +138,16 @@ export const gameStore = reactive({
 
         cancelExplosionTO: setTimeout(() => { }, 1),
         cancelLaserTO: setTimeout(() => { }, 1),
+
+        // Add orbit control properties
+        orbitCenter: new Vector3(),
+        orbitTarget: new Vector3(),
+        orbitDistance: 70,
+        orbitSpeed: 0.001,
+        previousPosition: new Vector3(),
+        previousTime: Date.now(),
+        pausedTime: 0,
+        isPaused: false,
     },
 
     actions: {
@@ -117,6 +160,9 @@ export const gameStore = reactive({
         update: () => void 0,
         switchGameMode: () => void 0,
         switchSpeedMode: () => void 0,
+        toggleObservationMode: (pointOfInterestKey: string | null) => void 0,
+        updateOrbitPosition: (horizontalAngle: number, verticalAngle: number) => void 0,
+        resumeJourney: () => void 0,
     },
 })
 
@@ -451,3 +497,101 @@ const camera = shallowRef(new PerspectiveCamera())
 onMounted(() => {
     gameStore.actions.init(camera.value)
 })
+
+gameStore.actions.toggleObservationMode = (pointOfInterestKey) => {
+    // Only available in explore mode
+    if (gameStore.gameMode !== GameMode.Explore) return;
+
+    const { mutation } = gameStore;
+
+    // If already in observation mode or no point specified, reset to normal journey
+    if (gameStore.observationMode !== ObservationMode.None || !pointOfInterestKey) {
+        return gameStore.actions.resumeJourney();
+    }
+
+    // Get point of interest data
+    const poi = POINTS_OF_INTEREST[pointOfInterestKey];
+    if (!poi) return;
+
+    // Store current position and pause time info
+    mutation.previousPosition.copy(mutation.position);
+    mutation.previousTime = Date.now();
+    mutation.isPaused = true;
+
+    // Set up orbit parameters
+    mutation.orbitCenter.copy(track.parameters.path.getPointAt(poi.trackPosition).multiplyScalar(mutation.scale));
+    mutation.orbitDistance = poi.orbitDistance;
+    mutation.orbitSpeed = poi.orbitSpeed;
+
+    // Initialize orbit angle
+    gameStore.orbitAngle = 0;
+    gameStore.orbitHeight = 0;
+
+    // Set observation mode and current point of interest
+    gameStore.observationMode = ObservationMode.Orbiting;
+    gameStore.currentPointOfInterest = pointOfInterestKey;
+
+    // Force game to pause movement along the track
+    mutation.pausedTime = Date.now() - mutation.previousTime;
+
+    console.log(`Now observing: ${poi.name}`);
+}
+
+gameStore.actions.updateOrbitPosition = (horizontalAngle, verticalAngle) => {
+    if (gameStore.observationMode === ObservationMode.Orbiting) {
+        // Update orbit angles based on input
+        gameStore.orbitAngle = horizontalAngle;
+        gameStore.orbitHeight = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, verticalAngle));
+    }
+}
+
+gameStore.actions.resumeJourney = () => {
+    const { mutation } = gameStore;
+
+    // Only do something if we're in observation mode
+    if (gameStore.observationMode === ObservationMode.None) return;
+
+    // Reset observation mode
+    gameStore.observationMode = ObservationMode.None;
+    gameStore.currentPointOfInterest = null;
+
+    // Resume normal movement
+    if (mutation.isPaused) {
+        // Update start time to account for the paused duration
+        mutation.startTime += (Date.now() - mutation.previousTime);
+        mutation.isPaused = false;
+    }
+
+    console.log("Resumed journey");
+}
+
+// Update the update function to handle observation mode
+const originalUpdate = gameStore.actions.update;
+gameStore.actions.update = () => {
+    const { observationMode, mutation } = gameStore;
+
+    if (observationMode === ObservationMode.None) {
+        // Normal update
+        originalUpdate();
+    } else if (observationMode === ObservationMode.Orbiting) {
+        // In orbiting mode, update camera position based on orbit parameters
+
+        // Calculate orbit position
+        const horizontalRadius = mutation.orbitDistance * Math.cos(gameStore.orbitHeight);
+        const x = mutation.orbitCenter.x + horizontalRadius * Math.cos(gameStore.orbitAngle);
+        const z = mutation.orbitCenter.z + horizontalRadius * Math.sin(gameStore.orbitAngle);
+        const y = mutation.orbitCenter.y + mutation.orbitDistance * Math.sin(gameStore.orbitHeight);
+
+        mutation.position.set(x, y, z);
+
+        // Automatically slowly rotate if mouse input is not controlling it
+        gameStore.orbitAngle += mutation.orbitSpeed;
+
+        // Point camera at the center point
+        gameStore.camera.position.copy(mutation.position);
+        gameStore.camera.lookAt(mutation.orbitCenter);
+
+        // Don't advance the track position when in observation mode
+        mutation.t = (mutation.t + 0.0001) % 1; // Small increment to prevent timeline stalling completely
+    }
+}
