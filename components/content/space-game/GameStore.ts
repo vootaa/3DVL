@@ -3,6 +3,7 @@ import * as audio from './audio'
 import type { ExplosionData } from './3d/Explosions.vue'
 import { Box3, Clock, Euler, Matrix4, Object3D, PerspectiveCamera, Ray, TubeGeometry, Vector2, Vector3 } from 'three'
 import { GrannyKnot } from 'three/examples/jsm/curves/CurveExtras.js'
+import { timeManager } from './TimeManager';
 
 class WiderGrannyKnot extends GrannyKnot {
     override getPoint(t: number) {
@@ -78,6 +79,7 @@ export const gameStore = reactive({
     sound: false,
     gameMode: GameMode.Battle, // Default to Battle mode
     speedMode: SpeedMode.Fast, // Default to Fast mode
+    timeManager,
     mutation: {
         t: 0,
         lastT: 0,
@@ -264,6 +266,9 @@ gameStore.actions.switchGameMode = () => {
 
     // Reset time by updating startTime to current time
     gameStore.mutation.startTime = Date.now();
+
+    // Reset timer
+    timeManager.actions.reset(false);
 
     // Clear existing entities
     gameStore.lasers = [];
