@@ -7,6 +7,7 @@ const gameStore: GameStore = inject('gameStore') as GameStore
 
 const ringRefs = ref<any[]>([]);
 const showConnectionsOption = ref(true);
+const showCrossChainConnections = ref(true);
 
 onMounted(() => {
     ringRefs.value = new Array(gameStore.tripleRings.length).fill(null);
@@ -14,6 +15,10 @@ onMounted(() => {
 
 function shouldShowLayerConnections(index: number): boolean {
     return showConnectionsOption.value && index < gameStore.tripleRings.length - 1;
+}
+
+function shouldShowCrossChainConnections(index: number): boolean {
+    return showCrossChainConnections.value && showConnectionsOption.value && index < gameStore.tripleRings.length - 1;
 }
 
 function getNextLayerPosition(index: number): [number, number, number] {
@@ -53,7 +58,8 @@ function getConnectionColor(index: number): string {
         <TripleRing v-for="(ring, i) of gameStore.tripleRings" :key="i" :ref="el => ringRefs[i] = el"
             :position="ring.position" :rotation="[ring.rotation.x, ring.rotation.y, ring.rotation.z]"
             :scale="ring.scale" :showNodes="true" :layerId="i" :showLayerConnections="shouldShowLayerConnections(i)"
-            :nextLayerPosition="getNextLayerPosition(i)" :nextLayerRotation="getNextLayerRotation(i)"
-            :nextLayerScale="getNextLayerScale(i)" :connectionColor="getConnectionColor(i)" />
+            :showCrossChainConnections="shouldShowCrossChainConnections(i)" :nextLayerPosition="getNextLayerPosition(i)"
+            :nextLayerRotation="getNextLayerRotation(i)" :nextLayerScale="getNextLayerScale(i)"
+            :connectionColor="getConnectionColor(i)" />
     </TresGroup>
 </template>

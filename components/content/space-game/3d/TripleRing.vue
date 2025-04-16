@@ -158,6 +158,69 @@ const nodes = computed(() => {
 
     return result;
 });
+
+const CONNECTIONS = [
+    [0, 5], [1, 6], [2, 7], [3, 8], [4, 9],
+    [0, 10], [1, 11], [2, 12], [3, 13], [4, 14],
+    [0, 15], [1, 16], [2, 17], [3, 18], [4, 19],
+    [5, 7], [6, 8], [7, 9], [8, 5], [9, 6],
+    [10, 11], [11, 12], [12, 13], [13, 14], [14, 15],
+    [15, 16], [16, 17], [17, 18], [18, 19], [19, 10]
+];
+
+// Generate reverse connection data for bidirectional connections
+const BIDIRECTIONAL_CONNECTIONS = [...CONNECTIONS];
+
+// Add reverse connections
+CONNECTIONS.forEach(conn => {
+    BIDIRECTIONAL_CONNECTIONS.push([conn[1], conn[0]]);
+});
+
+// Cross-chain connection types
+const CROSS_CHAIN_TYPES = {
+    MIDDLE_TO_INNER: 0,     // Middle ring to inner ring connection
+    MIDDLE_TO_OUTER_1: 1,   // Middle ring to outer ring connection (first group)
+    MIDDLE_TO_OUTER_2: 2,   // Middle ring to outer ring connection (second group)
+    INNER_CIRCULAR: 3,      // Inner ring circular connection
+    OUTER_CIRCULAR: 4       // Outer ring circular connection
+};
+
+// Determine connection type based on connection indices
+function getCrossChainType(fromId: number, toId: number): number {
+    if ((fromId < 5 && toId >= 5 && toId < 10) ||
+        (toId < 5 && fromId >= 5 && fromId < 10)) {
+        return CROSS_CHAIN_TYPES.MIDDLE_TO_INNER;
+    } else if ((fromId < 5 && (toId >= 10 && toId < 15)) ||
+        (toId < 5 && (fromId >= 10 && fromId < 15))) {
+        return CROSS_CHAIN_TYPES.MIDDLE_TO_OUTER_1;
+    } else if ((fromId < 5 && toId >= 15) ||
+        (toId < 5 && fromId >= 15)) {
+        return CROSS_CHAIN_TYPES.MIDDLE_TO_OUTER_2;
+    } else if ((fromId >= 5 && fromId < 10) && (toId >= 5 && toId < 10)) {
+        return CROSS_CHAIN_TYPES.INNER_CIRCULAR;
+    } else {
+        return CROSS_CHAIN_TYPES.OUTER_CIRCULAR;
+    }
+}
+
+// Get color based on connection type
+function getCrossChainColor(type: number): Color {
+    switch (type) {
+        case CROSS_CHAIN_TYPES.MIDDLE_TO_INNER:
+            return new Color(0x8f7de2);  // Purple
+        case CROSS_CHAIN_TYPES.MIDDLE_TO_OUTER_1:
+            return new Color(0xff9f7a);  // Coral
+        case CROSS_CHAIN_TYPES.MIDDLE_TO_OUTER_2:
+            return new Color(0x7af5ff);  // Cyan
+        case CROSS_CHAIN_TYPES.INNER_CIRCULAR:
+            return new Color(0x33b5ff);  // Sky blue
+        case CROSS_CHAIN_TYPES.OUTER_CIRCULAR:
+            return new Color(0xffc733);  // Gold
+        default:
+            return new Color(0xcccccc);  // Gray
+    }
+}
+
 const getNodeWorldPositions = () => {
     const worldPositions = [];
 
@@ -247,9 +310,11 @@ const layerConnections = computed(() => {
 
     if (currentPositions.length === 0 || nextPositions.length === 0) return [];
 
+    // Same chain connection - current chain ID connects to the same chain ID in the next layer
     for (let i = 0; i < 20; i++) {
         const geometry = new BufferGeometry();
 
+        // Create vertex array for the connection line
         const vertices = new Float32Array([
             currentPositions[i].x, currentPositions[i].y, currentPositions[i].z,
             nextPositions[i].x, nextPositions[i].y, nextPositions[i].z
@@ -257,14 +322,48 @@ const layerConnections = computed(() => {
 
         geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));
 
+        // Select color based on chain ID
+        const material = new LineBasicMaterial({
+            color: getChainColor(i),
+            transparent: true,
+            opacity: 0.7
+        });
+
         connections.push({
             geometry,
-            material: new LineBasicMaterial({
-                color: getChainColor(i),
-                transparent: true,
-                opacity: 0.7
-            }),
-            chainId: i
+            material,
+            chainId: i,
+            type: 'chain'
+        });
+    }
+
+    // Cross-chain connection - based on BIDIRECTIONAL_CONNECTIONS
+    for (let i = 0; i < BIDIRECTIONAL_CONNECTIONS.length; i++) {
+        const [fromId, toId] = BIDIRECTIONAL_CONNECTIONS[i];
+
+        // Create connection from current layer's fromId to next layer's toId
+        const geometry = new BufferGeometry();
+        const vertices = new Float32Array([
+            currentPositions[fromId].x, currentPositions[fromId].y, currentPositions[fromId].z,
+            nextPositions[toId].x, nextPositions[toId].y, nextPositions[toId].z
+        ]);
+
+        geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));
+
+        // Determine color based on connection type
+        const connectionType = getCrossChainType(fromId, toId);
+        const material = new LineBasicMaterial({
+            color: getCrossChainColor(connectionType),
+            transparent: true,
+            opacity: 0.4  // Lower opacity to avoid visual clutter
+        });
+
+        connections.push({
+            geometry,
+            material,
+            fromId,
+            toId,
+            type: 'cross'
         });
     }
 
