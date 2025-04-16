@@ -48,7 +48,7 @@ onMounted(() => {
 
             // Set text properties
             const fontSize = 74;
-            ctx.font = `bold ${fontSize}px "Kode Mono", monospace`;
+            ctx.font = `bold ${fontSize}px "Kode Mono", monospace, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = props.color;

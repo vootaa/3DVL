@@ -51,6 +51,7 @@ const score = computed(() => (gameStore.points >= 1000 ? `${(gameStore.points / 
 
 <style lang="css" scoped>
 @import url('https://fonts.googleapis.com/css2?family=Teko:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400;500;700&display=swap');
 
 .score-display {
     position: absolute;
@@ -60,12 +61,12 @@ const score = computed(() => (gameStore.points >= 1000 ? `${(gameStore.points / 
     border-radius: 8px;
     padding: 10px 15px;
     color: indianred;
-    font-family: 'Teko', sans-serif;
+    font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
     font-weight: 500;
     font-variant-numeric: slashed-zero tabular-nums;
     text-transform: uppercase;
     transform: skew(3deg, -3deg);
-    width: 180px;
+    width: 280px;
     min-height: 105px;
     display: flex;
     flex-direction: column;

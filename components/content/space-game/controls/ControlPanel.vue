@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject } from 'vue'
-import { GameMode, SpeedMode, SPEED_SETTINGS, type GameStore } from '../GameStore'
+import { SpeedMode, SPEED_SETTINGS, type GameStore } from '../GameStore'
 
 const gameStore = inject('gameStore') as GameStore
 
@@ -44,6 +44,7 @@ const speedBars = computed(() => {
 
 <style lang="css" scoped>
 @import url('https://fonts.googleapis.com/css2?family=Teko:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400;500;700&display=swap');
 
 .control-panel {
     position: absolute;
@@ -61,7 +62,7 @@ const speedBars = computed(() => {
     border-radius: 8px;
     padding: 10px 15px;
     color: indianred;
-    font-family: 'Teko', sans-serif;
+    font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
     font-weight: 500;
     text-transform: uppercase;
     text-align: right;

@@ -512,12 +512,15 @@ function generateInfoLabels(track: TubeGeometry) {
     INFO_LABELS.forEach(label => {
         const t = label.t;
 
+        // Get position on the track
         const { position, rotation } = calculateTrackPositionAndRotation(
             track,
             t,
-            0,
+            10, // Add vertical offset to position labels above the track
             (matrix) => {
                 matrix.multiply(new Matrix4().makeRotationY(Math.PI));
+                // Add a slight rotation to face labels more toward the camera
+                matrix.multiply(new Matrix4().makeRotationX(-Math.PI / 12));
             }
         );
 
