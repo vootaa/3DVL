@@ -1,7 +1,7 @@
 import { reactive, shallowRef, onMounted } from 'vue'
 import * as audio from './audio'
 import type { ExplosionData } from './3d/Explosions.vue'
-import { Box3, Clock, Euler, Matrix4, Object3D, PerspectiveCamera, Ray, TubeGeometry, Vector2, Vector3 } from 'three'
+import { Box3, Clock, Euler, Matrix4, Object3D, PerspectiveCamera, Ray, TubeGeometry, Vector2, Vector3, type Vector3Tuple } from 'three'
 import { GrannyKnot } from 'three/examples/jsm/curves/CurveExtras.js'
 import { timeManager } from './TimeManager';
 
@@ -46,6 +46,21 @@ const TRACK_POSITIONS = {
     SPACE_STATION: 0.8,
     LOOP: 1.0
 };
+
+const INFO_LABELS = [
+    { t: 0.09, text: "Petersen Graph", color: "#1E90FF" },
+    { t: 0.24, text: "Graph Theory", color: "#FF69B4" },
+    { t: 0.54, text: "Network Structure", color: "#1E90FF" },
+    { t: 0.69, text: "Mathematical Model", color: "#FF69B4" },
+    { t: 0.38, text: "ChainWeb", color: "#FFD700" },
+    { t: 0.41, text: "Blockchain Technology", color: "#FFD700" },
+    { t: 0.43, text: "Kadena", color: "#FFD700" },
+    { t: 0.01, text: "VooTaa Space", color: "#32CD32" },
+    { t: 0.2, text: "Web3 Explorer", color: "#FF4500" },
+    { t: 0.5, text: "Blockchain Visuals", color: "#9370DB" },
+    { t: 0.78, text: "Space Station", color: "#20B2AA" },
+    { t: 0.81, text: "Knowledge Hub", color: "#20B2AA" }
+];
 
 // Define points of interest for observation
 export const POINTS_OF_INTEREST = {
@@ -103,6 +118,7 @@ export const gameStore = reactive({
     rings: generateRings(30, track),
     chainweb3D: generateChainweb3D(30, track),
     PetersenGraphGroup: generatePetersenGraph(track),
+    infoLabels: generateInfoLabels(track),
     spaceStation: generateSpaceStationData(track),
     camera: new PerspectiveCamera(),
     sound: false,
@@ -161,7 +177,7 @@ export const gameStore = reactive({
         switchGameMode: null as unknown as () => void,
         switchSpeedMode: null as unknown as () => void,
         toggleObservationMode: null as unknown as (pointOfInterestKey: keyof typeof POINTS_OF_INTEREST | null) => void,
-        updateOrbitPosition: null as unknown as (horizontalAngle: number) => void,
+        updateOrbitPosition: null as unknown as (horizontalAngle: number, verticalAngle: number) => void,
         resumeJourney: null as unknown as () => void,
     },
 })
@@ -489,6 +505,38 @@ function generatePetersenGraph(track: TubeGeometry) {
     return temp;
 }
 
+function generateInfoLabels(track: TubeGeometry) {
+    const labels: { position: Vector3Tuple; rotation: { x: number; y: number; z: number }; scale: number; text: string; color: string }[] = [];
+
+    // Process all info labels
+    INFO_LABELS.forEach(label => {
+        const t = label.t;
+
+        const { position, rotation } = calculateTrackPositionAndRotation(
+            track,
+            t,
+            10,
+            (matrix) => {
+                matrix.multiply(new Matrix4().makeRotationY(Math.PI));
+            }
+        );
+
+        labels.push({
+            position: position.toArray(),
+            rotation: {
+                x: rotation.x,
+                y: rotation.y,
+                z: rotation.z
+            },
+            scale: 5.0,
+            text: label.text,
+            color: label.color
+        });
+    });
+
+    return labels;
+}
+
 function generateSpaceStationData(track: TubeGeometry, startT: number = TRACK_POSITIONS.SPACE_STATION) {
     const t = startT;
 
@@ -547,7 +595,7 @@ gameStore.actions.toggleObservationMode = (pointOfInterestKey: keyof typeof POIN
     console.log(`Now observing: ${poi.name}`);
 }
 
-gameStore.actions.updateOrbitPosition = (horizontalAngle, verticalAngle) => {
+gameStore.actions.updateOrbitPosition = (horizontalAngle: number, verticalAngle: number) => {
     if (gameStore.observationMode === ObservationMode.Orbiting) {
         // Update orbit angles based on input
         gameStore.orbitAngle = horizontalAngle;
