@@ -13,7 +13,7 @@ box.setFromCenterAndSize(new Vector3(0, 0, 1), new Vector3(3, 3, 3))
 const glowMaterial = new MeshBasicMaterial({ color: new Color('lightblue') })
 const bodyMaterial = new MeshPhongMaterial({ color: new Color('black') })
 
-const { nodes, materials } = await useLoader(GLTFLoader, '/models/space-game/spacedrone.gltf')
+const { nodes, materials } = await useLoader(GLTFLoader, '/models/space-game/spacedrone.gltf') as any
 const ref = shallowRef([new Group()])
 
 useLoop().onBeforeRender(() => {

@@ -110,7 +110,7 @@ export const gameStore = reactive({
     speedMode: SpeedMode.Fast, // Default to Fast mode
     timeManager,
     observationMode: ObservationMode.None,
-    currentPointOfInterest: null,
+    currentPointOfInterest: null as keyof typeof POINTS_OF_INTEREST | null,
     orbitAngle: 0,
     orbitHeight: 0,
     mutation: {
@@ -160,7 +160,7 @@ export const gameStore = reactive({
         update: () => void 0,
         switchGameMode: () => void 0,
         switchSpeedMode: () => void 0,
-        toggleObservationMode: (pointOfInterestKey: string | null) => void 0,
+        toggleObservationMode: (pointOfInterestKey: keyof typeof POINTS_OF_INTEREST | null) => void 0,
         updateOrbitPosition: (horizontalAngle: number, verticalAngle: number) => void 0,
         resumeJourney: () => void 0,
     },
@@ -498,7 +498,7 @@ onMounted(() => {
     gameStore.actions.init(camera.value)
 })
 
-gameStore.actions.toggleObservationMode = (pointOfInterestKey) => {
+gameStore.actions.toggleObservationMode = (pointOfInterestKey: keyof typeof POINTS_OF_INTEREST | null) => {
     // Only available in explore mode
     if (gameStore.gameMode !== GameMode.Explore) return;
 
