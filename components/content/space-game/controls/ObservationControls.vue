@@ -95,7 +95,7 @@ onUnmounted(() => {
 
         <div v-else class="orbit-controls">
             <div class="orbit-info">
-                <span>Observing: {{ currentPoiName }}</span>
+                <span class="observation-title">Observing: {{ currentPoiName }}</span>
                 <button @click="gameStore.actions.resumeJourney()" class="resume-button">
                     Resume Journey
                 </button>
@@ -158,8 +158,14 @@ onUnmounted(() => {
 
 .orbit-info {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.observation-title {
+    font-weight: 500;
+    margin-bottom: 5px;
 }
 
 .resume-button {
@@ -169,7 +175,9 @@ onUnmounted(() => {
     border-radius: 4px;
     color: white;
     cursor: pointer;
-    margin-left: 10px;
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
 }
 
 .orbit-instructions {
