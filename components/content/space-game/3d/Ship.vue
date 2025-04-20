@@ -29,17 +29,36 @@ const target = shallowRef(new Group())
 // Add computed property to check current game mode
 const isBattleMode = computed(() => gameStore.gameMode === GameMode.Battle)
 
+// Define ship movement boundaries
+const boundaries = {
+  x: { min: -150, max: 150 },
+  y: { min: -60, max: 80 }
+}
+
+// Function to clamp values within boundaries
+function clampValue(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max)
+}
+
 useLoop().onBeforeRender(() => {
   const time = clock.getElapsedTime();
   main.value.position.z = Math.sin(time * 40) * Math.PI * 0.2
 
   if (gameStore.observationMode === ObservationMode.None) {
-    main.value.rotation.z += (mouse.x / 500 - main.value.rotation.z) * 0.2
-    main.value.rotation.x += (-mouse.y / 1200 - main.value.rotation.x) * 0.2
-    main.value.rotation.y += (-mouse.x / 1200 - main.value.rotation.y) * 0.2
+    // Clamp mouse coordinates to stay within boundaries
+    const clampedMouseX = clampValue(mouse.x, boundaries.x.min * 5, boundaries.x.max * 5)
+    const clampedMouseY = clampValue(mouse.y, boundaries.y.min * 12, boundaries.y.max * 12)
 
-    main.value.position.x += (mouse.x / 10 - main.value.position.x) * 0.2
-    main.value.position.y += (25 + -mouse.y / 10 - main.value.position.y) * 0.2
+    main.value.rotation.z += (clampedMouseX / 500 - main.value.rotation.z) * 0.2
+    main.value.rotation.x += (-clampedMouseY / 1200 - main.value.rotation.x) * 0.2
+    main.value.rotation.y += (-clampedMouseX / 1200 - main.value.rotation.y) * 0.2
+
+    // Apply clamped values to ship position
+    const targetX = clampValue(clampedMouseX / 10, boundaries.x.min, boundaries.x.max)
+    const targetY = clampValue(25 + -clampedMouseY / 10, boundaries.y.min, boundaries.y.max)
+
+    main.value.position.x += (targetX - main.value.position.x) * 0.2
+    main.value.position.y += (targetY - main.value.position.y) * 0.2
 
     // Get ships orientation and save it to the stores ray
     main.value.getWorldPosition(position)
@@ -47,15 +66,12 @@ useLoop().onBeforeRender(() => {
     ray.origin.copy(position)
     ray.direction.copy(direction.negate())
   } else {
-    const centerMouseX = 0;
-    const centerMouseY = 0;
+    main.value.rotation.z -= main.value.rotation.z * 0.05
+    main.value.rotation.x -= main.value.rotation.x * 0.05
+    main.value.rotation.y -= main.value.rotation.y * 0.05
 
-    main.value.rotation.z += (centerMouseX / 500 - main.value.rotation.z) * 0.05
-    main.value.rotation.x += (-centerMouseY / 1200 - main.value.rotation.x) * 0.05
-    main.value.rotation.y += (-centerMouseX / 1200 - main.value.rotation.y) * 0.05
-
-    main.value.position.x += (centerMouseX / 10 - main.value.position.x) * 0.05
-    main.value.position.y += (25 + -centerMouseY / 10 - main.value.position.y) * 0.05
+    main.value.position.x -= main.value.position.x * 0.05
+    main.value.position.y += (25 - main.value.position.y) * 0.05
 
     const period = 3.0;
     const amplitude = 0.3;
