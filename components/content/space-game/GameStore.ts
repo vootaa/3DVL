@@ -44,6 +44,7 @@ const TRACK_POSITIONS = {
     WARP_RESET: 0.5,
     RINGS: 0.6,
     SPACE_STATION: 0.8,
+    SPACE_PROBE: 0.88,
     LOOP: 1.0
 };
 
@@ -56,10 +57,11 @@ const INFO_LABELS = [
     { t: 0.45, text: "Blockchain", color: "#e6c86e" },              // Matching gold
     { t: 0.49, text: "Kadena", color: "#e6c86e" },                  // Matching gold
     { t: 0.59, text: "3D Visual", color: "#7CFC00" },               // Match track color in exploration mode
-    { t: 0.65, text: "Vootaa Lab", color: "#e38846" },              // Warmer orange to match track in battle mode
+    { t: 0.63, text: "Vootaa Lab", color: "#e38846" },              // Warmer orange to match track in battle mode
     { t: 0.79, text: "Space Station", color: "#9f7bea" },           // Softer purple variant
-    { t: 0.91, text: "Welcome to", color: "#20B2AA" },              // Keep this teal to match observation mode track
-    { t: 0.92, text: "Explore Journey", color: "#20B2AA" }          // Matching teal
+    { t: 0.87, text: "Space Probe", color: "#9f7bea" },             // Same purple for consistency
+    { t: 0.95, text: "Welcome to", color: "#20B2AA" },              // Keep this teal to match observation mode track
+    { t: 0.96, text: "Explore Journey", color: "#20B2AA" }          // Matching teal
 ];
 
 // Define points of interest for observation
@@ -79,7 +81,13 @@ export const POINTS_OF_INTEREST = {
     SPACE_STATION: {
         name: 'Space Station',
         trackPosition: TRACK_POSITIONS.SPACE_STATION,
-        orbitDistance: 70,
+        orbitDistance: 80,
+        orbitSpeed: 0.001
+    },
+    SPACE_PROBE: {
+        name: 'Space Probe',
+        trackPosition: TRACK_POSITIONS.SPACE_PROBE,
+        orbitDistance: 100,
         orbitSpeed: 0.001
     },
 };
@@ -120,6 +128,7 @@ export const gameStore = reactive({
     PetersenGraphGroup: generatePetersenGraph(track),
     infoLabels: generateInfoLabels(track),
     spaceStation: generateSpaceStationData(track),
+    spaceProbe: generateSpaceProbeData(track),
     camera: new PerspectiveCamera(),
     sound: false,
     showInfoText: true, // state to control text visibility
@@ -457,7 +466,7 @@ function generateRings(count: number, track: TubeGeometry, startT: number = TRAC
     let t = startT;
 
     for (let i = 0; i < count; i++) {
-        t += 0.002;
+        t += 0.001;
         const { position, rotation } = calculateTrackPositionAndRotation(track, t);
 
         temp.push({
@@ -553,6 +562,18 @@ function generateSpaceStationData(track: TubeGeometry, startT: number = TRACK_PO
         position: position.toArray(),
         rotation: rotation,
         scale: 10
+    };
+}
+
+function generateSpaceProbeData(track: TubeGeometry, startT: number = TRACK_POSITIONS.SPACE_PROBE) {
+    const t = startT;
+
+    const { position, rotation } = calculateTrackPositionAndRotation(track, t, -50);
+
+    return {
+        position: position.toArray(),
+        rotation: rotation,
+        scale: 2
     };
 }
 
