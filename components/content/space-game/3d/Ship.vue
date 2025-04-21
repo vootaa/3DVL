@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { inject, shallowRef, computed } from 'vue'
+import { onMounted, onUnmounted, inject, shallowRef, computed, watch } from 'vue'
 import { useLoader, useLoop } from '@tresjs/core'
 import type { GameStore } from '../GameStore'
 import { GameMode, ObservationMode } from '../GameStore'
@@ -29,10 +29,64 @@ const target = shallowRef(new Group())
 // Add computed property to check current game mode
 const isBattleMode = computed(() => gameStore.gameMode === GameMode.Battle)
 
-// Define ship movement boundaries
-const boundaries = {
-  x: { min: -150, max: 150 },
-  y: { min: -60, max: 80 }
+// Define margin values (percentage of screen)
+const margins: { x: number; y: number } = {
+  x: 0.12,
+  y: 0.1
+}
+
+function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
+  let timeout: ReturnType<typeof setTimeout> | null = null
+
+  return (...args: Parameters<F>): ReturnType<F> | undefined => {
+    if (timeout !== null) {
+      clearTimeout(timeout)
+      timeout = null
+    }
+    timeout = setTimeout(() => func(...args), waitFor)
+    return undefined as any
+  }
+}
+
+
+// Calculate boundaries based on window size
+const boundaries = shallowRef<{
+  x: { min: number; max: number };
+  y: { min: number; max: number };
+}>({
+  x: { min: 0, max: 0 },
+  y: { min: 0, max: 0 }
+})
+
+// Function to update boundaries based on current screen size
+function updateBoundaries(): void {
+  if (!gameStore.camera || gameStore.camera.position.z <= 0) {
+    setTimeout(updateBoundaries, 100);
+    return;
+  }
+  const width: number = window.innerWidth
+  const height: number = window.innerHeight
+
+  const effectiveWidth: number = width * (1 - 2 * margins.x)
+  const effectiveHeight: number = height * (1 - 2 * margins.y)
+
+  const cameraZ: number = Math.max(gameStore.camera.position.z, 100)
+  const worldWidth: number = Math.tan(Math.PI * gameStore.mutation.fov / 360) * cameraZ * 2
+  const worldHeight: number = worldWidth / (window.innerWidth / window.innerHeight)
+
+  const worldScaleX: number = worldWidth / effectiveWidth
+  const worldScaleY: number = worldHeight / effectiveHeight
+
+  boundaries.value = {
+    x: {
+      min: -(width / 2 - width * margins.x) * worldScaleX,
+      max: (width / 2 - width * margins.x) * worldScaleX
+    },
+    y: {
+      min: -(height / 2 - height * margins.y) * worldScaleY,
+      max: (height / 2 - height * margins.y) * worldScaleY
+    }
+  }
 }
 
 // Function to clamp values within boundaries
@@ -40,22 +94,38 @@ function clampValue(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
 }
 
+const debouncedUpdateBoundaries = debounce(updateBoundaries, 100)
+// Update boundaries when component is mounted and on window resize
+onMounted(() => {
+  updateBoundaries()
+  window.addEventListener('resize', debouncedUpdateBoundaries)
+  setTimeout(updateBoundaries, 500)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', debouncedUpdateBoundaries)
+})
+
+watch(() => gameStore.camera.position.z, () => {
+  updateBoundaries()
+})
+
 useLoop().onBeforeRender(() => {
   const time = clock.getElapsedTime();
   main.value.position.z = Math.sin(time * 40) * Math.PI * 0.2
 
   if (gameStore.observationMode === ObservationMode.None) {
     // Clamp mouse coordinates to stay within boundaries
-    const clampedMouseX = clampValue(mouse.x, boundaries.x.min * 5, boundaries.x.max * 5)
-    const clampedMouseY = clampValue(mouse.y, boundaries.y.min * 12, boundaries.y.max * 12)
+    const clampedMouseX = clampValue(mouse.x, boundaries.value.x.min * 5, boundaries.value.x.max * 5)
+    const clampedMouseY = clampValue(mouse.y, boundaries.value.y.min * 12, boundaries.value.y.max * 12)
 
     main.value.rotation.z += (clampedMouseX / 500 - main.value.rotation.z) * 0.2
     main.value.rotation.x += (-clampedMouseY / 1200 - main.value.rotation.x) * 0.2
     main.value.rotation.y += (-clampedMouseX / 1200 - main.value.rotation.y) * 0.2
 
     // Apply clamped values to ship position
-    const targetX = clampValue(clampedMouseX / 10, boundaries.x.min, boundaries.x.max)
-    const targetY = clampValue(25 + -clampedMouseY / 10, boundaries.y.min, boundaries.y.max)
+    const targetX = clampValue(clampedMouseX / 10, boundaries.value.x.min, boundaries.value.x.max)
+    const targetY = clampValue(25 + -clampedMouseY / 10, boundaries.value.y.min, boundaries.value.y.max)
 
     main.value.position.x += (targetX - main.value.position.x) * 0.2
     main.value.position.y += (targetY - main.value.position.y) * 0.2
