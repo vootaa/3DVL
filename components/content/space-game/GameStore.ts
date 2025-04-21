@@ -121,6 +121,8 @@ export const gameStore = reactive({
     loopCount: 0,
     lasers: [] as number[],
     explosions: [] as ExplosionData[],
+    initialRockCount: 100,
+    initialEnemyCount: 10,
     rocks: randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5),
     enemies: randomData(10, track, 20, 15, 1),
     rings: generateRings(40, track),
@@ -139,6 +141,19 @@ export const gameStore = reactive({
     currentPointOfInterest: null as keyof typeof POINTS_OF_INTEREST | null,
     orbitAngle: 0,
     orbitHeight: 0,
+    comboSystem: {
+        count: 0,
+        lastHitTime: 0,
+        timeWindow: 2000, // 2 seconds for combo counting
+        active: false,
+        resetTimer: 0 as unknown as ReturnType<typeof setTimeout>
+    },
+    scoreNotifications: [] as Array<{
+        id: number;
+        text: string;
+        points: number;
+        timestamp: number;
+    }>,
     mutation: {
         t: 0,
         lastT: 0,
@@ -190,8 +205,77 @@ export const gameStore = reactive({
         toggleObservationMode: null as unknown as (pointOfInterestKey: keyof typeof POINTS_OF_INTEREST | null) => void,
         updateOrbitPosition: null as unknown as (horizontalAngle: number, verticalAngle: number) => void,
         resumeJourney: null as unknown as () => void,
+        registerHit: null as unknown as (count: number, type: 'rock' | 'enemy') => void,
+        addScoreNotification: null as unknown as (text: string, points: number) => void,
     },
 })
+
+gameStore.actions.addScoreNotification = (text: string, points: number) => {
+    const id = Date.now();
+    gameStore.scoreNotifications.push({
+        id,
+        text,
+        points,
+        timestamp: Date.now()
+    });
+
+    // Automatically clear after 3 seconds
+    setTimeout(() => {
+        gameStore.scoreNotifications = gameStore.scoreNotifications.filter(item => item.id !== id);
+    }, 3000);
+}
+
+gameStore.actions.registerHit = (count: number, type: 'rock' | 'enemy') => {
+    const now = Date.now();
+
+    // Only process combos in Battle mode
+    if (gameStore.gameMode !== GameMode.Battle) return;
+
+    // Base points
+    let basePoints = type === 'rock' ? count * 100 : count * 200;
+
+    // Add points
+    gameStore.points += basePoints;
+
+    // Display base score notification
+    const itemText = type === 'rock'
+        ? `${count} Stone${count > 1 ? 's' : ''}`
+        : `${count} Enemy${count > 1 ? 'ies' : 'y'}`;
+
+    gameStore.actions.addScoreNotification(`${itemText} +${basePoints}`, basePoints);
+
+    // Handle combo
+    if (now - gameStore.comboSystem.lastHitTime < gameStore.comboSystem.timeWindow) {
+        gameStore.comboSystem.count += count;
+
+        // Add combo bonus
+        let bonusPoints = 0;
+        if (gameStore.comboSystem.count >= 5) {
+            bonusPoints = gameStore.comboSystem.count * 50;
+            gameStore.actions.addScoreNotification(`${gameStore.comboSystem.count}x COMBO!`, bonusPoints);
+        } else if (gameStore.comboSystem.count >= 3) {
+            bonusPoints = gameStore.comboSystem.count * 30;
+            gameStore.actions.addScoreNotification(`${gameStore.comboSystem.count}x Hit!`, bonusPoints);
+        }
+
+        // Add combo bonus points
+        if (bonusPoints > 0) {
+            gameStore.points += bonusPoints;
+        }
+    } else {
+        gameStore.comboSystem.count = count;
+    }
+
+    gameStore.comboSystem.lastHitTime = now;
+    gameStore.comboSystem.active = true;
+
+    // Reset combo timer
+    clearTimeout(gameStore.comboSystem.resetTimer);
+    gameStore.comboSystem.resetTimer = setTimeout(() => {
+        gameStore.comboSystem.active = false;
+        gameStore.comboSystem.count = 0;
+    }, gameStore.comboSystem.timeWindow);
+}
 
 gameStore.actions.playAudio = (audio: HTMLAudioElement, volume = 1, loop = false) => {
     if (gameStore.sound) {
@@ -319,9 +403,18 @@ gameStore.actions.update = () => {
                 gameStore.explosions = gameStore.explosions.filter(({ time }) => Date.now() - time <= 1000)
             }
                 , 1000)
-            gameStore.points = gameStore.points + rocksHit.length * 100 + enemiesHit.length * 200,
-                gameStore.rocks = gameStore.rocks.filter(rock => !rocksHit.find(r => r.guid === rock.guid)),
-                gameStore.enemies = gameStore.enemies.filter(enemy => !enemiesHit.find(e => e.guid === enemy.guid))
+
+            if (rocksHit.length > 0) {
+                gameStore.actions.registerHit(rocksHit.length, 'rock');
+            }
+
+            if (enemiesHit.length > 0) {
+                gameStore.actions.registerHit(enemiesHit.length, 'enemy');
+            }
+
+            gameStore.rocks = gameStore.rocks.filter(rock => !rocksHit.find(r => r.guid === rock.guid));
+            gameStore.enemies = gameStore.enemies.filter(enemy => !enemiesHit.find(e => e.guid === enemy.guid));
+
         }
     } else {
         // In Explore mode, set hits to 0 to avoid targeting UI
@@ -354,6 +447,15 @@ gameStore.actions.switchGameMode = () => {
     gameStore.lasers = [];
     gameStore.explosions = [];
 
+    // Reset combo system
+    gameStore.comboSystem.count = 0;
+    gameStore.comboSystem.active = false;
+    gameStore.comboSystem.lastHitTime = 0;
+    clearTimeout(gameStore.comboSystem.resetTimer);
+
+    // Clear score notifications
+    gameStore.scoreNotifications = [];
+
     // Reset player position to the start of the track (t=0)
     gameStore.mutation.t = 0;
 
@@ -367,12 +469,18 @@ gameStore.actions.switchGameMode = () => {
         gameStore.rocks = randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5);
         gameStore.enemies = randomData(10, track, 20, 15, 1);
 
+        gameStore.initialRockCount = 100;
+        gameStore.initialEnemyCount = 10;
+
         // Reset particles to full density for Battle mode
         gameStore.mutation.particles = randomData(500, track, 100, 1, () => 0.5 + Math.random() * 0.8);
     } else {
         // Empty arrays for Explore mode
         gameStore.rocks = [];
         gameStore.enemies = [];
+
+        gameStore.initialRockCount = 0;
+        gameStore.initialEnemyCount = 0;
 
         // Reduce particles to 10% for a cleaner Explore mode
         gameStore.mutation.particles = randomData(50, track, 100, 1, () => 0.5 + Math.random() * 0.8);
