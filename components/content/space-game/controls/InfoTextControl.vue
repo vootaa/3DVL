@@ -19,9 +19,6 @@ const toggleInfoText = () => {
 </template>
 
 <style lang="css" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Teko:wght@500&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400;500;700&display=swap');
-
 .info-text-control {
     position: absolute;
     top: 130px;
@@ -30,7 +27,6 @@ const toggleInfoText = () => {
     border-radius: 8px;
     padding: 10px 15px;
     color: #4286f4;
-    /* Blue color to distinguish from sound control */
     font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
     font-weight: 500;
     font-variant-numeric: slashed-zero tabular-nums;

@@ -25,7 +25,7 @@ export default defineNuxtConfig({
     '@nuxt/devtools',
   ],
 
-  css: ['/styles/main.css', '@unocss/reset/tailwind-compat.css', '@tresjs/leches/styles'],
+  css: ['./assets/css/fonts.css', './assets/css/main.css', '@unocss/reset/tailwind-compat.css', '@tresjs/leches/styles'],
   declare: ['*.glsl'],
 
   tres: {
@@ -77,10 +77,6 @@ export default defineNuxtConfig({
             'font-family': 'JetBrains Mono',
             'font-size': '0.875rem',
           },
-          /*  code: {
-            'font-family': 'Fira Code',
-            'font-size': '0.875rem',
-          }, */
           ':not(pre)>code': {
             background: '#e8e8e8 !important',
             padding: '0.25rem 0.5rem !important',
@@ -129,5 +125,5 @@ export default defineNuxtConfig({
     transpile: ['fsevents', 'postprocessing'],
   },
 
-  compatibilityDate: '2024-08-29',
+  compatibilityDate: '2025-04-21',
 })

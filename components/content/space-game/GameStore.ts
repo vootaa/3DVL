@@ -37,31 +37,31 @@ export enum ObservationMode {
 
 const TRACK_POSITIONS = {
     START: 0,
-    PETERSEN_GRAPH: [0.1, 0.25, 0.55, 0.7],
+    PETERSEN_GRAPH: [0.1, 0.25, 0.55, 0.955],
     Chainweb3D: 0.4,
     WARP_BEGIN: 0.3,
     WARP_END: 0.4,
     WARP_RESET: 0.5,
-    RINGS: 0.6,
-    SPACE_STATION: 0.8,
-    SPACE_PROBE: 0.88,
+    RINGS: 0.65,
+    SPACE_STATION: 0.79,
+    SPACE_PROBE: 0.86,
     LOOP: 1.0
 };
 
 const INFO_LABELS = [
     { t: 0.095, text: "Petersen Graph", color: "#4286f4" },         // Softer blue to match the space environment
     { t: 0.245, text: "Graph Theory", color: "#c67eff" },           // Softer purple that harmonizes with stars
-    { t: 0.545, text: "Network Structure", color: "#4286f4" },      // Matching blue
-    { t: 0.695, text: "Mathematical Model", color: "#c67eff" },     // Matching purple
+    { t: 0.545, text: "Scalable Structure", color: "#4286f4" },      // Matching blue
+    { t: 0.95, text: "Remarkable Configuration", color: "#c67eff" },     // Matching purple
     { t: 0.395, text: "Chainweb", color: "#e6c86e" },               // Warmer, less saturated gold
     { t: 0.45, text: "Blockchain", color: "#e6c86e" },              // Matching gold
     { t: 0.49, text: "Kadena", color: "#e6c86e" },                  // Matching gold
-    { t: 0.59, text: "3D Visual", color: "#7CFC00" },               // Match track color in exploration mode
-    { t: 0.63, text: "Vootaa Lab", color: "#e38846" },              // Warmer orange to match track in battle mode
-    { t: 0.79, text: "Space Station", color: "#9f7bea" },           // Softer purple variant
-    { t: 0.87, text: "Space Probe", color: "#9f7bea" },             // Same purple for consistency
-    { t: 0.95, text: "Welcome to", color: "#20B2AA" },              // Keep this teal to match observation mode track
-    { t: 0.96, text: "Explore Journey", color: "#20B2AA" }          // Matching teal
+    { t: 0.64, text: "3D Visual", color: "#7CFC00" },               // Match track color in exploration mode
+    { t: 0.7, text: "Vootaa Lab", color: "#e38846" },              // Warmer orange to match track in battle mode
+    { t: 0.78, text: "Space Station", color: "#9f7bea" },           // Softer purple variant
+    { t: 0.85, text: "Space Probe", color: "#9f7bea" },             // Same purple for consistency
+    { t: 0.98, text: "Welcome to", color: "#20B2AA" },              // Keep this teal to match observation mode track
+    { t: 0.99, text: "Explore Journey", color: "#20B2AA" }          // Matching teal
 ];
 
 // Define points of interest for observation
@@ -543,7 +543,7 @@ function generateInfoLabels(track: TubeGeometry) {
         const { position, rotation } = calculateTrackPositionAndRotation(
             track,
             t,
-            10, // Add vertical offset to position labels above the track
+            -10,
             (matrix) => {
                 matrix.multiply(new Matrix4().makeRotationY(Math.PI));
                 // Add a slight rotation to face labels more toward the camera
@@ -572,19 +572,20 @@ function generateSpaceStationData(track: TubeGeometry, startT: number = TRACK_PO
 
     // Get position and rotation with offset
     // Add fourth parameter to make the space station perpendicular to the track
-    const { position, rotation } = calculateTrackPositionAndRotation(track, t, 50);
+    const { position, rotation } = calculateTrackPositionAndRotation(track, t, 100);
 
     return {
         position: position.toArray(),
         rotation: rotation,
-        scale: 10
+        scale: 8
     };
 }
 
 function generateSpaceProbeData(track: TubeGeometry, startT: number = TRACK_POSITIONS.SPACE_PROBE) {
     const t = startT;
 
-    const { position, rotation } = calculateTrackPositionAndRotation(track, t, -50);
+    // Get position and rotation with offset
+    const { position, rotation } = calculateTrackPositionAndRotation(track, t, 70);
 
     return {
         position: position.toArray(),

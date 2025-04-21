@@ -118,6 +118,7 @@ onUnmounted(() => {
     top: 280px;
     right: 20px;
     z-index: 100;
+    font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
 }
 
 .poi-header {
@@ -206,6 +207,7 @@ onUnmounted(() => {
 .observation-title {
     font-weight: 500;
     margin-bottom: 5px;
+    font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
 }
 
 .resume-button {
@@ -218,6 +220,13 @@ onUnmounted(() => {
     margin-left: 0;
     width: 100%;
     text-align: center;
+    font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.resume-button:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .orbit-instructions {
@@ -237,7 +246,7 @@ onUnmounted(() => {
 }
 
 .orbit-distance {
-    font-family: monospace;
+    font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
     font-weight: 500;
     color: #a0e0ff;
     text-align: center;

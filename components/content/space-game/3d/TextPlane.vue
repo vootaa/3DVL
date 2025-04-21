@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { watch, onMounted, ref } from 'vue'
 import { CanvasTexture } from 'three'
 import type { PropType } from 'vue'
 
@@ -33,46 +33,84 @@ const props = defineProps({
 // Create canvas texture for text
 const textTexture = ref<CanvasTexture | null>(null);
 
-// Generate text canvas on mounted
-onMounted(() => {
-    // We'll create this in browser environment only
-    if (typeof document !== 'undefined') {
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 256;
+// Function to render text on canvas
+function renderTextToCanvas() {
+    if (typeof document === 'undefined') return;
 
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
 
-            // Set text properties
-            const fontSize = 74;
-            ctx.font = `bold ${fontSize}px "Kode Mono", monospace, sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = props.color;
+    const ctx = canvas.getContext('2d', { alpha: true });
+    if (!ctx) return;
 
-            const text = props.text;
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Measure text width to ensure canvas can fit it
-            const metrics = ctx.measureText(text);
-            const textWidth = metrics.width;
+    const fontAvailable = document.fonts.check(`bold 10px "Kode Mono"`)
 
-            // Adjust canvas size if needed to fit text
-            if (textWidth > canvas.width * 0.8) {
-                const newFontSize = Math.floor(fontSize * (canvas.width * 0.8) / textWidth);
-                ctx.font = `bold ${newFontSize}px "Kode Mono", monospace`;
-            }
+    if (fontAvailable) {
+        // Set text properties
+        const fontSize = 74;
+        ctx.font = `bold ${fontSize}px "Kode Mono", monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = props.color;
 
-            // Draw text in a single line
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            ctx.fillText(text, centerX, centerY);
+        // Measure text width to ensure canvas can fit it
+        const metrics = ctx.measureText(props.text);
+        const textWidth = metrics.width;
+
+        // Adjust canvas size if needed to fit text
+        if (textWidth > canvas.width * 0.8) {
+            const newFontSize = Math.floor(fontSize * (canvas.width * 0.8) / textWidth);
+            ctx.font = `bold ${newFontSize}px "Kode Mono", "Teko", monospace, sans-serif`;
         }
 
-        textTexture.value = new CanvasTexture(canvas);
+        // Draw text in a single line
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        ctx.fillText(props.text, centerX, centerY);
     }
+
+    const texture = new CanvasTexture(canvas);
+    texture.premultiplyAlpha = true;
+    texture.needsUpdate = true;
+    textTexture.value = texture;
+}
+
+// Generate text canvas on mounted, with font loading check
+onMounted(async () => {
+    if (typeof document === 'undefined') return;
+
+    // Render an initial blank transparent texture
+    renderTextToCanvas();
+
+    // Preload fonts
+    if ('fonts' in document) {
+        try {
+            // Fix font URL, using correct font file URL instead of CSS URL
+            await document.fonts.load('bold 74px "Kode Mono"');
+
+            // Wait for all fonts to be ready
+            await document.fonts.ready;
+
+            // Render again after fonts are loaded
+            renderTextToCanvas();
+        } catch (error) {
+            console.error("Error loading fonts:", error);
+        }
+
+        // Set delayed retry to ensure font loading
+        setTimeout(() => {
+            renderTextToCanvas();
+        }, 1000);
+    }
+});
+
+// Add watchers to ensure texture updates when mode changes
+watch(() => props.text, () => {
+    renderTextToCanvas();
 });
 </script>
 
@@ -80,7 +118,8 @@ onMounted(() => {
     <TresGroup :position="position" :rotation="rotation" :scale="[scale, scale, scale]">
         <!-- Text plane using canvas texture -->
         <TresSprite :scale="[planeSize, planeSize / 2, 1]">
-            <TresSpriteMaterial v-if="textTexture" :map="textTexture" :transparent="true" :depthWrite="false" />
+            <TresSpriteMaterial v-if="textTexture" :map="textTexture" :transparent="true" :depthWrite="false"
+                :depthTest="true" :alphaTest="0.01" :side="2" />
         </TresSprite>
     </TresGroup>
 </template>

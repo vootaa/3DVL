@@ -18,9 +18,6 @@ const toggleSound = () => {
 </template>
 
 <style lang="css" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Teko:wght@500&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400;500;700&display=swap');
-
 .sound-control {
     position: absolute;
     top: 20px;
