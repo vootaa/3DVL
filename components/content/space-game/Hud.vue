@@ -93,8 +93,8 @@ const comboSystem = computed(() => gameStore.comboSystem)
     font-weight: 500;
     font-variant-numeric: slashed-zero tabular-nums;
     text-transform: uppercase;
-    transform: skew(-3deg, -3deg);
-    width: 360px;
+    transform: skew(3deg, -3deg);
+    width: 320px;
     min-height: 105px;
     display: flex;
     flex-direction: column;

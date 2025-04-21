@@ -316,15 +316,27 @@ gameStore.actions.shoot = () => {
 }
 
 gameStore.actions.test = (data: { size: number; offset: Vector3; scale: number; hit: any; distance: number; }) => {
-    gameStore.mutation.box.min.copy(data.offset)
-    gameStore.mutation.box.max.copy(data.offset)
-    gameStore.mutation.box.expandByScalar(data.size * data.scale)
-    data.hit.set(10000, 10000, 10000)
-    const result = gameStore.mutation.ray.intersectBox(gameStore.mutation.box, data.hit)
+    const halfSize = data.size * data.scale / 2;
+
+    gameStore.mutation.box.min.set(
+        data.offset.x - halfSize,
+        data.offset.y - halfSize,
+        data.offset.z - halfSize
+    );
+
+    gameStore.mutation.box.max.set(
+        data.offset.x + halfSize,
+        data.offset.y + halfSize,
+        data.offset.z + halfSize
+    );
+
+    data.hit.set(10000, 10000, 10000);
+
+    const result = gameStore.mutation.ray.intersectBox(gameStore.mutation.box, data.hit);
 
     if (result) {
-        data.distance = gameStore.mutation.ray.origin.distanceTo(data.hit)
-        return true
+        data.distance = gameStore.mutation.ray.origin.distanceTo(data.hit);
+        return true;
     }
 
     return false
@@ -516,11 +528,35 @@ function randomData(count: number, track: TubeGeometry, radius: number, size: nu
         const t = Math.random()
         const pos = track.parameters.path.getPointAt(t)
         pos.multiplyScalar(15)
-        const offset = pos
-            .clone()
-            .add(new Vector3(-radius + Math.random() * radius * 2, -radius + Math.random() * radius * 2, -radius + Math.random() * radius * 2))
+
+        // Modify enemy position generation: limit vertical distance
+        // Horizontal direction still maintains omnidirectional randomness
+        const horizontalOffset = new Vector3(
+            -radius + Math.random() * radius * 2,
+            0,  // Set to zero first, then add limited vertical offset later
+            -radius + Math.random() * radius * 2
+        );
+
+        // Vertical offset is controlled within a smaller range to reduce enemies generated too far below the track
+        // Control vertical offset between -radius/2 and radius/2 to reduce distance of enemies below
+        const verticalOffset = -radius / 2 + Math.random() * radius;
+        horizontalOffset.y = verticalOffset;
+
+        const offset = pos.clone().add(horizontalOffset);
         const speed = 0.1 + Math.random()
-        return { guid: guid++, scale: typeof scale === 'function' ? scale() : scale, size, offset, pos, speed, radius, t, hit: new Vector3(), distance: 1000, rotation: new Euler(Math.random(), Math.random(), Math.random()) }
+        return {
+            guid: guid++,
+            scale: typeof scale === 'function' ? scale() : scale,
+            size,
+            offset,
+            pos,
+            speed,
+            radius,
+            t,
+            hit: new Vector3(),
+            distance: 1000,
+            rotation: new Euler(Math.random(), Math.random(), Math.random())
+        }
     })
 }
 
