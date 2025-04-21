@@ -1,12 +1,29 @@
 <script setup lang="ts">
 import { inject } from 'vue'
-import { SpeedMode, SPEED_SETTINGS, type GameStore } from '../GameStore'
+import { SpeedMode, SPEED_SETTINGS, type GameStore, ObservationMode } from '../GameStore'
 
 const gameStore = inject('gameStore') as GameStore
 
 const switchGameMode = () => {
-    gameStore.actions.switchGameMode()
+    if (gameStore.observationMode === ObservationMode.None) {
+        gameStore.actions.switchGameMode()
+    } else {
+        console.log('Please resume journey before switching game mode')
+    }
 }
+
+const switchSpeedMode = () => {
+    if (gameStore.observationMode === ObservationMode.None) {
+        gameStore.actions.switchSpeedMode()
+    } else {
+        console.log('Please resume journey before changing speed')
+    }
+}
+
+
+const isGameModeSwitchDisabled = computed(() => {
+    return gameStore.observationMode !== ObservationMode.None
+})
 
 const speedLabel = computed(() => {
     return SPEED_SETTINGS[gameStore.speedMode].label
@@ -24,15 +41,18 @@ const speedBars = computed(() => {
 
 <template>
     <div class="control-panel">
-        <div class="control-item game-mode" @click="switchGameMode">
+        <div class="control-item game-mode" @click="switchGameMode" :class="{ 'disabled': isGameModeSwitchDisabled }">
             <div class="control-label">GAME MODE</div>
             <div class="control-value">{{ gameStore.gameMode }}</div>
-            <div class="control-hint">click to switch</div>
+            <div v-if="!isGameModeSwitchDisabled" class="control-hint">click to switch</div>
+            <div v-else class="control-hint warning">resume journey first</div>
         </div>
 
-        <div class="control-item speed-mode" @click="gameStore.actions.switchSpeedMode">
+        <div class="control-item speed-mode" @click="switchSpeedMode" :class="{ 'disabled': isGameModeSwitchDisabled }">
             <div class="control-label">SPEED</div>
             <div class="control-value">{{ speedLabel }}</div>
+            <div v-if="!isGameModeSwitchDisabled" class="control-hint">click to change</div>
+            <div v-else class="control-hint warning">resume journey first</div>
             <div class="speed-bars">
                 <div class="bar" :class="{ active: speedBars >= 1 }"></div>
                 <div class="bar" :class="{ active: speedBars >= 2 }"></div>
@@ -69,7 +89,7 @@ const speedBars = computed(() => {
     transform: skew(-3deg, -3deg);
     pointer-events: all;
     cursor: pointer;
-    width: 160px;
+    width: 200px;
     min-height: 90px;
     display: flex;
     flex-direction: column;
@@ -78,8 +98,14 @@ const speedBars = computed(() => {
     box-sizing: border-box;
 }
 
-.control-item:hover {
+.control-item:hover:not(.disabled) {
     background: rgba(0, 0, 0, 0.7);
+}
+
+.control-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    position: relative;
 }
 
 .control-label {
@@ -97,6 +123,16 @@ const speedBars = computed(() => {
     font-size: 0.85em;
     opacity: 0.6;
     font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.control-hint.warning {
+    color: #ffcc00;
+    opacity: 0.8;
+    font-size: 0.75em;
+    letter-spacing: -0.3px;
 }
 
 .speed-bars {

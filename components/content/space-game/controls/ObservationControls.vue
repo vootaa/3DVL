@@ -115,7 +115,7 @@ onUnmounted(() => {
 <style>
 .observation-controls {
     position: absolute;
-    top: 250px;
+    top: 280px;
     right: 20px;
     z-index: 100;
 }
@@ -159,7 +159,7 @@ onUnmounted(() => {
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
-    min-width: 160px;
+    min-width: 180px;
     text-align: left;
     position: relative;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);

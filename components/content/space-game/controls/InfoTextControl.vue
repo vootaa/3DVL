@@ -39,7 +39,7 @@ const toggleInfoText = () => {
     transform: skew(3deg, 3deg);
     pointer-events: all;
     cursor: pointer;
-    width: 160px;
+    width: 180px;
     min-height: 90px;
     display: flex;
     flex-direction: column;
