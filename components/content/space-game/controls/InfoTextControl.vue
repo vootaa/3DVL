@@ -12,7 +12,7 @@ const toggleInfoText = () => {
 
 <template>
     <div class="info-text-control" @click="toggleInfoText" v-if="gameStore.gameMode === GameMode.Explore">
-        <div class="control-label">INFO TEXT</div>
+        <div class="control-label">INFO Labels</div>
         <div class="control-value">{{ gameStore.showInfoText ? 'ON' : 'OFF' }}</div>
         <div class="control-hint">click to toggle</div>
     </div>

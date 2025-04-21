@@ -472,7 +472,7 @@ function generateRings(count: number, track: TubeGeometry, startT: number = TRAC
         temp.push({
             position: position.toArray(),
             rotation,
-            scale: 30 + i * 2 * Math.sin(i * 0.1) * Math.PI / 2
+            scale: 20 + i * 3 * Math.sin(i * 0.2) * Math.PI / 2
         });
     }
 
@@ -573,7 +573,7 @@ function generateSpaceProbeData(track: TubeGeometry, startT: number = TRACK_POSI
     return {
         position: position.toArray(),
         rotation: rotation,
-        scale: 2
+        scale: 3
     };
 }
 

@@ -105,6 +105,9 @@ onUnmounted(() => {
             <div class="orbit-instructions">
                 Drag mouse to orbit • Scroll to zoom
             </div>
+            <div class="orbit-data">
+                <span class="orbit-distance">Distance: {{ Math.round(gameStore.mutation.orbitDistance) }} KM</span>
+            </div>
         </div>
     </div>
 </template>
@@ -220,5 +223,23 @@ onUnmounted(() => {
 .orbit-instructions {
     font-size: 0.8em;
     opacity: 0.8;
+}
+
+.orbit-data {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    font-size: 0.9em;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 5px 8px;
+    border-radius: 4px;
+    margin-bottom: 5px;
+}
+
+.orbit-distance {
+    font-family: monospace;
+    font-weight: 500;
+    color: #a0e0ff;
+    text-align: center;
 }
 </style>
