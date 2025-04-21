@@ -123,7 +123,7 @@ export const gameStore = reactive({
     explosions: [] as ExplosionData[],
     rocks: randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5),
     enemies: randomData(10, track, 20, 15, 1),
-    rings: generateRings(50, track),
+    rings: generateRings(40, track),
     chainweb3D: generateChainweb3D(30, track),
     PetersenGraphGroup: generatePetersenGraph(track),
     infoLabels: generateInfoLabels(track),
@@ -471,11 +471,11 @@ function generateRings(count: number, track: TubeGeometry, startT: number = TRAC
 
     // Add random wave parameters
     const waveFactor = 0.05 + Math.random() * 0.15; // Wave factor (0.05-0.2)
-    const waveFrequency = 0.05 + Math.random() * 0.2; // Wave frequency (0.05-0.25)
+    const waveFrequency = 0.05 + Math.random() * 0.25; // Wave frequency (0.05-0.3)
 
     for (let i = 0; i < count; i++) {
         // Add a small random offset for each ring to make distribution more natural
-        t += 0.0008;
+        t += 0.001;
 
         // Get position and rotation
         const { position, rotation } = calculateTrackPositionAndRotation(track, t);
