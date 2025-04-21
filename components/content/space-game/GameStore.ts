@@ -123,7 +123,7 @@ export const gameStore = reactive({
     explosions: [] as ExplosionData[],
     rocks: randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5),
     enemies: randomData(10, track, 20, 15, 1),
-    rings: generateRings(30, track),
+    rings: generateRings(50, track),
     chainweb3D: generateChainweb3D(30, track),
     PetersenGraphGroup: generatePetersenGraph(track),
     infoLabels: generateInfoLabels(track),
@@ -465,14 +465,30 @@ function generateRings(count: number, track: TubeGeometry, startT: number = TRAC
     const temp = [];
     let t = startT;
 
+    // Two adjustable parameters to control ring size variations
+    const baseScale = 15 + Math.random() * 10; // Base scale size (15-25)
+    const scaleVariation = 0.5 + Math.random() * 1.5;  // Scale variation range (0.5-2)
+
+    // Add random wave parameters
+    const waveFactor = 0.05 + Math.random() * 0.15; // Wave factor (0.05-0.2)
+    const waveFrequency = 0.05 + Math.random() * 0.2; // Wave frequency (0.05-0.25)
+
     for (let i = 0; i < count; i++) {
-        t += 0.001;
+        // Add a small random offset for each ring to make distribution more natural
+        t += 0.0008;
+
+        // Get position and rotation
         const { position, rotation } = calculateTrackPositionAndRotation(track, t);
+
+        // Calculate scale using new parameters, adding randomness and wave effect
+        const scale = baseScale +
+            (i * scaleVariation * Math.sin(i * waveFrequency) * Math.PI / 2) +
+            (Math.random() * waveFactor * baseScale);
 
         temp.push({
             position: position.toArray(),
             rotation,
-            scale: 20 + i * 3 * Math.sin(i * 0.2) * Math.PI / 2
+            scale: scale
         });
     }
 
