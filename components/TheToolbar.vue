@@ -26,14 +26,20 @@ const toggleDark = useToggle(isDark)
           class="bg-transparent -mt-1"
           @click="toggleDark()"
         >
-          <i
-            v-if="isDark"
-            class="i-carbon-sun"
-          />
-          <i
-            v-else
-            class="i-carbon-moon"
-          />
+          <ClientOnly>
+            <i
+              v-if="isDark"
+              class="i-carbon-sun"
+            />
+            <i
+              v-else
+              class="i-carbon-moon"
+            />
+            <!-- Provide a placeholder to display before client-side rendering completes -->
+            <template #fallback>
+              <i class="i-carbon-moon" />
+            </template>
+          </ClientOnly>
         </button>
         <a
           href="https://tresjs.org/"

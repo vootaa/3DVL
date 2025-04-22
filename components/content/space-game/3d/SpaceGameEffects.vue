@@ -1,14 +1,13 @@
 <script lang="ts" setup>
+import { extend, useLoop, useTres } from '@tresjs/core'
+import { shallowRef, onMounted, nextTick } from 'vue'
+
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
-import { extend, useLoop, useTres } from '@tresjs/core'
-import { shallowRef, watch, onMounted, nextTick } from 'vue'
-import { Vector2 } from 'three'
 
-extend({ EffectComposer, RenderPass, OutputPass, ShaderPass, UnrealBloomPass })
+extend({ EffectComposer, RenderPass, OutputPass, UnrealBloomPass })
 
 const { renderer, scene, camera, sizes } = useTres()
 const composer = shallowRef()
@@ -27,7 +26,13 @@ watch([() => sizes.width.value, () => sizes.height.value], () => {
   }
 })
 
-useLoop().render(() => {
+onUnmounted(() => {
+  if (composer.value) {
+  }
+})
+
+const loop = useLoop()
+loop.render(() => {
   try {
     if (composer.value) {
       composer.value.render()
@@ -43,21 +48,18 @@ useLoop().render(() => {
 </script>
 
 <template>
-  <TresEffectComposer 
-    ref="composer" 
+  <TresEffectComposer
+    ref="composer"
     :args="[renderer]"
   >
-    <TresRenderPass 
-      :args="[scene, camera]" 
-      attach="passes-0" 
+    <TresRenderPass
+      :args="[scene, camera]"
+      attach="passes-0"
     />
-    <TresUnrealBloomPass 
-      :args="[new Vector2(sizes.width.value, sizes.height.value), 0.5, 0.1, 0]" 
-      attach="passes-1" 
+    <TresUnrealBloomPass
+      :args="[undefined, 0.5, 0.1, 0]"
+      attach="passes-1"
     />
-    <TresOutputPass 
-      attach="passes-2" 
-      :set-size="[sizes.width.value, sizes.height.value]" 
-    />
+    <TresOutputPass attach="passes-2" />
   </TresEffectComposer>
 </template>
