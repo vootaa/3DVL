@@ -10,11 +10,16 @@ const probeData = gameStore.spaceProbe
 </script>
 
 <template>
-    <TresGroup>
-        <SpaceStation :position="stationData.position"
-            :rotation="[stationData.rotation.x, stationData.rotation.y, stationData.rotation.z]"
-            :scale="stationData.scale" />
-        <SpaceProbe :position="probeData.position"
-            :rotation="[probeData.rotation.x, probeData.rotation.y, probeData.rotation.z]" :scale="probeData.scale" />
-    </TresGroup>
+  <TresGroup>
+    <SpaceStation
+      :position="stationData.position"
+      :rotation="[stationData.rotation.x, stationData.rotation.y, stationData.rotation.z]"
+      :scale="stationData.scale"
+    />
+    <SpaceProbe
+      :position="probeData.position"
+      :rotation="[probeData.rotation.x, probeData.rotation.y, probeData.rotation.z]"
+      :scale="probeData.scale"
+    />
+  </TresGroup>
 </template>

@@ -28,6 +28,11 @@ geom.setAttribute('position', new BufferAttribute(positions, 3))
 <template>
   <TresPoints :args="[geom]">
     <TresBufferGeometry :position="[positions, 3]" />
-    <TresPointsMaterial color="#DDEEFF" :size="15" :size-attenuation="true" :fog="false" />
+    <TresPointsMaterial
+      color="#DDEEFF"
+      :size="15"
+      :size-attenuation="true"
+      :fog="false"
+    />
   </TresPoints>
 </template>

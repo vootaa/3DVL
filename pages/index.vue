@@ -5,7 +5,7 @@ const { data: experiments } = await useAsyncData('/',
       $or: [
         { status: { $exists: false } },
         { status: 'published' },
-      ]
+      ],
     })
     .sort({ date: -1 })
     .find(),
@@ -65,10 +65,18 @@ function getRepoTitleFromExperiment(experiment) {
 <template>
   <main class="bg-white dark:bg-dark">
     <div class="w-full container mx-auto px-4 md:px-0 pb-60 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-16 pt-8">
-      <TheCard v-for="experiment in formattedExperiments" :key="experiment._path" :title="experiment.title"
-        :path="experiment._path" :repo-title="experiment.repoTitle" :repo-path="experiment.repoPath"
-        :media="experiment.thumbnail" :description="experiment.description" :author="experiment.author"
-        :tags="experiment.tags" />
+      <TheCard
+        v-for="experiment in formattedExperiments"
+        :key="experiment._path"
+        :title="experiment.title"
+        :path="experiment._path"
+        :repo-title="experiment.repoTitle"
+        :repo-path="experiment.repoPath"
+        :media="experiment.thumbnail"
+        :description="experiment.description"
+        :author="experiment.author"
+        :tags="experiment.tags"
+      />
     </div>
   </main>
 </template>

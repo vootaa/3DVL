@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Imagotype from './Imagotype.vue';
+import Imagotype from './Imagotype.vue'
 import BrownianDistributionGroup from './BrownianDistributionGroup.vue'
 </script>
 

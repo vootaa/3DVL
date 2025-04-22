@@ -7,7 +7,7 @@ import { gameStore } from './GameStore'
 import SoundControl from './controls/SoundControl.vue'
 import InfoTextControl from './controls/InfoTextControl.vue'
 import ControlPanel from './controls/ControlPanel.vue'
-import ObservationControls from './controls/ObservationControls.vue';
+import ObservationControls from './controls/ObservationControls.vue'
 import Hud from './Hud.vue'
 
 provide('gameStore', gameStore)
@@ -16,12 +16,31 @@ onMounted(() => { gameStore.actions.init(camera.value) })
 </script>
 
 <template>
-  <div class="full-screen" @pointermove="gameStore.actions.updateMouse" @pointerdown="gameStore.actions.shoot">
-    <TresCanvas clear-color="#010104" :linear="true" :flat="true" :antialias="false" :tone-mapping="NoToneMapping"
-      :output-encoding="SRGBColorSpace">
-      <TresPerspectiveCamera ref="camera" :position="[0, 0, 2000]" :near="0.01" :far="20000"
-        :fov="gameStore.mutation.fov" />
-      <TresFog color="#121225" :near="150" :far="600" />
+  <div
+    class="full-screen"
+    @pointermove="gameStore.actions.updateMouse"
+    @pointerdown="gameStore.actions.shoot"
+  >
+    <TresCanvas
+      clear-color="#010104"
+      :linear="true"
+      :flat="true"
+      :antialias="false"
+      :tone-mapping="NoToneMapping"
+      :output-encoding="SRGBColorSpace"
+    >
+      <TresPerspectiveCamera
+        ref="camera"
+        :position="[0, 0, 2000]"
+        :near="0.01"
+        :far="20000"
+        :fov="gameStore.mutation.fov"
+      />
+      <TresFog
+        color="#121225"
+        :near="150"
+        :far="600"
+      />
       <Game />
     </TresCanvas>
     <SoundControl />

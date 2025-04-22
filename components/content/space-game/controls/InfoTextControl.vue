@@ -6,16 +6,26 @@ import { GameMode } from '../GameStore'
 const gameStore = inject('gameStore') as GameStore
 
 const toggleInfoText = () => {
-    gameStore.actions.toggleInfoText(!gameStore.showInfoText)
+  gameStore.actions.toggleInfoText(!gameStore.showInfoText)
 }
 </script>
 
 <template>
-    <div class="info-text-control" @click="toggleInfoText" v-if="gameStore.gameMode === GameMode.Explore">
-        <div class="control-label">INFO Labels</div>
-        <div class="control-value">{{ gameStore.showInfoText ? 'ON' : 'OFF' }}</div>
-        <div class="control-hint">click to toggle</div>
+  <div
+    v-if="gameStore.gameMode === GameMode.Explore"
+    class="info-text-control"
+    @click="toggleInfoText"
+  >
+    <div class="control-label">
+      INFO Labels
     </div>
+    <div class="control-value">
+      {{ gameStore.showInfoText ? 'ON' : 'OFF' }}
+    </div>
+    <div class="control-hint">
+      click to toggle
+    </div>
+  </div>
 </template>
 
 <style lang="css" scoped>

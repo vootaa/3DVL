@@ -7,8 +7,13 @@ const gameStore: GameStore = inject('gameStore') as GameStore
 </script>
 
 <template>
-    <TresGroup>
-        <PetersenGraphPlane v-for="({ position, rotation, scale }, i) of gameStore.PetersenGraphGroup" :key="i"
-            :position="position" :rotation="[rotation.x, rotation.y, rotation.z]" :scale="scale" />
-    </TresGroup>
+  <TresGroup>
+    <PetersenGraphPlane
+      v-for="({ position, rotation, scale }, i) of gameStore.PetersenGraphGroup"
+      :key="i"
+      :position="position"
+      :rotation="[rotation.x, rotation.y, rotation.z]"
+      :scale="scale"
+    />
+  </TresGroup>
 </template>

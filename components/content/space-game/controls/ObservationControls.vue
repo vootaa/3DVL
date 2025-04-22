@@ -1,167 +1,193 @@
 <script setup>
-import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
-import { gameStore, GameMode, ObservationMode, POINTS_OF_INTEREST } from '../GameStore';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
+import { gameStore, GameMode, ObservationMode, POINTS_OF_INTEREST } from '../GameStore'
 
 // Add observation timer
-const observationTime = ref(0);
-const observationInterval = ref(null);
-const requiredObservationTime = 20; // Seconds required to obtain stardust
+const observationTime = ref(0)
+const observationInterval = ref(null)
+const requiredObservationTime = 20 // Seconds required to obtain stardust
 
 // Watch for changes in current observation point to start/stop timer
 watch(() => [gameStore.currentPointOfInterest, gameStore.observationMode], ([newPOI, newMode]) => {
-    clearInterval(observationInterval.value);
+  clearInterval(observationInterval.value)
 
-    if (newPOI && newMode === ObservationMode.Orbiting) {
-        observationTime.value = 0;
-        // Start a new timer
-        observationInterval.value = setInterval(() => { observationTime.value++; }, 1000);
-    } else {
-        observationTime.value = 0;
-    }
-}, { immediate: true });
+  if (newPOI && newMode === ObservationMode.Orbiting) {
+    observationTime.value = 0
+    // Start a new timer
+    observationInterval.value = setInterval(() => { observationTime.value++ }, 1000)
+  }
+  else {
+    observationTime.value = 0
+  }
+}, { immediate: true })
 
 const remainingTime = computed(() => {
-    if (!gameStore.currentPointOfInterest ||
-        gameStore.observedPoints.includes(gameStore.currentPointOfInterest)) {
-        return 0;
-    }
+  if (!gameStore.currentPointOfInterest
+        || gameStore.observedPoints.includes(gameStore.currentPointOfInterest)) {
+    return 0
+  }
 
-    return Math.max(0, requiredObservationTime - observationTime.value);
-});
+  return Math.max(0, requiredObservationTime - observationTime.value)
+})
 
 const hasCollectedStardust = computed(() => {
-    if (!gameStore.currentPointOfInterest) return false;
-    return gameStore.observedPoints.includes(gameStore.currentPointOfInterest);
-});
+  if (!gameStore.currentPointOfInterest) return false
+  return gameStore.observedPoints.includes(gameStore.currentPointOfInterest)
+})
 
 // Calculate if player is near a point of interest (within 0.05 of track position)
 const isNearPointOfInterest = (poiKey) => {
-    const poi = POINTS_OF_INTEREST[poiKey];
-    const t = gameStore.mutation.t;
-    const poiT = poi.trackPosition;
+  const poi = POINTS_OF_INTEREST[poiKey]
+  const t = gameStore.mutation.t
+  const poiT = poi.trackPosition
 
-    // Handle array of positions
-    if (Array.isArray(poiT)) {
-        return poiT.some(position => Math.abs(t - position) < 0.05);
-    }
+  // Handle array of positions
+  if (Array.isArray(poiT)) {
+    return poiT.some(position => Math.abs(t - position) < 0.05)
+  }
 
-    // Handle single position
-    return Math.abs(t - poiT) < 0.05;
-};
+  // Handle single position
+  return Math.abs(t - poiT) < 0.05
+}
 
 const observePointOfInterest = (poiKey) => {
-    gameStore.actions.toggleObservationMode(poiKey);
-};
+  gameStore.actions.toggleObservationMode(poiKey)
+}
 
 const currentPoiName = computed(() => {
-    if (!gameStore.currentPointOfInterest) return '';
-    return POINTS_OF_INTEREST[gameStore.currentPointOfInterest].name;
-});
+  if (!gameStore.currentPointOfInterest) return ''
+  return POINTS_OF_INTEREST[gameStore.currentPointOfInterest].name
+})
 
 // Mouse handling for orbit controls
-let isDragging = false;
-let lastMouseX = 0;
-let lastMouseY = 0;
+let isDragging = false
+let lastMouseX = 0
+let lastMouseY = 0
 
 const handleMouseDown = (e) => {
-    if (gameStore.observationMode === ObservationMode.Orbiting) {
-        isDragging = true;
-        lastMouseX = e.clientX;
-        lastMouseY = e.clientY;
-    }
-};
+  if (gameStore.observationMode === ObservationMode.Orbiting) {
+    isDragging = true
+    lastMouseX = e.clientX
+    lastMouseY = e.clientY
+  }
+}
 
 const handleMouseMove = (e) => {
-    if (isDragging && gameStore.observationMode === ObservationMode.Orbiting) {
-        const deltaX = e.clientX - lastMouseX;
-        const deltaY = e.clientY - lastMouseY;
+  if (isDragging && gameStore.observationMode === ObservationMode.Orbiting) {
+    const deltaX = e.clientX - lastMouseX
+    const deltaY = e.clientY - lastMouseY
 
-        // Update orbit angle based on mouse movement
-        gameStore.orbitAngle -= deltaX * 0.005;
-        gameStore.orbitHeight -= deltaY * 0.005;
+    // Update orbit angle based on mouse movement
+    gameStore.orbitAngle -= deltaX * 0.005
+    gameStore.orbitHeight -= deltaY * 0.005
 
-        lastMouseX = e.clientX;
-        lastMouseY = e.clientY;
-    }
-};
+    lastMouseX = e.clientX
+    lastMouseY = e.clientY
+  }
+}
 
 const handleMouseUp = () => {
-    isDragging = false;
-};
+  isDragging = false
+}
 
 const handleWheel = (e) => {
-    if (gameStore.observationMode === ObservationMode.Orbiting) {
-        // Adjust orbit distance with mouse wheel
-        const delta = e.deltaY > 0 ? 5 : -5;
-        gameStore.mutation.orbitDistance = Math.max(30, Math.min(200, gameStore.mutation.orbitDistance + delta));
-    }
-};
+  if (gameStore.observationMode === ObservationMode.Orbiting) {
+    // Adjust orbit distance with mouse wheel
+    const delta = e.deltaY > 0 ? 5 : -5
+    gameStore.mutation.orbitDistance = Math.max(30, Math.min(200, gameStore.mutation.orbitDistance + delta))
+  }
+}
 
 // Add event listeners
 onMounted(() => {
-    window.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('wheel', handleWheel);
-});
+  window.addEventListener('mousedown', handleMouseDown)
+  window.addEventListener('mousemove', handleMouseMove)
+  window.addEventListener('mouseup', handleMouseUp)
+  window.addEventListener('wheel', handleWheel)
+})
 
 onUnmounted(() => {
-    clearInterval(observationInterval.value);
+  clearInterval(observationInterval.value)
 
-    window.removeEventListener('mousedown', handleMouseDown);
-    window.removeEventListener('mousemove', handleMouseMove);
-    window.removeEventListener('mouseup', handleMouseUp);
-    window.removeEventListener('wheel', handleWheel);
-});
+  window.removeEventListener('mousedown', handleMouseDown)
+  window.removeEventListener('mousemove', handleMouseMove)
+  window.removeEventListener('mouseup', handleMouseUp)
+  window.removeEventListener('wheel', handleWheel)
+})
 </script>
 
 <template>
-    <div v-if="gameStore.gameMode === GameMode.Explore" class="observation-controls">
-        <div v-if="gameStore.observationMode === ObservationMode.None">
-            <div class="poi-header">Observe Points:</div>
-            <div class="poi-buttons">
-                <button v-for="(poi, key, index) in POINTS_OF_INTEREST" :key="key" @click="observePointOfInterest(key)"
-                    :disabled="!isNearPointOfInterest(key)" class="poi-button">
-                    <span class="poi-number">{{ index + 1 }}</span> {{ poi.name }}
-                </button>
-            </div>
-        </div>
-
-        <div v-else class="orbit-controls">
-            <div class="orbit-info">
-                <span class="observation-title">Observing: {{ currentPoiName }}</span>
-                <div class="observation-timer" :class="{ 'completed': hasCollectedStardust }">
-                    <template v-if="hasCollectedStardust">
-                        <div class="stardust-collected">
-                            <span class="stardust-icon">✧</span> Stardust Collected!
-                        </div>
-                        <div class="timer-value">{{ observationTime }}s</div>
-                    </template>
-                    <template v-else>
-                        <div class="timer-label">
-                            <span class="stardust-icon">✧</span> Collecting Stardust: {{ observationTime }}s
-                        </div>
-                        <div class="timer-progress">
-                            <div class="timer-bar"
-                                :style="{ width: `${(observationTime / requiredObservationTime) * 100}%` }"></div>
-                            <div class="timer-text">{{ remainingTime }}s remaining</div>
-                        </div>
-                    </template>
-                </div>
-                <button @click="gameStore.actions.resumeJourney()" class="resume-button">
-                    Resume Journey
-                </button>
-            </div>
-
-            <!-- Orbit control instructions -->
-            <div class="orbit-instructions">
-                Drag mouse to orbit • Scroll to zoom
-            </div>
-            <div class="orbit-data">
-                <span class="orbit-distance">Distance: {{ Math.round(gameStore.mutation.orbitDistance) }} KM</span>
-            </div>
-        </div>
+  <div
+    v-if="gameStore.gameMode === GameMode.Explore"
+    class="observation-controls"
+  >
+    <div v-if="gameStore.observationMode === ObservationMode.None">
+      <div class="poi-header">
+        Observe Points:
+      </div>
+      <div class="poi-buttons">
+        <button
+          v-for="(poi, key, index) in POINTS_OF_INTEREST"
+          :key="key"
+          :disabled="!isNearPointOfInterest(key)"
+          class="poi-button"
+          @click="observePointOfInterest(key)"
+        >
+          <span class="poi-number">{{ index + 1 }}</span> {{ poi.name }}
+        </button>
+      </div>
     </div>
+
+    <div
+      v-else
+      class="orbit-controls"
+    >
+      <div class="orbit-info">
+        <span class="observation-title">Observing: {{ currentPoiName }}</span>
+        <div
+          class="observation-timer"
+          :class="{ completed: hasCollectedStardust }"
+        >
+          <template v-if="hasCollectedStardust">
+            <div class="stardust-collected">
+              <span class="stardust-icon">✧</span> Stardust Collected!
+            </div>
+            <div class="timer-value">
+              {{ observationTime }}s
+            </div>
+          </template>
+          <template v-else>
+            <div class="timer-label">
+              <span class="stardust-icon">✧</span> Collecting Stardust: {{ observationTime }}s
+            </div>
+            <div class="timer-progress">
+              <div
+                class="timer-bar"
+                :style="{ width: `${(observationTime / requiredObservationTime) * 100}%` }"
+              />
+              <div class="timer-text">
+                {{ remainingTime }}s remaining
+              </div>
+            </div>
+          </template>
+        </div>
+        <button
+          class="resume-button"
+          @click="gameStore.actions.resumeJourney()"
+        >
+          Resume Journey
+        </button>
+      </div>
+
+      <!-- Orbit control instructions -->
+      <div class="orbit-instructions">
+        Drag mouse to orbit • Scroll to zoom
+      </div>
+      <div class="orbit-data">
+        <span class="orbit-distance">Distance: {{ Math.round(gameStore.mutation.orbitDistance) }} KM</span>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style>

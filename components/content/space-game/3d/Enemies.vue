@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { useLoader, useLoop } from '@tresjs/core'
+import { Box3, Vector3, MeshBasicMaterial, Color, MeshPhongMaterial, Group } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { inject, shallowRef } from 'vue'
 import type { GameStore } from '../GameStore'
-import { Box3, Vector3, MeshBasicMaterial, Color, MeshPhongMaterial, Group } from 'three';
 
 const gameStore = inject('gameStore') as GameStore
 const clock = gameStore.mutation.clock
@@ -31,12 +31,28 @@ useLoop().onBeforeRender(() => {
 </script>
 
 <template>
-  <TresGroup v-for="enemy, i of gameStore.enemies" :key="i" ref="ref" :scale="[5, 5, 5]">
-    <TresMesh :position="[0, 0, 50]" :rotation="[Math.PI / 2, 0, 0]" :material="glowMaterial">
+  <TresGroup
+    v-for="enemy, i of gameStore.enemies"
+    :key="i"
+    ref="ref"
+    :scale="[5, 5, 5]"
+  >
+    <TresMesh
+      :position="[0, 0, 50]"
+      :rotation="[Math.PI / 2, 0, 0]"
+      :material="glowMaterial"
+    >
       <TresCylinderGeometry :args="[0.25, 0.25, 100, 4]" />
     </TresMesh>
-    <TresMesh name="Sphere_DroneGlowmat_0" :geometry="nodes.Sphere_DroneGlowmat_0.geometry"
-      :material="materials.DroneGlowmat" />
-    <TresMesh name="Sphere_Body_0" :geometry="nodes.Sphere_Body_0.geometry" :material="bodyMaterial" />
+    <TresMesh
+      name="Sphere_DroneGlowmat_0"
+      :geometry="nodes.Sphere_DroneGlowmat_0.geometry"
+      :material="materials.DroneGlowmat"
+    />
+    <TresMesh
+      name="Sphere_Body_0"
+      :geometry="nodes.Sphere_Body_0.geometry"
+      :material="bodyMaterial"
+    />
   </TresGroup>
 </template>

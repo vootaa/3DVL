@@ -4,154 +4,176 @@ import { GameMode, type GameStore } from '../GameStore'
 import { timeManager } from '../TimeManager'
 
 const props = defineProps({
-    type: {
-        type: String,
-        required: true,
-        validator: (value: string) => ['gameOver', 'switchConfirm'].includes(value)
-    },
-    currentMode: {
-        type: Number as unknown as () => GameMode,
-        required: true,
-        validator: (value: number) => Object.values(GameMode).includes(value as unknown as GameMode)
-    },
-    battleScore: {
-        type: Number,
-        default: 0
-    },
-    stardust: {
-        type: Number,
-        default: 0
-    },
-    time: {
-        type: String,
-        default: '00:00.0'
-    },
-    totalLoops: {
-        type: Number,
-        default: 7
-    }
+  type: {
+    type: String,
+    required: true,
+    validator: (value: string) => ['gameOver', 'switchConfirm'].includes(value),
+  },
+  currentMode: {
+    type: Number as unknown as () => GameMode,
+    required: true,
+    validator: (value: number) => Object.values(GameMode).includes(value as unknown as GameMode),
+  },
+  battleScore: {
+    type: Number,
+    default: 0,
+  },
+  stardust: {
+    type: Number,
+    default: 0,
+  },
+  time: {
+    type: String,
+    default: '00:00.0',
+  },
+  totalLoops: {
+    type: Number,
+    default: 7,
+  },
 })
 
 const gameStore = inject('gameStore') as GameStore
 
 const restartGame = () => {
-    // Restart game, keep current mode
-    gameStore.actions.restartGame(false);
-    gameStore.actions.hideModal();
+  // Restart game, keep current mode
+  gameStore.actions.restartGame(false)
+  gameStore.actions.hideModal()
 }
 
 const switchMode = () => {
-    // Switch game mode and restart
-    // If switching from game over dialog, need complete reset
-    if (props.type === 'gameOver') {
-        gameStore.actions.restartGame(true); // true means switch mode
-    } else {
-        gameStore.actions.switchGameMode();
-    }
-    gameStore.actions.hideModal();
+  // Switch game mode and restart
+  // If switching from game over dialog, need complete reset
+  if (props.type === 'gameOver') {
+    gameStore.actions.restartGame(true) // true means switch mode
+  }
+  else {
+    gameStore.actions.switchGameMode()
+  }
+  gameStore.actions.hideModal()
 }
 
 const continueGame = () => {
-    // Cancel, continue current game
-    gameStore.actions.hideModal();
-    // Resume game time
-    timeManager.actions.resume();
+  // Cancel, continue current game
+  gameStore.actions.hideModal()
+  // Resume game time
+  timeManager.actions.resume()
 }
 
 // Check if current mode is battle mode
 const isBattleMode = computed(() => props.currentMode === GameMode.Battle)
 
-const getOppositeMode = () => {
-    return isBattleMode.value ? 'Explore' : 'Battle';
-}
+const getOppositeMode = () => isBattleMode.value ? 'Explore' : 'Battle'
 
 const getTitleText = () => {
-    if (props.type === 'gameOver') {
-        return isBattleMode.value ? 'BATTLE COMPLETE' : 'EXPLORATION COMPLETE';
-    } else {
-        return 'SWITCH MODE?';
-    }
+  if (props.type === 'gameOver') {
+    return isBattleMode.value ? 'BATTLE COMPLETE' : 'EXPLORATION COMPLETE'
+  }
+  else {
+    return 'SWITCH MODE?'
+  }
 }
 </script>
 
 <template>
-    <div class="modal-backdrop">
-        <div class="modal-container">
-            <div class="modal-header">{{ getTitleText() }}</div>
+  <div class="modal-backdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        {{ getTitleText() }}
+      </div>
 
-            <!-- Game over prompt -->
-            <div v-if="type === 'gameOver'" class="modal-content">
-                <!-- Battle mode ended -->
-                <template v-if="isBattleMode">
-                    <div class="stats-row">
-                        <span class="label">FINAL SCORE:</span>
-                        <span class="value">{{ battleScore }}</span>
-                    </div>
-                    <div class="stats-row">
-                        <span class="label">TIME:</span>
-                        <span class="value">{{ time }}</span>
-                    </div>
-                    <div class="stats-row">
-                        <span class="label">LOOPS COMPLETED:</span>
-                        <span class="value">{{ totalLoops }}/{{ totalLoops }}</span>
-                    </div>
-                </template>
+      <!-- Game over prompt -->
+      <div
+        v-if="type === 'gameOver'"
+        class="modal-content"
+      >
+        <!-- Battle mode ended -->
+        <template v-if="isBattleMode">
+          <div class="stats-row">
+            <span class="label">FINAL SCORE:</span>
+            <span class="value">{{ battleScore }}</span>
+          </div>
+          <div class="stats-row">
+            <span class="label">TIME:</span>
+            <span class="value">{{ time }}</span>
+          </div>
+          <div class="stats-row">
+            <span class="label">LOOPS COMPLETED:</span>
+            <span class="value">{{ totalLoops }}/{{ totalLoops }}</span>
+          </div>
+        </template>
 
-                <!-- Exploration mode ended -->
-                <template v-else>
-                    <div class="stats-row">
-                        <span class="label">STARDUST COLLECTED:</span>
-                        <span class="value">
-                            <span class="stardust-icon">✧</span> {{ stardust }}
-                        </span>
-                    </div>
-                    <div class="stats-row">
-                        <span class="label">TIME:</span>
-                        <span class="value">{{ time }}</span>
-                    </div>
-                    <div class="stats-row">
-                        <span class="label">LOOPS COMPLETED:</span>
-                        <span class="value">{{ totalLoops }}/{{ totalLoops }}</span>
-                    </div>
-                </template>
-            </div>
+        <!-- Exploration mode ended -->
+        <template v-else>
+          <div class="stats-row">
+            <span class="label">STARDUST COLLECTED:</span>
+            <span class="value">
+              <span class="stardust-icon">✧</span> {{ stardust }}
+            </span>
+          </div>
+          <div class="stats-row">
+            <span class="label">TIME:</span>
+            <span class="value">{{ time }}</span>
+          </div>
+          <div class="stats-row">
+            <span class="label">LOOPS COMPLETED:</span>
+            <span class="value">{{ totalLoops }}/{{ totalLoops }}</span>
+          </div>
+        </template>
+      </div>
 
-            <!-- Switch mode confirmation -->
-            <div v-else class="modal-content">
-                <div class="warning-message">
-                    <template v-if="isBattleMode">
-                        Your current battle score will be lost if you switch to Explore mode.
-                    </template>
-                    <template v-else>
-                        Your collected stardust will be lost if you switch to Battle mode.
-                    </template>
-                </div>
-                <div class="question">Do you want to continue?</div>
-            </div>
-
-            <div class="modal-footer">
-                <!-- Game over buttons -->
-                <template v-if="type === 'gameOver'">
-                    <button class="modal-btn primary" @click="restartGame">
-                        PLAY AGAIN
-                    </button>
-                    <button class="modal-btn secondary" @click="switchMode">
-                        SWITCH TO {{ getOppositeMode().toUpperCase() }}
-                    </button>
-                </template>
-
-                <!-- Switch confirmation buttons -->
-                <template v-else>
-                    <button class="modal-btn primary" @click="continueGame">
-                        CONTINUE
-                    </button>
-                    <button class="modal-btn warning" @click="switchMode">
-                        SWITCH TO {{ getOppositeMode().toUpperCase() }}
-                    </button>
-                </template>
-            </div>
+      <!-- Switch mode confirmation -->
+      <div
+        v-else
+        class="modal-content"
+      >
+        <div class="warning-message">
+          <template v-if="isBattleMode">
+            Your current battle score will be lost if you switch to Explore mode.
+          </template>
+          <template v-else>
+            Your collected stardust will be lost if you switch to Battle mode.
+          </template>
         </div>
+        <div class="question">
+          Do you want to continue?
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <!-- Game over buttons -->
+        <template v-if="type === 'gameOver'">
+          <button
+            class="modal-btn primary"
+            @click="restartGame"
+          >
+            PLAY AGAIN
+          </button>
+          <button
+            class="modal-btn secondary"
+            @click="switchMode"
+          >
+            SWITCH TO {{ getOppositeMode().toUpperCase() }}
+          </button>
+        </template>
+
+        <!-- Switch confirmation buttons -->
+        <template v-else>
+          <button
+            class="modal-btn primary"
+            @click="continueGame"
+          >
+            CONTINUE
+          </button>
+          <button
+            class="modal-btn warning"
+            @click="switchMode"
+          >
+            SWITCH TO {{ getOppositeMode().toUpperCase() }}
+          </button>
+        </template>
+      </div>
     </div>
+  </div>
 </template>
 
 <style lang="css" scoped>

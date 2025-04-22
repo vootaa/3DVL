@@ -19,7 +19,11 @@ const repoTitle = getRepoTitleFromPath(route.path)
 
 <template>
   <div>
-    <TheCodeButton :to="repoPath" :title="repoTitle" class="fixed z-10 bottom-5 right-5" />
+    <TheCodeButton
+      :to="repoPath"
+      :title="repoTitle"
+      class="fixed z-10 bottom-5 right-5"
+    />
     <slot />
   </div>
 </template>

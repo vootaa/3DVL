@@ -6,7 +6,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.vue"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.vue",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.vue --fix"
   },
   "dependencies": {
     "@tresjs/post-processing": "1.0.0-next.1",
@@ -32,10 +33,11 @@
     "@tweakpane/plugin-essentials": "^0.2.1",
     "@types/three": "^0.175.0",
     "@unocss/nuxt": "^0.65.3",
+    "eslint": "8.57.0",
     "gsap": "^3.12.4",
     "nuxt": "^3.16.2",
     "nuxt-svgo": "^4.0.17",
-    "postprocessing": "6.37.1",
+    "postprocessing": "6.37.2",
     "vite-svg-loader": "^5.1.0"
   }
 }

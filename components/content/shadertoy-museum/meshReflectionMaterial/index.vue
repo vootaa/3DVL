@@ -379,11 +379,20 @@ defineExpose({ instance: materialRef })
 </script>
 
 <template>
-  <TresMeshReflectionMaterial :key="`key${hasBlur ? '0' : '1'
+  <TresMeshReflectionMaterial
+    :key="`key${hasBlur ? '0' : '1'
     }${hasDepth ? '0' : '1'
     }${hasDistortion ? '0' : '1'
     }${hasRoughness ? '0' : '1'
-    }`" ref="materialRef" v-bind="props" :texture-matrix="state.textureMatrix" :t-sharp="fboSharp?.texture"
-    :t-depth="fboSharp?.depthTexture" :t-blur="fboBlur?.texture" :defines-USE_BLUR="hasBlur ? '' : undefined"
-    :defines-USE_DEPTH="hasDepth ? '' : undefined" :defines-USE_DISTORTION="hasDistortion ? '' : undefined" />
+    }`"
+    ref="materialRef"
+    v-bind="props"
+    :texture-matrix="state.textureMatrix"
+    :t-sharp="fboSharp?.texture"
+    :t-depth="fboSharp?.depthTexture"
+    :t-blur="fboBlur?.texture"
+    :defines-USE_BLUR="hasBlur ? '' : undefined"
+    :defines-USE_DEPTH="hasDepth ? '' : undefined"
+    :defines-USE_DISTORTION="hasDistortion ? '' : undefined"
+  />
 </template>

@@ -5,61 +5,103 @@ import { SpeedMode, SPEED_SETTINGS, type GameStore, ObservationMode } from '../G
 const gameStore = inject('gameStore') as GameStore
 
 const switchGameMode = () => {
-    if (gameStore.observationMode === ObservationMode.None) {
-        gameStore.actions.switchGameMode()
-    } else {
-        console.log('Please resume journey before switching game mode')
-    }
+  if (gameStore.observationMode === ObservationMode.None) {
+    gameStore.actions.switchGameMode()
+  }
+  else {
+    console.log('Please resume journey before switching game mode')
+  }
 }
 
 const switchSpeedMode = () => {
-    if (gameStore.observationMode === ObservationMode.None) {
-        gameStore.actions.switchSpeedMode()
-    } else {
-        console.log('Please resume journey before changing speed')
-    }
+  if (gameStore.observationMode === ObservationMode.None) {
+    gameStore.actions.switchSpeedMode()
+  }
+  else {
+    console.log('Please resume journey before changing speed')
+  }
 }
 
+const isGameModeSwitchDisabled = computed(() => gameStore.observationMode !== ObservationMode.None)
 
-const isGameModeSwitchDisabled = computed(() => {
-    return gameStore.observationMode !== ObservationMode.None
-})
-
-const speedLabel = computed(() => {
-    return SPEED_SETTINGS[gameStore.speedMode].label
-})
+const speedLabel = computed(() => SPEED_SETTINGS[gameStore.speedMode].label)
 
 const speedBars = computed(() => {
-    switch (gameStore.speedMode) {
-        case SpeedMode.Slow: return 1
-        case SpeedMode.Normal: return 2
-        case SpeedMode.Fast: return 3
-        default: return 3
-    }
+  switch (gameStore.speedMode) {
+    case SpeedMode.Slow: return 1
+    case SpeedMode.Normal: return 2
+    case SpeedMode.Fast: return 3
+    default: return 3
+  }
 })
 </script>
 
 <template>
-    <div class="control-panel">
-        <div class="control-item game-mode" @click="switchGameMode" :class="{ 'disabled': isGameModeSwitchDisabled }">
-            <div class="control-label">GAME MODE</div>
-            <div class="control-value">{{ gameStore.gameMode }}</div>
-            <div v-if="!isGameModeSwitchDisabled" class="control-hint">click to switch</div>
-            <div v-else class="control-hint warning">resume journey first</div>
-        </div>
-
-        <div class="control-item speed-mode" @click="switchSpeedMode" :class="{ 'disabled': isGameModeSwitchDisabled }">
-            <div class="control-label">SPEED</div>
-            <div class="control-value">{{ speedLabel }}</div>
-            <div v-if="!isGameModeSwitchDisabled" class="control-hint">click to change</div>
-            <div v-else class="control-hint warning">resume journey first</div>
-            <div class="speed-bars">
-                <div class="bar" :class="{ active: speedBars >= 1 }"></div>
-                <div class="bar" :class="{ active: speedBars >= 2 }"></div>
-                <div class="bar" :class="{ active: speedBars >= 3 }"></div>
-            </div>
-        </div>
+  <div class="control-panel">
+    <div
+      class="control-item game-mode"
+      :class="{ disabled: isGameModeSwitchDisabled }"
+      @click="switchGameMode"
+    >
+      <div class="control-label">
+        GAME MODE
+      </div>
+      <div class="control-value">
+        {{ gameStore.gameMode }}
+      </div>
+      <div
+        v-if="!isGameModeSwitchDisabled"
+        class="control-hint"
+      >
+        click to switch
+      </div>
+      <div
+        v-else
+        class="control-hint warning"
+      >
+        resume journey first
+      </div>
     </div>
+
+    <div
+      class="control-item speed-mode"
+      :class="{ disabled: isGameModeSwitchDisabled }"
+      @click="switchSpeedMode"
+    >
+      <div class="control-label">
+        SPEED
+      </div>
+      <div class="control-value">
+        {{ speedLabel }}
+      </div>
+      <div
+        v-if="!isGameModeSwitchDisabled"
+        class="control-hint"
+      >
+        click to change
+      </div>
+      <div
+        v-else
+        class="control-hint warning"
+      >
+        resume journey first
+      </div>
+      <div class="speed-bars">
+        <div
+          class="bar"
+          :class="{ active: speedBars >= 1 }"
+        />
+        <div
+          class="bar"
+          :class="{ active: speedBars >= 2 }"
+        />
+        <div
+          class="bar"
+          :class="{ active: speedBars >= 3 }"
+        />
+      </div>
+    </div>
+  </div>
 </template>
 
 <style lang="css" scoped>

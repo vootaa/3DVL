@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import BrownianDistributionExperiment from './BrownianDistributionExperiment.vue'
 import { useDark, useToggle } from '@vueuse/core'
+import BrownianDistributionExperiment from './BrownianDistributionExperiment.vue'
 import { colors } from './constants'
+
 const isDark = useDark()
 const toggleDark = useToggle(isDark)
-
 </script>
 
 <template>
-  <TresCanvas :clear-color="isDark ? colors.DARK : colors.LIGHT" window-size>
+  <TresCanvas
+    :clear-color="isDark ? colors.DARK : colors.LIGHT"
+    window-size
+  >
     <BrownianDistributionExperiment />
   </TresCanvas>
   <button

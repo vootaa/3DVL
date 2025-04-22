@@ -74,7 +74,11 @@ useHead({
 <template>
   <main>
     <ClientOnly>
-      <ContentRenderer v-if="data" :value="data" class="w-full h-100vh relative" />
+      <ContentRenderer
+        v-if="data"
+        :value="data"
+        class="w-full h-100vh relative"
+      />
     </ClientOnly>
   </main>
 </template>

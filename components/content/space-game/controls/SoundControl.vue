@@ -5,16 +5,25 @@ import type { GameStore } from '../GameStore'
 const gameStore = inject('gameStore') as GameStore
 
 const toggleSound = () => {
-    gameStore.actions.toggleSound(!gameStore.sound)
+  gameStore.actions.toggleSound(!gameStore.sound)
 }
 </script>
 
 <template>
-    <div class="sound-control" @click="toggleSound">
-        <div class="control-label">SOUND</div>
-        <div class="control-value">{{ gameStore.sound ? 'ON' : 'OFF' }}</div>
-        <div class="control-hint">click to toggle</div>
+  <div
+    class="sound-control"
+    @click="toggleSound"
+  >
+    <div class="control-label">
+      SOUND
     </div>
+    <div class="control-value">
+      {{ gameStore.sound ? 'ON' : 'OFF' }}
+    </div>
+    <div class="control-hint">
+      click to toggle
+    </div>
+  </div>
 </template>
 
 <style lang="css" scoped>

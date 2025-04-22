@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { DoubleSide, Material, MeshNormalMaterial, ShaderMaterial, Vector2 } from 'three';
-import type { State } from '../index.vue';
+import type { Material } from 'three'
+import { DoubleSide, MeshNormalMaterial, ShaderMaterial, Vector2 } from 'three'
+import type { State } from '../index.vue'
 
 const state = inject('state') as State
 
@@ -66,8 +67,12 @@ watch(() => state.i, () => {
 </script>
 
 <template>
-  <TresMesh :position="state.target.position" :scale="state.target.scale" :rotation="state.target.rotation"
-    :material="material">
+  <TresMesh
+    :position="state.target.position"
+    :scale="state.target.scale"
+    :rotation="state.target.rotation"
+    :material="material"
+  >
     <TresPlaneGeometry :copy="state.target.geometry" />
   </TresMesh>
 </template>

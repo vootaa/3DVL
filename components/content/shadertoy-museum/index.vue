@@ -1,29 +1,30 @@
 <script setup lang="ts">
-import { Camera, Light, Mesh, Clock, PlaneGeometry } from 'three';
-import type { LightFn } from './fns/shaderToyLights';
-import { shaderToySrc } from './fns/shaderToySrc';
+import type { Camera, Light } from 'three'
+import { Mesh, Clock, PlaneGeometry } from 'three'
+import { TresCanvas } from '@tresjs/core'
+import type { LightFn } from './fns/shaderToyLights'
+import { shaderToySrc } from './fns/shaderToySrc'
 import TheExperience from './TheExperience.vue'
-import { TresCanvas } from '@tresjs/core';
 
-type ShaderToyTarget = {
+interface ShaderToyTarget {
   shader: string
   title: string
   author: string
   description: string
   href: string
   lightFn: LightFn
-  dimensions: { x: number, y: number }
-  cameras: Camera[],
-  lights: Light[],
-  floor: Mesh,
-  target: Mesh,
-  name: string,
+  dimensions: { x: number; y: number }
+  cameras: Camera[]
+  lights: Light[]
+  floor: Mesh
+  target: Mesh
+  name: string
 }
 
 export type State = ShaderToyTarget & {
-  i: number,
-  shaderToyTargets: ShaderToyTarget[],
-  clock: Clock,
+  i: number
+  shaderToyTargets: ShaderToyTarget[]
+  clock: Clock
   next: () => void
 }
 
@@ -59,11 +60,17 @@ function click() {
   Object.assign(state, targetInfo)
 }
 </script>
+
 <template>
   <Suspense>
     <div>
       <TextUi />
-      <TresCanvas @pointerup="click" clear-color="#000" :anti-alias="false" window-size>
+      <TresCanvas
+        clear-color="#000"
+        :anti-alias="false"
+        window-size
+        @pointerup="click"
+      >
         <TheExperience />
       </TresCanvas>
     </div>

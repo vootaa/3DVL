@@ -54,7 +54,7 @@ defineProps<{
           <img
             :src="author.avatar"
             class="border-2 border-gray-200 w-8 h-8 mr-4 rounded-full"
-          />
+          >
           <span class="font-bold text-sm">{{ author.name }}</span>
         </div>
       </footer>

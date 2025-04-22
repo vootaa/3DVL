@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { BoxGeometry, Color, Group, MeshBasicMaterial, PointLight, Vector3 } from 'three'
 import { onMounted, onUnmounted, inject, shallowRef, computed, watch } from 'vue'
 import { useLoader, useLoop } from '@tresjs/core'
 import type { GameStore } from '../GameStore'
 import { GameMode, ObservationMode } from '../GameStore'
-import { BoxGeometry, Color, Group, MeshBasicMaterial, PointLight, Vector3 } from 'three';
 
 const geometry = new BoxGeometry(1, 1, 40)
 const lightgreen = new Color('lightgreen')
@@ -32,7 +32,7 @@ const isBattleMode = computed(() => gameStore.gameMode === GameMode.Battle)
 // Define margin values (percentage of screen)
 const margins: { x: number; y: number } = {
   x: 0.12,
-  y: 0.1
+  y: 0.1,
 }
 
 function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
@@ -48,21 +48,20 @@ function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
   }
 }
 
-
 // Calculate boundaries based on window size
 const boundaries = shallowRef<{
-  x: { min: number; max: number };
-  y: { min: number; max: number };
+  x: { min: number; max: number }
+  y: { min: number; max: number }
 }>({
   x: { min: 0, max: 0 },
-  y: { min: 0, max: 0 }
+  y: { min: 0, max: 0 },
 })
 
 // Function to update boundaries based on current screen size
 function updateBoundaries(): void {
   if (!gameStore.camera || gameStore.camera.position.z <= 0) {
-    setTimeout(updateBoundaries, 100);
-    return;
+    setTimeout(updateBoundaries, 100)
+    return
   }
   const width: number = window.innerWidth
   const height: number = window.innerHeight
@@ -80,12 +79,12 @@ function updateBoundaries(): void {
   boundaries.value = {
     x: {
       min: -(width / 2 - width * margins.x) * worldScaleX,
-      max: (width / 2 - width * margins.x) * worldScaleX
+      max: (width / 2 - width * margins.x) * worldScaleX,
     },
     y: {
       min: -(height / 2 - height * margins.y) * worldScaleY,
-      max: (height / 2 - height * margins.y) * worldScaleY
-    }
+      max: (height / 2 - height * margins.y) * worldScaleY,
+    },
   }
 }
 
@@ -111,7 +110,7 @@ watch(() => gameStore.camera.position.z, () => {
 })
 
 useLoop().onBeforeRender(() => {
-  const time = clock.getElapsedTime();
+  const time = clock.getElapsedTime()
   main.value.position.z = Math.sin(time * 40) * Math.PI * 0.2
 
   if (gameStore.observationMode === ObservationMode.None) {
@@ -135,7 +134,8 @@ useLoop().onBeforeRender(() => {
     main.value.getWorldDirection(direction)
     ray.origin.copy(position)
     ray.direction.copy(direction.negate())
-  } else {
+  }
+  else {
     main.value.rotation.z -= main.value.rotation.z * 0.05
     main.value.rotation.x -= main.value.rotation.x * 0.05
     main.value.rotation.y -= main.value.rotation.y * 0.05
@@ -143,10 +143,10 @@ useLoop().onBeforeRender(() => {
     main.value.position.x -= main.value.position.x * 0.05
     main.value.position.y += (25 - main.value.position.y) * 0.05
 
-    const period = 3.0;
-    const amplitude = 0.3;
-    main.value.position.x += Math.sin(time / period) * amplitude;
-    main.value.position.y += Math.cos(time / period * 1.3) * amplitude;
+    const period = 3.0
+    const amplitude = 0.3
+    main.value.position.x += Math.sin(time / period) * amplitude
+    main.value.position.y += Math.cos(time / period * 1.3) * amplitude
   }
 
   exhaust.value.scale.x = 1 + Math.sin(time * 200)
@@ -157,76 +157,155 @@ useLoop().onBeforeRender(() => {
       g.position.z -= 20
     }
   }
-  laserLight.value.intensity += ((gameStore.lasers.length && Date.now() - gameStore.lasers[gameStore.lasers.length - 1] < 100 ? 200000 : 0) - laserLight.value.intensity) * 0.3
+  const laserActive = gameStore.lasers.length
+    && Date.now() - gameStore.lasers[gameStore.lasers.length - 1] < 100
+
+  const targetIntensity = laserActive ? 200000 : 0
+  laserLight.value.intensity += (targetIntensity - laserLight.value.intensity) * 0.3
 
   // Only show crosshair and target in Battle mode
   crossMaterial.color = mutation.hits ? lightgreen : hotpink
 
   // Hide crosshair in Explore mode
   if (cross.value) {
-    cross.value.visible = isBattleMode.value && !mutation.hits;
+    cross.value.visible = isBattleMode.value && !mutation.hits
   }
 
   // In Battle mode, show target indicator when targeting
   if (target.value) {
-    target.value.visible = isBattleMode.value && !!mutation.hits;
+    target.value.visible = isBattleMode.value && !!mutation.hits
   }
 })
 </script>
 
 <template>
   <TresGroup ref="main">
-    <TresPointLight color="cornflowerblue" :intensity="500" :distance="500" :position-z="10" />
+    <TresPointLight
+      color="cornflowerblue"
+      :intensity="500"
+      :distance="500"
+      :position-z="10"
+    />
     <TresGroup :scale="[3.5, 3.5, 3.5]">
-      <TresGroup ref="cross" :position="[0, 0, -300]" name="cross">
-        <TresMesh :render-order="1000" :material="crossMaterial">
+      <TresGroup
+        ref="cross"
+        :position="[0, 0, -300]"
+        name="cross"
+      >
+        <TresMesh
+          :render-order="1000"
+          :material="crossMaterial"
+        >
           <TresBoxGeometry :args="[20, 2, 2]" />
         </TresMesh>
-        <TresMesh :render-order="1000" :material="crossMaterial">
+        <TresMesh
+          :render-order="1000"
+          :material="crossMaterial"
+        >
           <TresBoxGeometry :args="[2, 20, 2]" />
         </TresMesh>
       </TresGroup>
-      <TresGroup ref="target" :position="[0, 0, -300]" name="target">
-        <TresMesh :position="[0, 20, 0]" :render-order="1000" :material="crossMaterial">
+      <TresGroup
+        ref="target"
+        :position="[0, 0, -300]"
+        name="target"
+      >
+        <TresMesh
+          :position="[0, 20, 0]"
+          :render-order="1000"
+          :material="crossMaterial"
+        >
           <TresBoxGeometry :args="[40, 2, 2]" />
         </TresMesh>
-        <TresMesh :position="[0, -20, 0]" :render-order="1000" :material="crossMaterial">
+        <TresMesh
+          :position="[0, -20, 0]"
+          :render-order="1000"
+          :material="crossMaterial"
+        >
           <TresBoxGeometry :args="[40, 2, 2]" />
         </TresMesh>
-        <TresMesh :position="[20, 0, 0]" :render-order="1000" :material="crossMaterial">
+        <TresMesh
+          :position="[20, 0, 0]"
+          :render-order="1000"
+          :material="crossMaterial"
+        >
           <TresBoxGeometry :args="[2, 40, 2]" />
         </TresMesh>
-        <TresMesh :position="[-20, 0, 0]" :render-order="1000" :material="crossMaterial">
+        <TresMesh
+          :position="[-20, 0, 0]"
+          :render-order="1000"
+          :material="crossMaterial"
+        >
           <TresBoxGeometry :args="[2, 40, 2]" />
         </TresMesh>
       </TresGroup>
-      <TresPointLight ref="laserLight" :position="[0, 0, -20]" :distance="100" :intensity="0" color="lightgreen" />
-      <TresGroup v-for="laser, i of gameStore.lasers" ref="laserGroup" :key="i">
-        <TresMesh :position="[-2.8, 0, -0.8]" :geometry="geometry" :material="laserMaterial" />
-        <TresMesh :position="[2.8, 0, -0.8]" :geometry="geometry" :material="laserMaterial" />
+      <TresPointLight
+        ref="laserLight"
+        :position="[0, 0, -20]"
+        :distance="100"
+        :intensity="0"
+        color="lightgreen"
+      />
+      <TresGroup
+        v-for="_ in gameStore.lasers"
+        :key="_"
+        ref="laserGroup"
+      >
+        <TresMesh
+          :position="[-2.8, 0, -0.8]"
+          :geometry="geometry"
+          :material="laserMaterial"
+        />
+        <TresMesh
+          :position="[2.8, 0, -0.8]"
+          :geometry="geometry"
+          :material="laserMaterial"
+        />
       </TresGroup>
       <TresGroup :rotation="[Math.PI / 2, Math.PI, 0]">
-        <TresMesh name="Renault_(S,_T1)_0" :geometry="nodes['Renault_(S,_T1)_0'].geometry">
+        <TresMesh
+          name="Renault_(S,_T1)_0"
+          :geometry="nodes['Renault_(S,_T1)_0'].geometry"
+        >
           <TresMeshStandardMaterial color="#070707" />
         </TresMesh>
-        <TresMesh name="Renault_(S,_T1)_1" :geometry="nodes['Renault_(S,_T1)_1'].geometry">
+        <TresMesh
+          name="Renault_(S,_T1)_1"
+          :geometry="nodes['Renault_(S,_T1)_1'].geometry"
+        >
           <TresMeshStandardMaterial color="black" />
         </TresMesh>
-        <TresMesh name="Renault_(S,_T1)_2" :geometry="nodes['Renault_(S,_T1)_2'].geometry">
+        <TresMesh
+          name="Renault_(S,_T1)_2"
+          :geometry="nodes['Renault_(S,_T1)_2'].geometry"
+        >
           <TresMeshStandardMaterial color="#070707" />
         </TresMesh>
-        <TresMesh name="Renault_(S,_T1)_3" :geometry="nodes['Renault_(S,_T1)_3'].geometry">
+        <TresMesh
+          name="Renault_(S,_T1)_3"
+          :geometry="nodes['Renault_(S,_T1)_3'].geometry"
+        >
           <TresMeshBasicMaterial color="lightblue" />
         </TresMesh>
-        <TresMesh name="Renault_(S,_T1)_4" :geometry="nodes['Renault_(S,_T1)_4'].geometry">
+        <TresMesh
+          name="Renault_(S,_T1)_4"
+          :geometry="nodes['Renault_(S,_T1)_4'].geometry"
+        >
           <TresMeshBasicMaterial color="white" />
         </TresMesh>
-        <TresMesh name="Renault_(S,_T1)_5" :geometry="nodes['Renault_(S,_T1)_5'].geometry">
+        <TresMesh
+          name="Renault_(S,_T1)_5"
+          :geometry="nodes['Renault_(S,_T1)_5'].geometry"
+        >
           <TresMeshBasicMaterial color="teal" />
         </TresMesh>
       </TresGroup>
     </TresGroup>
-    <TresMesh ref="exhaust" :scale="[1, 1, 30]" :position="[0, 1, 30]">
+    <TresMesh
+      ref="exhaust"
+      :scale="[1, 1, 30]"
+      :position="[0, 1, 30]"
+    >
       <TresDodecahedronGeometry :args="[1.5, 0]" />
       <TresMeshBasicMaterial color="lightblue" />
     </TresMesh>

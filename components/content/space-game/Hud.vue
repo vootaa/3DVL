@@ -11,39 +11,39 @@ const formattedSessionTime = ref('00:00.0')
 const formattedTotalTime = ref('00:00.0')
 
 const enemiesStats = computed(() => {
-    const remaining = gameStore.enemies.length;
-    const total = gameStore.initialEnemyCount || 10;
-    return `${remaining}/${total}`;
+  const remaining = gameStore.enemies.length
+  const total = gameStore.initialEnemyCount || 10
+  return `${remaining}/${total}`
 })
 
 const rocksStats = computed(() => {
-    const remaining = gameStore.rocks.length;
-    const total = gameStore.initialRockCount || 100;
-    return `${remaining}/${total}`;
+  const remaining = gameStore.rocks.length
+  const total = gameStore.initialRockCount || 100
+  return `${remaining}/${total}`
 })
 
 // Function to update display time
 const updateDisplayTime = () => {
-    // Session time formatting (simplified mode)
-    const sessionSeconds = Math.floor(timeManager.sessionTime / 1000);
-    const sessionMinutes = Math.floor(sessionSeconds / 60);
-    const sessionSecs = sessionSeconds % 60;
-    const sessionDeciseconds = Math.floor((timeManager.sessionTime % 1000) / 100);
-    formattedSessionTime.value = `${sessionMinutes > 0 ? sessionMinutes + ':' : ''}${sessionSecs}${sessionMinutes > 0 ? '' : 's'}.${sessionDeciseconds}`;
+  // Session time formatting (simplified mode)
+  const sessionSeconds = Math.floor(timeManager.sessionTime / 1000)
+  const sessionMinutes = Math.floor(sessionSeconds / 60)
+  const sessionSecs = sessionSeconds % 60
+  const sessionDeciseconds = Math.floor((timeManager.sessionTime % 1000) / 100)
+  formattedSessionTime.value = `${sessionMinutes > 0 ? `${sessionMinutes}:` : ''}${sessionSecs}${sessionMinutes > 0 ? '' : 's'}.${sessionDeciseconds}`
 
-    // Total time formatting (simplified mode)
-    const totalSeconds = Math.floor(timeManager.totalGameTime / 1000);
-    const totalMinutes = Math.floor(totalSeconds / 60);
-    const totalSecs = totalSeconds % 60;
-    const totalDeciseconds = Math.floor((timeManager.totalGameTime % 1000) / 100);
-    formattedTotalTime.value = `${totalMinutes > 0 ? totalMinutes + ':' : ''}${totalSecs}${totalMinutes > 0 ? '' : 's'}.${totalDeciseconds}`;
+  // Total time formatting (simplified mode)
+  const totalSeconds = Math.floor(timeManager.totalGameTime / 1000)
+  const totalMinutes = Math.floor(totalSeconds / 60)
+  const totalSecs = totalSeconds % 60
+  const totalDeciseconds = Math.floor((timeManager.totalGameTime % 1000) / 100)
+  formattedTotalTime.value = `${totalMinutes > 0 ? `${totalMinutes}:` : ''}${totalSecs}${totalMinutes > 0 ? '' : 's'}.${totalDeciseconds}`
 }
 
 const displayInterval = setInterval(updateDisplayTime, 100)
 
 // Clean up interval when component is unmounted
 onUnmounted(() => {
-    clearInterval(displayInterval)
+  clearInterval(displayInterval)
 })
 
 const formattedBattleScore = computed(() => (gameStore.battleScore >= 1000 ? `${(gameStore.battleScore / 1000).toFixed(1)}K` : gameStore.battleScore))
@@ -53,43 +53,85 @@ const comboSystem = computed(() => gameStore.comboSystem)
 </script>
 
 <template>
-    <div class="score-notifications">
-        <transition-group name="notification">
-            <div v-for="notification in scoreNotifications" :key="notification.id" class="score-notification"
-                :class="{ 'stardust-notification': notification.icon === '✧' }">
-                <span class="notification-text">
-                    <span v-if="notification.icon" class="notification-icon">{{ notification.icon }}</span>
-                    {{ notification.text }}
-                </span>
-                <span class="notification-points">+{{ notification.points }}</span>
-            </div>
-        </transition-group>
-    </div>
+  <div class="score-notifications">
+    <transition-group name="notification">
+      <div
+        v-for="notification in scoreNotifications"
+        :key="notification.id"
+        class="score-notification"
+        :class="{ 'stardust-notification': notification.icon === '✧' }"
+      >
+        <span class="notification-text">
+          <span
+            v-if="notification.icon"
+            class="notification-icon"
+          >{{ notification.icon }}</span>
+          {{ notification.text }}
+        </span>
+        <span class="notification-points">+{{ notification.points }}</span>
+      </div>
+    </transition-group>
+  </div>
 
-    <div v-if="comboSystem.active && comboSystem.count >= 3" class="combo-indicator">
-        <span class="combo-count">{{ comboSystem.count }}x</span>
-        <span class="combo-text">COMBO!</span>
-    </div>
+  <div
+    v-if="comboSystem.active && comboSystem.count >= 3"
+    class="combo-indicator"
+  >
+    <span class="combo-count">{{ comboSystem.count }}x</span>
+    <span class="combo-text">COMBO!</span>
+  </div>
 
-    <!-- Time and score information -->
-    <div class="score-display">
-        <div class="control-label">STATS DATA</div>
-        <div class="control-value">
-            <div class="info-line">Loops: {{ gameStore.loopCount }} / {{ gameStore.totalLoops }}</div>
-            <div v-if="gameStore.gameMode === GameMode.Battle" class="info-line">Enemies: {{ enemiesStats }}</div>
-            <div v-if="gameStore.gameMode === GameMode.Battle" class="info-line">Rocks: {{ rocksStats }}</div>
-            <div v-if="gameStore.gameMode === GameMode.Battle" class="info-line">Score: {{ formattedBattleScore }}</div>
-            <div v-if="gameStore.gameMode === GameMode.Explore" class="info-line">
-                <span class="stardust-icon">✧</span> Stardust: {{ gameStore.stardust }}
-            </div>
-            <div class="info-line">Current: {{ formattedSessionTime }}</div>
-            <div class="info-line">Total: {{ formattedTotalTime }}</div>
-        </div>
+  <!-- Time and score information -->
+  <div class="score-display">
+    <div class="control-label">
+      STATS DATA
     </div>
+    <div class="control-value">
+      <div class="info-line">
+        Loops: {{ gameStore.loopCount }} / {{ gameStore.totalLoops }}
+      </div>
+      <div
+        v-if="gameStore.gameMode === GameMode.Battle"
+        class="info-line"
+      >
+        Enemies: {{ enemiesStats }}
+      </div>
+      <div
+        v-if="gameStore.gameMode === GameMode.Battle"
+        class="info-line"
+      >
+        Rocks: {{ rocksStats }}
+      </div>
+      <div
+        v-if="gameStore.gameMode === GameMode.Battle"
+        class="info-line"
+      >
+        Score: {{ formattedBattleScore }}
+      </div>
+      <div
+        v-if="gameStore.gameMode === GameMode.Explore"
+        class="info-line"
+      >
+        <span class="stardust-icon">✧</span> Stardust: {{ gameStore.stardust }}
+      </div>
+      <div class="info-line">
+        Current: {{ formattedSessionTime }}
+      </div>
+      <div class="info-line">
+        Total: {{ formattedTotalTime }}
+      </div>
+    </div>
+  </div>
 
-    <ModalDialog v-if="gameStore.modal.show" :type="gameStore.modal.type" :currentMode="gameStore.gameMode"
-        :score="gameStore.battleScore" :cards="gameStore.stardust" :time="formattedSessionTime"
-        :totalLoops="gameStore.totalLoops" />
+  <ModalDialog
+    v-if="gameStore.modal.show"
+    :type="gameStore.modal.type"
+    :current-mode="gameStore.gameMode"
+    :score="gameStore.battleScore"
+    :cards="gameStore.stardust"
+    :time="formattedSessionTime"
+    :total-loops="gameStore.totalLoops"
+  />
 </template>
 
 <style lang="css" scoped>

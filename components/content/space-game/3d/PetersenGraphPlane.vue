@@ -3,37 +3,36 @@ import { shallowRef } from 'vue'
 import { DoubleSide, AdditiveBlending } from 'three'
 
 const props = defineProps({
-    position: {
-        type: Array as unknown as () => [number, number, number],
-        required: true
-    },
-    rotation: {
-        type: Array as unknown as () => [number, number, number],
-        required: true
-    },
-    scale: {
-        type: Number,
-        default: 1
-    },
-    planeSize: {
-        type: Number,
-        default: 20
-    }
-});
-
+  position: {
+    type: Array as unknown as () => [number, number, number],
+    required: true,
+  },
+  rotation: {
+    type: Array as unknown as () => [number, number, number],
+    required: true,
+  },
+  scale: {
+    type: Number,
+    default: 1,
+  },
+  planeSize: {
+    type: Number,
+    default: 20,
+  },
+})
 
 const uniforms = shallowRef({
-    iTime: { value: 0.0 },
-});
+  iTime: { value: 0.0 },
+})
 
-const meshRef = ref();
+const meshRef = ref()
 
 const { onBeforeRender } = useLoop()
 
 onBeforeRender(({ elapsed }) => {
-    if (!meshRef.value || !uniforms.value) return;
-    uniforms.value.iTime.value = elapsed * 0.5;
-});
+  if (!meshRef.value || !uniforms.value) return
+  uniforms.value.iTime.value = elapsed * 0.5
+})
 
 const fragmentShader = `
 uniform float iTime;
@@ -192,7 +191,7 @@ void main() {
     // Output final color with transparency
     gl_FragColor = vec4(finalColor, min(1.0, alpha));
 }
-`;
+`
 
 const vertexShader = `
 varying vec2 vUv;
@@ -201,21 +200,30 @@ void main() {
   vUv = uv;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
-`;
-
+`
 
 const blending = {
-    blending: AdditiveBlending,
-    depthWrite: false,
+  blending: AdditiveBlending,
+  depthWrite: false,
 }
 </script>
 
 <template>
-    <TresGroup :position="position" :rotation="rotation" :scale="[scale, scale, scale]">
-        <TresMesh ref="meshRef">
-            <TresPlaneGeometry :args="[planeSize, planeSize, 1, 1]" />
-            <TresShaderMaterial v-bind="blending" :uniforms="uniforms" :fragment-shader="fragmentShader"
-                :vertex-shader="vertexShader" :transparent="true" :side="DoubleSide" />
-        </TresMesh>
-    </TresGroup>
+  <TresGroup
+    :position="position"
+    :rotation="rotation"
+    :scale="[scale, scale, scale]"
+  >
+    <TresMesh ref="meshRef">
+      <TresPlaneGeometry :args="[planeSize, planeSize, 1, 1]" />
+      <TresShaderMaterial
+        v-bind="blending"
+        :uniforms="uniforms"
+        :fragment-shader="fragmentShader"
+        :vertex-shader="vertexShader"
+        :transparent="true"
+        :side="DoubleSide"
+      />
+    </TresMesh>
+  </TresGroup>
 </template>

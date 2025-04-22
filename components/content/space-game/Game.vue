@@ -20,33 +20,33 @@ import SpaceGameEffects from './3d/SpaceGameEffects.vue'
 import { gameStore } from './GameStore'
 
 if (gameStore) {
-    useLoop().onBeforeRender(gameStore.actions.update)
-} else {
-    console.error('GameStore not injected in Game.vue')
+  useLoop().onBeforeRender(gameStore.actions.update)
 }
-
+else {
+  console.error('GameStore not injected in Game.vue')
+}
 </script>
 
 <template>
-    <TresAmbientLight :intensity="0.25" />
-    <Stars :count="300" />
-    <Track />
-    <Particles />
-    <Suspense fallback="{null}">
-        <TresGroup>
-            <Rings />
-            <Chainweb3D />
-            <PetersenGraphGroup />
-            <InfoLabels />
-            <Enemies />
-            <Planets />
-            <Rocks />
-            <SpaceObjects />
-            <Rig>
-                <Ship />
-            </Rig>
-            <Explosions />
-            <SpaceGameEffects />
-        </TresGroup>
-    </Suspense>
+  <TresAmbientLight :intensity="0.25" />
+  <Stars :count="300" />
+  <Track />
+  <Particles />
+  <Suspense fallback="{null}">
+    <TresGroup>
+      <Rings />
+      <Chainweb3D />
+      <PetersenGraphGroup />
+      <InfoLabels />
+      <Enemies />
+      <Planets />
+      <Rocks />
+      <SpaceObjects />
+      <Rig>
+        <Ship />
+      </Rig>
+      <Explosions />
+      <SpaceGameEffects />
+    </TresGroup>
+  </Suspense>
 </template>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useTexture } from '@tresjs/core'
+import { Euler, Mesh, Vector3 } from 'three'
 import MeshReflectionMaterial from '../meshReflectionMaterial/index.vue'
-import { Euler, Mesh, Vector3 } from 'three';
-import type { State } from '../index.vue';
+import type { State } from '../index.vue'
 
 const normalMapSrc = '/textures/shadertoy-museum/normal.jpg'
 const normalMap = await useTexture([normalMapSrc])
@@ -19,20 +19,28 @@ const rotation = shallowRef(new Euler())
 const scale = shallowRef(new Vector3())
 
 watch(() => state.i, () => {
-    const targetInfo = state.shaderToyTargets[state.i] ?? {}
+  const targetInfo = state.shaderToyTargets[state.i] ?? {}
 
-    if (targetInfo.floor) {
-        position.value = targetInfo.floor.position
-        rotation.value = targetInfo.floor.rotation
-        scale.value = targetInfo.floor.scale
-    }
+  if (targetInfo.floor) {
+    position.value = targetInfo.floor.position
+    rotation.value = targetInfo.floor.rotation
+    scale.value = targetInfo.floor.scale
+  }
 })
 </script>
 
 <template>
-    <TresMesh :position="position" :scale="scale" :rotation="rotation">
-        <TresPlaneGeometry />
-        <MeshReflectionMaterial :mix="0.5" :normal-map="normalMap" :roughness-map="roughnessMap"
-            :displacement-map="displacementMap" />
-    </TresMesh>
+  <TresMesh
+    :position="position"
+    :scale="scale"
+    :rotation="rotation"
+  >
+    <TresPlaneGeometry />
+    <MeshReflectionMaterial
+      :mix="0.5"
+      :normal-map="normalMap"
+      :roughness-map="roughnessMap"
+      :displacement-map="displacementMap"
+    />
+  </TresMesh>
 </template>
