@@ -94,7 +94,7 @@ export function initializeActions(gameStore: any, guid: number, track: any, audi
 
   gameStore.actions.addStardust = () => {
     gameStore.stardust++
-    gameStore.actions.addScoreNotification('Stardust Collected', 1, true)
+    gameStore.actions.addScoreNotification('Stardust', 1, false)
   }
 
   gameStore.actions.addScoreNotification = (text: string, points: number, isBonus = false) => {
@@ -254,7 +254,6 @@ export function initializeActions(gameStore: any, guid: number, track: any, audi
       const t = (mutation.t = ((time - mutation.startTime) % mutation.looptime) / mutation.looptime)
 
       if (mutation.lastT > 0.9 && t < 0.1) {
-        const loopSpeedFactor = SPEED_SETTINGS[speedMode as keyof typeof SPEED_SETTINGS].factor
         // Track loop completed
         gameStore.loopCount++
       }
@@ -274,7 +273,7 @@ export function initializeActions(gameStore: any, guid: number, track: any, audi
           warping = true
           gameStore.actions.playAudio(audio.warp)
         }
-      } 
+      }
       else if (t > TRACK_POSITIONS.WARP_RESET) {
         warping = false
       }
@@ -355,14 +354,14 @@ export function initializeActions(gameStore: any, guid: number, track: any, audi
           if (enemiesHit.length > 0 && gameStore.enemies.length === 0 && gameStore.initialEnemyCount > 0) {
             // All enemies destroyed, provide bonus reward
             gameStore.battleScore += SCORE_VALUES.ALL_ENEMIES_BONUS
-            gameStore.actions.addScoreNotification('Enemies Destroyed!', SCORE_VALUES.ALL_ENEMIES_BONUS, true)
+            gameStore.actions.addScoreNotification('No Enemy', SCORE_VALUES.ALL_ENEMIES_BONUS, true)
           }
 
           // Check if all rocks are destroyed
           if (rocksHit.length > 0 && gameStore.rocks.length === 0 && gameStore.initialRockCount > 0) {
             // All rocks cleared, provide bonus reward
             gameStore.battleScore += SCORE_VALUES.ALL_ROCKS_BONUS
-            gameStore.actions.addScoreNotification('Rocks Cleared!', SCORE_VALUES.ALL_ROCKS_BONUS, true)
+            gameStore.actions.addScoreNotification('No Rock', SCORE_VALUES.ALL_ROCKS_BONUS, true)
           }
         }
       }
@@ -388,6 +387,10 @@ export function initializeActions(gameStore: any, guid: number, track: any, audi
       // Point camera at the center point
       gameStore.camera.position.copy(mutation.position)
       gameStore.camera.lookAt(mutation.orbitCenter)
+
+      if (gameStore.currentPointOfInterest) {
+        checkStardustCollection(gameStore)
+      }
     }
 
     // Check if total loops reached (ensure check only happens once)
@@ -444,9 +447,7 @@ export function initializeActions(gameStore: any, guid: number, track: any, audi
       gameStore.mutation.observationStartTime = Date.now()
     }
 
-    // Now observing point of interest
-
-    // If exiting observation mode, check if can collect card
+    // If exiting observation mode, check if can collect Stardust
     if (!pointOfInterestKey && gameStore.mutation.observationStartTime) {
       checkStardustCollection(gameStore)
     }
