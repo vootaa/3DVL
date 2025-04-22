@@ -5,6 +5,8 @@ import { Box3, Clock, Euler, Matrix4, Object3D, PerspectiveCamera, Ray, TubeGeom
 import { GrannyKnot } from 'three/examples/jsm/curves/CurveExtras.js'
 import { timeManager } from './TimeManager';
 
+export type GameStore = typeof gameStore;
+
 class WiderGrannyKnot extends GrannyKnot {
     override getPoint(t: number) {
         const original = super.getPoint(t);
