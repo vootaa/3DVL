@@ -116,11 +116,11 @@ const track = new TubeGeometry(spline, 200, 0.15, 10, true)
 
 export const gameStore = reactive({
     spline,
-    points: 0,
+    battleScore: 0,
+    stardust: 0,
     health: 100,
     loopCount: 0,
-    totalLoops: 7, // 游戏总圈数
-    cards: 0,      // 探索模式收集的卡片
+    totalLoops: 7, // total game loops
     lasers: [] as number[],
     explosions: [] as ExplosionData[],
     initialRockCount: 100,
@@ -140,12 +140,12 @@ export const gameStore = reactive({
     speedMode: SpeedMode.Fast, // Default to Fast mode
     modal: {
         show: false,
-        type: '', // 'gameOver' 或 'switchConfirm'
+        type: '', // 'gameOver' or 'switchConfirm'
     },
     timeManager,
     observationMode: ObservationMode.None,
     currentPointOfInterest: null as keyof typeof POINTS_OF_INTEREST | null,
-    observedPoints: [] as string[], // 已观察过的点
+    observedPoints: [] as string[], // previously observed points
     orbitAngle: 0,
     orbitHeight: 0,
     comboSystem: {
@@ -159,6 +159,7 @@ export const gameStore = reactive({
         id: number;
         text: string;
         points: number;
+        icon?: string | null;
         timestamp: number;
     }>,
     mutation: {
@@ -214,35 +215,35 @@ export const gameStore = reactive({
         updateOrbitPosition: null as unknown as (horizontalAngle: number, verticalAngle: number) => void,
         resumeJourney: null as unknown as () => void,
         registerHit: null as unknown as (count: number, type: 'rock' | 'enemy') => void,
-        addScoreNotification: null as unknown as (text: string, points: number) => void,
+        addScoreNotification: null as unknown as (text: string, points: number, icon?: string | null) => void,
         restartGame: null as unknown as (switchMode: boolean) => void,
         showModal: null as unknown as (type: string) => void,
         hideModal: null as unknown as () => void,
-        addCard: null as unknown as () => void,
+        addStardust: null as unknown as () => void,
     },
 })
 
 gameStore.actions.restartGame = (switchMode: boolean) => {
-    // 重置分数
-    gameStore.points = 0;
-    gameStore.cards = 0;
+    // Reset score
+    gameStore.battleScore = 0;
+    gameStore.stardust = 0;
     gameStore.loopCount = 0;
 
-    // 重置时间
+    // Reset time
     gameStore.mutation.startTime = Date.now();
     timeManager.actions.reset(false);
 
-    // 清除实体
+    // Clear entities
     gameStore.lasers = [];
     gameStore.explosions = [];
     gameStore.observedPoints = [];
 
-    // 重置位置
+    // Reset position
     gameStore.mutation.t = 0;
     const startPos = track.parameters.path.getPointAt(0);
     gameStore.mutation.position.copy(startPos.multiplyScalar(gameStore.mutation.scale));
 
-    // 生成新的实体
+    // Generate new entities
     if (gameStore.gameMode === GameMode.Battle) {
         gameStore.rocks = randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5);
         gameStore.enemies = randomData(10, track, 20, 15, 1);
@@ -255,54 +256,59 @@ gameStore.actions.restartGame = (switchMode: boolean) => {
         gameStore.initialEnemyCount = 0;
     }
 
-    // 如果需要切换模式
+    // If mode switch is needed
     if (switchMode) {
         gameStore.gameMode = gameStore.gameMode === GameMode.Battle ? GameMode.Explore : GameMode.Battle;
     }
 
-    // 确保重置并恢复时间
+    // Ensure reset and resume time
     timeManager.actions.reset(false);
     timeManager.actions.resume();
 }
 
-// 实现显示模态框方法
+// Implement modal display method
 gameStore.actions.showModal = (type: string) => {
     gameStore.modal.show = true;
     gameStore.modal.type = type;
 
-    // 暂停游戏时间，但总时间继续
+    // Pause game time, but continue total time
     timeManager.actions.pause();
 }
 
-// 实现隐藏模态框方法
+// Implement hide modal method
 gameStore.actions.hideModal = () => {
     gameStore.modal.show = false;
 
-    // 确保游戏时间恢复计时（只有在非游戏结束的情况下）
+    // Ensure game time resumes counting (only if not game over)
     if (gameStore.modal.type === 'switchConfirm') {
         timeManager.actions.resume();
     }
 }
 
-// 实现添加卡片方法（探索模式）
-gameStore.actions.addCard = () => {
+
+gameStore.actions.addStardust = () => {
     if (gameStore.gameMode === GameMode.Explore) {
-        gameStore.cards++;
+        gameStore.stardust++;
+
+        // Show a more visual notification
+        gameStore.actions.addScoreNotification("Stardust +1", 1, "✧");
     }
 }
 
-gameStore.actions.addScoreNotification = (text: string, points: number) => {
+gameStore.actions.addScoreNotification = (text, points, icon = null) => {
     const id = Date.now();
     gameStore.scoreNotifications.push({
         id,
         text,
         points,
+        icon,
         timestamp: Date.now()
     });
 
     // Automatically clear after 3 seconds
     setTimeout(() => {
-        gameStore.scoreNotifications = gameStore.scoreNotifications.filter(item => item.id !== id);
+        gameStore.scoreNotifications = gameStore.scoreNotifications
+            .filter(item => item.id !== id);
     }, 3000);
 }
 
@@ -316,7 +322,7 @@ gameStore.actions.registerHit = (count: number, type: 'rock' | 'enemy') => {
     let basePoints = type === 'rock' ? count * 100 : count * 200;
 
     // Add points
-    gameStore.points += basePoints;
+    gameStore.battleScore += basePoints;
 
     // Display base score notification
     const itemText = type === 'rock'
@@ -341,7 +347,7 @@ gameStore.actions.registerHit = (count: number, type: 'rock' | 'enemy') => {
 
         // Add combo bonus points
         if (bonusPoints > 0) {
-            gameStore.points += bonusPoints;
+            gameStore.battleScore += bonusPoints;
         }
     } else {
         gameStore.comboSystem.count = count;
@@ -527,7 +533,7 @@ gameStore.actions.switchGameMode = () => {
     gameStore.chainweb3D = generateChainweb3D(30, track, TRACK_POSITIONS.Chainweb3D, gameStore.gameMode === GameMode.Battle);
 
     // Reset score,loopCount regardless of mode
-    gameStore.points = 0;
+    gameStore.battleScore = 0;
     gameStore.loopCount = 0
 
     // Reset time by updating startTime to current time
@@ -604,16 +610,93 @@ gameStore.actions.switchSpeedMode = () => {
 
 const originalSwitchGameMode = gameStore.actions.switchGameMode;
 gameStore.actions.switchGameMode = () => {
-    // 如果游戏正在进行中（loopCount > 0）并且未显示模态框
+    // If game is in progress (loopCount > 0) and modal is not shown
     if (gameStore.loopCount > 0 && !gameStore.modal.show) {
-        // 显示切换确认对话框
+        // Show switch confirmation dialog
         gameStore.actions.showModal('switchConfirm');
     } else {
-        // 直接切换
+        // Direct switch
         originalSwitchGameMode();
     }
 }
 
+// Update the update function to handle observation mode
+const originalUpdate = gameStore.actions.update;
+gameStore.actions.update = () => {
+    const { observationMode, mutation } = gameStore;
+
+    if (observationMode === ObservationMode.None) {
+        // Normal update
+        originalUpdate();
+    } else if (observationMode === ObservationMode.Orbiting) {
+        // In orbiting mode, update camera position based on orbit parameters
+
+        // Calculate orbit position
+        const horizontalRadius = mutation.orbitDistance * Math.cos(gameStore.orbitHeight);
+        const x = mutation.orbitCenter.x + horizontalRadius * Math.cos(gameStore.orbitAngle);
+        const z = mutation.orbitCenter.z + horizontalRadius * Math.sin(gameStore.orbitAngle);
+        const y = mutation.orbitCenter.y + mutation.orbitDistance * Math.sin(gameStore.orbitHeight);
+
+        mutation.position.set(x, y, z);
+
+        // Automatically slowly rotate if mouse input is not controlling it
+        gameStore.orbitAngle += mutation.orbitSpeed;
+
+        // Point camera at the center point
+        gameStore.camera.position.copy(mutation.position);
+        gameStore.camera.lookAt(mutation.orbitCenter);
+    }
+
+    // Check if total loops reached (ensure check only happens once)
+    if (gameStore.loopCount >= gameStore.totalLoops && !gameStore.modal.show) {
+        // Show game over dialog
+        gameStore.actions.showModal('gameOver');
+    }
+}
+
+// Add the toggle info text function
+gameStore.actions.toggleInfoText = (show?: boolean) => {
+    if (show !== false && show !== true) show = !gameStore.showInfoText
+    gameStore.showInfoText = show
+}
+
+function checkStardustCollection() {
+    if (gameStore.gameMode !== GameMode.Explore) return;
+
+    // Safety check for currentPointOfInterest
+    const poi = gameStore.currentPointOfInterest;
+    if (!poi) return;
+
+    if (gameStore.observationMode !== ObservationMode.None &&
+        !gameStore.observedPoints.includes(poi)) {
+
+        const observationStartTime = gameStore.mutation.observationStartTime || 0;
+        const observationTime = Date.now() - observationStartTime;
+
+        if (observationTime >= 20000) { // 20 seconds
+            gameStore.observedPoints.push(poi);
+            gameStore.actions.addStardust();
+            gameStore.actions.addScoreNotification("Stardust +1", 1, "✧");
+        }
+    }
+}
+
+// Modify observation mode toggle method to record start time
+const originalToggleObservationMode = gameStore.actions.toggleObservationMode;
+gameStore.actions.toggleObservationMode = (pointOfInterestKey: keyof typeof POINTS_OF_INTEREST | null) => {
+    // Record observation start time
+    if (pointOfInterestKey && !gameStore.observedPoints.includes(pointOfInterestKey)) {
+        gameStore.mutation.observationStartTime = Date.now();
+    }
+
+    // Call original method
+    originalToggleObservationMode(pointOfInterestKey);
+
+    // If exiting observation mode, check if can collect card
+    if (!pointOfInterestKey && gameStore.mutation.observationStartTime) {
+        checkStardustCollection();
+    }
+}
 
 export type GameStore = typeof gameStore
 
@@ -931,9 +1014,9 @@ gameStore.actions.update = () => {
         gameStore.camera.lookAt(mutation.orbitCenter);
     }
 
-    // 检查是否达到总圈数（确保只在这里检查一次）
+    // Check if total loops reached (ensure check only happens once)
     if (gameStore.loopCount >= gameStore.totalLoops && !gameStore.modal.show) {
-        // 显示游戏结束对话框
+        // Show game over dialog
         gameStore.actions.showModal('gameOver');
     }
 }
@@ -944,11 +1027,10 @@ gameStore.actions.toggleInfoText = (show?: boolean) => {
     gameStore.showInfoText = show
 }
 
-// 添加类型安全的卡片收集验证函数
-function checkObservationCardCollection() {
+function checkStardustCollection() {
     if (gameStore.gameMode !== GameMode.Explore) return;
 
-    // 安全检查 currentPointOfInterest
+    // Safety check for currentPointOfInterest
     const poi = gameStore.currentPointOfInterest;
     if (!poi) return;
 
@@ -958,31 +1040,27 @@ function checkObservationCardCollection() {
         const observationStartTime = gameStore.mutation.observationStartTime || 0;
         const observationTime = Date.now() - observationStartTime;
 
-        if (observationTime >= 20000) { // 20秒
-            // 添加到已观察点列表
+        if (observationTime >= 20000) { // 20 seconds
             gameStore.observedPoints.push(poi);
-            // 增加卡片
-            gameStore.actions.addCard();
-
-            // 显示通知
-            gameStore.actions.addScoreNotification("Observation Card +1", 1);
+            gameStore.actions.addStardust();
+            gameStore.actions.addScoreNotification("Stardust +1", 1, "✧");
         }
     }
 }
 
-// 修改观察模式切换方法以记录开始时间
+// Modify observation mode toggle method to record start time
 const originalToggleObservationMode = gameStore.actions.toggleObservationMode;
 gameStore.actions.toggleObservationMode = (pointOfInterestKey: keyof typeof POINTS_OF_INTEREST | null) => {
-    // 记录观察开始时间
+    // Record observation start time
     if (pointOfInterestKey && !gameStore.observedPoints.includes(pointOfInterestKey)) {
         gameStore.mutation.observationStartTime = Date.now();
     }
 
-    // 调用原始方法
+    // Call original method
     originalToggleObservationMode(pointOfInterestKey);
 
-    // 如果退出观察模式，检查是否可以收集卡片
+    // If exiting observation mode, check if can collect card
     if (!pointOfInterestKey && gameStore.mutation.observationStartTime) {
-        checkObservationCardCollection();
+        checkStardustCollection();
     }
 }

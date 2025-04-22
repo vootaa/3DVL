@@ -46,19 +46,21 @@ onUnmounted(() => {
     clearInterval(displayInterval)
 })
 
-const score = computed(() => (gameStore.points >= 1000 ? `${(gameStore.points / 1000).toFixed(1)}K` : gameStore.points))
+const formattedBattleScore = computed(() => (gameStore.battleScore >= 1000 ? `${(gameStore.battleScore / 1000).toFixed(1)}K` : gameStore.battleScore))
 
 const scoreNotifications = computed(() => gameStore.scoreNotifications)
 const comboSystem = computed(() => gameStore.comboSystem)
-
-
 </script>
 
 <template>
     <div class="score-notifications">
         <transition-group name="notification">
-            <div v-for="notification in scoreNotifications" :key="notification.id" class="score-notification">
-                <span class="notification-text">{{ notification.text }}</span>
+            <div v-for="notification in scoreNotifications" :key="notification.id" class="score-notification"
+                :class="{ 'stardust-notification': notification.icon === '✧' }">
+                <span class="notification-text">
+                    <span v-if="notification.icon" class="notification-icon">{{ notification.icon }}</span>
+                    {{ notification.text }}
+                </span>
                 <span class="notification-points">+{{ notification.points }}</span>
             </div>
         </transition-group>
@@ -76,15 +78,17 @@ const comboSystem = computed(() => gameStore.comboSystem)
             <div class="info-line">Loops: {{ gameStore.loopCount }} / {{ gameStore.totalLoops }}</div>
             <div v-if="gameStore.gameMode === GameMode.Battle" class="info-line">Enemies: {{ enemiesStats }}</div>
             <div v-if="gameStore.gameMode === GameMode.Battle" class="info-line">Rocks: {{ rocksStats }}</div>
-            <div v-if="gameStore.gameMode === GameMode.Battle" class="info-line">Score: {{ score }}</div>
-            <div v-if="gameStore.gameMode === GameMode.Explore" class="info-line">Cards: {{ gameStore.cards }}</div>
+            <div v-if="gameStore.gameMode === GameMode.Battle" class="info-line">Score: {{ formattedBattleScore }}</div>
+            <div v-if="gameStore.gameMode === GameMode.Explore" class="info-line">
+                <span class="stardust-icon">✧</span> Stardust: {{ gameStore.stardust }}
+            </div>
             <div class="info-line">Current: {{ formattedSessionTime }}</div>
             <div class="info-line">Total: {{ formattedTotalTime }}</div>
         </div>
     </div>
 
     <ModalDialog v-if="gameStore.modal.show" :type="gameStore.modal.type" :currentMode="gameStore.gameMode"
-        :score="gameStore.points" :cards="gameStore.cards" :time="formattedSessionTime"
+        :score="gameStore.battleScore" :cards="gameStore.stardust" :time="formattedSessionTime"
         :totalLoops="gameStore.totalLoops" />
 </template>
 
@@ -123,6 +127,31 @@ const comboSystem = computed(() => gameStore.comboSystem)
 
 .info-line {
     margin: 0;
+}
+
+.stardust-icon {
+    color: #ffde87;
+    text-shadow: 0 0 5px #ffaa00;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.stardust-notification {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 218, 135, 0.3);
+    box-shadow: 0 0 15px rgba(255, 218, 135, 0.3);
+}
+
+.stardust-notification .notification-text {
+    color: #ffde87;
+}
+
+.stardust-notification .notification-points {
+    color: #ffaa00;
+}
+
+.notification-icon {
+    margin-right: 5px;
 }
 
 .score-notifications {

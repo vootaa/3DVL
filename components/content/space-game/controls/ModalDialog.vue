@@ -14,11 +14,11 @@ const props = defineProps({
         required: true,
         validator: (value: number) => Object.values(GameMode).includes(value as unknown as GameMode)
     },
-    score: {
+    battleScore: {
         type: Number,
         default: 0
     },
-    cards: {
+    stardust: {
         type: Number,
         default: 0
     },
@@ -35,16 +35,16 @@ const props = defineProps({
 const gameStore = inject('gameStore') as GameStore
 
 const restartGame = () => {
-    // 重启游戏，保持当前模式
+    // Restart game, keep current mode
     gameStore.actions.restartGame(false);
     gameStore.actions.hideModal();
 }
 
 const switchMode = () => {
-    // 切换游戏模式并重启
-    // 如果是从游戏结束对话框切换，需要完全重置
+    // Switch game mode and restart
+    // If switching from game over dialog, need complete reset
     if (props.type === 'gameOver') {
-        gameStore.actions.restartGame(true); // true表示切换模式
+        gameStore.actions.restartGame(true); // true means switch mode
     } else {
         gameStore.actions.switchGameMode();
     }
@@ -52,13 +52,13 @@ const switchMode = () => {
 }
 
 const continueGame = () => {
-    // 取消，继续当前游戏
+    // Cancel, continue current game
     gameStore.actions.hideModal();
-    // 恢复游戏时间
+    // Resume game time
     timeManager.actions.resume();
 }
 
-// 检查当前模式是否是战斗模式
+// Check if current mode is battle mode
 const isBattleMode = computed(() => props.currentMode === GameMode.Battle)
 
 const getOppositeMode = () => {
@@ -79,13 +79,13 @@ const getTitleText = () => {
         <div class="modal-container">
             <div class="modal-header">{{ getTitleText() }}</div>
 
-            <!-- 游戏结束提示 -->
+            <!-- Game over prompt -->
             <div v-if="type === 'gameOver'" class="modal-content">
-                <!-- 战斗模式结束 -->
+                <!-- Battle mode ended -->
                 <template v-if="isBattleMode">
                     <div class="stats-row">
                         <span class="label">FINAL SCORE:</span>
-                        <span class="value">{{ score }}</span>
+                        <span class="value">{{ battleScore }}</span>
                     </div>
                     <div class="stats-row">
                         <span class="label">TIME:</span>
@@ -97,11 +97,13 @@ const getTitleText = () => {
                     </div>
                 </template>
 
-                <!-- 探索模式结束 -->
+                <!-- Exploration mode ended -->
                 <template v-else>
                     <div class="stats-row">
-                        <span class="label">CARDS COLLECTED:</span>
-                        <span class="value">{{ cards }}</span>
+                        <span class="label">STARDUST COLLECTED:</span>
+                        <span class="value">
+                            <span class="stardust-icon">✧</span> {{ stardust }}
+                        </span>
                     </div>
                     <div class="stats-row">
                         <span class="label">TIME:</span>
@@ -114,34 +116,34 @@ const getTitleText = () => {
                 </template>
             </div>
 
-            <!-- 切换模式确认 -->
+            <!-- Switch mode confirmation -->
             <div v-else class="modal-content">
                 <div class="warning-message">
                     <template v-if="isBattleMode">
-                        Your current score will be lost if you switch to Explore mode.
+                        Your current battle score will be lost if you switch to Explore mode.
                     </template>
                     <template v-else>
-                        Your collected cards will be lost if you switch to Battle mode.
+                        Your collected stardust will be lost if you switch to Battle mode.
                     </template>
                 </div>
                 <div class="question">Do you want to continue?</div>
             </div>
 
             <div class="modal-footer">
-                <!-- 游戏结束的按钮 -->
+                <!-- Game over buttons -->
                 <template v-if="type === 'gameOver'">
                     <button class="modal-btn primary" @click="restartGame">
                         PLAY AGAIN
                     </button>
                     <button class="modal-btn secondary" @click="switchMode">
-                        TRY {{ getOppositeMode().toUpperCase() }} MODE
+                        SWITCH TO {{ getOppositeMode().toUpperCase() }}
                     </button>
                 </template>
 
-                <!-- 切换确认的按钮 -->
+                <!-- Switch confirmation buttons -->
                 <template v-else>
                     <button class="modal-btn primary" @click="continueGame">
-                        CONTINUE CURRENT GAME
+                        CONTINUE
                     </button>
                     <button class="modal-btn warning" @click="switchMode">
                         SWITCH TO {{ getOppositeMode().toUpperCase() }}
@@ -243,6 +245,13 @@ const getTitleText = () => {
     border: 1px solid rgba(255, 102, 0, 0.3);
     border-radius: 5px;
     background-color: rgba(255, 102, 0, 0.1);
+}
+
+.stardust-icon {
+    color: #ffde87;
+    text-shadow: 0 0 5px #ffaa00;
+    display: inline-block;
+    margin-right: 5px;
 }
 
 .question {

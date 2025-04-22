@@ -1,6 +1,38 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import { gameStore, GameMode, ObservationMode, POINTS_OF_INTEREST } from '../GameStore';
+
+// Add observation timer
+const observationTime = ref(0);
+const observationInterval = ref(null);
+const requiredObservationTime = 20; // Seconds required to obtain stardust
+
+// Watch for changes in current observation point to start/stop timer
+watch(() => [gameStore.currentPointOfInterest, gameStore.observationMode], ([newPOI, newMode]) => {
+    clearInterval(observationInterval.value);
+
+    if (newPOI && newMode === ObservationMode.Orbiting) {
+        observationTime.value = 0;
+        // Start a new timer
+        observationInterval.value = setInterval(() => { observationTime.value++; }, 1000);
+    } else {
+        observationTime.value = 0;
+    }
+}, { immediate: true });
+
+const remainingTime = computed(() => {
+    if (!gameStore.currentPointOfInterest ||
+        gameStore.observedPoints.includes(gameStore.currentPointOfInterest)) {
+        return 0;
+    }
+
+    return Math.max(0, requiredObservationTime - observationTime.value);
+});
+
+const hasCollectedStardust = computed(() => {
+    if (!gameStore.currentPointOfInterest) return false;
+    return gameStore.observedPoints.includes(gameStore.currentPointOfInterest);
+});
 
 // Calculate if player is near a point of interest (within 0.05 of track position)
 const isNearPointOfInterest = (poiKey) => {
@@ -74,6 +106,8 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+    clearInterval(observationInterval.value);
+
     window.removeEventListener('mousedown', handleMouseDown);
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', handleMouseUp);
@@ -96,6 +130,24 @@ onUnmounted(() => {
         <div v-else class="orbit-controls">
             <div class="orbit-info">
                 <span class="observation-title">Observing: {{ currentPoiName }}</span>
+                <div class="observation-timer" :class="{ 'completed': hasCollectedStardust }">
+                    <template v-if="hasCollectedStardust">
+                        <div class="stardust-collected">
+                            <span class="stardust-icon">✧</span> Stardust Collected!
+                        </div>
+                        <div class="timer-value">{{ observationTime }}s</div>
+                    </template>
+                    <template v-else>
+                        <div class="timer-label">
+                            <span class="stardust-icon">✧</span> Collecting Stardust: {{ observationTime }}s
+                        </div>
+                        <div class="timer-progress">
+                            <div class="timer-bar"
+                                :style="{ width: `${(observationTime / requiredObservationTime) * 100}%` }"></div>
+                            <div class="timer-text">{{ remainingTime }}s remaining</div>
+                        </div>
+                    </template>
+                </div>
                 <button @click="gameStore.actions.resumeJourney()" class="resume-button">
                     Resume Journey
                 </button>
@@ -250,5 +302,89 @@ onUnmounted(() => {
     font-weight: 500;
     color: #a0e0ff;
     text-align: center;
+}
+
+.observation-timer {
+    width: 100%;
+    margin: 10px 0;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.stardust-icon {
+    color: #ffde87;
+    text-shadow: 0 0 5px #ffaa00;
+    font-size: 1.2em;
+    margin-right: 2px;
+}
+
+.timer-label {
+    font-size: 0.9em;
+    color: #a0e0ff;
+    margin-bottom: 5px;
+}
+
+.stardust-collected {
+    font-size: 1.1em;
+    color: #ffde87;
+    font-weight: 500;
+    text-shadow: 0 0 8px rgba(255, 218, 135, 0.8);
+    margin-bottom: 5px;
+    animation: glow 1.5s infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 0 0 5px rgba(255, 218, 135, 0.5);
+    }
+
+    to {
+        text-shadow: 0 0 15px rgba(255, 218, 135, 0.9), 0 0 20px rgba(255, 255, 255, 0.5);
+    }
+}
+
+.timer-value {
+    font-size: 1.2em;
+    font-weight: 700;
+    color: #00ffaa;
+}
+
+.timer-progress {
+    height: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    margin-top: 5px;
+}
+
+.timer-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #4b6cb7, #8e54e9);
+    box-shadow: 0 0 10px rgba(142, 84, 233, 0.8);
+    border-radius: 10px;
+    transition: width 1s linear;
+}
+
+.timer-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.8em;
+    font-weight: 500;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+}
+
+.observation-timer.completed {
+    background: rgba(255, 218, 135, 0.15);
+    border-color: rgba(255, 218, 135, 0.4);
 }
 </style>
