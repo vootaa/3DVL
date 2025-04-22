@@ -74,7 +74,6 @@ export function checkStardustCollection(gameStore: any) {
     if (observationTime >= 20000) { // 20 seconds
       gameStore.observedPoints.push(poi)
       gameStore.actions.addStardust()
-      gameStore.actions.addScoreNotification('Stardust +1', 1, true)
     }
   }
 }
