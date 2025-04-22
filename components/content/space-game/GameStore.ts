@@ -508,7 +508,7 @@ gameStore.actions.update = () => {
         gameStore.mutation.cancelExplosionTO = setTimeout(() => {
           gameStore.explosions = gameStore.explosions.filter(({ time }) => Date.now() - time <= 1000)
         }
-        , 1000)
+          , 1000)
 
         if (rocksHit.length > 0) {
           gameStore.actions.registerHit(rocksHit.length, 'rock')
@@ -621,7 +621,7 @@ gameStore.actions.switchGameMode = () => {
     gameStore.mutation.particles = randomData(50, track, 100, 1, () => 0.5 + Math.random() * 0.8)
   }
 
-  console.log(`Switched from ${previousMode} to ${gameStore.gameMode} mode, game fully reset`)
+  // Mode switch completed
 }
 
 gameStore.actions.switchSpeedMode = () => {
@@ -642,8 +642,7 @@ gameStore.actions.switchSpeedMode = () => {
   gameStore.mutation.startTime = now - (currentT * targetLooptime)
   gameStore.mutation.looptime = targetLooptime
 
-  // Debug information
-  console.log(`Speed changed to ${gameStore.speedMode} (${SPEED_SETTINGS[gameStore.speedMode].label})`)
+  // Speed has been changed to new setting
 }
 
 const originalSwitchGameMode = gameStore.actions.switchGameMode
@@ -673,7 +672,7 @@ function checkStardustCollection() {
   if (!poi) return
 
   if (gameStore.observationMode !== ObservationMode.None
-        && !gameStore.observedPoints.includes(poi)) {
+    && !gameStore.observedPoints.includes(poi)) {
 
     const observationStartTime = gameStore.mutation.observationStartTime || 0
     const observationTime = Date.now() - observationStartTime
@@ -727,7 +726,7 @@ gameStore.actions.toggleObservationMode = (pointOfInterestKey: keyof typeof POIN
     gameStore.mutation.observationStartTime = Date.now()
   }
 
-  console.log(`Now observing: ${poi.name}`)
+  // Now observing point of interest
 
   // If exiting observation mode, check if can collect card
   if (!pointOfInterestKey && gameStore.mutation.observationStartTime) {
@@ -760,7 +759,7 @@ gameStore.actions.resumeJourney = () => {
     mutation.isPaused = false
   }
 
-  console.log('Resumed journey')
+  // Journey resumed
 }
 
 function randomData(count: number, track: TubeGeometry, radius: number, size: number, scale: number | (() => number)) {
@@ -866,8 +865,8 @@ function generateRings(count: number, track: TubeGeometry, startT: number = TRAC
 
     // Calculate scale using new parameters, adding randomness and wave effect
     const scale = baseScale
-            + (i * scaleVariation * Math.sin(i * waveFrequency) * Math.PI / 2)
-            + (Math.random() * waveFactor * baseScale)
+      + (i * scaleVariation * Math.sin(i * waveFrequency) * Math.PI / 2)
+      + (Math.random() * waveFactor * baseScale)
 
     temp.push({
       position: position.toArray(),

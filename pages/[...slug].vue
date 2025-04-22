@@ -9,38 +9,38 @@ useHead({
   title: `${data?.value?.title} - 3DVL`,
   meta: [
     {
-      hid: 'description',
+      key: 'description',
       name: 'description',
       content: data?.value?.description,
     },
     {
-      hid: 'keywords',
+      key: 'keywords',
       property: 'keywords',
-      keywords: data?.value?.tags?.join(', '),
+      content: data?.value?.tags?.join(', '),
     },
     // og
     {
-      hid: 'og:description',
+      key: 'og:description',
       property: 'og:description',
       content: data?.value?.description,
     },
     {
-      hid: 'og:title',
+      key: 'og:title',
       property: 'og:title',
       content: `${data?.value?.title} made with TresJS by @${data?.value?.author}`,
     },
     {
-      hid: 'og:type',
+      key: 'og:type',
       property: 'og:type',
       content: 'project',
     },
     {
-      hid: 'og:image',
+      key: 'og:image',
       property: 'og:image',
       content: data?.value?.thumbnail ?? `/${data?.value?._path?.split('/').pop()}.png`,
     },
     {
-      hid: 'og:image:alt',
+      key: 'og:image:alt',
       property: 'og:image:alt',
       content: data?.value?.title,
     },
@@ -48,22 +48,22 @@ useHead({
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:site', content: '@alvarosabu' },
     {
-      hid: 'twitter:title',
+      key: 'twitter:title',
       property: 'twitter:title',
       content: `${data?.value?.title} - Tres`,
     },
     {
-      hid: 'twitter:description',
+      key: 'twitter:description',
       name: 'twitter:description',
       content: data?.value?.description,
     },
     {
-      hid: 'twitter:image',
+      key: 'twitter:image',
       name: 'twitter:image',
       content: data?.value?.thumbnail ?? `/${data?.value?._path?.split('/').pop()}.png`,
     },
     {
-      hid: 'twitter:image:alt',
+      key: 'twitter:image:alt',
       name: 'twitter:image:alt',
       content: data?.value?.title,
     },
@@ -74,11 +74,7 @@ useHead({
 <template>
   <main>
     <ClientOnly>
-      <ContentRenderer
-        v-if="data"
-        :value="data"
-        class="w-full h-100vh relative"
-      />
+      <ContentRenderer v-if="data" :value="data" class="w-full h-100vh relative" />
     </ClientOnly>
   </main>
 </template>
