@@ -4,25 +4,7 @@
     "@tresjs/eslint-config-vue"
   ],
   "rules": {
-    // You may need to disable some problematic rules
-    "vue/valid-v-for": "warn", // Downgrade to warning instead of error
-    "vue/no-unused-vars": "warn",
-    "@typescript-eslint/no-explicit-any": "off",
-    "vue/multi-word-component-names": "off",
-    "max-len": [
-      "warn",
-      {
-        "code": 180
-      }
-    ], // Increase maximum line length
-    "max-statements-per-line": [
-      "warn",
-      {
-        "max": 2
-      }
-    ], // Allow maximum 2 statements per line
-    "no-console": "warn", // Change console statements to warning
-    "no-void": "off" // Turn off void check
+    "@typescript-eslint/no-explicit-any": "off"
   },
   "parserOptions": {
     "ecmaVersion": 2022,

@@ -14,7 +14,10 @@ watch(() => [gameStore.currentPointOfInterest, gameStore.observationMode], ([new
   if (newPOI && newMode === ObservationMode.Orbiting) {
     observationTime.value = 0
     // Start a new timer
-    observationInterval.value = setInterval(() => { observationTime.value++ }, 1000)
+    const incrementTime = () => {
+      observationTime.value++
+    }
+    observationInterval.value = setInterval(incrementTime, 1000)
   }
   else {
     observationTime.value = 0

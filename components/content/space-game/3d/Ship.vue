@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { BoxGeometry, Color, Group, MeshBasicMaterial, PointLight, Vector3 } from 'three'
 import { onMounted, onUnmounted, inject, shallowRef, computed, watch } from 'vue'
 import { useLoader, useLoop } from '@tresjs/core'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import type { GameStore } from '../GameStore'
 import { GameMode, ObservationMode } from '../GameStore'
 

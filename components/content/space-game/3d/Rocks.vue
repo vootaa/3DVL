@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { inject, shallowRef } from 'vue'
 import { useLoop, useLoader } from '@tresjs/core'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { Group } from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import type { GameStore } from '../GameStore'
 
 const gameStore: GameStore = inject('gameStore') as GameStore

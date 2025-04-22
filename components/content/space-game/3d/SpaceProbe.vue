@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { shallowRef } from 'vue'
 import { useLoader, useLoop } from '@tresjs/core'
 import { MeshStandardMaterial, Color, Group, PointLight } from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 const props = defineProps({
   position: {

@@ -15,9 +15,14 @@ function updateParticles() {
     const { offset, scale } = particle
     dummy.position.copy(offset)
     dummy.scale.set(scale, scale, scale)
-    dummy.rotation.set(Math.sin(Math.random()) * Math.PI, Math.sin(Math.random()) * Math.PI, Math.cos(Math.random()) * Math.PI)
+    const rx = Math.sin(Math.random()) * Math.PI
+    const ry = Math.sin(Math.random()) * Math.PI
+    const rz = Math.cos(Math.random()) * Math.PI
+    dummy.rotation.set(rx, ry, rz)
     dummy.updateMatrix()
-    if (instancedMeshRef.value) { instancedMeshRef.value.setMatrixAt(i, dummy.matrix) }
+    if (instancedMeshRef.value) {
+      instancedMeshRef.value.setMatrixAt(i, dummy.matrix)
+    }
   })
   if (instancedMeshRef.value) {
     instancedMeshRef.value.instanceMatrix.needsUpdate = true

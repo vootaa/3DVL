@@ -26,12 +26,14 @@ useLoop().onAfterRender(({ camera }) => {
   normal.copy(binormal).cross(dir)
   pos.add(normal.clone().multiplyScalar(offset))
   camera.position.copy(pos)
-  const lookAt = track.parameters.path.getPointAt((t + 30 / track.parameters.path.getLength()) % 1).multiplyScalar(scale)
+  const pathOffset = (t + 30 / track.parameters.path.getLength()) % 1
+  const lookAt = track.parameters.path.getPointAt(pathOffset).multiplyScalar(scale)
   camera.matrix.lookAt(camera.position, lookAt, normal)
   camera.quaternion.setFromRotationMatrix(camera.matrix);
-  (camera as PerspectiveCamera).fov += ((t > 0.4 && t < 0.45 ? 120 : fov) - (camera as PerspectiveCamera).fov) * 0.05;
   (camera as PerspectiveCamera).updateProjectionMatrix()
-  const lightPos = track.parameters.path.getPointAt((t + 1 / track.parameters.path.getLength()) % 1).multiplyScalar(scale)
+  const lightPathOffset = (t + 1 / track.parameters.path.getLength()) % 1
+  const lightPos = track.parameters.path.getPointAt(lightPathOffset).multiplyScalar(scale)
+  groupRef.value.position.copy(lightPos)
   groupRef.value.position.copy(lightPos)
   groupRef.value.quaternion.setFromRotationMatrix(camera.matrix)
 })

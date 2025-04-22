@@ -8,18 +8,14 @@ const switchGameMode = () => {
   if (gameStore.observationMode === ObservationMode.None) {
     gameStore.actions.switchGameMode()
   }
-  else {
-    console.log('Please resume journey before switching game mode')
-  }
+  // No action needed when in observation mode - UI already shows warning
 }
 
 const switchSpeedMode = () => {
   if (gameStore.observationMode === ObservationMode.None) {
     gameStore.actions.switchSpeedMode()
   }
-  else {
-    console.log('Please resume journey before changing speed')
-  }
+  // No action needed when in observation mode - UI already shows warning
 }
 
 const isGameModeSwitchDisabled = computed(() => gameStore.observationMode !== ObservationMode.None)

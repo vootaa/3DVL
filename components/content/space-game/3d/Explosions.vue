@@ -17,7 +17,9 @@ export interface ExplosionData {
 }
 
 function updateExplosions() {
-  if (!Array.isArray(instancedMeshesRef.value)) { return }
+  if (!Array.isArray(instancedMeshesRef.value)) {
+    return
+  }
 
   dummy.scale.set(1, 1, 1)
   dummy.rotation.set(0, 0, 0)
