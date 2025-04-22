@@ -119,6 +119,8 @@ export const gameStore = reactive({
     points: 0,
     health: 100,
     loopCount: 0,
+    totalLoops: 7, // 游戏总圈数
+    cards: 0,      // 探索模式收集的卡片
     lasers: [] as number[],
     explosions: [] as ExplosionData[],
     initialRockCount: 100,
@@ -136,9 +138,14 @@ export const gameStore = reactive({
     showInfoText: true, // state to control text visibility
     gameMode: GameMode.Battle, // Default to Battle mode
     speedMode: SpeedMode.Fast, // Default to Fast mode
+    modal: {
+        show: false,
+        type: '', // 'gameOver' 或 'switchConfirm'
+    },
     timeManager,
     observationMode: ObservationMode.None,
     currentPointOfInterest: null as keyof typeof POINTS_OF_INTEREST | null,
+    observedPoints: [] as string[], // 已观察过的点
     orbitAngle: 0,
     orbitHeight: 0,
     comboSystem: {
@@ -159,6 +166,7 @@ export const gameStore = reactive({
         lastT: 0,
         position: new Vector3(),
         startTime: Date.now(),
+        observationStartTime: 0,
 
         track: track as TubeGeometry,
         scale: 15,
@@ -207,8 +215,81 @@ export const gameStore = reactive({
         resumeJourney: null as unknown as () => void,
         registerHit: null as unknown as (count: number, type: 'rock' | 'enemy') => void,
         addScoreNotification: null as unknown as (text: string, points: number) => void,
+        restartGame: null as unknown as (switchMode: boolean) => void,
+        showModal: null as unknown as (type: string) => void,
+        hideModal: null as unknown as () => void,
+        addCard: null as unknown as () => void,
     },
 })
+
+gameStore.actions.restartGame = (switchMode: boolean) => {
+    // 重置分数
+    gameStore.points = 0;
+    gameStore.cards = 0;
+    gameStore.loopCount = 0;
+
+    // 重置时间
+    gameStore.mutation.startTime = Date.now();
+    timeManager.actions.reset(false);
+
+    // 清除实体
+    gameStore.lasers = [];
+    gameStore.explosions = [];
+    gameStore.observedPoints = [];
+
+    // 重置位置
+    gameStore.mutation.t = 0;
+    const startPos = track.parameters.path.getPointAt(0);
+    gameStore.mutation.position.copy(startPos.multiplyScalar(gameStore.mutation.scale));
+
+    // 生成新的实体
+    if (gameStore.gameMode === GameMode.Battle) {
+        gameStore.rocks = randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5);
+        gameStore.enemies = randomData(10, track, 20, 15, 1);
+        gameStore.initialRockCount = 100;
+        gameStore.initialEnemyCount = 10;
+    } else {
+        gameStore.rocks = [];
+        gameStore.enemies = [];
+        gameStore.initialRockCount = 0;
+        gameStore.initialEnemyCount = 0;
+    }
+
+    // 如果需要切换模式
+    if (switchMode) {
+        gameStore.gameMode = gameStore.gameMode === GameMode.Battle ? GameMode.Explore : GameMode.Battle;
+    }
+
+    // 确保重置并恢复时间
+    timeManager.actions.reset(false);
+    timeManager.actions.resume();
+}
+
+// 实现显示模态框方法
+gameStore.actions.showModal = (type: string) => {
+    gameStore.modal.show = true;
+    gameStore.modal.type = type;
+
+    // 暂停游戏时间，但总时间继续
+    timeManager.actions.pause();
+}
+
+// 实现隐藏模态框方法
+gameStore.actions.hideModal = () => {
+    gameStore.modal.show = false;
+
+    // 确保游戏时间恢复计时（只有在非游戏结束的情况下）
+    if (gameStore.modal.type === 'switchConfirm') {
+        timeManager.actions.resume();
+    }
+}
+
+// 实现添加卡片方法（探索模式）
+gameStore.actions.addCard = () => {
+    if (gameStore.gameMode === GameMode.Explore) {
+        gameStore.cards++;
+    }
+}
 
 gameStore.actions.addScoreNotification = (text: string, points: number) => {
     const id = Date.now();
@@ -520,6 +601,19 @@ gameStore.actions.switchSpeedMode = () => {
     // Debug information
     console.log(`Speed changed to ${gameStore.speedMode} (${SPEED_SETTINGS[gameStore.speedMode].label})`);
 }
+
+const originalSwitchGameMode = gameStore.actions.switchGameMode;
+gameStore.actions.switchGameMode = () => {
+    // 如果游戏正在进行中（loopCount > 0）并且未显示模态框
+    if (gameStore.loopCount > 0 && !gameStore.modal.show) {
+        // 显示切换确认对话框
+        gameStore.actions.showModal('switchConfirm');
+    } else {
+        // 直接切换
+        originalSwitchGameMode();
+    }
+}
+
 
 export type GameStore = typeof gameStore
 
@@ -836,10 +930,59 @@ gameStore.actions.update = () => {
         gameStore.camera.position.copy(mutation.position);
         gameStore.camera.lookAt(mutation.orbitCenter);
     }
+
+    // 检查是否达到总圈数（确保只在这里检查一次）
+    if (gameStore.loopCount >= gameStore.totalLoops && !gameStore.modal.show) {
+        // 显示游戏结束对话框
+        gameStore.actions.showModal('gameOver');
+    }
 }
 
 // Add the toggle info text function
 gameStore.actions.toggleInfoText = (show?: boolean) => {
     if (show !== false && show !== true) show = !gameStore.showInfoText
     gameStore.showInfoText = show
+}
+
+// 添加类型安全的卡片收集验证函数
+function checkObservationCardCollection() {
+    if (gameStore.gameMode !== GameMode.Explore) return;
+
+    // 安全检查 currentPointOfInterest
+    const poi = gameStore.currentPointOfInterest;
+    if (!poi) return;
+
+    if (gameStore.observationMode !== ObservationMode.None &&
+        !gameStore.observedPoints.includes(poi)) {
+
+        const observationStartTime = gameStore.mutation.observationStartTime || 0;
+        const observationTime = Date.now() - observationStartTime;
+
+        if (observationTime >= 20000) { // 20秒
+            // 添加到已观察点列表
+            gameStore.observedPoints.push(poi);
+            // 增加卡片
+            gameStore.actions.addCard();
+
+            // 显示通知
+            gameStore.actions.addScoreNotification("Observation Card +1", 1);
+        }
+    }
+}
+
+// 修改观察模式切换方法以记录开始时间
+const originalToggleObservationMode = gameStore.actions.toggleObservationMode;
+gameStore.actions.toggleObservationMode = (pointOfInterestKey: keyof typeof POINTS_OF_INTEREST | null) => {
+    // 记录观察开始时间
+    if (pointOfInterestKey && !gameStore.observedPoints.includes(pointOfInterestKey)) {
+        gameStore.mutation.observationStartTime = Date.now();
+    }
+
+    // 调用原始方法
+    originalToggleObservationMode(pointOfInterestKey);
+
+    // 如果退出观察模式，检查是否可以收集卡片
+    if (!pointOfInterestKey && gameStore.mutation.observationStartTime) {
+        checkObservationCardCollection();
+    }
 }

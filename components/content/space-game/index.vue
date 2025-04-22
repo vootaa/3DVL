@@ -4,11 +4,11 @@ import { SRGBColorSpace, NoToneMapping } from 'three'
 import { onMounted, provide, shallowRef } from 'vue'
 import Game from './Game.vue'
 import { gameStore } from './GameStore'
-import Hud from './Hud.vue'
 import SoundControl from './controls/SoundControl.vue'
 import InfoTextControl from './controls/InfoTextControl.vue'
 import ControlPanel from './controls/ControlPanel.vue'
 import ObservationControls from './controls/ObservationControls.vue';
+import Hud from './Hud.vue'
 
 provide('gameStore', gameStore)
 const camera = shallowRef()
@@ -24,11 +24,11 @@ onMounted(() => { gameStore.actions.init(camera.value) })
       <TresFog color="#121225" :near="150" :far="600" />
       <Game />
     </TresCanvas>
-    <Hud />
     <SoundControl />
     <InfoTextControl />
     <ControlPanel />
     <ObservationControls />
+    <Hud />
   </div>
 </template>
 

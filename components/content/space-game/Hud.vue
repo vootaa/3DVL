@@ -2,6 +2,7 @@
 import { computed, inject, ref, onUnmounted } from 'vue'
 import { GameMode, type GameStore } from './GameStore'
 import { timeManager } from './TimeManager'
+import ModalDialog from './controls/ModalDialog.vue'
 
 const gameStore = inject('gameStore') as GameStore
 
@@ -49,6 +50,8 @@ const score = computed(() => (gameStore.points >= 1000 ? `${(gameStore.points / 
 
 const scoreNotifications = computed(() => gameStore.scoreNotifications)
 const comboSystem = computed(() => gameStore.comboSystem)
+
+
 </script>
 
 <template>
@@ -70,14 +73,19 @@ const comboSystem = computed(() => gameStore.comboSystem)
     <div class="score-display">
         <div class="control-label">STATS DATA</div>
         <div class="control-value">
-            <div class="info-line">Loops: {{ gameStore.loopCount }}</div>
+            <div class="info-line">Loops: {{ gameStore.loopCount }} / {{ gameStore.totalLoops }}</div>
             <div v-if="gameStore.gameMode === GameMode.Battle" class="info-line">Enemies: {{ enemiesStats }}</div>
             <div v-if="gameStore.gameMode === GameMode.Battle" class="info-line">Rocks: {{ rocksStats }}</div>
             <div v-if="gameStore.gameMode === GameMode.Battle" class="info-line">Score: {{ score }}</div>
+            <div v-if="gameStore.gameMode === GameMode.Explore" class="info-line">Cards: {{ gameStore.cards }}</div>
             <div class="info-line">Current: {{ formattedSessionTime }}</div>
             <div class="info-line">Total: {{ formattedTotalTime }}</div>
         </div>
     </div>
+
+    <ModalDialog v-if="gameStore.modal.show" :type="gameStore.modal.type" :currentMode="gameStore.gameMode"
+        :score="gameStore.points" :cards="gameStore.cards" :time="formattedSessionTime"
+        :totalLoops="gameStore.totalLoops" />
 </template>
 
 <style lang="css" scoped>

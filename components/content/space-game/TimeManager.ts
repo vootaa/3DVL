@@ -77,7 +77,7 @@ export const timeManager = reactive({
         /**
          * Get formatted game time (min:sec.ms)
          */
-        getFormattedTime: () => string,
+        getFormattedTime: () => "" as string,
 
         /**
          * Register update callback
