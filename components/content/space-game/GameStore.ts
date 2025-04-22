@@ -285,7 +285,6 @@ gameStore.actions.hideModal = () => {
     }
 }
 
-
 gameStore.actions.addStardust = () => {
     if (gameStore.gameMode === GameMode.Explore) {
         gameStore.stardust++;
@@ -437,89 +436,115 @@ gameStore.actions.updateMouse = ({ clientX, clientY }) => {
 }
 
 gameStore.actions.update = () => {
-    const { rocks, enemies, mutation, gameMode, speedMode } = gameStore
+    const { observationMode, mutation } = gameStore;
 
-    const time = Date.now()
-    const t = (mutation.t = ((time - mutation.startTime) % mutation.looptime) / mutation.looptime)
+    if (observationMode === ObservationMode.None) {
+        const { rocks, enemies, mutation, gameMode, speedMode } = gameStore
 
-    if (mutation.lastT > 0.9 && t < 0.1) {
-        gameStore.loopCount++
-    }
-    mutation.lastT = t
+        const time = Date.now()
+        const t = (mutation.t = ((time - mutation.startTime) % mutation.looptime) / mutation.looptime)
 
-    mutation.position = track.parameters.path.getPointAt(t)
-    mutation.position.multiplyScalar(mutation.scale)
-
-    const speedFactor = SPEED_SETTINGS[speedMode].factor
-    gameStore.camera.fov = 70 + (speedFactor - 1.0) * 10
-    gameStore.camera.updateProjectionMatrix()
-
-    // test for wormhole/warp
-    let warping = false
-    if (t > TRACK_POSITIONS.WARP_BEGIN && t < TRACK_POSITIONS.WARP_END) {
-        if (!warping) {
-            warping = true
-            gameStore.actions.playAudio(audio.warp)
+        if (mutation.lastT > 0.9 && t < 0.1) {
+            gameStore.loopCount++
         }
-    }
-    else if (t > TRACK_POSITIONS.WARP_RESET) warping = false
+        mutation.lastT = t
 
-    // Only process hits and collisions in Battle mode
-    if (gameMode === GameMode.Battle) {
-        // test for hits
-        const rocksHit = rocks.filter(data => gameStore.actions.test(data))
-        const enemiesHit = enemies.filter(data => gameStore.actions.test(data))
-        const allHit = rocksHit.concat(enemiesHit)
-        const previous = mutation.hits
-        mutation.hits = allHit.length
-        if (previous === 0 && mutation.hits) gameStore.actions.playAudio(audio.click)
-        const lasers = gameStore.lasers
-        if (mutation.hits && lasers.length && time - lasers[lasers.length - 1] < 100) {
-            gameStore.actions.playAudio(new Audio(audio.mp3.explosion), 0.5)
-            const updates: ExplosionData[] = []
-            allHit.forEach(data => updates.push({
-                time: Date.now(),
-                ...data,
-                color: 'white',
-                particles: Array.from({ length: 20 }).fill(0).map(_ => ({
-                    position: new Vector3(),
-                    dPos: new Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2).normalize().multiplyScalar(.40),
-                })),
-            }))
-            allHit.forEach(data => updates.push({
-                time: Date.now(),
-                ...data,
-                color: 'orange',
-                particles: Array.from({ length: 20 }).fill(0).map(_ => ({
-                    position: new Vector3(),
-                    dPos: new Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2).normalize().multiplyScalar(.60),
-                })),
-            }))
-            gameStore.explosions = [...gameStore.explosions, ...updates]
+        mutation.position = track.parameters.path.getPointAt(t)
+        mutation.position.multiplyScalar(mutation.scale)
 
-            clearTimeout(gameStore.mutation.cancelExplosionTO)
-            gameStore.mutation.cancelExplosionTO = setTimeout(() => {
-                gameStore.explosions = gameStore.explosions.filter(({ time }) => Date.now() - time <= 1000)
+        const speedFactor = SPEED_SETTINGS[speedMode].factor
+        gameStore.camera.fov = 70 + (speedFactor - 1.0) * 10
+        gameStore.camera.updateProjectionMatrix()
+
+        // test for wormhole/warp
+        let warping = false
+        if (t > TRACK_POSITIONS.WARP_BEGIN && t < TRACK_POSITIONS.WARP_END) {
+            if (!warping) {
+                warping = true
+                gameStore.actions.playAudio(audio.warp)
             }
-                , 1000)
-
-            if (rocksHit.length > 0) {
-                gameStore.actions.registerHit(rocksHit.length, 'rock');
-            }
-
-            if (enemiesHit.length > 0) {
-                gameStore.actions.registerHit(enemiesHit.length, 'enemy');
-            }
-
-            gameStore.rocks = gameStore.rocks.filter(rock => !rocksHit.find(r => r.guid === rock.guid));
-            gameStore.enemies = gameStore.enemies.filter(enemy => !enemiesHit.find(e => e.guid === enemy.guid));
-
         }
-    } else {
-        // In Explore mode, set hits to 0 to avoid targeting UI
-        mutation.hits = 0
+        else if (t > TRACK_POSITIONS.WARP_RESET) warping = false
+
+        // Only process hits and collisions in Battle mode
+        if (gameMode === GameMode.Battle) {
+            // test for hits
+            const rocksHit = rocks.filter(data => gameStore.actions.test(data))
+            const enemiesHit = enemies.filter(data => gameStore.actions.test(data))
+            const allHit = rocksHit.concat(enemiesHit)
+            const previous = mutation.hits
+            mutation.hits = allHit.length
+            if (previous === 0 && mutation.hits) gameStore.actions.playAudio(audio.click)
+            const lasers = gameStore.lasers
+            if (mutation.hits && lasers.length && time - lasers[lasers.length - 1] < 100) {
+                gameStore.actions.playAudio(new Audio(audio.mp3.explosion), 0.5)
+                const updates: ExplosionData[] = []
+                allHit.forEach(data => updates.push({
+                    time: Date.now(),
+                    ...data,
+                    color: 'white',
+                    particles: Array.from({ length: 20 }).fill(0).map(_ => ({
+                        position: new Vector3(),
+                        dPos: new Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2).normalize().multiplyScalar(.40),
+                    })),
+                }))
+                allHit.forEach(data => updates.push({
+                    time: Date.now(),
+                    ...data,
+                    color: 'orange',
+                    particles: Array.from({ length: 20 }).fill(0).map(_ => ({
+                        position: new Vector3(),
+                        dPos: new Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2).normalize().multiplyScalar(.60),
+                    })),
+                }))
+                gameStore.explosions = [...gameStore.explosions, ...updates]
+
+                clearTimeout(gameStore.mutation.cancelExplosionTO)
+                gameStore.mutation.cancelExplosionTO = setTimeout(() => {
+                    gameStore.explosions = gameStore.explosions.filter(({ time }) => Date.now() - time <= 1000)
+                }
+                    , 1000)
+
+                if (rocksHit.length > 0) {
+                    gameStore.actions.registerHit(rocksHit.length, 'rock');
+                }
+
+                if (enemiesHit.length > 0) {
+                    gameStore.actions.registerHit(enemiesHit.length, 'enemy');
+                }
+
+                gameStore.rocks = gameStore.rocks.filter(rock => !rocksHit.find(r => r.guid === rock.guid));
+                gameStore.enemies = gameStore.enemies.filter(enemy => !enemiesHit.find(e => e.guid === enemy.guid));
+
+            }
+        } else {
+            // In Explore mode, set hits to 0 to avoid targeting UI
+            mutation.hits = 0
+        }
+    } else if (observationMode === ObservationMode.Orbiting) {
+        // In orbiting mode, update camera position based on orbit parameters
+
+        // Calculate orbit position
+        const horizontalRadius = mutation.orbitDistance * Math.cos(gameStore.orbitHeight);
+        const x = mutation.orbitCenter.x + horizontalRadius * Math.cos(gameStore.orbitAngle);
+        const z = mutation.orbitCenter.z + horizontalRadius * Math.sin(gameStore.orbitAngle);
+        const y = mutation.orbitCenter.y + mutation.orbitDistance * Math.sin(gameStore.orbitHeight);
+
+        mutation.position.set(x, y, z);
+
+        // Automatically slowly rotate if mouse input is not controlling it
+        gameStore.orbitAngle += mutation.orbitSpeed;
+
+        // Point camera at the center point
+        gameStore.camera.position.copy(mutation.position);
+        gameStore.camera.lookAt(mutation.orbitCenter);
     }
 
+    // Check if total loops reached (ensure check only happens once)
+    if (gameStore.loopCount >= gameStore.totalLoops && !gameStore.modal.show) {
+        // Show game over dialog
+        gameStore.actions.showModal('gameOver');
+    }
 }
 
 // Completely reset all game state when switching modes
@@ -545,6 +570,9 @@ gameStore.actions.switchGameMode = () => {
     // Clear existing entities
     gameStore.lasers = [];
     gameStore.explosions = [];
+
+    // Clear observed points for stardust collection when switching modes
+    gameStore.observedPoints = [];
 
     // Reset combo system
     gameStore.comboSystem.count = 0;
@@ -620,40 +648,6 @@ gameStore.actions.switchGameMode = () => {
     }
 }
 
-// Update the update function to handle observation mode
-const originalUpdate = gameStore.actions.update;
-gameStore.actions.update = () => {
-    const { observationMode, mutation } = gameStore;
-
-    if (observationMode === ObservationMode.None) {
-        // Normal update
-        originalUpdate();
-    } else if (observationMode === ObservationMode.Orbiting) {
-        // In orbiting mode, update camera position based on orbit parameters
-
-        // Calculate orbit position
-        const horizontalRadius = mutation.orbitDistance * Math.cos(gameStore.orbitHeight);
-        const x = mutation.orbitCenter.x + horizontalRadius * Math.cos(gameStore.orbitAngle);
-        const z = mutation.orbitCenter.z + horizontalRadius * Math.sin(gameStore.orbitAngle);
-        const y = mutation.orbitCenter.y + mutation.orbitDistance * Math.sin(gameStore.orbitHeight);
-
-        mutation.position.set(x, y, z);
-
-        // Automatically slowly rotate if mouse input is not controlling it
-        gameStore.orbitAngle += mutation.orbitSpeed;
-
-        // Point camera at the center point
-        gameStore.camera.position.copy(mutation.position);
-        gameStore.camera.lookAt(mutation.orbitCenter);
-    }
-
-    // Check if total loops reached (ensure check only happens once)
-    if (gameStore.loopCount >= gameStore.totalLoops && !gameStore.modal.show) {
-        // Show game over dialog
-        gameStore.actions.showModal('gameOver');
-    }
-}
-
 // Add the toggle info text function
 gameStore.actions.toggleInfoText = (show?: boolean) => {
     if (show !== false && show !== true) show = !gameStore.showInfoText
@@ -681,16 +675,48 @@ function checkStardustCollection() {
     }
 }
 
-// Modify observation mode toggle method to record start time
-const originalToggleObservationMode = gameStore.actions.toggleObservationMode;
 gameStore.actions.toggleObservationMode = (pointOfInterestKey: keyof typeof POINTS_OF_INTEREST | null) => {
-    // Record observation start time
+    // Only available in explore mode
+    if (gameStore.gameMode !== GameMode.Explore) return;
+
+    const { mutation } = gameStore;
+
+    // If already in observation mode or no point specified, reset to normal journey
+    if (gameStore.observationMode !== ObservationMode.None || !pointOfInterestKey) {
+        return gameStore.actions.resumeJourney();
+    }
+
+    // Get point of interest data
+    const poi = POINTS_OF_INTEREST[pointOfInterestKey];
+    if (!poi) return;
+
+    // Store current position and pause time info
+    mutation.previousPosition.copy(mutation.position);
+    mutation.previousTime = Date.now();
+    mutation.isPaused = true;
+
+    // Set up orbit parameters
+    mutation.orbitCenter.copy(track.parameters.path.getPointAt(poi.trackPosition).multiplyScalar(mutation.scale));
+    mutation.orbitDistance = poi.orbitDistance;
+    mutation.orbitSpeed = poi.orbitSpeed;
+
+    // Initialize orbit angle
+    gameStore.orbitAngle = 0;
+    gameStore.orbitHeight = 0;
+
+    // Set observation mode and current point of interest
+    gameStore.observationMode = ObservationMode.Orbiting;
+    gameStore.currentPointOfInterest = pointOfInterestKey;
+
+    // Force game to pause movement along the track
+    mutation.pausedTime = Date.now() - mutation.previousTime;
+
+    // Record observation start time for stardust collection
     if (pointOfInterestKey && !gameStore.observedPoints.includes(pointOfInterestKey)) {
         gameStore.mutation.observationStartTime = Date.now();
     }
 
-    // Call original method
-    originalToggleObservationMode(pointOfInterestKey);
+    console.log(`Now observing: ${poi.name}`);
 
     // If exiting observation mode, check if can collect card
     if (!pointOfInterestKey && gameStore.mutation.observationStartTime) {
@@ -698,7 +724,33 @@ gameStore.actions.toggleObservationMode = (pointOfInterestKey: keyof typeof POIN
     }
 }
 
-export type GameStore = typeof gameStore
+gameStore.actions.updateOrbitPosition = (horizontalAngle: number, verticalAngle: number) => {
+    if (gameStore.observationMode === ObservationMode.Orbiting) {
+        // Update orbit angles based on input
+        gameStore.orbitAngle = horizontalAngle;
+        gameStore.orbitHeight = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, verticalAngle));
+    }
+}
+
+gameStore.actions.resumeJourney = () => {
+    const { mutation } = gameStore;
+
+    // Only do something if we're in observation mode
+    if (gameStore.observationMode === ObservationMode.None) return;
+
+    // Reset observation mode
+    gameStore.observationMode = ObservationMode.None;
+    gameStore.currentPointOfInterest = null;
+
+    // Resume normal movement
+    if (mutation.isPaused) {
+        // Update start time to account for the paused duration
+        mutation.startTime += (Date.now() - mutation.previousTime);
+        mutation.isPaused = false;
+    }
+
+    console.log("Resumed journey");
+}
 
 function randomData(count: number, track: TubeGeometry, radius: number, size: number, scale: number | (() => number)) {
     return new Array(count).fill({}).map(() => {
@@ -919,148 +971,3 @@ const camera = shallowRef(new PerspectiveCamera())
 onMounted(() => {
     gameStore.actions.init(camera.value)
 })
-
-gameStore.actions.toggleObservationMode = (pointOfInterestKey: keyof typeof POINTS_OF_INTEREST | null) => {
-    // Only available in explore mode
-    if (gameStore.gameMode !== GameMode.Explore) return;
-
-    const { mutation } = gameStore;
-
-    // If already in observation mode or no point specified, reset to normal journey
-    if (gameStore.observationMode !== ObservationMode.None || !pointOfInterestKey) {
-        return gameStore.actions.resumeJourney();
-    }
-
-    // Get point of interest data
-    const poi = POINTS_OF_INTEREST[pointOfInterestKey];
-    if (!poi) return;
-
-    // Store current position and pause time info
-    mutation.previousPosition.copy(mutation.position);
-    mutation.previousTime = Date.now();
-    mutation.isPaused = true;
-
-    // Set up orbit parameters
-    mutation.orbitCenter.copy(track.parameters.path.getPointAt(poi.trackPosition).multiplyScalar(mutation.scale));
-    mutation.orbitDistance = poi.orbitDistance;
-    mutation.orbitSpeed = poi.orbitSpeed;
-
-    // Initialize orbit angle
-    gameStore.orbitAngle = 0;
-    gameStore.orbitHeight = 0;
-
-    // Set observation mode and current point of interest
-    gameStore.observationMode = ObservationMode.Orbiting;
-    gameStore.currentPointOfInterest = pointOfInterestKey;
-
-    // Force game to pause movement along the track
-    mutation.pausedTime = Date.now() - mutation.previousTime;
-
-    console.log(`Now observing: ${poi.name}`);
-}
-
-gameStore.actions.updateOrbitPosition = (horizontalAngle: number, verticalAngle: number) => {
-    if (gameStore.observationMode === ObservationMode.Orbiting) {
-        // Update orbit angles based on input
-        gameStore.orbitAngle = horizontalAngle;
-        gameStore.orbitHeight = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, verticalAngle));
-    }
-}
-
-gameStore.actions.resumeJourney = () => {
-    const { mutation } = gameStore;
-
-    // Only do something if we're in observation mode
-    if (gameStore.observationMode === ObservationMode.None) return;
-
-    // Reset observation mode
-    gameStore.observationMode = ObservationMode.None;
-    gameStore.currentPointOfInterest = null;
-
-    // Resume normal movement
-    if (mutation.isPaused) {
-        // Update start time to account for the paused duration
-        mutation.startTime += (Date.now() - mutation.previousTime);
-        mutation.isPaused = false;
-    }
-
-    console.log("Resumed journey");
-}
-
-// Update the update function to handle observation mode
-const originalUpdate = gameStore.actions.update;
-gameStore.actions.update = () => {
-    const { observationMode, mutation } = gameStore;
-
-    if (observationMode === ObservationMode.None) {
-        // Normal update
-        originalUpdate();
-    } else if (observationMode === ObservationMode.Orbiting) {
-        // In orbiting mode, update camera position based on orbit parameters
-
-        // Calculate orbit position
-        const horizontalRadius = mutation.orbitDistance * Math.cos(gameStore.orbitHeight);
-        const x = mutation.orbitCenter.x + horizontalRadius * Math.cos(gameStore.orbitAngle);
-        const z = mutation.orbitCenter.z + horizontalRadius * Math.sin(gameStore.orbitAngle);
-        const y = mutation.orbitCenter.y + mutation.orbitDistance * Math.sin(gameStore.orbitHeight);
-
-        mutation.position.set(x, y, z);
-
-        // Automatically slowly rotate if mouse input is not controlling it
-        gameStore.orbitAngle += mutation.orbitSpeed;
-
-        // Point camera at the center point
-        gameStore.camera.position.copy(mutation.position);
-        gameStore.camera.lookAt(mutation.orbitCenter);
-    }
-
-    // Check if total loops reached (ensure check only happens once)
-    if (gameStore.loopCount >= gameStore.totalLoops && !gameStore.modal.show) {
-        // Show game over dialog
-        gameStore.actions.showModal('gameOver');
-    }
-}
-
-// Add the toggle info text function
-gameStore.actions.toggleInfoText = (show?: boolean) => {
-    if (show !== false && show !== true) show = !gameStore.showInfoText
-    gameStore.showInfoText = show
-}
-
-function checkStardustCollection() {
-    if (gameStore.gameMode !== GameMode.Explore) return;
-
-    // Safety check for currentPointOfInterest
-    const poi = gameStore.currentPointOfInterest;
-    if (!poi) return;
-
-    if (gameStore.observationMode !== ObservationMode.None &&
-        !gameStore.observedPoints.includes(poi)) {
-
-        const observationStartTime = gameStore.mutation.observationStartTime || 0;
-        const observationTime = Date.now() - observationStartTime;
-
-        if (observationTime >= 20000) { // 20 seconds
-            gameStore.observedPoints.push(poi);
-            gameStore.actions.addStardust();
-            gameStore.actions.addScoreNotification("Stardust +1", 1, "✧");
-        }
-    }
-}
-
-// Modify observation mode toggle method to record start time
-const originalToggleObservationMode = gameStore.actions.toggleObservationMode;
-gameStore.actions.toggleObservationMode = (pointOfInterestKey: keyof typeof POINTS_OF_INTEREST | null) => {
-    // Record observation start time
-    if (pointOfInterestKey && !gameStore.observedPoints.includes(pointOfInterestKey)) {
-        gameStore.mutation.observationStartTime = Date.now();
-    }
-
-    // Call original method
-    originalToggleObservationMode(pointOfInterestKey);
-
-    // If exiting observation mode, check if can collect card
-    if (!pointOfInterestKey && gameStore.mutation.observationStartTime) {
-        checkStardustCollection();
-    }
-}
