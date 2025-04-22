@@ -1,6 +1,10 @@
 import { reactive, shallowRef, onMounted } from 'vue'
-import { Box3, Clock, Euler, Matrix4, Object3D, PerspectiveCamera, Ray, TubeGeometry, Vector2, Vector3, type Vector3Tuple } from 'three'
+import {
+  Box3, Clock, Euler, Matrix4, Object3D, PerspectiveCamera, Ray,
+  TubeGeometry, Vector2, Vector3, type Vector3Tuple,
+} from 'three'
 import { GrannyKnot } from 'three/examples/jsm/curves/CurveExtras.js'
+
 import * as audio from './audio'
 import type { ExplosionData } from './3d/Explosions.vue'
 import { timeManager } from './TimeManager'
@@ -35,6 +39,15 @@ export enum ObservationMode {
   None = 'None', // Normal movement
   Fixed = 'Fixed', // Fixed position observation
   Orbiting = 'Orbiting', // Orbiting around a point of interest
+}
+
+export const SCORE_VALUES = {
+  ENEMY: 200, // 200 points per enemy
+  ROCK: 10, // 10 points per rock
+  COMBO_THRESHOLD_SMALL: 3, // Small combo threshold
+  COMBO_THRESHOLD_LARGE: 5, // Large combo threshold  
+  COMBO_BONUS_SMALL: 30, // Small combo multiplier
+  COMBO_BONUS_LARGE: 50, // Large combo multiplier
 }
 
 const TRACK_POSITIONS = {
@@ -207,7 +220,13 @@ export const gameStore = reactive({
     toggleSound: null as unknown as (sound?: boolean) => void,
     toggleInfoText: null as unknown as (show?: boolean) => void,
     shoot: null as unknown as () => void,
-    test: null as unknown as (data: { size: number; offset: Vector3; scale: number; hit: any; distance: number }) => boolean,
+    test: null as unknown as (data: {
+      size: number
+      offset: Vector3
+      scale: number
+      hit: any
+      distance: number
+    }) => boolean,
     updateMouse: null as unknown as (mouse: { clientX: number; clientY: number }) => void,
     init: null as unknown as (camera: PerspectiveCamera) => void,
     update: null as unknown as () => void,
@@ -226,47 +245,64 @@ export const gameStore = reactive({
 })
 
 gameStore.actions.restartGame = (switchMode: boolean) => {
+  // Clear entities
+  gameStore.enemies = []
+  gameStore.rocks = []
+  gameStore.explosions = []
+  gameStore.lasers = []
+  gameStore.observedPoints = []
+  gameStore.scoreNotifications = []
+
   // Reset score
   gameStore.battleScore = 0
   gameStore.stardust = 0
   gameStore.loopCount = 0
+  gameStore.health = 100
+
+  if (switchMode) {
+    gameStore.gameMode = gameStore.gameMode === GameMode.Battle
+      ? GameMode.Explore : GameMode.Battle
+  }
+
+  const currentIsBattleMode = gameStore.gameMode === GameMode.Battle
+  const track = gameStore.mutation.track
+
+  if (currentIsBattleMode) {
+    gameStore.initialEnemyCount = 10
+    gameStore.initialRockCount = 100
+    gameStore.enemies = randomData(gameStore.initialEnemyCount, track, 20, 15, () => 1 + Math.random() * 1.5)
+    gameStore.rocks = randomData(gameStore.initialRockCount, track, 150, 8, () => 1 + Math.random() * 3)
+  }
+  else {
+    gameStore.enemies = []
+    gameStore.rocks = []
+    gameStore.initialRockCount = 0
+    gameStore.initialEnemyCount = 0
+  }
 
   // Reset time
   gameStore.mutation.startTime = Date.now()
   timeManager.actions.reset(false)
 
-  // Clear entities
-  gameStore.lasers = []
-  gameStore.explosions = []
-  gameStore.observedPoints = []
+  // Reset combo system
+  gameStore.comboSystem.count = 0
+  gameStore.comboSystem.active = false
+  gameStore.comboSystem.lastHitTime = 0
+  clearTimeout(gameStore.comboSystem.resetTimer)
 
   // Reset position
   gameStore.mutation.t = 0
-  const startPos = track.parameters.path.getPointAt(0)
-  gameStore.mutation.position.copy(startPos.multiplyScalar(gameStore.mutation.scale))
+  gameStore.mutation.position.set(0, 0, 0)
 
-  // Generate new entities
-  if (gameStore.gameMode === GameMode.Battle) {
-    gameStore.rocks = randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5)
-    gameStore.enemies = randomData(10, track, 20, 15, 1)
-    gameStore.initialRockCount = 100
-    gameStore.initialEnemyCount = 10
+  gameStore.observationMode = ObservationMode.None
+  gameStore.currentPointOfInterest = null
+
+  if (currentIsBattleMode) {
+    gameStore.mutation.particles = randomData(500, track, 100, 1, () => 0.5 + Math.random() * 0.8)
   }
   else {
-    gameStore.rocks = []
-    gameStore.enemies = []
-    gameStore.initialRockCount = 0
-    gameStore.initialEnemyCount = 0
+    gameStore.mutation.particles = randomData(50, track, 100, 1, () => 0.5 + Math.random() * 0.8)
   }
-
-  // If mode switch is needed
-  if (switchMode) {
-    gameStore.gameMode = gameStore.gameMode === GameMode.Battle ? GameMode.Explore : GameMode.Battle
-  }
-
-  // Ensure reset and resume time
-  timeManager.actions.reset(false)
-  timeManager.actions.resume()
 }
 
 // Implement modal display method
@@ -321,7 +357,8 @@ gameStore.actions.registerHit = (count: number, type: 'rock' | 'enemy') => {
   if (gameStore.gameMode !== GameMode.Battle) return
 
   // Base points
-  const basePoints = type === 'rock' ? count * 100 : count * 200
+  const pointsPerItem = type === 'rock' ? SCORE_VALUES.ROCK : SCORE_VALUES.ENEMY
+  const basePoints = count * pointsPerItem
 
   // Add points
   gameStore.battleScore += basePoints
@@ -329,7 +366,7 @@ gameStore.actions.registerHit = (count: number, type: 'rock' | 'enemy') => {
   // Display base score notification
   const itemText = type === 'rock'
     ? `${count} Stone${count > 1 ? 's' : ''}`
-    : `${count} Enemy${count > 1 ? 'ies' : 'y'}`
+    : `${count} Enem${count > 1 ? 'ies' : 'y'}`
 
   gameStore.actions.addScoreNotification(`${itemText} +${basePoints}`, basePoints)
 
@@ -339,12 +376,12 @@ gameStore.actions.registerHit = (count: number, type: 'rock' | 'enemy') => {
 
     // Add combo bonus
     let bonusPoints = 0
-    if (gameStore.comboSystem.count >= 5) {
-      bonusPoints = gameStore.comboSystem.count * 50
+    if (gameStore.comboSystem.count >= SCORE_VALUES.COMBO_THRESHOLD_LARGE) {
+      bonusPoints = gameStore.comboSystem.count * SCORE_VALUES.COMBO_BONUS_LARGE
       gameStore.actions.addScoreNotification(`${gameStore.comboSystem.count}x COMBO!`, bonusPoints)
     }
-    else if (gameStore.comboSystem.count >= 3) {
-      bonusPoints = gameStore.comboSystem.count * 30
+    else if (gameStore.comboSystem.count >= SCORE_VALUES.COMBO_THRESHOLD_SMALL) {
+      bonusPoints = gameStore.comboSystem.count * SCORE_VALUES.COMBO_BONUS_SMALL
       gameStore.actions.addScoreNotification(`${gameStore.comboSystem.count}x Hit!`, bonusPoints)
     }
 
@@ -400,7 +437,9 @@ gameStore.actions.shoot = () => {
   if (gameStore.gameMode === GameMode.Battle) {
     gameStore.lasers = [...gameStore.lasers, Date.now()]
     clearTimeout(gameStore.mutation.cancelLaserTO)
-    gameStore.mutation.cancelLaserTO = setTimeout(() => gameStore.lasers = gameStore.lasers.filter(t => Date.now() - t <= 1000), 1000)
+    gameStore.mutation.cancelLaserTO = setTimeout(() => {
+      gameStore.lasers = gameStore.lasers.filter(t => Date.now() - t <= 1000)
+    }, 1000)
     gameStore.actions.playAudio(audio.zap, 0.5)
   }
   // In Explore mode, shooting is disabled
@@ -490,7 +529,11 @@ gameStore.actions.update = () => {
           color: 'white',
           particles: Array.from({ length: 20 }).fill(0).map(_ => ({
             position: new Vector3(),
-            dPos: new Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2).normalize().multiplyScalar(.40),
+            dPos: new Vector3(
+              -1 + Math.random() * 2,
+              -1 + Math.random() * 2,
+              -1 + Math.random() * 2,
+            ).normalize().multiplyScalar(.40),
           })),
         }))
         allHit.forEach(data => updates.push({
@@ -499,7 +542,11 @@ gameStore.actions.update = () => {
           color: 'orange',
           particles: Array.from({ length: 20 }).fill(0).map(_ => ({
             position: new Vector3(),
-            dPos: new Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2).normalize().multiplyScalar(.60),
+            dPos: new Vector3(
+              -1 + Math.random() * 2,
+              -1 + Math.random() * 2,
+              -1 + Math.random() * 2,
+            ).normalize().multiplyScalar(.60),
           })),
         }))
         gameStore.explosions = [...gameStore.explosions, ...updates]
@@ -508,7 +555,7 @@ gameStore.actions.update = () => {
         gameStore.mutation.cancelExplosionTO = setTimeout(() => {
           gameStore.explosions = gameStore.explosions.filter(({ time }) => Date.now() - time <= 1000)
         }
-          , 1000)
+        , 1000)
 
         if (rocksHit.length > 0) {
           gameStore.actions.registerHit(rocksHit.length, 'rock')
@@ -556,13 +603,11 @@ gameStore.actions.update = () => {
 
 // Completely reset all game state when switching modes
 gameStore.actions.switchGameMode = () => {
-  // Store current mode before switching
-  const previousMode = gameStore.gameMode
+  const currentIsBattleMode = gameStore.gameMode === GameMode.Battle
 
   // Toggle between Battle and Explore modes
-  gameStore.gameMode = gameStore.gameMode === GameMode.Battle ? GameMode.Explore : GameMode.Battle
-
-  gameStore.chainweb3D = generateChainweb3D(30, track, TRACK_POSITIONS.Chainweb3D, gameStore.gameMode === GameMode.Battle)
+  gameStore.gameMode = currentIsBattleMode ? GameMode.Explore : GameMode.Battle
+  gameStore.chainweb3D = generateChainweb3D(30, track, TRACK_POSITIONS.Chainweb3D, currentIsBattleMode)
 
   // Reset score,loopCount regardless of mode
   gameStore.battleScore = 0
@@ -878,7 +923,12 @@ function generateRings(count: number, track: TubeGeometry, startT: number = TRAC
   return temp
 }
 
-function generateChainweb3D(count: number, track: TubeGeometry, startT: number = TRACK_POSITIONS.Chainweb3D, isBattleMode: boolean = true) {
+function generateChainweb3D(
+  count: number,
+  track: TubeGeometry,
+  startT: number = TRACK_POSITIONS.Chainweb3D,
+  isBattleMode: boolean = true,
+) {
   const temp = []
   let t = startT
 
@@ -916,7 +966,15 @@ function generatePetersenGraph(track: TubeGeometry) {
 }
 
 function generateInfoLabels(track: TubeGeometry) {
-  const labels: { position: Vector3Tuple; rotation: { x: number; y: number; z: number }; scale: number; text: string; color: string }[] = []
+  interface InfoLabel {
+    position: Vector3Tuple
+    rotation: { x: number; y: number; z: number }
+    scale: number
+    text: string
+    color: string
+  }
+
+  const labels: InfoLabel[] = []
 
   // Process all info labels
   INFO_LABELS.forEach((label) => {

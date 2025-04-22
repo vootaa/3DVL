@@ -29,24 +29,32 @@ const updateDisplayTime = () => {
   const sessionMinutes = Math.floor(sessionSeconds / 60)
   const sessionSecs = sessionSeconds % 60
   const sessionDeciseconds = Math.floor((timeManager.sessionTime % 1000) / 100)
-  formattedSessionTime.value = `${sessionMinutes > 0 ? `${sessionMinutes}:` : ''}${sessionSecs}${sessionMinutes > 0 ? '' : 's'}.${sessionDeciseconds}`
+  const minutePrefix = sessionMinutes > 0 ? `${sessionMinutes}:` : ''
+  const secondsSuffix = sessionMinutes > 0 ? '' : 's'
+  formattedSessionTime.value = `${minutePrefix}${sessionSecs}${secondsSuffix}.${sessionDeciseconds}`
 
   // Total time formatting (simplified mode)
   const totalSeconds = Math.floor(timeManager.totalGameTime / 1000)
   const totalMinutes = Math.floor(totalSeconds / 60)
   const totalSecs = totalSeconds % 60
   const totalDeciseconds = Math.floor((timeManager.totalGameTime % 1000) / 100)
-  formattedTotalTime.value = `${totalMinutes > 0 ? `${totalMinutes}:` : ''}${totalSecs}${totalMinutes > 0 ? '' : 's'}.${totalDeciseconds}`
+  const totalMinPrefix = totalMinutes > 0 ? `${totalMinutes}:` : ''
+  const totalSecSuffix = totalMinutes > 0 ? '' : 's'
+  formattedTotalTime.value = `${totalMinPrefix}${totalSecs}${totalSecSuffix}.${totalDeciseconds}`
 }
 
 const displayInterval = setInterval(updateDisplayTime, 100)
 
 // Clean up interval when component is unmounted
+const formattedBattleScore = computed(() => 
+  gameStore.battleScore >= 1000 
+    ? `${(gameStore.battleScore / 1000).toFixed(1)}K` 
+    : gameStore.battleScore,
+)
+
 onUnmounted(() => {
   clearInterval(displayInterval)
 })
-
-const formattedBattleScore = computed(() => (gameStore.battleScore >= 1000 ? `${(gameStore.battleScore / 1000).toFixed(1)}K` : gameStore.battleScore))
 
 const scoreNotifications = computed(() => gameStore.scoreNotifications)
 const comboSystem = computed(() => gameStore.comboSystem)
@@ -127,8 +135,8 @@ const comboSystem = computed(() => gameStore.comboSystem)
     v-if="gameStore.modal.show"
     :type="gameStore.modal.type"
     :current-mode="gameStore.gameMode"
-    :score="gameStore.battleScore"
-    :cards="gameStore.stardust"
+    :battle-score="gameStore.battleScore"
+    :stardust="gameStore.stardust"
     :time="formattedSessionTime"
     :total-loops="gameStore.totalLoops"
   />

@@ -37,6 +37,7 @@ const gameStore = inject('gameStore') as GameStore
 const restartGame = () => {
   // Restart game, keep current mode
   gameStore.actions.restartGame(false)
+  timeManager.actions.reset()
   gameStore.actions.hideModal()
 }
 
@@ -45,6 +46,7 @@ const switchMode = () => {
   // If switching from game over dialog, need complete reset
   if (props.type === 'gameOver') {
     gameStore.actions.restartGame(true) // true means switch mode
+    timeManager.actions.reset()
   }
   else {
     gameStore.actions.switchGameMode()
@@ -93,12 +95,12 @@ const getTitleText = () => {
             <span class="value">{{ battleScore }}</span>
           </div>
           <div class="stats-row">
-            <span class="label">TIME:</span>
-            <span class="value">{{ time }}</span>
+            <span class="label">MISSION TIME:</span>
+            <span class="value">{{ time }} <span class="time-unit">(min:sec)</span></span>
           </div>
           <div class="stats-row">
             <span class="label">LOOPS COMPLETED:</span>
-            <span class="value">{{ totalLoops }}/{{ totalLoops }}</span>
+            <span class="value">{{ totalLoops }} / {{ totalLoops }}</span>
           </div>
         </template>
 
@@ -111,12 +113,12 @@ const getTitleText = () => {
             </span>
           </div>
           <div class="stats-row">
-            <span class="label">TIME:</span>
-            <span class="value">{{ time }}</span>
+            <span class="label">MISSION TIME:</span>
+            <span class="value">{{ time }} <span class="time-unit">(min:sec)</span></span>
           </div>
           <div class="stats-row">
             <span class="label">LOOPS COMPLETED:</span>
-            <span class="value">{{ totalLoops }}/{{ totalLoops }}</span>
+            <span class="value">{{ totalLoops }} / {{ totalLoops }}</span>
           </div>
         </template>
       </div>
@@ -255,6 +257,12 @@ const getTitleText = () => {
     font-weight: 700;
     font-size: 1.2em;
     color: #ffcc00;
+}
+
+.time-unit {
+    font-size: 0.7em;
+    opacity: 0.7;
+    margin-left: 5px;
 }
 
 .warning-message {
