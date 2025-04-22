@@ -376,11 +376,11 @@ gameStore.actions.registerHit = (count: number, type: 'rock' | 'enemy') => {
     let bonusPoints = 0
     if (gameStore.comboSystem.count >= SCORE_VALUES.COMBO_THRESHOLD_LARGE) {
       bonusPoints = gameStore.comboSystem.count * SCORE_VALUES.COMBO_BONUS_LARGE
-      gameStore.actions.addScoreNotification(`${gameStore.comboSystem.count}x COMBO!`, bonusPoints, false)
+      gameStore.actions.addScoreNotification(`${gameStore.comboSystem.count}x COMBO!`, bonusPoints, true)
     }
     else if (gameStore.comboSystem.count >= SCORE_VALUES.COMBO_THRESHOLD_SMALL) {
       bonusPoints = gameStore.comboSystem.count * SCORE_VALUES.COMBO_BONUS_SMALL
-      gameStore.actions.addScoreNotification(`${gameStore.comboSystem.count}x Hit!`, bonusPoints, false)
+      gameStore.actions.addScoreNotification(`${gameStore.comboSystem.count}x Hit!`, bonusPoints, true)
     }
 
     // Add combo bonus points
