@@ -42,14 +42,14 @@ export enum ObservationMode {
 }
 
 export const SCORE_VALUES = {
-  ENEMY: 200, // 200 points per enemy
+  ENEMY: 150, // 150 points per enemy
   ROCK: 10, // 10 points per rock
   COMBO_THRESHOLD_SMALL: 3, // Small combo threshold
   COMBO_THRESHOLD_LARGE: 5, // Large combo threshold  
-  COMBO_BONUS_SMALL: 30, // Small combo multiplier
+  COMBO_BONUS_SMALL: 25, // Small combo multiplier
   COMBO_BONUS_LARGE: 50, // Large combo multiplier
-  ALL_ENEMIES_BONUS: 1000, // Bonus for destroying all enemies
-  ALL_ROCKS_BONUS: 1000, // Bonus for destroying all rocks
+  ALL_ENEMIES_BONUS: 800, // Bonus for destroying all enemies
+  ALL_ROCKS_BONUS: 1500, // Bonus for destroying all rocks
 }
 
 const TRACK_POSITIONS = {
@@ -342,10 +342,10 @@ gameStore.actions.addScoreNotification = (text: string, points: number, isBonus 
 
   gameStore.scoreNotifications = [...gameStore.scoreNotifications, notification]
 
-  // Auto-remove notification after 5 seconds
+  // Auto-remove notification after 3 seconds
   setTimeout(() => {
     gameStore.scoreNotifications = gameStore.scoreNotifications.filter(n => n.id !== notification.id)
-  }, 5000)
+  }, 3000)
 }
 
 gameStore.actions.registerHit = (count: number, type: 'rock' | 'enemy') => {
@@ -570,14 +570,14 @@ gameStore.actions.update = () => {
         if (enemiesHit.length > 0 && gameStore.enemies.length === 0 && gameStore.initialEnemyCount > 0) {
           // All enemies destroyed, provide bonus reward
           gameStore.battleScore += SCORE_VALUES.ALL_ENEMIES_BONUS
-          gameStore.actions.addScoreNotification('All Enemies Destroyed!', SCORE_VALUES.ALL_ENEMIES_BONUS, true)
+          gameStore.actions.addScoreNotification('Enemies Destroyed!', SCORE_VALUES.ALL_ENEMIES_BONUS, true)
         }
 
         // Check if all rocks are destroyed
         if (rocksHit.length > 0 && gameStore.rocks.length === 0 && gameStore.initialRockCount > 0) {
           // All rocks cleared, provide bonus reward
           gameStore.battleScore += SCORE_VALUES.ALL_ROCKS_BONUS
-          gameStore.actions.addScoreNotification('All Rocks Cleared!', SCORE_VALUES.ALL_ROCKS_BONUS, true)
+          gameStore.actions.addScoreNotification('Rocks Cleared!', SCORE_VALUES.ALL_ROCKS_BONUS, true)
         }
 
       }

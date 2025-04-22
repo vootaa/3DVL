@@ -10,15 +10,26 @@ const gameStore = inject('gameStore') as GameStore
 const formattedSessionTime = ref('00:00.0')
 const formattedTotalTime = ref('00:00.0')
 
+// Helper function to format time consistently
+const formatTime = (timeMs: number) => {
+  const seconds = Math.floor(timeMs / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  const deciseconds = Math.floor((timeMs % 1000) / 100)
+  const minPrefix = minutes > 0 ? `${minutes}:` : ''
+  const secSuffix = minutes > 0 ? '' : 's'
+  return `${minPrefix}${secs}${secSuffix}.${deciseconds}`
+}
+
 const enemiesStats = computed(() => {
   const remaining = gameStore.enemies.length
-  const total = gameStore.initialEnemyCount || 10
+  const total = gameStore.initialEnemyCount
   return `${remaining}/${total}`
 })
 
 const rocksStats = computed(() => {
   const remaining = gameStore.rocks.length
-  const total = gameStore.initialRockCount || 100
+  const total = gameStore.initialRockCount
   return `${remaining}/${total}`
 })
 
@@ -27,50 +38,43 @@ const destroyedRocks = computed(() => gameStore.initialRockCount - gameStore.roc
 
 // Function to update display time
 const updateDisplayTime = () => {
-  // Session time formatting (simplified mode)
-  const sessionSeconds = Math.floor(timeManager.sessionTime / 1000)
-  const sessionMinutes = Math.floor(sessionSeconds / 60)
-  const sessionSecs = sessionSeconds % 60
-  const sessionDeciseconds = Math.floor((timeManager.sessionTime % 1000) / 100)
-  const minutePrefix = sessionMinutes > 0 ? `${sessionMinutes}:` : ''
-  const secondsSuffix = sessionMinutes > 0 ? '' : 's'
-  formattedSessionTime.value = `${minutePrefix}${sessionSecs}${secondsSuffix}.${sessionDeciseconds}`
-
-  // Total time formatting (simplified mode)
-  const totalSeconds = Math.floor(timeManager.totalGameTime / 1000)
-  const totalMinutes = Math.floor(totalSeconds / 60)
-  const totalSecs = totalSeconds % 60
-  const totalDeciseconds = Math.floor((timeManager.totalGameTime % 1000) / 100)
-  const totalMinPrefix = totalMinutes > 0 ? `${totalMinutes}:` : ''
-  const totalSecSuffix = totalMinutes > 0 ? '' : 's'
-  formattedTotalTime.value = `${totalMinPrefix}${totalSecs}${totalSecSuffix}.${totalDeciseconds}`
+  formattedSessionTime.value = formatTime(timeManager.sessionTime)
+  formattedTotalTime.value = formatTime(timeManager.totalGameTime)
 }
 
 const displayInterval = setInterval(updateDisplayTime, 100)
 
-// Clean up interval when component is unmounted
+// Format battle score with K suffix for thousands
 const formattedBattleScore = computed(() => 
   gameStore.battleScore >= 1000 
     ? `${(gameStore.battleScore / 1000).toFixed(1)}K` 
-    : gameStore.battleScore,
+    : gameStore.battleScore.toString(),
 )
 
+// Clean up interval when component is unmounted
 onUnmounted(() => {
   clearInterval(displayInterval)
 })
 
+// Notification system
 const scoreNotifications = computed(() => gameStore.scoreNotifications)
+const regularNotifications = computed(() => 
+  scoreNotifications.value.filter(notification => !notification.isBonus),
+)
+const bonusNotifications = computed(() => 
+  scoreNotifications.value.filter(notification => notification.isBonus),
+)
 const comboSystem = computed(() => gameStore.comboSystem)
 </script>
 
 <template>
-  <div class="score-notifications">
+  <!-- Regular notifications (left side) -->
+  <div class="score-notifications score-notifications-left">
     <transition-group name="notification">
       <div
-        v-for="notification in scoreNotifications"
+        v-for="notification in regularNotifications"
         :key="notification.id"
         class="score-notification"
-        :class="{ 'bonus-notification': notification.isBonus }"
       >
         <span class="notification-text">
           {{ notification.text }}
@@ -80,6 +84,23 @@ const comboSystem = computed(() => gameStore.comboSystem)
     </transition-group>
   </div>
 
+  <!-- Bonus notifications (right side) -->
+  <div class="score-notifications score-notifications-right">
+    <transition-group name="notification">
+      <div
+        v-for="notification in bonusNotifications"
+        :key="notification.id"
+        class="score-notification bonus-notification"
+      >
+        <span class="notification-text">
+          {{ notification.text }}
+        </span>
+        <span class="notification-points">+{{ notification.points }}</span>
+      </div>
+    </transition-group>
+  </div>
+
+  <!-- Combo indicator -->
   <div
     v-if="comboSystem.active && comboSystem.count >= 3"
     class="combo-indicator"
@@ -130,6 +151,7 @@ const comboSystem = computed(() => gameStore.comboSystem)
     </div>
   </div>
 
+  <!-- Game over/mode switch dialog -->
   <ModalDialog
     v-if="gameStore.modal.show"
     :type="gameStore.modal.type"
@@ -146,6 +168,7 @@ const comboSystem = computed(() => gameStore.comboSystem)
 </template>
 
 <style lang="css" scoped>
+/* Stats display panel */
 .score-display {
     position: absolute;
     bottom: 20px;
@@ -189,6 +212,45 @@ const comboSystem = computed(() => gameStore.comboSystem)
     margin-right: 5px;
 }
 
+/* Notification system styles */
+.score-notifications {
+    position: absolute;
+    top: 100px;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.score-notifications-left {
+    left: 20px;
+    align-items: flex-start;
+}
+
+.score-notifications-right {
+    right: 20px;
+    align-items: flex-end;
+}
+
+.score-notification {
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    color: #ffcc00;
+    font-family: 'Kode Mono', monospace;
+    font-weight: 700;
+    font-size: 1.8em;
+    display: flex;
+    justify-content: space-between;
+    width: calc(100% - 40px);
+    box-sizing: border-box;
+    text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+}
+
+/* Bonus notification styling */
 .bonus-notification {
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid rgba(255, 218, 135, 0.3);
@@ -203,35 +265,6 @@ const comboSystem = computed(() => gameStore.comboSystem)
   color: #ffaa00;
 }
 
-.score-notifications {
-    position: absolute;
-    top: 100px;
-    left: 20%;
-    transform: translateX(-50%);
-    width: 400px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    z-index: 1000;
-    pointer-events: none;
-}
-
-.score-notification {
-    background: rgba(0, 0, 0, 0.7);
-    border-radius: 8px;
-    padding: 10px 15px;
-    margin-bottom: 10px;
-    color: #ffcc00;
-    font-family: 'Kode Mono', monospace;
-    font-weight: 700;
-    font-size: 1.8em;
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    box-sizing: border-box;
-    text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
-}
-
 .notification-text {
     margin-right: 10px;
 }
@@ -240,6 +273,7 @@ const comboSystem = computed(() => gameStore.comboSystem)
     color: #ff6600;
 }
 
+/* Combo indicator styles */
 .combo-indicator {
     position: absolute;
     top: 100px;
@@ -291,27 +325,43 @@ const comboSystem = computed(() => gameStore.comboSystem)
     transition: all 0.5s;
 }
 
-.notification-enter-from {
+.score-notifications-left .notification-enter-from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateX(-20px);
 }
 
-.notification-leave-to {
+.score-notifications-left .notification-leave-to {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateX(-20px);
 }
 
+.score-notifications-right .notification-enter-from {
+    opacity: 0;
+    transform: translateX(20px);
+}
+
+.score-notifications-right .notification-leave-to {
+    opacity: 0;
+    transform: translateX(20px);
+}
+
+/* Responsive design */
 @media only screen and (max-width: 900px) {
-    .score-display {
-        padding: 8px 12px;
-    }
-
-    .control-value {
-        font-size: 1.5em;
-    }
-
     .score-notifications {
         width: 300px;
+    }
+    
+    .score-notifications-left {
+        left: 10px;
+    }
+    
+    .score-notifications-right {
+        right: 10px;
+    }
+    
+    .score-notification {
+        font-size: 1.5em;
+        padding: 8px 12px;
     }
 }
 </style>
