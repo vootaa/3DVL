@@ -225,13 +225,15 @@ const comboSystem = computed(() => gameStore.comboSystem)
 }
 
 .score-notifications-left {
-    left: 20px;
-    align-items: flex-start;
+    left: 25%;
+    transform: translateX(-50%);
+    align-items: flex-end;
 }
 
 .score-notifications-right {
-    right: 20px;
-    align-items: flex-end;
+    right: 25%;
+    transform: translateX(50%);
+    align-items: flex-start;
 }
 
 .score-notification {
@@ -327,22 +329,22 @@ const comboSystem = computed(() => gameStore.comboSystem)
 
 .score-notifications-left .notification-enter-from {
     opacity: 0;
-    transform: translateX(-20px);
+    transform: translateX(-50%) translateY(-20px);
 }
 
 .score-notifications-left .notification-leave-to {
     opacity: 0;
-    transform: translateX(-20px);
+    transform: translateX(-50%) translateY(-20px);
 }
 
 .score-notifications-right .notification-enter-from {
     opacity: 0;
-    transform: translateX(20px);
+    transform: translateX(50%) translateY(-20px);
 }
 
 .score-notifications-right .notification-leave-to {
     opacity: 0;
-    transform: translateX(20px);
+    transform: translateX(50%) translateY(-20px);
 }
 
 /* Responsive design */
@@ -352,16 +354,28 @@ const comboSystem = computed(() => gameStore.comboSystem)
     }
     
     .score-notifications-left {
-        left: 10px;
+        left: 30%;
     }
     
     .score-notifications-right {
-        right: 10px;
+        right: 30%;
     }
     
     .score-notification {
         font-size: 1.5em;
         padding: 8px 12px;
+    }
+
+    .combo-indicator {
+        top: 80px; /* Adjusted position for smaller screens */
+    }
+
+    .notification-text {
+        font-size: 1.2em; /* Adjusted font size for smaller screens */
+    }
+    
+    .notification-points {
+        font-size: 1.2em; /* Adjusted font size for smaller screens */
     }
 }
 </style>
