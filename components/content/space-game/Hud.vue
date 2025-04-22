@@ -70,13 +70,9 @@ const comboSystem = computed(() => gameStore.comboSystem)
         v-for="notification in scoreNotifications"
         :key="notification.id"
         class="score-notification"
-        :class="{ 'stardust-notification': notification.icon === '✧' }"
+        :class="{ 'bonus-notification': notification.isBonus }"
       >
         <span class="notification-text">
-          <span
-            v-if="notification.icon"
-            class="notification-icon"
-          >{{ notification.icon }}</span>
           {{ notification.text }}
         </span>
         <span class="notification-points">+{{ notification.points }}</span>
@@ -144,6 +140,8 @@ const comboSystem = computed(() => gameStore.comboSystem)
     :stardust="gameStore.stardust"
     :time="formattedSessionTime"
     :total-loops="gameStore.totalLoops"
+    :total-enemies="gameStore.initialEnemyCount"
+    :total-rocks="gameStore.initialRockCount"
   />
 </template>
 
@@ -191,22 +189,18 @@ const comboSystem = computed(() => gameStore.comboSystem)
     margin-right: 5px;
 }
 
-.stardust-notification {
-    background: rgba(0, 0, 0, 0.7);
-    border: 1px solid rgba(255, 218, 135, 0.3);
-    box-shadow: 0 0 15px rgba(255, 218, 135, 0.3);
+.bonus-notification {
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 218, 135, 0.3);
+  box-shadow: 0 0 15px rgba(255, 218, 135, 0.3);
 }
 
-.stardust-notification .notification-text {
-    color: #ffde87;
+.bonus-notification .notification-text {
+  color: #ffde87;
 }
 
-.stardust-notification .notification-points {
-    color: #ffaa00;
-}
-
-.notification-icon {
-    margin-right: 5px;
+.bonus-notification .notification-points {
+  color: #ffaa00;
 }
 
 .score-notifications {

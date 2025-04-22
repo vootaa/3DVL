@@ -38,6 +38,14 @@ const props = defineProps({
     type: Number,
     default: 7,
   },
+  totalEnemies: {
+    type: Number,
+    default: 10,
+  },
+  totalRocks: {
+    type: Number,
+    default: 100,
+  },
 })
 
 const gameStore = inject('gameStore') as GameStore
@@ -105,10 +113,18 @@ const getTitleText = () => {
           <div class="stats-row">
             <span class="label">ENEMIES DESTROYED:</span>
             <span class="value">{{ destroyedEnemies }}</span>
+            <span
+              v-if="destroyedEnemies === totalEnemies"
+              class="bonus-tag"
+            >+1000</span>
           </div>
           <div class="stats-row">
             <span class="label">ROCKS BLASTED:</span>
             <span class="value">{{ destroyedRocks }}</span>
+            <span
+              v-if="destroyedRocks === totalRocks"
+              class="bonus-tag"
+            >+1000</span>
           </div>
           <div class="stats-row">
             <span class="label">MISSION TIME:</span>
@@ -279,6 +295,17 @@ const getTitleText = () => {
     font-size: 0.7em;
     opacity: 0.7;
     margin-left: 5px;
+}
+
+.bonus-tag {
+  background-color: rgba(255, 215, 0, 0.3);
+  color: #ffcc00;
+  font-size: 0.85em;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+  animation: pulse 1.5s infinite;
 }
 
 .warning-message {

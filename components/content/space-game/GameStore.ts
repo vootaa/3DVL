@@ -48,6 +48,8 @@ export const SCORE_VALUES = {
   COMBO_THRESHOLD_LARGE: 5, // Large combo threshold  
   COMBO_BONUS_SMALL: 30, // Small combo multiplier
   COMBO_BONUS_LARGE: 50, // Large combo multiplier
+  ALL_ENEMIES_BONUS: 1000, // Bonus for destroying all enemies
+  ALL_ROCKS_BONUS: 1000, // Bonus for destroying all rocks
 }
 
 const TRACK_POSITIONS = {
@@ -174,7 +176,7 @@ export const gameStore = reactive({
     id: number
     text: string
     points: number
-    icon?: string | null
+    isBonus?: boolean
     timestamp: number
   }>,
   mutation: {
@@ -236,7 +238,7 @@ export const gameStore = reactive({
     updateOrbitPosition: null as unknown as (horizontalAngle: number, verticalAngle: number) => void,
     resumeJourney: null as unknown as () => void,
     registerHit: null as unknown as (count: number, type: 'rock' | 'enemy') => void,
-    addScoreNotification: null as unknown as (text: string, points: number, icon?: string | null) => void,
+    addScoreNotification: null as unknown as (text: string, points: number, isBonus: boolean) => void,
     restartGame: null as unknown as (switchMode: boolean) => void,
     showModal: null as unknown as (type: string) => void,
     hideModal: null as unknown as () => void,
@@ -325,29 +327,25 @@ gameStore.actions.hideModal = () => {
 }
 
 gameStore.actions.addStardust = () => {
-  if (gameStore.gameMode === GameMode.Explore) {
-    gameStore.stardust++
-
-    // Show a more visual notification
-    gameStore.actions.addScoreNotification('Stardust +1', 1, '✧')
-  }
+  gameStore.stardust++
+  gameStore.actions.addScoreNotification('Stardust Collected', 1, true)
 }
 
-gameStore.actions.addScoreNotification = (text, points, icon = null) => {
-  const id = Date.now()
-  gameStore.scoreNotifications.push({
-    id,
+gameStore.actions.addScoreNotification = (text: string, points: number, isBonus = false) => {
+  const notification = {
+    id: Date.now(),
     text,
     points,
-    icon,
+    isBonus,
     timestamp: Date.now(),
-  })
+  }
 
-  // Automatically clear after 3 seconds
+  gameStore.scoreNotifications = [...gameStore.scoreNotifications, notification]
+
+  // Auto-remove notification after 5 seconds
   setTimeout(() => {
-    gameStore.scoreNotifications = gameStore.scoreNotifications
-      .filter(item => item.id !== id)
-  }, 3000)
+    gameStore.scoreNotifications = gameStore.scoreNotifications.filter(n => n.id !== notification.id)
+  }, 5000)
 }
 
 gameStore.actions.registerHit = (count: number, type: 'rock' | 'enemy') => {
@@ -368,7 +366,7 @@ gameStore.actions.registerHit = (count: number, type: 'rock' | 'enemy') => {
     ? `${count} Stone${count > 1 ? 's' : ''}`
     : `${count} Enem${count > 1 ? 'ies' : 'y'}`
 
-  gameStore.actions.addScoreNotification(`${itemText} +${basePoints}`, basePoints)
+  gameStore.actions.addScoreNotification(`${itemText} +${basePoints}`, basePoints, false)
 
   // Handle combo
   if (now - gameStore.comboSystem.lastHitTime < gameStore.comboSystem.timeWindow) {
@@ -378,11 +376,11 @@ gameStore.actions.registerHit = (count: number, type: 'rock' | 'enemy') => {
     let bonusPoints = 0
     if (gameStore.comboSystem.count >= SCORE_VALUES.COMBO_THRESHOLD_LARGE) {
       bonusPoints = gameStore.comboSystem.count * SCORE_VALUES.COMBO_BONUS_LARGE
-      gameStore.actions.addScoreNotification(`${gameStore.comboSystem.count}x COMBO!`, bonusPoints)
+      gameStore.actions.addScoreNotification(`${gameStore.comboSystem.count}x COMBO!`, bonusPoints, false)
     }
     else if (gameStore.comboSystem.count >= SCORE_VALUES.COMBO_THRESHOLD_SMALL) {
       bonusPoints = gameStore.comboSystem.count * SCORE_VALUES.COMBO_BONUS_SMALL
-      gameStore.actions.addScoreNotification(`${gameStore.comboSystem.count}x Hit!`, bonusPoints)
+      gameStore.actions.addScoreNotification(`${gameStore.comboSystem.count}x Hit!`, bonusPoints, false)
     }
 
     // Add combo bonus points
@@ -568,6 +566,20 @@ gameStore.actions.update = () => {
         gameStore.rocks = gameStore.rocks.filter(rock => !rocksHit.find(r => r.guid === rock.guid))
         gameStore.enemies = gameStore.enemies.filter(enemy => !enemiesHit.find(e => e.guid === enemy.guid))
 
+        // Check if all enemies are destroyed
+        if (enemiesHit.length > 0 && gameStore.enemies.length === 0 && gameStore.initialEnemyCount > 0) {
+          // All enemies destroyed, provide bonus reward
+          gameStore.battleScore += SCORE_VALUES.ALL_ENEMIES_BONUS
+          gameStore.actions.addScoreNotification('All Enemies Destroyed!', SCORE_VALUES.ALL_ENEMIES_BONUS, true)
+        }
+
+        // Check if all rocks are destroyed
+        if (rocksHit.length > 0 && gameStore.rocks.length === 0 && gameStore.initialRockCount > 0) {
+          // All rocks cleared, provide bonus reward
+          gameStore.battleScore += SCORE_VALUES.ALL_ROCKS_BONUS
+          gameStore.actions.addScoreNotification('All Rocks Cleared!', SCORE_VALUES.ALL_ROCKS_BONUS, true)
+        }
+
       }
     }
     else {
@@ -725,7 +737,7 @@ function checkStardustCollection() {
     if (observationTime >= 20000) { // 20 seconds
       gameStore.observedPoints.push(poi)
       gameStore.actions.addStardust()
-      gameStore.actions.addScoreNotification('Stardust +1', 1, '✧')
+      gameStore.actions.addScoreNotification('Stardust +1', 1, true)
     }
   }
 }
