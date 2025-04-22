@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
-import { gameStore, GameMode, ObservationMode, POINTS_OF_INTEREST } from '../GameStore'
+import { gameStore } from '../GameStore'
+import { GameMode, ObservationMode, POINTS_OF_INTEREST } from '../store/constants'
 
 // Add observation timer
 const observationTime = ref(0)
