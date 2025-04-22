@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { inject, computed } from 'vue'
-import { GameMode, type GameStore } from '../GameStore'
-import { timeManager } from '../TimeManager'
+import type { GameStore } from '../GameStore'
+import { GameMode } from '../store/constants'
+import { timeManager } from '../store/TimeManager'
 
 const props = defineProps({
   type: {

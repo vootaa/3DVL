@@ -57,22 +57,22 @@ export const timeManager = reactive({
     /**
          * Initialize timer
          */
-    init: () => void 0,
+    init: () => undefined,
 
     /**
          * Reset timer
          */
-    reset: (resetTotal?: boolean) => void 0,
+    reset: (_resetTotal?: boolean) => undefined,
 
     /**
          * Pause timer
          */
-    pause: () => void 0,
+    pause: () => undefined,
 
     /**
          * Resume timer
          */
-    resume: () => void 0,
+    resume: () => undefined,
 
     /**
          * Get formatted game time (min:sec.ms)
@@ -83,13 +83,13 @@ export const timeManager = reactive({
          * Register update callback
          * @param callback Callback function that receives time delta (milliseconds) parameter
          */
-    registerUpdateCallback: (callback: (dt: number) => void) => void 0,
+    registerUpdateCallback: (_callback: (dt: number) => void) => undefined,
 
     /**
          * Remove update callback
          * @param callback Callback function to remove
          */
-    removeUpdateCallback: (callback: (dt: number) => void) => void 0,
+    removeUpdateCallback: (_callback: (dt: number) => void) => undefined,
   },
 })
 
@@ -188,7 +188,10 @@ timeManager.actions.getFormattedTime = () => {
   const seconds = totalSeconds % 60
   const milliseconds = Math.floor((timeManager.totalGameTime % 1000) / 10)
 
-  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`
+  const mins = minutes.toString().padStart(2, '0')
+  const secs = seconds.toString().padStart(2, '0')
+  const ms = milliseconds.toString().padStart(2, '0')
+  return `${mins}:${secs}.${ms}`
 }
 
 /**

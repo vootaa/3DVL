@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, inject, ref, onUnmounted } from 'vue'
-import { GameMode, type GameStore } from './GameStore'
-import { timeManager } from './TimeManager'
-import ModalDialog from './controls/ModalDialog.vue'
+import type { GameStore } from '../GameStore'
+import { GameMode } from '../store/constants'
+import { timeManager } from '../store/TimeManager'
+import ModalDialog from './ModalDialog.vue'
 
 const gameStore = inject('gameStore') as GameStore
 

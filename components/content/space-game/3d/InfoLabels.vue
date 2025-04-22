@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, computed } from 'vue'
 import type { GameStore } from '../GameStore'
-import { GameMode } from '../GameStore'
+import { GameMode } from '../store/constants'
 import TextPlane from './TextPlane.vue'
 
 const gameStore: GameStore = inject('gameStore') as GameStore

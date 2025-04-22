@@ -8,11 +8,13 @@ import SoundControl from './controls/SoundControl.vue'
 import InfoTextControl from './controls/InfoTextControl.vue'
 import ControlPanel from './controls/ControlPanel.vue'
 import ObservationControls from './controls/ObservationControls.vue'
-import Hud from './Hud.vue'
+import HudControl from './controls/HudControl.vue'
 
 provide('gameStore', gameStore)
 const camera = shallowRef()
-onMounted(() => { gameStore.actions.init(camera.value) })
+onMounted(() => {
+  gameStore.actions.init(camera.value)
+})
 </script>
 
 <template>
@@ -47,7 +49,7 @@ onMounted(() => { gameStore.actions.init(camera.value) })
     <InfoTextControl />
     <ControlPanel />
     <ObservationControls />
-    <Hud />
+    <HudControl />
   </div>
 </template>
 

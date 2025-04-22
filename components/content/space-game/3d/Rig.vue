@@ -10,7 +10,7 @@ let offset = 0
 const groupRef = shallowRef(new Group())
 const rig = shallowRef(new Group())
 const { mutation } = inject('gameStore') as GameStore
-const { fov, scale, binormal, normal, track, mouse } = mutation
+const { scale, binormal, normal, track, mouse } = mutation
 
 useLoop().onAfterRender(({ camera }) => {
   const t = mutation.t

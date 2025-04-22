@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { inject } from 'vue'
-import { SpeedMode, SPEED_SETTINGS, type GameStore, ObservationMode } from '../GameStore'
+import type { GameStore } from '../GameStore'
+import { SpeedMode, SPEED_SETTINGS, ObservationMode } from '../store/constants'
 
 const gameStore = inject('gameStore') as GameStore
 

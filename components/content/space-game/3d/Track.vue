@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject } from 'vue'
 import type { GameStore } from '../GameStore'
-import { GameMode, ObservationMode } from '../GameStore'
+import { GameMode, ObservationMode } from '../store/constants'
 
 const gameStore = inject('gameStore') as GameStore
 const { scale: s, track } = gameStore.mutation

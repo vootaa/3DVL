@@ -4,7 +4,7 @@ import { onMounted, onUnmounted, inject, shallowRef, computed, watch } from 'vue
 import { useLoader, useLoop } from '@tresjs/core'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import type { GameStore } from '../GameStore'
-import { GameMode, ObservationMode } from '../GameStore'
+import { GameMode, ObservationMode } from '../store/constants'
 
 const geometry = new BoxGeometry(1, 1, 40)
 const lightgreen = new Color('lightgreen')
