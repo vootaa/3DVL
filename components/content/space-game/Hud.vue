@@ -22,6 +22,9 @@ const rocksStats = computed(() => {
   return `${remaining}/${total}`
 })
 
+const destroyedEnemies = computed(() => gameStore.initialEnemyCount - gameStore.enemies.length)
+const destroyedRocks = computed(() => gameStore.initialRockCount - gameStore.rocks.length)
+
 // Function to update display time
 const updateDisplayTime = () => {
   // Session time formatting (simplified mode)
@@ -92,7 +95,7 @@ const comboSystem = computed(() => gameStore.comboSystem)
   <!-- Time and score information -->
   <div class="score-display">
     <div class="control-label">
-      STATS DATA
+      STATISTICS DATA
     </div>
     <div class="control-value">
       <div class="info-line">
@@ -120,7 +123,7 @@ const comboSystem = computed(() => gameStore.comboSystem)
         v-if="gameStore.gameMode === GameMode.Explore"
         class="info-line"
       >
-        <span class="stardust-icon">✧</span> Stardust: {{ gameStore.stardust }}
+        Stardust: {{ gameStore.stardust }} <span class="stardust-icon">✧</span> 
       </div>
       <div class="info-line">
         Current: {{ formattedSessionTime }}
@@ -136,6 +139,8 @@ const comboSystem = computed(() => gameStore.comboSystem)
     :type="gameStore.modal.type"
     :current-mode="gameStore.gameMode"
     :battle-score="gameStore.battleScore"
+    :destroyed-enemies="destroyedEnemies"
+    :destroyed-rocks="destroyedRocks"
     :stardust="gameStore.stardust"
     :time="formattedSessionTime"
     :total-loops="gameStore.totalLoops"

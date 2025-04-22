@@ -18,6 +18,14 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
+  destroyedEnemies: {
+    type: Number,
+    default: 0,
+  },
+  destroyedRocks: {
+    type: Number,
+    default: 0,
+  },
   stardust: {
     type: Number,
     default: 0,
@@ -93,6 +101,14 @@ const getTitleText = () => {
           <div class="stats-row">
             <span class="label">FINAL SCORE:</span>
             <span class="value">{{ battleScore }}</span>
+          </div>
+          <div class="stats-row">
+            <span class="label">ENEMIES DESTROYED:</span>
+            <span class="value">{{ destroyedEnemies }}</span>
+          </div>
+          <div class="stats-row">
+            <span class="label">ROCKS BLASTED:</span>
+            <span class="value">{{ destroyedRocks }}</span>
           </div>
           <div class="stats-row">
             <span class="label">MISSION TIME:</span>
