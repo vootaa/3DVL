@@ -194,10 +194,10 @@ export function initializeActions(gameStore: any, guid: number, track: any, audi
     gameStore.mutation.clock.start()
     gameStore.camera = camera
     gameStore.camera.far = 10000
-    clearTimeout(gameStore.mutation.cancelLaserTO)
-    gameStore.mutation.cancelLaserTO = setTimeout(() => {
-      gameStore.lasers = gameStore.lasers.filter((t: number) => Date.now() - t <= 1000)
-    }, 1000)
+    gameStore.actions.toggleSound(gameStore.sound)
+  }
+
+  gameStore.actions.shoot = () => {
     // Only allow shooting in Battle mode
     if (gameStore.gameMode === GameMode.Battle) {
       gameStore.lasers = [...gameStore.lasers, Date.now()]
@@ -560,7 +560,7 @@ export function initializeActions(gameStore: any, guid: number, track: any, audi
     }
   }
 
-  gameStore.actions.toggleSpeed = () => {
+  gameStore.actions.switchSpeedMode = () => {
     // Toggle between speed modes
     if (gameStore.speedMode === SpeedMode.Fast) {
       gameStore.speedMode = SpeedMode.Slow
