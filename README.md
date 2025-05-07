@@ -1,6 +1,6 @@
 # 3D Vision Lab
 
-> 3D Vision Lab for ChainWeb, built with TresJS
+> 3D Vision Lab for ChainWeb, built with [TresJS](https://tresjs.org/)
 
 ## Setup
 
@@ -73,8 +73,9 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 
 This project is an early-stage experimental fork of the TresJS Showcase, created by the amazing @tresjs team.
 
-https://lab.tresjs.org/
-https://github.com/Tresjs/lab
+1. https://lab.tresjs.org/
+
+2. https://github.com/Tresjs/lab
 
 The original space game code:
 https://github.com/Tresjs/lab/tree/main/components/content/space-game
