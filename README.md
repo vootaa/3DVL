@@ -83,6 +83,12 @@ This project is an early-stage experimental fork of the TresJS Showcase, created
 
 A huge thank you to the TresJS team for building such an approachable and well-structured foundation — none of this would have been possible without your work.
 
+🧭 Additional Credits
+
+Some of the original visual elements and scene designs used in the [TresJS Lab Space Game](https://github.com/Tresjs/lab/tree/main/components/content/space-game) were adapted or inspired by the fantastic work of the [@pmndrs](https://github.com/pmndrs) team.
+
+While I initially missed this in my understanding of the source chain, I want to sincerely thank them and credit their exceptional contributions to the Web3D and ThreeJS ecosystem.
+
 ⸻
 
 🏗️ What’s Different
