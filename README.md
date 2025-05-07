@@ -85,11 +85,11 @@ I'd like to give them a huge thank you for building such an approachable and wel
 
 🏗️ What’s Different
 
-While the original codebase remains the foundation, this fork has introduced:
- • Custom rendering effects (e.g., plasma-style shaders, arc links)
- • Chainweb blockchain visualization (inspired by Kadena’s architecture)
- • Experimental interactions and layout tweaks
- • AI-assisted code modifications and additions
+This branch is an experiment, and the possible development direction is:
+
+1) With the capabilities currently demonstrated by TresJS, it is gradually evolving through projects such as space games, hoping to become a complete Web3 project.
+2) Use Web3D to display the multi-chain structure of Chainweb and build a real-time data visualization exploration scene.
+3) GitHub Copilot completes the iteratively added code with the corresponding coding model.
 
 ⚠️ Please note: I’m not a professional frontend or Web3D developer. This project began as a zero-experience learning experiment.
 
