@@ -76,6 +76,7 @@ const launchMode = (mode: 'battle' | 'explore') => {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
 }
 
 .content {
@@ -95,12 +96,20 @@ h1 {
   font-size: 3em;
   margin-bottom: 2em;
   text-shadow: 0 0 10px rgba(100, 149, 237, 0.7);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .loading {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.loading p {
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 .spinner {
@@ -132,6 +141,10 @@ h1 {
   cursor: pointer;
   transition: all 0.3s ease;
   color: white;
+  font-family: 'Kode Mono', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .game-btn {
