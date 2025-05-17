@@ -12,11 +12,17 @@ const props = defineProps({
     default: 0,
   },
 })
+
 const emit = defineEmits(['launch'])
+
 const isResourcesLoaded = ref(false)
 const loadingProgress = ref(0)
 const loadingTime = ref(0)
 const startTime = ref(0)
+
+onMounted(() => {
+  startTime.value = Date.now()
+})
 
 // Monitor property changes
 watch(() => props.resourcesLoaded, (newVal) => {
@@ -30,10 +36,6 @@ watch(() => props.resourcesLoaded, (newVal) => {
 
 watch(() => props.progress, (newVal) => {
   loadingProgress.value = newVal
-})
-
-onMounted(() => {
-  startTime.value = Date.now()
 })
 
 const launchMode = (mode: 'battle' | 'explore') => {

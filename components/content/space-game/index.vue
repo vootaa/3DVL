@@ -23,9 +23,14 @@ import * as audio from './audio'
 provide('gameStore', gameStore)
 const cameraRef = shallowRef(new PerspectiveCamera())
 
-// Resource loading status
 const resourcesLoaded = ref(false)
 const loadingProgress = ref(0)
+const gameActive = ref(false)
+
+onMounted(async () => {
+  // Start loading resources
+  await ResourceLoader.loadAllResources()
+})
 
 // Monitor resource loading progress
 watch(() => ResourceLoader.loadingProgress, (newVal) => {
@@ -37,7 +42,35 @@ watch(() => ResourceLoader.isLoaded, (newVal) => {
   resourcesLoaded.value = newVal
 })
 
-const gameActive = ref(false)
+const handleMouseMove = (event: PointerEvent) => {
+  if (gameStore.actions.updateMouse) {
+    gameStore.actions.updateMouse({
+      clientX: event.clientX,
+      clientY: event.clientY,
+    })
+  }
+  else {
+    console.warn('updateMouse action not available')
+  }
+}
+
+const initializeGame = () => {
+  if (cameraRef.value) {
+    console.log('Initializing game with camera:', cameraRef.value)
+    gameStore.actions.init(cameraRef.value)
+
+    gameStore.actions.updateMouse({
+      clientX: window.innerWidth / 2,
+      clientY: window.innerHeight / 2,
+    })
+
+    gameActive.value = true
+    console.log('Game activated')
+  }
+  else {
+    console.error('Cannot start game: No camera reference available')
+  }
+}
 
 const start = (mode: 'battle' | 'explore') => {
   console.log('Start function called with mode:', mode)
@@ -60,32 +93,9 @@ const start = (mode: 'battle' | 'explore') => {
   initializeActions(gameStore, audio)
   gameStore.actions.startGame(false)
 
-  // Initialize the game
   nextTick(() => {
-    if (cameraRef.value) {
-      console.log('Initializing game with camera:', cameraRef.value)
-      gameStore.actions.init(cameraRef.value)
-      gameActive.value = true
-      console.log('Game activated')
-    }
-    else {
-      console.error('Cannot start game: No camera reference available')
-    }
+    initializeGame()
   })
-}
-
-onMounted(async () => {
-  // Start loading resources
-  await ResourceLoader.loadAllResources()
-})
-
-const handleMouseMove = (event: PointerEvent) => {
-  if (gameStore.actions.updateMouse) {
-    gameStore.actions.updateMouse({
-      clientX: event.clientX,
-      clientY: event.clientY,
-    })
-  }
 }
 </script>
 
