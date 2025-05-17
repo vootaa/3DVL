@@ -11,8 +11,11 @@ import {
 import { checkStardustCollection } from './utils'
 import { randomData, generateChainweb3D } from './generators'
 
-export function initializeActions(gameStore: any, guid: number, track: any, audio: any) {
-  gameStore.actions.restartGame = (switchMode: boolean) => {
+export function initializeActions(gameStore: any, audio: any) {
+  const guid = gameStore.guid
+  const track = gameStore.mutation.track
+
+  gameStore.actions.startGame = (switchMode: boolean) => {
     // Clear entities
     gameStore.enemies = []
     gameStore.rocks = []
@@ -25,19 +28,17 @@ export function initializeActions(gameStore: any, guid: number, track: any, audi
     gameStore.battleScore = 0
     gameStore.stardust = 0
     gameStore.loopCount = 0
-    gameStore.health = 100
 
     if (switchMode) {
       gameStore.gameMode = gameStore.gameMode === GameMode.Battle
         ? GameMode.Explore : GameMode.Battle
     }
-
+    
     const currentIsBattleMode = gameStore.gameMode === GameMode.Battle
-    const track = gameStore.mutation.track
-
     if (currentIsBattleMode) {
       gameStore.initialEnemyCount = 10
       gameStore.initialRockCount = 100
+      gameStore.particlesCount = 500
       gameStore.enemies = randomData(gameStore.initialEnemyCount, track, 20, 15, () => 1 + Math.random() * 1.5, guid)
       gameStore.rocks = randomData(gameStore.initialRockCount, track, 150, 8, () => 1 + Math.random() * 3, guid)
     }
@@ -46,7 +47,11 @@ export function initializeActions(gameStore: any, guid: number, track: any, audi
       gameStore.rocks = []
       gameStore.initialRockCount = 0
       gameStore.initialEnemyCount = 0
+      gameStore.particlesCount = 50
     }
+
+    gameStore.mutation.particles = randomData(gameStore.particlesCount,
+      track, 100, 1, () => 0.5 + Math.random() * 0.8, guid)
 
     // Reset time
     gameStore.mutation.startTime = Date.now()
@@ -65,12 +70,6 @@ export function initializeActions(gameStore: any, guid: number, track: any, audi
     gameStore.observationMode = ObservationMode.None
     gameStore.currentPointOfInterest = null
 
-    if (currentIsBattleMode) {
-      gameStore.mutation.particles = randomData(500, track, 100, 1, () => 0.5 + Math.random() * 0.8, guid)
-    }
-    else {
-      gameStore.mutation.particles = randomData(50, track, 100, 1, () => 0.5 + Math.random() * 0.8, guid)
-    }
   }
 
   // Implement modal display method

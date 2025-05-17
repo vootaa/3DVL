@@ -1,13 +1,12 @@
-import { reactive, shallowRef, onMounted } from 'vue'
-import { Clock, Object3D, PerspectiveCamera, Ray, Box3, TubeGeometry, Vector2, Vector3 } from 'three'
+import { reactive } from 'vue'
+import type { PerspectiveCamera } from 'three'
+import { Clock, Object3D, Ray, Box3, TubeGeometry, Vector2, Vector3 } from 'three'
 
-import * as audio from './audio'
 import { timeManager } from './store/TimeManager'
 import type { POINTS_OF_INTEREST } from './store/constants'
 import { GameMode, ObservationMode, SpeedMode } from './store/constants'
 import { WiderGrannyKnot } from './store/utils'
 import { 
-  randomData, 
   generateRings, 
   generateChainweb3D, 
   generatePetersenGraph, 
@@ -15,36 +14,36 @@ import {
   generateSpaceStationData, 
   generateSpaceProbeData,
 } from './store/generators'
-import { initializeActions } from './store/actions'
+
 import type { ExplosionData } from './store/types'
 
 const spline = new WiderGrannyKnot()
-const track = new TubeGeometry(spline, 200, 0.15, 10, true)
+const tk = new TubeGeometry(spline, 200, 0.15, 10, true)
 const guid = 0
 
 export const gameStore = reactive({
   spline,
+  guid,
   battleScore: 0,
   stardust: 0,
-  health: 100,
   loopCount: 0,
   totalLoops: 7, // total game loops
   lasers: [] as number[],
   explosions: [] as ExplosionData[],
-  initialRockCount: 100,
-  initialEnemyCount: 10,
-  rocks: randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5, guid),
-  enemies: randomData(10, track, 20, 15, 1, guid),
-  rings: generateRings(40, track),
-  chainweb3D: generateChainweb3D(30, track),
-  PetersenGraphGroup: generatePetersenGraph(track),
-  infoLabels: generateInfoLabels(track),
-  spaceStation: generateSpaceStationData(track),
-  spaceProbe: generateSpaceProbeData(track),
-  camera: new PerspectiveCamera(),
+  initialRockCount: 0,
+  initialEnemyCount: 0,
+  rocks: [],
+  enemies: [],
+  rings: generateRings(40, tk),
+  chainweb3D: generateChainweb3D(30, tk),
+  PetersenGraphGroup: generatePetersenGraph(tk),
+  infoLabels: generateInfoLabels(tk),
+  spaceStation: generateSpaceStationData(tk),
+  spaceProbe: generateSpaceProbeData(tk),
+  camera: null,
   sound: false,
   showInfoText: true, // state to control text visibility
-  gameMode: GameMode.Battle, // Default to Battle mode
+  gameMode: GameMode.None, // Default to None mode
   speedMode: SpeedMode.Fast, // Default to Fast mode
   modal: {
     show: false,
@@ -77,12 +76,12 @@ export const gameStore = reactive({
     startTime: Date.now(),
     observationStartTime: 0,
 
-    track: track as TubeGeometry,
+    track: tk,
     scale: 15,
     fov: 70,
     hits: 0,
 
-    particles: randomData(500, track, 100, 1, () => 0.5 + Math.random() * 0.8, guid),
+    particles: [],
     looptime: 40 * 1000, // default to fast mode
     binormal: new Vector3(),
     normal: new Vector3(),
@@ -130,20 +129,11 @@ export const gameStore = reactive({
     resumeJourney: null as unknown as () => void,
     registerHit: null as unknown as (count: number, type: 'rock' | 'enemy') => void,
     addScoreNotification: null as unknown as (text: string, points: number, isBonus: boolean) => void,
-    restartGame: null as unknown as (switchMode: boolean) => void,
+    startGame: null as unknown as (switchMode: boolean) => void,
     showModal: null as unknown as (type: string) => void,
     hideModal: null as unknown as () => void,
     addStardust: null as unknown as () => void,
   },
-})
-
-// Initialize actions
-initializeActions(gameStore, guid, track, audio)
-
-// Initialize camera on mount
-const camera = shallowRef(new PerspectiveCamera())
-onMounted(() => {
-  gameStore.actions.init(camera.value)
 })
 
 export type GameStore = typeof gameStore

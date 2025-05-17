@@ -1,4 +1,4 @@
-import type { Euler, PerspectiveCamera, Vector3 } from 'three'
+import type { Euler, PerspectiveCamera, TubeGeometry, Vector3 } from 'three'
 import type { timeManager } from './TimeManager'
 import type { GameMode, ObservationMode, POINTS_OF_INTEREST, SpeedMode } from './constants'
 
@@ -15,9 +15,9 @@ export interface ExplosionData {
 
 export interface GameStore {
   spline: any
+  guid: number
   battleScore: number
   stardust: number
-  health: number
   loopCount: number
   totalLoops: number
   lasers: number[]
@@ -67,7 +67,7 @@ export interface GameStore {
     position: Vector3
     startTime: number
     observationStartTime: number
-    track: any
+    track: TubeGeometry
     scale: number
     fov: number
     hits: number
@@ -113,7 +113,7 @@ export interface GameStore {
     resumeJourney: () => void
     registerHit: (count: number, type: 'rock' | 'enemy') => void
     addScoreNotification: (text: string, points: number, isBonus: boolean) => void
-    restartGame: (switchMode: boolean) => void
+    startGame: (switchMode: boolean) => void
     showModal: (type: string) => void
     hideModal: () => void
     addStardust: () => void

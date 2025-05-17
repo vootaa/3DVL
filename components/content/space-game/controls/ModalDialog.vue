@@ -53,7 +53,7 @@ const gameStore = inject('gameStore') as GameStore
 
 const restartGame = () => {
   // Restart game, keep current mode
-  gameStore.actions.restartGame(false)
+  gameStore.actions.startGame(false)
   timeManager.actions.reset()
   gameStore.actions.hideModal()
 }
@@ -62,7 +62,7 @@ const switchMode = () => {
   // Switch game mode and restart
   // If switching from game over dialog, need complete reset
   if (props.type === 'gameOver') {
-    gameStore.actions.restartGame(true) // true means switch mode
+    gameStore.actions.startGame(true) // true means switch mode
     timeManager.actions.reset()
   }
   else {

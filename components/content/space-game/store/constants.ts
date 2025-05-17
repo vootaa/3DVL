@@ -1,5 +1,6 @@
 // Define game modes
 export enum GameMode {
+  None = 'None',
   Battle = 'Battle',
   Explore = 'Explore',
 }
