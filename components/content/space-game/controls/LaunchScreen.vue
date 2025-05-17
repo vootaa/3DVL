@@ -23,7 +23,8 @@ watch(() => props.resourcesLoaded, (newVal) => {
   isResourcesLoaded.value = newVal
   if (newVal) {
     loadingProgress.value = 100 // Ensure it shows 100% when loaded
-    loadingTime.value = Math.round((Date.now() - startTime.value) / 100) / 10
+    // Format time to show 2 decimal places
+    loadingTime.value = Math.round((Date.now() - startTime.value) / 10) / 100
   }
 })
 
@@ -55,7 +56,7 @@ const launchMode = (mode: 'battle' | 'explore') => {
         <div class="progress-container">
           <div class="progress-stats">
             <span class="progress-percentage">{{ loadingProgress }}%</span>
-            <span class="progress-time">{{ loadingTime }}s</span>
+            <span class="progress-time">{{ loadingTime.toFixed(2) }}s</span>
           </div>
 
           <div class="progress-bar-container">
@@ -90,17 +91,16 @@ const launchMode = (mode: 'battle' | 'explore') => {
       <!-- Tech Stack Section -->
       <div class="tech-stack">
         <div class="stack-title">
-          Powered by:
+          Technology Stack:
         </div>
         <div class="tech-badges primary">
           <span class="tech-badge">Vue 3</span>
           <span class="tech-badge">Three.js</span>
-          <span class="tech-badge">WebGL</span>
+          <span class="tech-badge">WebGL/GLSL</span>
         </div>
         <div class="tech-badges secondary">
-          <span class="tech-badge framework">TresJS</span>
           <span class="tech-badge framework">
-            <span class="tech-badge-port">Ported from</span> React Three Fiber
+            TresJS: Vue port of React Three Fiber
           </span>
         </div>
       </div>
@@ -109,7 +109,10 @@ const launchMode = (mode: 'battle' | 'explore') => {
       <div class="credits">
         <p>Developed by Vootaa Labs</p>
         <p class="credit-note">
-          Based on 0xca0a's React Three Fiber game prototype
+          Based on 0xca0a's R3F game prototype
+        </p>
+        <p class="credit-fonts">
+          Fonts: Kode Mono & Teko
         </p>
       </div>
     </div>
@@ -150,9 +153,9 @@ const launchMode = (mode: 'battle' | 'explore') => {
 
 h1 {
   font-size: 3em;
-  margin-bottom: 1.5em;
+  margin-bottom: 0.2em;
   text-shadow: 0 0 10px rgba(100, 149, 237, 0.7);
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -162,13 +165,14 @@ h1 {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .progress-container {
   width: 100%;
   max-width: 400px;
-  margin-top: 20px;
+  margin-top: 10px;
+  margin-bottom: 20px;
 }
 
 .progress-stats {
@@ -187,6 +191,7 @@ h1 {
 
 .progress-time {
   color: #aaa;
+  font-family: monospace;
 }
 
 .progress-bar-container {
@@ -230,7 +235,7 @@ h1 {
   display: flex;
   justify-content: center;
   gap: 2em;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
 }
 
 .btn {
@@ -262,7 +267,7 @@ h1 {
 
 .tech-stack {
   margin-top: auto;
-  margin-bottom: 35px;
+  margin-bottom: 25px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -300,12 +305,8 @@ h1 {
   background-color: rgba(237, 100, 149, 0.2);
   border: 1px solid rgba(237, 100, 149, 0.5);
   color: #ff8bb8;
-}
-
-.tech-badge-port {
-  font-size: 0.75em;
-  opacity: 0.8;
-  margin-right: 4px;
+  padding: 6px 12px;
+  font-size: 0.9em;
 }
 
 .credits {
@@ -322,5 +323,11 @@ h1 {
   font-size: 0.9em;
   margin-top: 5px;
   font-style: italic;
+}
+
+.credit-fonts {
+  font-size: 0.8em;
+  margin-top: 8px;
+  color: #aaa;
 }
 </style>
