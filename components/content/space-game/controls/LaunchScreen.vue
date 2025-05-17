@@ -45,6 +45,9 @@ const launchMode = (mode: 'battle' | 'explore') => {
   <div class="launch-screen">
     <div class="content">
       <h1>Space Game</h1>
+      <h2 class="subtitle">
+        A Web3D gaming & visualization of the Kadena Chainweb braided structure
+      </h2>
 
       <!-- Progress section - always visible -->
       <div class="loading-section">
@@ -111,6 +114,9 @@ const launchMode = (mode: 'battle' | 'explore') => {
         <p class="credit-note">
           Based on 0xca0a's R3F game prototype
         </p>
+        <p class="credit-tools">
+          AI-assisted: GitHub Copilot & Claude 3.7
+        </p>
         <p class="credit-fonts">
           Fonts: Kode Mono & Teko
         </p>
@@ -153,11 +159,21 @@ const launchMode = (mode: 'battle' | 'explore') => {
 
 h1 {
   font-size: 3em;
-  margin-bottom: 0.2em;
+  margin-bottom: 0.1em;
   text-shadow: 0 0 10px rgba(100, 149, 237, 0.7);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+.subtitle {
+  font-size: 1em;
+  margin-top: 0;
+  margin-bottom: 1em;
+  color: #8bb8ff;
+  font-weight: 100;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 5px rgba(100, 149, 237, 0.5);
 }
 
 .loading-section {
@@ -234,22 +250,23 @@ h1 {
 .buttons {
   display: flex;
   justify-content: center;
-  gap: 2em;
+  gap: 3em;
   margin-bottom: 40px;
 }
 
 .btn {
-  padding: 12px 24px;
-  font-size: 1.2em;
+  padding: 16px 32px;
+  font-size: 1.5em;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
   color: white;
   font-family: 'Kode Mono', monospace;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
+  min-width: 150px;
 }
 
 .game-btn {
@@ -323,6 +340,12 @@ h1 {
   font-size: 0.9em;
   margin-top: 5px;
   font-style: italic;
+}
+
+.credit-tools {
+  font-size: 0.8em;
+  margin-top: 5px;
+  color: #aaa;
 }
 
 .credit-fonts {
