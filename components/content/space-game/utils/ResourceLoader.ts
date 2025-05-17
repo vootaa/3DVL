@@ -59,6 +59,7 @@ export const ResourceLoader = reactive({
         this.loadingProgress = Math.floor((this.loadedResources / this.totalResources) * 100)
       }
       catch (error) {
+        // eslint-disable-next-line no-console
         console.error(`Failed to load resource: ${resource.name}`, error)
       }
     })
