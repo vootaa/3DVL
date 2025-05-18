@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { inject } from 'vue'
-import type { GameStore } from '../GameStore'
+
 import { GameMode } from '../store/constants'
+
+// eslint-disable-next-line import/namespace
+import type { GameStore } from '../GameStore'
 
 const gameStore = inject('gameStore') as GameStore
 

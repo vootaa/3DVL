@@ -11,9 +11,16 @@ import {
 import { checkStardustCollection } from './utils'
 import { randomData, generateChainweb3D } from './generators'
 
-export function initializeActions(gameStore: any, audio: any) {
+export function initializeActions(gameStore: any) {
   const guid = gameStore.guid
   const track = gameStore.mutation.track
+
+  function playSound(name: string, loop = false, volume = 1.0) {
+    if (gameStore.audioSystem && gameStore.sound) {
+      return gameStore.audioSystem.play(name, loop, volume)
+    }
+    return null
+  }
 
   gameStore.actions.startGame = (switchMode: boolean) => {
     // Clear entities
@@ -169,24 +176,18 @@ export function initializeActions(gameStore: any, audio: any) {
     }, gameStore.comboSystem.timeWindow)
   }
 
-  gameStore.actions.playAudio = (audio: HTMLAudioElement, volume = 1, loop = false) => {
-    if (gameStore.sound) {
-      audio.currentTime = 0
-      audio.volume = volume
-      audio.loop = loop
-      audio.play()
+  gameStore.actions.toggleSound = (sound = !gameStore.sound) => {    
+    if (sound) {
+      gameStore.audioSystem.resumeAll()
+      if (gameStore.gameMode !== GameMode.None) {
+        playSound('bg', true, 0.3)
+        playSound('engine', true, 1)
+        playSound('engine2', true, 0.3)
+      }
     }
     else {
-      audio.pause()
+      gameStore.audioSystem.pauseAll()
     }
-  }
-
-  gameStore.actions.toggleSound = (sound?: boolean) => {
-    if (sound !== false && sound !== true) sound = !gameStore.sound
-    gameStore.sound = sound
-    gameStore.actions.playAudio(audio.engine, 1, true)
-    gameStore.actions.playAudio(audio.engine2, 0.3, true)
-    gameStore.actions.playAudio(audio.bg, 1, true)
   }
 
   gameStore.actions.init = (camera: any) => {
@@ -204,7 +205,7 @@ export function initializeActions(gameStore: any, audio: any) {
       gameStore.mutation.cancelLaserTO = setTimeout(() => {
         gameStore.lasers = gameStore.lasers.filter((t: number) => Date.now() - t <= 1000)
       }, 1000)
-      gameStore.actions.playAudio(audio.zap, 0.5)
+      playSound('zap')
     }
     // In Explore mode, shooting is disabled
   }
@@ -270,7 +271,8 @@ export function initializeActions(gameStore: any, audio: any) {
       if (t > TRACK_POSITIONS.WARP_BEGIN && t < TRACK_POSITIONS.WARP_END) {
         if (!warping) {
           warping = true
-          gameStore.actions.playAudio(audio.warp)
+          playSound('warp', true, 0.5)
+          gameStore.actions.addScoreNotification('Warp!', 0, false)
         }
       }
       else if (t > TRACK_POSITIONS.WARP_RESET) {
@@ -287,12 +289,12 @@ export function initializeActions(gameStore: any, audio: any) {
         mutation.hits = allHit.length
         const previousHits = mutation.hits || 0
         if (previousHits === 0 && mutation.hits) {
-          gameStore.actions.playAudio(audio.click)
+          playSound('click', false, 0.5)
         }
         
         const lasers = gameStore.lasers
         if (mutation.hits && lasers.length && time - lasers[lasers.length - 1] < 100) {
-          gameStore.actions.playAudio(new Audio(audio.mp3.explosion), 0.5)
+          playSound('explosion', false, 0.5)
           const updates: any[] = []
           
           allHit.forEach((data: any) => {

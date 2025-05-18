@@ -2,7 +2,10 @@
 import { useLoop } from '@tresjs/core'
 import { BoxGeometry, Color, Group, MeshBasicMaterial, PointLight, Vector3 } from 'three'
 import { onMounted, onUnmounted, inject, shallowRef, computed, watch } from 'vue'
+
+// eslint-disable-next-line import/namespace
 import type { GameStore } from '../GameStore'
+
 import { GameMode, ObservationMode } from '../store/constants'
 import { ResourceLoader } from '../utils/ResourceLoader'
 

@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { computed, inject, ref, onUnmounted } from 'vue'
-import type { GameStore } from '../GameStore'
+
 import { GameMode } from '../store/constants'
 import { timeManager } from '../store/TimeManager'
+
+// eslint-disable-next-line import/namespace
+import type { GameStore } from '../GameStore'
+
 import ModalDialog from './ModalDialog.vue'
 
 const gameStore = inject('gameStore') as GameStore

@@ -4,21 +4,22 @@ import { TresCanvas } from '@tresjs/core'
 import { SRGBColorSpace, NoToneMapping, PerspectiveCamera } from 'three'
 import { onMounted, provide, shallowRef, ref, watch, nextTick } from 'vue'
 
-import Game from './Game.vue'
-import { gameStore } from './GameStore'
 import { GameMode } from './store/constants'
 import { initializeActions } from './store/actions'
 import { ResourceLoader } from './utils/ResourceLoader'
 
 import LaunchScreen from './controls/LaunchScreen.vue'
-
+import Game from './Game.vue'
 import SoundControl from './controls/SoundControl.vue'
 import InfoTextControl from './controls/InfoTextControl.vue'
 import ControlPanel from './controls/ControlPanel.vue'
 import ObservationControls from './controls/ObservationControls.vue'
 import HudControl from './controls/HudControl.vue'
 
-import * as audio from './audio'
+import { initializeAudio } from './utils/audio'
+
+// eslint-disable-next-line import/namespace
+import { gameStore } from './GameStore'
 
 provide('gameStore', gameStore)
 const cameraRef = shallowRef(new PerspectiveCamera())
@@ -54,10 +55,13 @@ const handleMouseMove = (event: PointerEvent) => {
   }
 }
 
-const initializeGame = () => {
+const initializeGame = async () => {
   if (cameraRef.value) {
     console.log('Initializing game with camera:', cameraRef.value)
     gameStore.actions.init(cameraRef.value)
+
+    const audioSystem = await initializeAudio(cameraRef.value)
+    gameStore.audioSystem = audioSystem
 
     gameStore.actions.updateMouse({
       clientX: window.innerWidth / 2,
@@ -72,13 +76,21 @@ const initializeGame = () => {
   }
 }
 
-const start = (mode: 'battle' | 'explore') => {
+const start = async (mode: 'battle' | 'explore') => {
   console.log('Start function called with mode:', mode)
   console.log('Resources loaded status:', resourcesLoaded.value)
 
   if (!resourcesLoaded.value) {
-    console.warn('Resources not fully loaded, cannot start game')
-    return
+    console.warn('Resources not fully loaded yet, waiting...')
+    await new Promise<void>((resolve) => {
+      const unwatch = watch(() => resourcesLoaded.value, (loaded) => {
+        if (loaded) {
+          unwatch()
+          resolve()
+        }
+      })
+    })
+    console.log('Resources now loaded, continuing game start')
   }
 
   console.log('Setting game mode to:', mode)
@@ -90,7 +102,7 @@ const start = (mode: 'battle' | 'explore') => {
   }
 
   // Initialize actions & start game
-  initializeActions(gameStore, audio)
+  initializeActions(gameStore)
   gameStore.actions.startGame(false)
 
   nextTick(() => {

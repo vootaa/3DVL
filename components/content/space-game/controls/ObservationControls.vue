@@ -1,7 +1,10 @@
 <script setup>
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
-import { gameStore } from '../GameStore'
+
 import { GameMode, ObservationMode, POINTS_OF_INTEREST } from '../store/constants'
+
+// eslint-disable-next-line import/namespace
+import { gameStore } from '../GameStore'
 
 // Add observation timer
 const observationTime = ref(0)

@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { inject, computed } from 'vue'
-import type { GameStore } from '../GameStore'
+
 import { GameMode } from '../store/constants'
 import { timeManager } from '../store/TimeManager'
+
+// eslint-disable-next-line import/namespace
+import type { GameStore } from '../GameStore'
 
 const props = defineProps({
   type: {

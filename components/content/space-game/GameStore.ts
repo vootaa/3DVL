@@ -17,6 +17,8 @@ import {
 
 import type { ExplosionData } from './store/types'
 
+import type { AudioSystem } from './utils/audio'
+
 const spline = new WiderGrannyKnot()
 const tk = new TubeGeometry(spline, 200, 0.15, 10, true)
 const guid = 0
@@ -62,6 +64,7 @@ export const gameStore = reactive({
     active: false,
     resetTimer: 0 as unknown as ReturnType<typeof setTimeout>,
   },
+  audioSystem: undefined as AudioSystem | undefined,
   scoreNotifications: [] as Array<{
     id: number
     text: string
@@ -108,7 +111,6 @@ export const gameStore = reactive({
   },
 
   actions: {
-    playAudio: null as unknown as (audio: HTMLAudioElement, volume?: number, loop?: boolean) => void,
     toggleSound: null as unknown as (sound?: boolean) => void,
     toggleInfoText: null as unknown as (show?: boolean) => void,
     shoot: null as unknown as () => void,
