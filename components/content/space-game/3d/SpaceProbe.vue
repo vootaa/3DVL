@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { shallowRef } from 'vue'
-import { useLoader, useLoop } from '@tresjs/core'
+import { useLoop } from '@tresjs/core'
 import { MeshStandardMaterial, Color, Group, PointLight } from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { shallowRef } from 'vue'
+import { ResourceLoader } from '../utils/ResourceLoader'
 
 const props = defineProps({
   position: {
@@ -20,7 +20,8 @@ const props = defineProps({
 })
 
 // Load the space probe model with nodes and materials
-const { scene } = await useLoader(GLTFLoader as any, '/models/space-game/SpaceProbe.glb') as any
+const { scene } = await ResourceLoader.registerModel('SpaceProbeModel',
+  '/models/space-game/SpaceProbe.glb')
 
 // Create refs for the probe group
 const probeLight = shallowRef(new PointLight())
@@ -55,9 +56,9 @@ useLoop().onBeforeRender(({ elapsed }) => {
 <template>
   <TresGroup
     ref="probeGroup"
-    :position="position"
-    :rotation="rotation"
-    :scale="[scale, scale, scale]"
+    :position="props.position"
+    :rotation="props.rotation"
+    :scale="[props.scale, props.scale, props.scale]"
   >
     <primitive :object="scene" />
 

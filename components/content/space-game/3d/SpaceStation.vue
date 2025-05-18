@@ -1,4 +1,3 @@
-
 <script setup lang="ts">
 import { useLoop } from '@tresjs/core'
 import { MeshStandardMaterial, Color, Group, PointLight } from 'three'
