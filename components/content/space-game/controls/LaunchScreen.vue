@@ -19,7 +19,6 @@ const emit = defineEmits(['launch'])
 
 const isResourcesLoaded = ref(false)
 const loadingProgress = ref(0)
-const loadingTime = ref(0)
 const startTime = ref(0)
 
 const loadingStats = computed(() => ResourceLoader.loadingStats)
@@ -50,11 +49,17 @@ const audioProgress = computed(() => {
   return stats.loaded > 0 ? `${stats.loaded}/${stats.total}` : '0/0'
 })
 
+const fontProgress = computed(() => {
+  const stats = loadingStats.value.font
+  return stats && stats.loaded > 0 ? `${stats.loaded}/${stats.total}` : '0/0'
+})
+
 const currentLoading = computed(() => {
   if (loadingStats.value.component.current) return `component: ${loadingStats.value.component.current}`
   if (loadingStats.value.model.current) return `model: ${loadingStats.value.model.current}`
   if (loadingStats.value.texture.current) return `texture: ${loadingStats.value.texture.current}`
   if (loadingStats.value.audio.current) return `audio: ${loadingStats.value.audio.current}`
+  if (loadingStats.value.font?.current) return `font: ${loadingStats.value.font.current}`
   return 'Loading resources completed'
 })
 
@@ -138,6 +143,10 @@ const launchMode = (mode: 'battle' | 'explore') => {
             <div class="resource-type audio">
               <span class="resource-label">audio:</span>
               <span class="resource-count">{{ audioProgress }}</span>
+            </div>
+            <div class="resource-type font">
+              <span class="resource-label">font:</span>
+              <span class="resource-count">{{ fontProgress }}</span>
             </div>
           </div>
 
@@ -268,7 +277,7 @@ h1 {
   font-size: 3em;
   margin-bottom: 0.1em;
   text-shadow: 0 0 10px rgba(100, 149, 237, 0.7);
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -422,7 +431,7 @@ h1 {
   border: 1px solid rgba(100, 149, 237, 0.3);
   padding: 4px 10px;
   border-radius: 12px;
-  font-size: 0.85em;
+  font-size: 0.8em;
   color: #8bb8ff;
   font-weight: 500;
 }
@@ -432,7 +441,7 @@ h1 {
   border: 1px solid rgba(100, 149, 237, 0.3);
   color: #8bb8ff;
   padding: 6px 12px;
-  font-size: 0.9em;
+  font-size: 0.8em;
 }
 
 .credits {
@@ -446,7 +455,7 @@ h1 {
 }
 
 .credit-note {
-  font-size: 0.9em;
+  font-size: 0.85em;
   margin-top: 5px;
   font-style: italic;
 }
@@ -474,7 +483,7 @@ h1 {
 
 .resource-type-stats {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-top: 15px;
   margin-bottom: 10px;
@@ -496,14 +505,15 @@ h1 {
 
 .resource-count {
   color: rgba(100, 149, 237, 0.8);
-  font-weight: 600;
+  font-weight: 500;
   font-size: 0.85em;
 }
 
 .component,
 .model,
 .texture,
-.audio {
+.audio
+.font {
   border-color: rgba(100, 149, 237, 0.15);
 }
 

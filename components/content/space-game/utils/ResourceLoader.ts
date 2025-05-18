@@ -1,5 +1,6 @@
 /* eslint-disable eslint-comments/disable-enable-pair */
 /* eslint-disable no-console */
+import FontFaceObserver from 'fontfaceobserver'
 import { reactive } from 'vue'
 import { TextureLoader, AudioLoader } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
@@ -8,7 +9,7 @@ interface Resource {
   name: string
   module: Promise<any>
   loaded: boolean
-  type: 'component' | 'model' | 'texture' | 'audio'
+  type: 'component' | 'model' | 'texture' | 'audio' | 'font'
   startTime?: number
   endTime?: number
   error?: Error | null
@@ -39,6 +40,12 @@ interface LoadingStats {
     items: string[]
     current: string | null
   }
+  font: {
+    total: number
+    loaded: number
+    items: string[]
+    current: string | null
+  }
   startTime: number
   elapsedTime: number
 }
@@ -55,12 +62,14 @@ export const ResourceLoader = reactive({
   modelCache: new Map(),
   textureCache: new Map(),
   audioCache: new Map(),
+  fontCache: new Set<string>(),
 
   loadingStats: {
     component: { total: 0, loaded: 0, items: [], current: null },
     model: { total: 0, loaded: 0, items: [], current: null },
     texture: { total: 0, loaded: 0, items: [], current: null },
     audio: { total: 0, loaded: 0, items: [], current: null },
+    font: { total: 0, loaded: 0, items: [], current: null },
     startTime: 0,
     elapsedTime: 0,
   } as LoadingStats,
@@ -75,18 +84,22 @@ export const ResourceLoader = reactive({
     stats.model.total = this.resources.filter(r => r.type === 'model').length
     stats.texture.total = this.resources.filter(r => r.type === 'texture').length
     stats.audio.total = this.resources.filter(r => r.type === 'audio').length
+    stats.font.total = this.resources.filter(r => r.type === 'font').length
 
     stats.component.loaded = this.resources.filter(r => r.type === 'component' && r.loaded).length
     stats.model.loaded = this.resources.filter(r => r.type === 'model' && r.loaded).length
     stats.texture.loaded = this.resources.filter(r => r.type === 'texture' && r.loaded).length
     stats.audio.loaded = this.resources.filter(r => r.type === 'audio' && r.loaded).length
+    stats.font.loaded = this.resources.filter(r => r.type === 'font' && r.loaded).length
 
-    const totalLoaded = stats.component.loaded + stats.model.loaded + stats.texture.loaded + stats.audio.loaded
+    const totalLoaded = stats.component.loaded + stats.model.loaded
+      + stats.texture.loaded + stats.audio.loaded + stats.font.loaded
+
     this.loadingProgress = Math.floor((totalLoaded / this.totalResources) * 100)
   },
 
   registerResource(name: string, modulePromise: Promise<any>,
-    type: 'component' | 'model' | 'texture' | 'audio' = 'component') {
+    type: 'component' | 'model' | 'texture' | 'audio' | 'font' = 'component') {
     this.resources.push({
       name,
       module: modulePromise,
@@ -101,6 +114,37 @@ export const ResourceLoader = reactive({
     this.updateLoadingStats()
   },
 
+  async registerFont(fontFamily: string, weights: number[] = [400]) {
+    if (this.fontCache.has(fontFamily)) {
+      return Promise.resolve(true)
+    }
+
+    this.loadingStats.font.current = fontFamily
+
+    try {
+      const observers = weights.map((weight) => {
+        const font = new FontFaceObserver(fontFamily, { weight })
+        return font.load(null, 30000)
+      })
+
+      await Promise.all(observers)
+
+      this.fontCache.add(fontFamily)
+
+      this.registerResource(fontFamily, Promise.resolve(true), 'font')
+      console.log(`Font loaded: ${fontFamily}`)
+      return true
+    }
+    catch (error) {
+      console.error(`Failed to load font: ${fontFamily}`, error)
+      this.loadingErrors.push({ name: fontFamily, type: 'font', error: error as Error })
+      return false
+    }
+    finally {
+      this.loadingStats.font.current = null
+    }
+  },
+
   async registerModel(name: string, path: string) {
     if (this.modelCache.has(path)) {
       return Promise.resolve(this.modelCache.get(path))
@@ -113,12 +157,12 @@ export const ResourceLoader = reactive({
         const timeoutId = setTimeout(() => {
           reject(new Error(`Model loading timeout: ${name}`))
         }, 20000)
-        
+
         this.modelLoader.load(
           path,
           (gltf) => {
             clearTimeout(timeoutId)
-            
+
             const nodes: { [key: string]: any } = {}
             gltf.scene.traverse((object) => {
               if (object.name) {
@@ -258,7 +302,7 @@ export const ResourceLoader = reactive({
 
   async loadAllResources() {
     this.loadingStats.startTime = Date.now()
-    
+
     this.registerResource('Game', import('../Game.vue'))
     this.registerResource('Planets', import('../3d/Planets.vue'))
     this.registerResource('Stars', import('../3d/Stars.vue'))
@@ -281,6 +325,11 @@ export const ResourceLoader = reactive({
     this.registerResource('ControlPanel', import('../controls/ControlPanel.vue'))
     this.registerResource('ObservationControls', import('../controls/ObservationControls.vue'))
     this.registerResource('HudControl', import('../controls/HudControl.vue'))
+
+    await Promise.all([
+      this.registerFont('Kode Mono', [400, 500, 700]),
+      this.registerFont('Teko', [500]),
+    ])
 
     await Promise.all([
       this.registerModel('ShipModel', '/models/space-game/ship.gltf'),
@@ -362,6 +411,7 @@ export const ResourceLoader = reactive({
     console.log(`Models: ${this.loadingStats.model.loaded}/${this.loadingStats.model.total}`)
     console.log(`Textures: ${this.loadingStats.texture.loaded}/${this.loadingStats.texture.total}`)
     console.log(`Audio: ${this.loadingStats.audio.loaded}/${this.loadingStats.audio.total}`)
+    console.log(`Font: ${this.loadingStats.font.loaded}/${this.loadingStats.font.total}`)
 
     if (this.loadingErrors.length > 0) {
       console.log('\n=== Loading Errors ===')

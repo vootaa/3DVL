@@ -3,7 +3,8 @@
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
     "types": [
-      "@types/three"
+      "@types/three",
+      "@types/fontfaceobserver"
     ],
     "strict": true,
     "isolatedModules": true
