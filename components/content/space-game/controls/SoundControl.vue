@@ -14,16 +14,26 @@ const toggleSound = () => {
 <template>
   <div
     class="sound-control"
+    :class="{ 'audio-error': gameStore.audioError }"
     @click="toggleSound"
   >
     <div class="control-label">
       SOUND
     </div>
     <div class="control-value">
-      {{ gameStore.sound ? 'ON' : 'OFF' }}
+      <span v-if="!gameStore.audioError">{{ gameStore.sound ? 'ON' : 'OFF' }}</span>
+      <span
+        v-else
+        class="error-text"
+      >ERROR</span>
     </div>
     <div class="control-hint">
-      click to toggle
+      <template v-if="!gameStore.audioError">
+        click to toggle
+      </template>
+      <template v-else>
+        audio load failed
+      </template>
     </div>
   </div>
 </template>
@@ -83,5 +93,13 @@ const toggleSound = () => {
     .control-value {
         font-size: 1.5em;
     }
+}
+
+.audio-error {
+  border: 1px solid rgba(255, 0, 0, 0.5);
+}
+
+.error-text {
+  color: #ff4444;
 }
 </style>

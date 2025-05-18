@@ -65,6 +65,7 @@ export const gameStore = reactive({
     resetTimer: 0 as unknown as ReturnType<typeof setTimeout>,
   },
   audioSystem: undefined as AudioSystem | undefined,
+  audioError: false,
   scoreNotifications: [] as Array<{
     id: number
     text: string

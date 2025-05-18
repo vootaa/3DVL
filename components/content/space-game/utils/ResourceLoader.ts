@@ -84,8 +84,17 @@ export const ResourceLoader = reactive({
           this.audioCache.set(path, buffer)
           resolve(buffer)
         },
-        undefined,
-        error => reject(error),
+        (progress) => {
+          if (progress.lengthComputable) {
+            const percentComplete = (progress.loaded / progress.total) * 100
+            // eslint-disable-next-line no-console
+            console.log(`Audio loading: ${percentComplete.toFixed(2)}%`)
+          }
+        },
+        (error) => {
+          console.error(`Failed to load audio ${name} (${path}):`, error)
+          reject(error)
+        },
       )
     })
 

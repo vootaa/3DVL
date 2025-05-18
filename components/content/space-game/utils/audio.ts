@@ -15,7 +15,7 @@ const AUDIO_RESOURCES = {
   click: { resourceName: 'ClickAudio', path: '/audio/space-game/click.mp3' },
   engine: { resourceName: 'EngineAudio', path: '/audio/space-game/engine.mp3' },
   engine2: { resourceName: 'Engine2Audio', path: '/audio/space-game/engine2.mp3' },
-  explosion: { resourceName: 'ExplosionAudio', path: '/audio/space-game/explosion.mp3' },  
+  explosion: { resourceName: 'ExplosionAudio', path: '/audio/space-game/explosion.mp3' },
   zap: { resourceName: 'LaserAudio', path: '/audio/space-game/laser.mp3' },
   warp: { resourceName: 'WarpAudio', path: '/audio/space-game/warp.mp3' },
 }
@@ -25,27 +25,44 @@ const AUDIO_RESOURCES = {
  * @param camera Three.js camera object
  * @returns Audio control interface
  */
-export async function initializeAudio(camera: PerspectiveCamera | Camera) {
+export async function initializeAudio(camera: PerspectiveCamera | Camera): Promise<AudioSystem> {
   console.log('Initializing audio system...')
 
   listener = new AudioListener()
-
   camera.add(listener)
 
   if (!ResourceLoader.isLoaded) {
-    console.log('Waiting for ResourceLoader to complete before initializing audio...')
+    console.log('Waiting for ResourceLoader to complete...')
     await new Promise<void>((resolve) => {
+      if (ResourceLoader.isLoaded) {
+        resolve()
+        return
+      }
+
       const unwatch = watch(() => ResourceLoader.isLoaded, (loaded) => {
         if (loaded) {
           unwatch()
-          console.log('ResourceLoader completed, continuing audio initialization')
+          console.log('ResourceLoader completed')
           resolve()
         }
       })
     })
   }
 
-  console.log('Creating audio objects from loaded resources...')
+  const missingAudios = Object.entries(AUDIO_RESOURCES).filter(
+    ([_, { path }]) => !ResourceLoader.audioCache.has(path),
+  )
+  
+  if (missingAudios.length > 0) {
+    console.log(`Loading ${missingAudios.length} missing audio resources...`)
+    await Promise.all(
+      missingAudios.map(([, { resourceName, path }]) =>
+        ResourceLoader.registerAudio(resourceName, path),
+      ),
+    )
+  }
+
+  console.log('Creating audio objects...')
   const audioPromises = Object.entries(AUDIO_RESOURCES).map(
     ([name, { path }]) => createAudio(name, path),
   )
@@ -145,17 +162,6 @@ async function createAudio(name: string, path: string): Promise<void> {
   catch (error) {
     console.error(`Error initializing audio ${name}:`, error)
   }
-}
-
-// Export some constants for compatibility
-export const mp3 = { 
-  explosion: '/audio/space-game/explosion.mp3',
-  bg: '/audio/space-game/bg.mp3',
-  click: '/audio/space-game/click.mp3',
-  engine: '/audio/space-game/engine.mp3',
-  engine2: '/audio/space-game/engine2.mp3',
-  laser: '/audio/space-game/laser.mp3',
-  warp: '/audio/space-game/warp.mp3',
 }
 
 export interface AudioSystem {
