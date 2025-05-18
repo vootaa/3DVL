@@ -1,3 +1,4 @@
+import type { PerspectiveCamera } from 'three'
 import { Vector3 } from 'three'
 import {
   GameMode,
@@ -177,6 +178,11 @@ export function initializeActions(gameStore: any) {
   }
 
   gameStore.actions.toggleSound = (sound = !gameStore.sound) => {    
+    if (!gameStore.audioSystem) {
+      console.warn('Audio system not initialized yet, cannot toggle sound')
+      return
+    }
+
     if (sound) {
       gameStore.audioSystem.resumeAll()
       if (gameStore.gameMode !== GameMode.None) {
@@ -190,11 +196,11 @@ export function initializeActions(gameStore: any) {
     }
   }
 
-  gameStore.actions.init = (camera: any) => {
+  gameStore.actions.init = (camera: PerspectiveCamera) => {
+    gameStore.sound = false
     gameStore.mutation.clock.start()
     gameStore.camera = camera
     gameStore.camera.far = 10000
-    gameStore.actions.toggleSound(gameStore.sound)
   }
 
   gameStore.actions.shoot = () => {

@@ -57,18 +57,20 @@ const handleMouseMove = (event: PointerEvent) => {
 
 const initializeGame = async () => {
   if (cameraRef.value) {
-    console.log('Initializing game with camera:', cameraRef.value)
-    gameStore.actions.init(cameraRef.value)
+    console.log('Initializing game with camera:', cameraRef.value)    
 
     try {
       const audioSystem = await initializeAudio(cameraRef.value)
       gameStore.audioSystem = audioSystem
+      console.log('Audio system initialized successfully')
     }
     catch (error) {
       console.error('Failed to initialize audio:', error)
       gameStore.audioError = true
       gameStore.sound = false
     }
+
+    gameStore.actions.init(cameraRef.value)
 
     gameStore.actions.updateMouse({
       clientX: window.innerWidth / 2,
