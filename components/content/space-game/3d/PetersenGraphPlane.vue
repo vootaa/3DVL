@@ -210,12 +210,12 @@ const blending = {
 
 <template>
   <TresGroup
-    :position="position"
-    :rotation="rotation"
-    :scale="[scale, scale, scale]"
+    :position="props.position"
+    :rotation="props.rotation"
+    :scale="[props.scale, props.scale, props.scale]"
   >
     <TresMesh ref="meshRef">
-      <TresPlaneGeometry :args="[planeSize, planeSize, 1, 1]" />
+      <TresPlaneGeometry :args="[props.planeSize, props.planeSize, 1, 1]" />
       <TresShaderMaterial
         v-bind="blending"
         :uniforms="uniforms"
