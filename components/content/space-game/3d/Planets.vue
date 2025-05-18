@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useLoader } from '@tresjs/core'
-import { TextureLoader, type Texture } from 'three'
+import { type Texture } from 'three'
+import { ResourceLoader } from '../utils/ResourceLoader'
 
-const earth = await useLoader(TextureLoader as any, '/textures/space-game/earth.jpg') as Texture
-const moon = await useLoader(TextureLoader as any, '/textures/space-game/moon.png') as Texture
+const earth = await ResourceLoader.registerTexture('EarthTexture', '/textures/space-game/earth.jpg') as Texture
+const moon = await ResourceLoader.registerTexture('MoonTexture', '/textures/space-game/moon.png') as Texture
 </script>
 
 <template>

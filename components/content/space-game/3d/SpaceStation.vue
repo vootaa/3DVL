@@ -1,8 +1,9 @@
+
 <script setup lang="ts">
+import { useLoop } from '@tresjs/core'
 import { MeshStandardMaterial, Color, Group, PointLight } from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { shallowRef } from 'vue'
-import { useLoader, useLoop } from '@tresjs/core'
+import { ResourceLoader } from '../utils/ResourceLoader'
 
 const props = defineProps({
   position: {
@@ -20,7 +21,8 @@ const props = defineProps({
 })
 
 // Load the space station model with nodes and materials
-const { scene } = await useLoader(GLTFLoader as any, '/models/space-game/InternationalSpaceStation.glb') as any
+const { scene } = await ResourceLoader.registerModel('SpaceStationModel', 
+  '/models/space-game/InternationalSpaceStation.glb')
 
 // Create refs for the station group
 const stationLight = shallowRef(new PointLight())
@@ -52,9 +54,9 @@ useLoop().onBeforeRender(({ elapsed }) => {
 <template>
   <TresGroup
     ref="stationGroup"
-    :position="position"
-    :rotation="rotation"
-    :scale="[scale, scale, scale]"
+    :position="props.position"
+    :rotation="props.rotation"
+    :scale="[props.scale, props.scale, props.scale]"
   >
     <primitive :object="scene" />
 

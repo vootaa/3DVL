@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import { inject, shallowRef } from 'vue'
-import { useLoop, useLoader } from '@tresjs/core'
+import { useLoop } from '@tresjs/core'
 import { Group } from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { inject, shallowRef } from 'vue'
 import type { GameStore } from '../GameStore'
+import { ResourceLoader } from '../utils/ResourceLoader'
+import type { ObjectData } from '../store/types'
 
 const gameStore: GameStore = inject('gameStore') as GameStore
 const rocksGroupRef = shallowRef(new Group())
 
-const { nodes, materials } = await useLoader(GLTFLoader as any, '/models/space-game/rock.gltf') as any
+const { nodes, materials } = await ResourceLoader.registerModel('RockModel', '/models/space-game/rock.gltf')
 const { clock } = gameStore.mutation
 
 useLoop().onBeforeRender(() => {
   let i = 0
-  for (const data of gameStore.rocks) {
-    const rock = rocksGroupRef.value.children[i]
+  for (const data of gameStore.rocks as ObjectData[]) {
+    const rock = rocksGroupRef.value.children[i] 
     if (rock) {
       const r = clock.elapsedTime * data.speed
       rock.rotation.set(r, r, r)
@@ -27,7 +28,7 @@ useLoop().onBeforeRender(() => {
 <template>
   <TresGroup ref="rocksGroupRef">
     <TresGroup
-      v-for="data of gameStore.rocks"
+      v-for="data of gameStore.rocks as ObjectData[]"
       :key="data.guid"
       :position="data.offset"
       :scale="[data.scale, data.scale, data.scale]"
