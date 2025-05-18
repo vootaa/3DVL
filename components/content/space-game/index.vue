@@ -62,7 +62,6 @@ const initializeGame = async () => {
     try {
       const audioSystem = await initializeAudio(cameraRef.value)
       gameStore.audioSystem = audioSystem
-      console.log('Audio system initialized successfully')
     }
     catch (error) {
       console.error('Failed to initialize audio:', error)
@@ -91,15 +90,27 @@ const start = async (mode: 'battle' | 'explore') => {
 
   if (!resourcesLoaded.value) {
     console.warn('Resources not fully loaded yet, waiting...')
-    await new Promise<void>((resolve) => {
-      const unwatch = watch(() => resourcesLoaded.value, (loaded) => {
-        if (loaded) {
-          unwatch()
-          resolve()
-        }
+    
+    const timeout = setTimeout(() => {
+      console.warn('Resource loading timeout, forcing completion')
+      ResourceLoader.forceComplete()
+    }, 20000)
+
+    try {
+      await new Promise<void>((resolve) => {
+        const unwatch = watch(() => resourcesLoaded.value, (loaded) => {
+          if (loaded) {
+            clearTimeout(timeout)
+            unwatch()
+            resolve()
+          }
+        })
       })
-    })
-    console.log('Resources now loaded, continuing game start')
+      console.log('Resources now loaded, continuing game start')
+    }
+    catch (error) {
+      console.error('Error waiting for resources:', error)
+    }
   }
 
   console.log('Setting game mode to:', mode)

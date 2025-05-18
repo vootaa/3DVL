@@ -1,5 +1,7 @@
+<!-- eslint-disable no-console -->
 <script setup lang="ts">
-import { ref, defineEmits, watch, onMounted } from 'vue'
+import { ref, defineEmits, watch, onMounted, computed } from 'vue'
+import { ResourceLoader } from '../utils/ResourceLoader'
 
 // Receive loading status passed from parent component
 const props = defineProps({
@@ -20,6 +22,42 @@ const loadingProgress = ref(0)
 const loadingTime = ref(0)
 const startTime = ref(0)
 
+const loadingStats = computed(() => ResourceLoader.loadingStats)
+
+const formatTime = (ms: number) => {
+  const seconds = Math.floor(ms / 1000)
+  const milliseconds = ms % 1000
+  return `${seconds}.${milliseconds.toString().padStart(3, '0')}s`
+}
+
+const componentProgress = computed(() => {
+  const stats = loadingStats.value.component
+  return stats.loaded > 0 ? `${stats.loaded}/${stats.total}` : '0/0'
+})
+
+const modelProgress = computed(() => {
+  const stats = loadingStats.value.model
+  return stats.loaded > 0 ? `${stats.loaded}/${stats.total}` : '0/0'
+})
+
+const textureProgress = computed(() => {
+  const stats = loadingStats.value.texture
+  return stats.loaded > 0 ? `${stats.loaded}/${stats.total}` : '0/0'
+})
+
+const audioProgress = computed(() => {
+  const stats = loadingStats.value.audio
+  return stats.loaded > 0 ? `${stats.loaded}/${stats.total}` : '0/0'
+})
+
+const currentLoading = computed(() => {
+  if (loadingStats.value.component.current) return `component: ${loadingStats.value.component.current}`
+  if (loadingStats.value.model.current) return `model: ${loadingStats.value.model.current}`
+  if (loadingStats.value.texture.current) return `texture: ${loadingStats.value.texture.current}`
+  if (loadingStats.value.audio.current) return `audio: ${loadingStats.value.audio.current}`
+  return 'Loading resources completed'
+})
+
 onMounted(() => {
   startTime.value = Date.now()
 })
@@ -29,14 +67,22 @@ watch(() => props.resourcesLoaded, (newVal) => {
   isResourcesLoaded.value = newVal
   if (newVal) {
     loadingProgress.value = 100 // Ensure it shows 100% when loaded
-    // Format time to show 2 decimal places
-    loadingTime.value = Math.round((Date.now() - startTime.value) / 10) / 100
   }
 })
 
 watch(() => props.progress, (newVal) => {
   loadingProgress.value = newVal
 })
+
+const forceComplete = () => {
+  console.log('Force completing resource loading')
+  ResourceLoader.forceComplete()
+}
+
+const diagnoseLoading = () => {
+  const report = ResourceLoader.diagnose()
+  console.log('Diagnostic report:', report)
+}
 
 const launchMode = (mode: 'battle' | 'explore') => {
   emit('launch', mode)
@@ -61,7 +107,7 @@ const launchMode = (mode: 'battle' | 'explore') => {
         <div class="progress-container">
           <div class="progress-stats">
             <span class="progress-percentage">{{ loadingProgress }}%</span>
-            <span class="progress-time">{{ loadingTime.toFixed(2) }}s</span>
+            <span class="progress-time">{{ formatTime(loadingStats.elapsedTime) }}</span>
           </div>
 
           <div class="progress-bar-container">
@@ -70,6 +116,54 @@ const launchMode = (mode: 'battle' | 'explore') => {
               :class="{ 'progress-complete': isResourcesLoaded }"
               :style="{ width: `${loadingProgress}%` }"
             />
+          </div>
+
+          <div class="current-resource">
+            {{ currentLoading }}
+          </div>
+
+          <div class="resource-type-stats">
+            <div class="resource-type component">
+              <span class="resource-label">component:</span>
+              <span class="resource-count">{{ componentProgress }}</span>
+            </div>
+            <div class="resource-type model">
+              <span class="resource-label">model:</span>
+              <span class="resource-count">{{ modelProgress }}</span>
+            </div>
+            <div class="resource-type texture">
+              <span class="resource-label">texture:</span>
+              <span class="resource-count">{{ textureProgress }}</span>
+            </div>
+            <div class="resource-type audio">
+              <span class="resource-label">audio:</span>
+              <span class="resource-count">{{ audioProgress }}</span>
+            </div>
+          </div>
+
+          <div
+            v-if="ResourceLoader.loadingErrors.length > 0"
+            class="loading-errors"
+          >
+            <span class="error-count">{{ ResourceLoader.loadingErrors.length }} resources failed to load</span>
+            <button
+              class="error-button"
+              @click="diagnoseLoading"
+            >
+              Diagnose
+            </button>
+          </div>
+
+          <div
+            v-if="loadingProgress >= 85 && !isResourcesLoaded && loadingStats.elapsedTime > 10000"
+            class="stuck-loading"
+          >
+            <button
+              class="force-button"
+              @click="forceComplete"
+            >
+              continue loading
+            </button>
           </div>
         </div>
       </div>
@@ -101,6 +195,7 @@ const launchMode = (mode: 'battle' | 'explore') => {
         <div class="tech-badges primary">
           <span class="tech-badge">Vue 3</span>
           <span class="tech-badge">Three.js</span>
+          <span class="tech-badge">Nuxt</span>
           <span class="tech-badge">WebGL/GLSL</span>
         </div>
         <div class="tech-badges secondary">
@@ -122,6 +217,16 @@ const launchMode = (mode: 'battle' | 'explore') => {
         <p class="credit-fonts">
           Fonts: Kode Mono & Teko
         </p>
+      </div>
+
+      <!-- Hidden debug controls -->
+      <div class="debug-controls">
+        <button
+          class="debug-button"
+          @click="diagnoseLoading"
+        >
+          Debug
+        </button>
       </div>
     </div>
   </div>
@@ -209,7 +314,7 @@ h1 {
 
 .progress-time {
   color: #aaa;
-  font-family: monospace;
+  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
 }
 
 .progress-bar-container {
@@ -230,8 +335,10 @@ h1 {
 }
 
 .progress-complete {
-  background: linear-gradient(to right, #43c59e, #47e3b8);
-  box-shadow: 0 0 12px rgba(71, 227, 184, 0.7);
+  background: linear-gradient(to right, #4169e1, #6495ed);
+  box-shadow: 0 0 8px rgba(100, 149, 237, 0.4);
+  opacity: 0.7;
+  transition: opacity 1s ease-out, width 0.3s ease-out;
 }
 
 .spinner {
@@ -264,7 +371,7 @@ h1 {
   cursor: pointer;
   transition: all 0.3s ease;
   color: white;
-  font-family: 'Kode Mono', monospace;
+  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -311,8 +418,8 @@ h1 {
 }
 
 .tech-badge {
-  background-color: rgba(100, 149, 237, 0.2);
-  border: 1px solid rgba(100, 149, 237, 0.5);
+  background-color: rgba(100, 149, 237, 0.1);
+  border: 1px solid rgba(100, 149, 237, 0.3);
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 0.85em;
@@ -321,9 +428,9 @@ h1 {
 }
 
 .tech-badge.framework {
-  background-color: rgba(237, 100, 149, 0.2);
-  border: 1px solid rgba(237, 100, 149, 0.5);
-  color: #ff8bb8;
+  background-color: rgba(100, 149, 237, 0.1);
+  border: 1px solid rgba(100, 149, 237, 0.3);
+  color: #8bb8ff;
   padding: 6px 12px;
   font-size: 0.9em;
 }
@@ -354,5 +461,109 @@ h1 {
   font-size: 0.8em;
   margin-top: 8px;
   color: #aaa;
+}
+
+.current-resource {
+  font-size: 0.9em;
+  color: #6495ed;
+  text-align: center;
+  margin-top: 8px;
+  min-height: 1.5em;
+  font-family: 'Kode Mono', monospace;
+}
+
+.resource-type-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+.resource-type {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.resource-label {
+  color: rgba(170, 170, 170, 0.7);
+  font-size: 0.85em;
+}
+
+.resource-count {
+  color: rgba(100, 149, 237, 0.8);
+  font-weight: 600;
+  font-size: 0.85em;
+}
+
+.component,
+.model,
+.texture,
+.audio {
+  border-color: rgba(100, 149, 237, 0.15);
+}
+
+.loading-errors {
+  margin-top: 12px;
+  padding: 5px;
+  background-color: rgba(255, 50, 50, 0.1);
+  border: 1px solid rgba(255, 50, 50, 0.3);
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.error-count {
+  color: #ff6b6b;
+  font-size: 0.85em;
+}
+
+.error-button {
+  background: rgba(255, 50, 50, 0.2);
+  border: 1px solid rgba(255, 50, 50, 0.5);
+  color: #ff6b6b;
+  font-size: 0.8em;
+  padding: 2px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.stuck-loading {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.force-button {
+  background: rgba(100, 149, 237, 0.2);
+  border: 1px solid rgba(100, 149, 237, 0.5);
+  color: #6495ed;
+  font-size: 0.9em;
+  padding: 4px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.debug-controls {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  opacity: 0.3;
+}
+
+.debug-button {
+  font-size: 10px;
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+}
+
+.debug-button:hover {
+  color: #6495ed;
 }
 </style>

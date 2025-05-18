@@ -1,3 +1,4 @@
+<!-- eslint-disable no-console -->
 <script setup lang="ts">
 import { useLoop } from '@tresjs/core'
 import { BoxGeometry, Color, Group, MeshBasicMaterial, PointLight, Vector3 } from 'three'
@@ -9,6 +10,30 @@ import type { GameStore } from '../GameStore'
 import { GameMode, ObservationMode } from '../store/constants'
 import { ResourceLoader } from '../utils/ResourceLoader'
 
+const modelLoaded = ref(false)
+const nodes = ref(null)
+
+const loadShipModel = async () => {
+  try {
+    console.log('Starting to load ship model...')
+    const result = await ResourceLoader.registerModel('ShipModel', '/models/space-game/ship.gltf')
+
+    if (result && result.nodes) {
+      nodes.value = result.nodes
+      modelLoaded.value = true
+      console.log('Ship model loaded successfully:', Object.keys(result.nodes))
+    }
+    else {
+      console.error('Ship model loaded but nodes are missing')
+    }
+  }
+  catch (error) {
+    console.error('Failed to load ship model:', error)
+  }
+}
+
+loadShipModel()
+
 const geometry = new BoxGeometry(1, 1, 40)
 const lightgreen = new Color('lightgreen')
 const hotpink = new Color('hotpink')
@@ -17,7 +42,6 @@ const crossMaterial = new MeshBasicMaterial({ color: hotpink, fog: false })
 const position = new Vector3()
 const direction = new Vector3()
 
-const { nodes } = await ResourceLoader.registerModel('ShipModel', '/models/space-game/ship.gltf')
 const gameStore = inject('gameStore') as GameStore
 const mutation = gameStore.mutation
 const { clock, mouse, ray } = mutation
@@ -265,7 +289,10 @@ useLoop().onBeforeRender(() => {
           :material="laserMaterial"
         />
       </TresGroup>
-      <TresGroup :rotation="[Math.PI / 2, Math.PI, 0]">
+      <TresGroup
+        v-if="modelLoaded && nodes"
+        :rotation="[Math.PI / 2, Math.PI, 0]"
+      >
         <TresMesh
           name="Renault_(S,_T1)_0"
           :geometry="nodes['Renault_(S,_T1)_0'].geometry"
