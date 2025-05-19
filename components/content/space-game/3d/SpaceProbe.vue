@@ -1,7 +1,11 @@
+<!-- eslint-disable no-console -->
 <script setup lang="ts">
+import type { BufferGeometry, Material } from 'three'
+
 import { useLoop } from '@tresjs/core'
 import { MeshStandardMaterial, Color, Group, PointLight } from 'three'
-import { shallowRef } from 'vue'
+import { shallowRef, ref, onMounted } from 'vue'
+
 import { ResourceLoader } from '../utils/ResourceLoader'
 
 const props = defineProps({
@@ -19,9 +23,15 @@ const props = defineProps({
   },
 })
 
-// Load the space probe model with nodes and materials
-const { scene } = await ResourceLoader.registerModel('SpaceProbeModel',
-  '/models/space-game/SpaceProbe.glb')
+interface GLTFNode {
+  geometry: BufferGeometry
+  material: Material | Material[]
+}
+
+const modelData = ref({
+  spaceProbeNode: null as GLTFNode | null,
+  isLoaded: false,
+})
 
 // Create refs for the probe group
 const probeLight = shallowRef(new PointLight())
@@ -33,9 +43,20 @@ const probeMaterial = new MeshStandardMaterial({
   roughness: 0.2,
 })
 
-scene.traverse((object: { isMesh: any; name: string; material: MeshStandardMaterial }) => {
-  if (object.isMesh && object.name === 'SpaceProbe_mesh') {
-    object.material = probeMaterial
+onMounted(async () => {
+  try {
+    const result = await ResourceLoader.registerModel('SpaceProbeModel', '/models/space-game/SpaceProbe.glb')
+    if (result?.nodes?.SpaceProbe_mesh) {
+      modelData.value.spaceProbeNode = result.nodes.SpaceProbe_mesh as GLTFNode
+      modelData.value.isLoaded = true
+      console.log('SpaceProbe model loaded successfully')
+    }
+    else {
+      console.error('SpaceProbe missing SpaceProbe node')
+    }
+  }
+  catch (error) {
+    console.error('Failed to load SpaceProbe model:', error)
   }
 })
 
@@ -60,7 +81,17 @@ useLoop().onBeforeRender(({ elapsed }) => {
     :rotation="props.rotation"
     :scale="[props.scale, props.scale, props.scale]"
   >
-    <primitive :object="scene" />
+    <template v-if="modelData.isLoaded && modelData.spaceProbeNode">
+      <TresMesh
+        :geometry="modelData.spaceProbeNode.geometry"
+        :material="modelData.spaceProbeNode.material"
+      />
+    </template>
+    <template v-else>
+      <TresMesh :material="probeMaterial">
+        <TresSphereGeometry :args="[1, 16, 16]" />
+      </TresMesh>
+    </template>
 
     <TresPointLight
       ref="probeLight"

@@ -1,7 +1,11 @@
+<!-- eslint-disable no-console -->
 <script setup lang="ts">
+import type { BufferGeometry, Material } from 'three'
+
 import { useLoop } from '@tresjs/core'
 import { MeshStandardMaterial, Color, Group, PointLight } from 'three'
-import { shallowRef } from 'vue'
+import { shallowRef, ref, onMounted } from 'vue'
+
 import { ResourceLoader } from '../utils/ResourceLoader'
 
 const props = defineProps({
@@ -19,9 +23,15 @@ const props = defineProps({
   },
 })
 
-// Load the space station model with nodes and materials
-const { scene } = await ResourceLoader.registerModel('SpaceStationModel', 
-  '/models/space-game/InternationalSpaceStation.glb')
+interface GLTFNode {
+  geometry: BufferGeometry
+  material: Material | Material[]
+}
+
+const modelData = ref({
+  stationNode: null as GLTFNode | null,
+  isLoaded: false,
+})
 
 // Create refs for the station group
 const stationLight = shallowRef(new PointLight())
@@ -33,9 +43,21 @@ const stationMaterial = new MeshStandardMaterial({
   roughness: 0.3,
 })
 
-scene.traverse((object: { isMesh: any; name: string; material: MeshStandardMaterial }) => {
-  if (object.isMesh && object.name === 'InternationalSpaceStation_mesh') {
-    object.material = stationMaterial
+onMounted(async () => {
+  try {
+    const result = await ResourceLoader.registerModel('SpaceStationModel',
+      '/models/space-game/InternationalSpaceStation.glb')
+    if (result?.nodes?.InternationalSpaceStation_mesh) {
+      modelData.value.stationNode = result.nodes.InternationalSpaceStation_mesh as GLTFNode
+      modelData.value.isLoaded = true
+      console.log('SpaceStation model loaded successfully')
+    }
+    else {
+      console.error('SpaceStation missing SpaceStation node')
+    }
+  }
+  catch (error) {
+    console.error('Failed to load SpaceStation model:', error)
   }
 })
 
@@ -57,7 +79,17 @@ useLoop().onBeforeRender(({ elapsed }) => {
     :rotation="props.rotation"
     :scale="[props.scale, props.scale, props.scale]"
   >
-    <primitive :object="scene" />
+    <template v-if="modelData.isLoaded && modelData.stationNode">
+      <TresMesh
+        :geometry="modelData.stationNode.geometry"
+        :material="modelData.stationNode.material"
+      />
+    </template>
+    <template v-else>
+      <TresMesh :material="stationMaterial">
+        <TresBoxGeometry :args="[4, 1, 2]" />
+      </TresMesh>
+    </template>
 
     <TresPointLight
       ref="stationLight"
