@@ -1,15 +1,52 @@
+<!-- eslint-disable no-console -->
 <script setup lang="ts">
+import type { BufferGeometry, Material } from 'three'
+
 import { useLoop } from '@tresjs/core'
-import { Group } from 'three'
-import { inject, shallowRef } from 'vue'
-import type { GameStore } from '../GameStore'
-import { ResourceLoader } from '../utils/ResourceLoader'
+import { Group, MeshStandardMaterial, Color } from 'three'
+import { inject, shallowRef, ref, onMounted } from 'vue'
+
 import type { ObjectData } from '../store/types'
+import type { GameStore } from '../GameStore'
+
+import { ResourceLoader } from '../utils/ResourceLoader'
 
 const gameStore: GameStore = inject('gameStore') as GameStore
 const rocksGroupRef = shallowRef(new Group())
 
-const { nodes, materials } = await ResourceLoader.registerModel('RockModel', '/models/space-game/rock.gltf')
+const fallbackMaterial = new MeshStandardMaterial({
+  color: new Color(0x888888),
+  roughness: 1,
+  metalness: 0.2,
+})
+
+interface GLTFNode {
+  geometry: BufferGeometry
+  material: Material | Material[]
+}
+
+const modelData = ref({
+  stoneNode: null as GLTFNode | null,
+  isLoaded: false,
+})
+
+onMounted(async () => {
+  try {
+    const result = await ResourceLoader.registerModel('RockModel', '/models/space-game/Stone.glb')
+    if (result?.nodes?.Stone) {
+      modelData.value.stoneNode = result.nodes.Stone as GLTFNode
+      modelData.value.isLoaded = true
+      console.log('RockModel loaded successfully')
+    }
+    else {
+      console.error('RockModel missing Stone node')
+    }
+  }
+  catch (error) {
+    console.error('Failed to load RockModel:', error)
+  }
+})
+
 const { clock } = gameStore.mutation
 
 useLoop().onBeforeRender(() => {
@@ -34,16 +71,21 @@ useLoop().onBeforeRender(() => {
       :scale="[data.scale, data.scale, data.scale]"
     >
       <TresGroup
-        :position="[-0.016298329457640648, -0.012838120572268963, 0.24073271453380585]"
-        :rotation="[3.0093872578726644, 0.27444228385461117, -0.22745113653772078]"
-        :scale="[20, 20, 20]"
+        :position="[-0.016, -0.012, 0.24]"
+        :rotation="[3.00, 0.27, -0.22]"
+        :scale="[1, 1, 1]"
       >
-        <TresMesh
-          :geometry="nodes.node_id4_Material_52_0.geometry"
-          :material="materials.Material_52"
-          :material-roughness="1"
-          :material-metalness="1"
-        />
+        <template v-if="modelData.isLoaded && modelData.stoneNode">
+          <TresMesh
+            :geometry="modelData.stoneNode.geometry"
+            :material="modelData.stoneNode.material"
+          />
+        </template>
+        <template v-else>
+          <TresMesh :material="fallbackMaterial">
+            <TresIcosahedronGeometry :args="[0.5, 1]" />
+          </TresMesh>
+        </template>
       </TresGroup>
     </TresGroup>
   </TresGroup>
