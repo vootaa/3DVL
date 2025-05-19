@@ -183,6 +183,8 @@ export function initializeActions(gameStore: any) {
       return
     }
 
+    gameStore.sound = sound
+
     if (sound) {
       gameStore.audioSystem.resumeAll()
       if (gameStore.gameMode !== GameMode.None) {

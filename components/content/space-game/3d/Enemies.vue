@@ -59,7 +59,7 @@ onMounted(async () => {
       }
     }
     else {
-      console.error('PodModel missing expected structure', result)
+      console.error('PodModel model loaded but nodes are missing')
       modelData.value.isLoaded = false
     }
   }
@@ -90,7 +90,7 @@ useLoop().onBeforeRender(() => {
     v-for="enemy, i of gameStore.enemies"
     :key="i"
     ref="ref"
-    :scale="[5, 5, 5]"
+    :scale="[20, 20, 20]"
   >
     <TresMesh
       :position="[0, 0, 50]"

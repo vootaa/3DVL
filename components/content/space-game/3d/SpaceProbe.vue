@@ -49,14 +49,14 @@ onMounted(async () => {
     if (result?.nodes?.SpaceProbe_mesh) {
       modelData.value.spaceProbeNode = result.nodes.SpaceProbe_mesh as GLTFNode
       modelData.value.isLoaded = true
-      console.log('SpaceProbe model loaded successfully')
+      console.log('SpaceProbeModel loaded successfully')
     }
     else {
       console.error('SpaceProbe missing SpaceProbe node')
     }
   }
   catch (error) {
-    console.error('Failed to load SpaceProbe model:', error)
+    console.error('Failed to load SpaceProbeModel:', error)
   }
 })
 

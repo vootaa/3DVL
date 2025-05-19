@@ -1,8 +1,10 @@
 <!-- eslint-disable no-console -->
 <script setup lang="ts">
+import type { BufferGeometry, Material } from 'three'
+
 import { useLoop } from '@tresjs/core'
 import { BoxGeometry, Color, Group, MeshBasicMaterial, PointLight, Vector3 } from 'three'
-import { onMounted, onUnmounted, inject, shallowRef, computed, watch } from 'vue'
+import { onMounted, onUnmounted, inject, shallowRef, computed, watch, ref } from 'vue'
 
 // eslint-disable-next-line import/namespace
 import type { GameStore } from '../GameStore'
@@ -10,29 +12,57 @@ import type { GameStore } from '../GameStore'
 import { GameMode, ObservationMode } from '../store/constants'
 import { ResourceLoader } from '../utils/ResourceLoader'
 
-const modelLoaded = ref(false)
-const nodes = ref(null)
+interface GLTFNode {
+  geometry: BufferGeometry
+  material: Material | Material[]
+}
 
-const loadShipModel = async () => {
+interface ShipModelData {
+  'Renault_0'?: GLTFNode | null // Light_Metal
+  'Renault_1'?: GLTFNode | null // Medium_Metal
+  'Renault_2'?: GLTFNode | null // Dark_Metal
+  'Renault_3'?: GLTFNode | null // Shield
+  'Renault_4'?: GLTFNode | null // Engine_Glow
+  'Renault_5'?: GLTFNode | null // Blue_Glow
+  isLoaded: boolean
+}
+
+const modelData = ref<ShipModelData>({
+  isLoaded: false,
+})
+
+onMounted(async () => {
   try {
-    console.log('Starting to load ship model...')
-    const result = await ResourceLoader.registerModel('ShipModel', '/models/space-game/ship.gltf')
+    const result = await ResourceLoader.registerModel('ShipModel', '/models/space-game/Ship.glb')
+    if (result?.nodes) {
+      modelData.value = {
+        Renault_0: result.nodes.Renault_0 as GLTFNode | undefined || null,
+        Renault_1: result.nodes.Renault_1 as GLTFNode | undefined || null,
+        Renault_2: result.nodes.Renault_2 as GLTFNode | undefined || null,
+        Renault_3: result.nodes.Renault_3 as GLTFNode | undefined || null,
+        Renault_4: result.nodes.Renault_4 as GLTFNode | undefined || null,
+        Renault_5: result.nodes.Renault_5 as GLTFNode | undefined || null,
+        isLoaded: true,
+      }
 
-    if (result && result.nodes) {
-      nodes.value = result.nodes
-      modelLoaded.value = true
-      console.log('Ship model loaded successfully:', Object.keys(result.nodes))
+      if (!modelData.value['Renault_1']) {
+        console.error('Missing main Ship component (Renault_1)')
+        modelData.value.isLoaded = false
+      }
+      else {
+        console.log('ShipModel loaded successfully')
+      }
     }
     else {
-      console.error('Ship model loaded but nodes are missing')
+      console.error('ShipModel loaded but nodes are missing')
+      modelData.value.isLoaded = false
     }
   }
   catch (error) {
-    console.error('Failed to load ship model:', error)
+    console.error('Failed to load ShipModel:', error)
+    modelData.value.isLoaded = false
   }
-}
-
-loadShipModel()
+})
 
 const geometry = new BoxGeometry(1, 1, 40)
 const lightgreen = new Color('lightgreen')
@@ -289,46 +319,50 @@ useLoop().onBeforeRender(() => {
           :material="laserMaterial"
         />
       </TresGroup>
-      <TresGroup
-        v-if="modelLoaded && nodes"
-        :rotation="[Math.PI / 2, Math.PI, 0]"
-      >
-        <TresMesh
-          name="Renault_(S,_T1)_0"
-          :geometry="nodes['Renault_(S,_T1)_0'].geometry"
-        >
-          <TresMeshStandardMaterial color="#070707" />
-        </TresMesh>
-        <TresMesh
-          name="Renault_(S,_T1)_1"
-          :geometry="nodes['Renault_(S,_T1)_1'].geometry"
-        >
-          <TresMeshStandardMaterial color="black" />
-        </TresMesh>
-        <TresMesh
-          name="Renault_(S,_T1)_2"
-          :geometry="nodes['Renault_(S,_T1)_2'].geometry"
-        >
-          <TresMeshStandardMaterial color="#070707" />
-        </TresMesh>
-        <TresMesh
-          name="Renault_(S,_T1)_3"
-          :geometry="nodes['Renault_(S,_T1)_3'].geometry"
-        >
-          <TresMeshBasicMaterial color="lightblue" />
-        </TresMesh>
-        <TresMesh
-          name="Renault_(S,_T1)_4"
-          :geometry="nodes['Renault_(S,_T1)_4'].geometry"
-        >
-          <TresMeshBasicMaterial color="white" />
-        </TresMesh>
-        <TresMesh
-          name="Renault_(S,_T1)_5"
-          :geometry="nodes['Renault_(S,_T1)_5'].geometry"
-        >
-          <TresMeshBasicMaterial color="teal" />
-        </TresMesh>
+      <TresGroup :rotation="[Math.PI / 2, Math.PI, 0]">
+        <template v-if="modelData.isLoaded">
+          <!-- Light_Metal (Renault_0) -->
+          <TresMesh
+            v-if="modelData.Renault_0"
+            :geometry="modelData.Renault_0.geometry"
+            :material="modelData.Renault_0.material"
+          />
+
+          <!-- Medium_Metal (Renault_1) -->
+          <TresMesh
+            v-if="modelData.Renault_1"
+            :geometry="modelData.Renault_1.geometry"
+            :material="modelData.Renault_1.material"
+          />
+
+          <!-- Dark_Metal (Renault_2) -->
+          <TresMesh
+            v-if="modelData.Renault_2"
+            :geometry="modelData.Renault_2.geometry"
+            :material="modelData.Renault_2.material"
+          />
+
+          <!-- Shield (Renault_3) -->
+          <TresMesh
+            v-if="modelData.Renault_3"
+            :geometry="modelData.Renault_3.geometry"
+            :material="modelData.Renault_3.material"
+          />
+
+          <!-- Engine_Glow (Renault_4) -->
+          <TresMesh
+            v-if="modelData.Renault_4"
+            :geometry="modelData.Renault_4.geometry"
+            :material="modelData.Renault_4.material"
+          />
+
+          <!-- Blue_Glow (Renault_5) -->
+          <TresMesh
+            v-if="modelData.Renault_5"
+            :geometry="modelData.Renault_5.geometry"
+            :material="modelData.Renault_5.material"
+          />
+        </template>
       </TresGroup>
     </TresGroup>
     <TresMesh

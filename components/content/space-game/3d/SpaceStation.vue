@@ -50,14 +50,14 @@ onMounted(async () => {
     if (result?.nodes?.InternationalSpaceStation_mesh) {
       modelData.value.stationNode = result.nodes.InternationalSpaceStation_mesh as GLTFNode
       modelData.value.isLoaded = true
-      console.log('SpaceStation model loaded successfully')
+      console.log('SpaceStationModel loaded successfully')
     }
     else {
-      console.error('SpaceStation missing SpaceStation node')
+      console.error('SpaceStationModel missing SpaceStation node')
     }
   }
   catch (error) {
-    console.error('Failed to load SpaceStation model:', error)
+    console.error('Failed to load SpaceStationModel:', error)
   }
 })
 

@@ -332,7 +332,7 @@ export const ResourceLoader = reactive({
     ])
 
     await Promise.all([
-      this.registerModel('ShipModel', '/models/space-game/ship.gltf'),
+      this.registerModel('ShipModel', '/models/space-game/Ship.glb'),
       this.registerModel('RockModel', '/models/space-game/Stone.glb'),
       this.registerModel('PodModel', '/models/space-game/Pod.glb'),
       this.registerModel('SpaceStationModel', '/models/space-game/InternationalSpaceStation.glb'),

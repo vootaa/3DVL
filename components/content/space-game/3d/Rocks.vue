@@ -73,7 +73,7 @@ useLoop().onBeforeRender(() => {
       <TresGroup
         :position="[-0.016, -0.012, 0.24]"
         :rotation="[3.00, 0.27, -0.22]"
-        :scale="[1, 1, 1]"
+        :scale="[5, 5, 5]"
       >
         <template v-if="modelData.isLoaded && modelData.stoneNode">
           <TresMesh
