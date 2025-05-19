@@ -280,7 +280,6 @@ export function initializeActions(gameStore: any) {
         if (!warping) {
           warping = true
           playSound('warp', true, 0.5)
-          gameStore.actions.addScoreNotification('Warp!', 0, false)
         }
       }
       else if (t > TRACK_POSITIONS.WARP_RESET) {
