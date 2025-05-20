@@ -14,9 +14,11 @@ const props = defineProps({
     validator: (value: string) => ['gameOver', 'switchConfirm'].includes(value),
   },
   currentMode: {
-    type: Number as unknown as () => GameMode,
+    type: [Number, String] as PropType<GameMode>,
     required: true,
-    validator: (value: number) => Object.values(GameMode).includes(value as unknown as GameMode),
+    validator: (value: number | string) => typeof value === 'number' 
+        ? Object.values(GameMode).includes(value as GameMode)
+        : ['Battle', 'Explore', 'None'].includes(value as string),
   },
   battleScore: {
     type: Number,

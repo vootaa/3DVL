@@ -201,7 +201,7 @@ const comboSystem = computed(() => gameStore.comboSystem)
 }
 
 .control-value {
-    font-size: 1.8em;
+    font-size: 1.5em;
     line-height: 1.1em;
     margin-top: 2px;
 }
@@ -221,7 +221,7 @@ const comboSystem = computed(() => gameStore.comboSystem)
 .score-notifications {
     position: absolute;
     top: 100px;
-    width: 400px;
+    width: 320px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -248,8 +248,8 @@ const comboSystem = computed(() => gameStore.comboSystem)
     margin-bottom: 10px;
     color: #ffcc00;
     font-family: 'Kode Mono', monospace;
-    font-weight: 700;
-    font-size: 1.8em;
+    font-weight: 500;
+    font-size: 1.5em;
     display: flex;
     justify-content: space-between;
     width: calc(100% - 40px);
@@ -310,8 +310,8 @@ const comboSystem = computed(() => gameStore.comboSystem)
 
 .combo-count {
     font-family: 'Kode Mono', monospace;
-    font-weight: 700;
-    font-size: 3em;
+    font-weight: 500;
+    font-size: 2em;
     color: #00ffff;
     text-shadow: 0 0 15px #00ffff, 0 0 25px #ffffff;
     letter-spacing: -2px;
@@ -319,9 +319,9 @@ const comboSystem = computed(() => gameStore.comboSystem)
 
 .combo-text {
     font-family: 'Kode Mono', monospace;
-    font-size: 1.4em;
+    font-size: 1.2em;
     color: #ffffff;
-    font-weight: 700;
+    font-weight: 500;
     text-shadow: 0 0 10px #ffffff;
     letter-spacing: 1px;
 }
@@ -355,7 +355,7 @@ const comboSystem = computed(() => gameStore.comboSystem)
 /* Responsive design */
 @media only screen and (max-width: 900px) {
     .score-notifications {
-        width: 300px;
+        width: 200px;
     }
     
     .score-notifications-left {
@@ -367,7 +367,7 @@ const comboSystem = computed(() => gameStore.comboSystem)
     }
     
     .score-notification {
-        font-size: 1.5em;
+        font-size: 1.2em;
         padding: 8px 12px;
     }
 
@@ -376,11 +376,11 @@ const comboSystem = computed(() => gameStore.comboSystem)
     }
 
     .notification-text {
-        font-size: 1.2em; /* Adjusted font size for smaller screens */
+        font-size: 1em; /* Adjusted font size for smaller screens */
     }
     
     .notification-points {
-        font-size: 1.2em; /* Adjusted font size for smaller screens */
+        font-size: 1em; /* Adjusted font size for smaller screens */
     }
 }
 </style>
