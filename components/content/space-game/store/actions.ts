@@ -37,12 +37,30 @@ export function initializeActions(gameStore: any) {
     gameStore.stardust = 0
     gameStore.loopCount = 0
 
+    // Reset observationMode
+    gameStore.observationMode = ObservationMode.None
+    gameStore.currentPointOfInterest = null
+
+    // Reset time
+    gameStore.mutation.startTime = Date.now()
+    gameStore.timeManager.actions.reset(false)
+
+    // Reset combo system
+    gameStore.comboSystem.count = 0
+    gameStore.comboSystem.active = false
+    gameStore.comboSystem.lastHitTime = 0
+    clearTimeout(gameStore.comboSystem.resetTimer)
+
+    // Reset position
+    gameStore.mutation.t = 0
+    gameStore.mutation.position.set(0, 0, 0)
+
+    const currentIsBattleMode = gameStore.gameMode === GameMode.Battle
+
     if (switchMode) {
-      gameStore.gameMode = gameStore.gameMode === GameMode.Battle
-        ? GameMode.Explore : GameMode.Battle
+      gameStore.gameMode = currentIsBattleMode ? GameMode.Explore : GameMode.Battle
     }
     
-    const currentIsBattleMode = gameStore.gameMode === GameMode.Battle
     if (currentIsBattleMode) {
       gameStore.initialEnemyCount = 10
       gameStore.initialRockCount = 100
@@ -60,23 +78,6 @@ export function initializeActions(gameStore: any) {
 
     gameStore.mutation.particles = randomData(gameStore.particlesCount,
       track, 100, 1, () => 0.5 + Math.random() * 0.8, guid)
-
-    // Reset time
-    gameStore.mutation.startTime = Date.now()
-    gameStore.timeManager.actions.reset(false)
-
-    // Reset combo system
-    gameStore.comboSystem.count = 0
-    gameStore.comboSystem.active = false
-    gameStore.comboSystem.lastHitTime = 0
-    clearTimeout(gameStore.comboSystem.resetTimer)
-
-    // Reset position
-    gameStore.mutation.t = 0
-    gameStore.mutation.position.set(0, 0, 0)
-
-    gameStore.observationMode = ObservationMode.None
-    gameStore.currentPointOfInterest = null
 
   }
 
@@ -245,7 +246,8 @@ export function initializeActions(gameStore: any) {
   }
 
   gameStore.actions.updateMouse = ({ clientX, clientY }: { clientX: number; clientY: number }) => {
-    if (gameStore.observationMode === ObservationMode.None) {
+    if (gameStore.gameMode === GameMode.Battle
+      || (gameStore.gameMode === GameMode.Explore && gameStore.observationMode === ObservationMode.None)) {
       gameStore.mutation.mouse.x = clientX - window.innerWidth / 2
       gameStore.mutation.mouse.y = clientY - window.innerHeight / 2
     }

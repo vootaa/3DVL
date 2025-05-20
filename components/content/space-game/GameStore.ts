@@ -90,7 +90,7 @@ export const gameStore = reactive({
     binormal: new Vector3(),
     normal: new Vector3(),
     clock: new Clock(false),
-    mouse: new Vector2(-250, 50),
+    mouse: new Vector2(0, 0), 
 
     // Re-usable objects
     dummy: new Object3D(),

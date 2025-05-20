@@ -76,12 +76,12 @@ const gameStore = inject('gameStore') as GameStore
 const mutation = gameStore.mutation
 const { clock, mouse, ray } = mutation
 
-const main = shallowRef(new Group())
-const laserGroup = shallowRef(new Group())
-const laserLight = shallowRef(new PointLight())
-const exhaust = shallowRef(new Group())
-const cross = shallowRef(new Group())
-const target = shallowRef(new Group())
+const main = shallowRef<Group>(new Group())
+const laserGroup = shallowRef<Group | Group[]>(new Group())
+const laserLight = shallowRef<PointLight>(new PointLight())
+const exhaust = shallowRef<Group>(new Group())
+const cross = shallowRef<Group>(new Group())
+const target = shallowRef<Group>(new Group())
 
 // Add computed property to check current game mode
 const isBattleMode = computed(() => gameStore.gameMode === GameMode.Battle)
@@ -162,8 +162,10 @@ onUnmounted(() => {
   window.removeEventListener('resize', debouncedUpdateBoundaries)
 })
 
-watch(() => gameStore.camera.position.z, () => {
-  updateBoundaries()
+watch(() => gameStore.camera?.position.z, (newValue) => {
+  if (newValue !== undefined && gameStore.camera) {
+    updateBoundaries()
+  }
 })
 
 useLoop().onBeforeRender(() => {
