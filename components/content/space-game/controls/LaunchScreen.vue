@@ -15,6 +15,27 @@ const props = defineProps({
   },
 })
 
+const isLoadingSectionCollapsed = ref(false)
+const isTechCreditsCollapsed = ref(true)
+
+const toggleLoadingSection = () => {
+  isLoadingSectionCollapsed.value = !isLoadingSectionCollapsed.value
+  if (!isLoadingSectionCollapsed.value) {
+    isTechCreditsCollapsed.value = true
+  } 
+}
+
+const toggleTechCredits = () => {
+  isTechCreditsCollapsed.value = !isTechCreditsCollapsed.value
+  if (!isTechCreditsCollapsed.value) {
+    isLoadingSectionCollapsed.value = true
+  }
+}
+
+const allSectionsCollapsed = computed(() => {
+  return isLoadingSectionCollapsed.value && isTechCreditsCollapsed.value
+})
+
 const emit = defineEmits(['launch'])
 
 const isResourcesLoaded = ref(false)
@@ -96,14 +117,17 @@ const launchMode = (mode: 'battle' | 'explore') => {
 
 <template>
   <div class="launch-screen">
-    <div class="content">
+    <div class="content" :class="{ 'all-collapsed': allSectionsCollapsed }">
       <h1>Space Game</h1>
       <h2 class="subtitle">
         A Web3D gaming & visualization of the Kadena Chainweb braided structure
+        <span class="fold-button" @click.stop="toggleLoadingSection">
+          {{ isLoadingSectionCollapsed ? '[+]' : '[-]' }}
+        </span>
       </h2>
 
-      <!-- Progress section - always visible -->
-      <div class="loading-section">
+      <!-- Progress section -->
+      <div class="loading-section" :class="{ 'collapsed': isLoadingSectionCollapsed }">
         <div
           v-if="!isResourcesLoaded"
           class="spinner"
@@ -148,6 +172,8 @@ const launchMode = (mode: 'battle' | 'explore') => {
               <span class="resource-label">font:</span>
               <span class="resource-count">{{ fontProgress }}</span>
             </div>
+            <div class="resource-type empty">
+            </div>
           </div>
 
           <div
@@ -185,6 +211,7 @@ const launchMode = (mode: 'battle' | 'explore') => {
         <button
           class="btn game-btn"
           @click="launchMode('battle')"
+          :class="{ 'centered': allSectionsCollapsed }"
         >
           Battle
         </button>
@@ -197,7 +224,7 @@ const launchMode = (mode: 'battle' | 'explore') => {
       </div>
 
       <!-- Tech Stack Section -->
-      <div class="tech-stack">
+      <div class="tech-stack" :class="{ 'collapsed': isTechCreditsCollapsed }">
         <div class="stack-title">
           Technology Stack:
         </div>
@@ -214,8 +241,15 @@ const launchMode = (mode: 'battle' | 'explore') => {
         </div>
       </div>
 
+      <!-- Tech & Credits toggle button -->
+      <div class="tech-credits-toggle" @click="toggleTechCredits">
+        <span class="fold-button">
+          {{ isTechCreditsCollapsed ? '[+] Technology Stacks & Credits' : '[-] Technology Stacks & Credits' }}
+        </span>
+      </div>
+
       <!-- Credits footer -->
-      <div class="credits">
+      <div class="credits" :class="{ 'collapsed': isTechCreditsCollapsed }">
         <p>Developed by Vootaa Labs</p>
         <p class="credit-note">
           Based on 0xca0a's R3F game prototype
@@ -370,6 +404,31 @@ h1 {
   justify-content: center;
   gap: 3em;
   margin-bottom: 40px;
+  transition: margin 0.3s ease;
+}
+
+.buttons.centered {
+  margin: auto 0;
+  padding: 40px 0;
+}
+
+.content.all-collapsed {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.content.all-collapsed h1 {
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+.content.all-collapsed .subtitle {
+  margin-bottom: 20px;
+}
+
+.content.all-collapsed .tech-credits-toggle {
+  margin-top: 20px;
 }
 
 .btn {
@@ -483,7 +542,8 @@ h1 {
 
 .resource-type-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, auto);
   gap: 8px;
   margin-top: 15px;
   margin-bottom: 10px;
@@ -575,5 +635,72 @@ h1 {
 
 .debug-button:hover {
   color: #6495ed;
+}
+
+.fold-button {
+  display: inline-block;
+  color: #6495ed;
+  cursor: pointer;
+  margin-left: 5px;
+  font-size: 0.9em;
+  font-weight: normal;
+  user-select: none;
+  transition: color 0.2s;
+}
+
+.fold-button:hover {
+  color: #8bb8ff;
+}
+
+.tech-credits-toggle {
+  text-align: center;
+  margin-top: auto;
+  margin-bottom: 10px;
+  color: #aaa;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tech-credits-toggle:hover .fold-button {
+  color: #8bb8ff;
+}
+
+.tech-credits-toggle .fold-button {
+  font-size: 0.9em;
+  margin-left: 0;
+}
+
+.tech-stack.collapsed {
+  height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+}
+
+.tech-stack {
+  transition: height 0.3s, opacity 0.3s, margin 0.3s, padding 0.3s;
+}
+
+.subtitle .fold-button {
+  font-size: 0.8em;
+  vertical-align: middle;
+}
+
+.collapsed {
+  height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  transition: height 0.3s, opacity 0.3s, margin 0.3s, padding 0.3s;
+}
+
+.loading-section {
+  transition: height 0.3s, opacity 0.3s, margin 0.3s;
+}
+
+.credits {
+  transition: height 0.3s, opacity 0.3s, margin 0.3s, padding 0.3s;
 }
 </style>
