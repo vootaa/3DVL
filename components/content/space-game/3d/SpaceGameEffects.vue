@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { extend, useLoop, useTres } from '@tresjs/core'
-import { shallowRef, onMounted, nextTick } from 'vue'
+import { shallowRef, onMounted, onUnmounted, nextTick, watch } from 'vue'
 
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
@@ -28,6 +28,7 @@ watch([() => sizes.width.value, () => sizes.height.value], () => {
 
 onUnmounted(() => {
   if (composer.value) {
+    composer.value.dispose()
   }
 })
 

@@ -117,6 +117,14 @@ export async function initializeAudio(camera: PerspectiveCamera | Camera): Promi
       })
     },
 
+    stopAll: () => {
+      Object.values(audioObjects).forEach((sound) => {
+        if (sound.buffer && sound.isPlaying) {
+          sound.stop()
+        }
+      })
+    },
+
     setGlobalVolume: (volume: number) => {
       if (listener) {
         listener.gain.gain.value = Math.max(0, Math.min(1, volume))

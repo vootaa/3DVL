@@ -195,7 +195,7 @@ export function initializeActions(gameStore: any) {
       }
     }
     else {
-      gameStore.audioSystem.pauseAll()
+      gameStore.audioSystem.stopAll()
     }
   }
 
@@ -430,6 +430,11 @@ export function initializeActions(gameStore: any) {
     // Get point of interest data
     const poi = POINTS_OF_INTEREST[pointOfInterestKey]
     if (!poi) return
+
+    // When entering observation mode, pause background sounds but keep warp sound playing if active
+    if (pointOfInterestKey && gameStore.audioSystem && gameStore.sound) {
+      gameStore.audioSystem.stop('warp')
+    }
 
     // Store current position and pause time info
     mutation.previousPosition.copy(mutation.position)
