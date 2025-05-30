@@ -34,7 +34,6 @@ useLoop().onAfterRender(({ camera }) => {
   const lightPathOffset = (t + 1 / track.parameters.path.getLength()) % 1
   const lightPos = track.parameters.path.getPointAt(lightPathOffset).multiplyScalar(scale)
   groupRef.value.position.copy(lightPos)
-  groupRef.value.position.copy(lightPos)
   groupRef.value.quaternion.setFromRotationMatrix(camera.matrix)
 })
 </script>
