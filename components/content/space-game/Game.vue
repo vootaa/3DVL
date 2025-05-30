@@ -9,7 +9,6 @@ import Rings from './3d/Rings.vue'
 import Chainweb3D from './3d/Chainweb3D.vue'
 import PetersenGraphGroup from './3d/PetersenGraphGroup.vue'
 import InfoLabels from './3d/InfoLabels.vue'
-import Enemies from './3d/Enemies.vue'
 import Rocks from './3d/Rocks.vue'
 import Track from './3d/Track.vue'
 import Explosions from './3d/Explosions.vue'
@@ -40,7 +39,6 @@ else {
       <Chainweb3D />
       <PetersenGraphGroup />
       <InfoLabels />
-      <Enemies />
       <Planets />
       <Rocks />
       <SpaceObjects />

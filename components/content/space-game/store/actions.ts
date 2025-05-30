@@ -245,8 +245,19 @@ export function initializeActions(gameStore: any) {
     return false
   }
 
+  gameStore.actions.updateMouse = (mouse: { clientX: number; clientY: number }) => {
+    if (gameStore.gameMode === GameMode.None) {
+      return
+    } else if (gameStore.gameMode === GameMode.Battle
+      || (gameStore.gameMode === GameMode.Explore && gameStore.observationMode === ObservationMode.None)) {
+      gameStore.mutation.mouse.set(mouse.clientX - window.innerWidth / 2, mouse.clientY - window.innerHeight / 2)
+    }
+  }
+
   gameStore.actions.updateMouse = ({ clientX, clientY }: { clientX: number; clientY: number }) => {
-    if (gameStore.gameMode === GameMode.Battle
+    if (gameStore.gameMode === GameMode.None) {
+      return
+    } else if (gameStore.gameMode === GameMode.Battle
       || (gameStore.gameMode === GameMode.Explore && gameStore.observationMode === ObservationMode.None)) {
       gameStore.mutation.mouse.x = clientX - window.innerWidth / 2
       gameStore.mutation.mouse.y = clientY - window.innerHeight / 2

@@ -255,7 +255,7 @@ const launchMode = (mode: 'battle' | 'explore') => {
           Based on 0xca0a's R3F game prototype
         </p>
         <p class="credit-tools">
-          AI-assisted: GitHub Copilot & Claude 3.7
+          AI-assisted: GitHub Copilot & Claude Sonnet
         </p>
         <p class="credit-fonts">
           Fonts: Kode Mono & Teko
@@ -288,9 +288,11 @@ const launchMode = (mode: 'battle' | 'explore') => {
   align-items: center;
   z-index: 1000;
   font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  pointer-events: none; /* Allow mouse events to pass through background area */
 }
 
 .content {
+  pointer-events: auto; /* Restore mouse events for content area */
   text-align: center;
   color: #fff;
   border: 2px solid #6495ed;
