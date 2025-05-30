@@ -3,7 +3,7 @@
 import type { BufferGeometry, Material } from 'three'
 
 import { useLoop } from '@tresjs/core'
-import { BoxGeometry, Color, Group, MeshBasicMaterial, PointLight, Vector3 } from 'three'
+import { BoxGeometry, Color, Group, MeshBasicMaterial, PerspectiveCamera, PointLight, Vector3 } from 'three'
 import { onMounted, onUnmounted, inject, shallowRef, computed, watch, ref } from 'vue'
 
 // eslint-disable-next-line import/namespace
@@ -116,7 +116,8 @@ const boundaries = shallowRef<{
 
 // Function to update boundaries based on current screen size
 function updateBoundaries(): void {
-  if (!gameStore.camera || gameStore.camera.position.z <= 0) {
+  const camera = gameStore.camera as unknown as PerspectiveCamera | undefined
+  if (!camera || camera.position.z <= 0) {
     setTimeout(updateBoundaries, 100)
     return
   }
@@ -126,7 +127,7 @@ function updateBoundaries(): void {
   const effectiveWidth: number = width * (1 - 2 * margins.x)
   const effectiveHeight: number = height * (1 - 2 * margins.y)
 
-  const cameraZ: number = Math.max(gameStore.camera.position.z, 100)
+  const cameraZ: number = Math.max(camera.position.z, 100)
   const worldWidth: number = Math.tan(Math.PI * gameStore.mutation.fov / 360) * cameraZ * 2
   const worldHeight: number = worldWidth / (window.innerWidth / window.innerHeight)
 
@@ -162,7 +163,10 @@ onUnmounted(() => {
   window.removeEventListener('resize', debouncedUpdateBoundaries)
 })
 
-watch(() => gameStore.camera?.position.z, (newValue) => {
+watch(() => {
+  const camera = gameStore.camera as unknown as PerspectiveCamera | undefined
+  return camera?.position.z
+}, (newValue) => {
   if (newValue !== undefined && gameStore.camera) {
     updateBoundaries()
   }
