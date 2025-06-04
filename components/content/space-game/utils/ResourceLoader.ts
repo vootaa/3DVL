@@ -36,22 +36,28 @@ export const ResourceLoader = reactive({
     const stats = this.loadingStats
     stats.elapsedTime = Date.now() - stats.startTime
 
-    stats[ResourceType.Component].total = this.resources.filter(r => r.type === ResourceType.Component).length
-    stats[ResourceType.Model].total = this.resources.filter(r => r.type === ResourceType.Model).length
-    stats[ResourceType.Texture].total = this.resources.filter(r => r.type === ResourceType.Texture).length
-    stats[ResourceType.Audio].total = this.resources.filter(r => r.type === ResourceType.Audio).length
-    stats[ResourceType.Font].total = this.resources.filter(r => r.type === ResourceType.Font).length
+    // Reset counters
+    Object.values(ResourceType).forEach(type => {
+      stats[type].total = 0;
+      stats[type].loaded = 0;
+    });
 
-    stats[ResourceType.Component].loaded = this.resources.filter(r => r.type === ResourceType.Component && r.loaded).length
-    stats[ResourceType.Model].loaded = this.resources.filter(r => r.type === ResourceType.Model && r.loaded).length
-    stats[ResourceType.Texture].loaded = this.resources.filter(r => r.type === ResourceType.Texture && r.loaded).length
-    stats[ResourceType.Audio].loaded = this.resources.filter(r => r.type === ResourceType.Audio && r.loaded).length
-    stats[ResourceType.Font].loaded = this.resources.filter(r => r.type === ResourceType.Font && r.loaded).length
+    // Single traversal to count all resource types
+    for (const resource of this.resources) {
+      stats[resource.type].total++;
+      if (resource.loaded) {
+        stats[resource.type].loaded++;
+      }
+    }
 
-    const totalLoaded = stats[ResourceType.Component].loaded + stats[ResourceType.Model].loaded
-      + stats[ResourceType.Texture].loaded + stats[ResourceType.Audio].loaded + stats[ResourceType.Font].loaded
+    // Calculate total loading progress
+    const totalLoaded = Object.values(ResourceType).reduce(
+      (sum, type) => sum + stats[type].loaded, 0
+    );
 
-    this.loadingProgress = Math.floor((totalLoaded / this.totalResources) * 100)
+    this.loadingProgress = this.totalResources > 0 
+      ? Math.floor((totalLoaded / this.totalResources) * 100)
+      : 0;
   },
 
   registerResource(name: string, modulePromise: Promise<any>,
