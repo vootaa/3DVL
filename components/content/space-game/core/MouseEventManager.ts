@@ -16,65 +16,75 @@ export class MouseEventManager {
   private lastMouseX = 0
   private lastMouseY = 0
   private gameStore: GameStore | null = null
-
+  
+  // Store bound event handlers for easier cleanup
   private boundHandlers = {
-    mousemove: this.handleMouseMove.bind(this),
-    mousedown: this.handleMouseDown.bind(this),
-    mouseup: this.handleMouseUp.bind(this),
-    wheel: this.handleWheel.bind(this)
+    mousemove: (e: Event) => this.handleMouseMove(e as MouseEvent),
+    mousedown: (e: Event) => this.handleMouseDown(e as MouseEvent),
+    mouseup: (e: Event) => this.handleMouseUp(e as MouseEvent),
+    wheel: (e: Event) => this.handleWheel(e as WheelEvent)
   }
 
   constructor() {
-    // Handlers will be initialized when gameStore is set
+    // No additional binding needed, already done in boundHandlers definition
   }
 
   setGameStore(gameStore: GameStore) {
     this.gameStore = gameStore
     this.initializeHandlers()
+    return this // Support chain calls
   }
 
   private initializeHandlers() {
     if (!this.gameStore) return
 
-    // Battle mode handlers
+    // Define state handlers
+    this.handlers.clear()
+    
+    // Battle mode
     this.handlers.set(GameState.BATTLE, {
       onMouseMove: (event: MouseEvent) => {
+        if (!this.gameStore) return
         this.updateShipPosition(event)
       },
-      onMouseDown: (event: MouseEvent) => {
-        this.handleShoot()
+      onMouseDown: () => {
+        if (!this.gameStore || !gameStateManager.canShoot()) return
+        this.gameStore.actions.shoot()
       }
     })
-
-    // Explore mode handlers  
+    
+    // Explore mode
     this.handlers.set(GameState.EXPLORE, {
       onMouseMove: (event: MouseEvent) => {
+        if (!this.gameStore) return
         this.updateShipPosition(event)
       }
     })
-
-    // Observation mode handlers
+    
+    // Observation mode
     this.handlers.set(GameState.OBSERVATION, {
       onMouseMove: (event: MouseEvent) => {
+        if (!this.gameStore || !this.isDragging) return
         this.handleOrbitRotation(event)
       },
       onMouseDown: (event: MouseEvent) => {
         this.startOrbitDrag(event)
       },
-      onMouseUp: (event: MouseEvent) => {
-        this.endOrbitDrag()
+      onMouseUp: () => {
+        this.isDragging = false
       },
       onWheel: (event: WheelEvent) => {
+        if (!this.gameStore) return
         this.handleOrbitZoom(event)
       }
     })
-
-    // Launch screen - no mouse handlers needed
+    
+    // Launch mode - no mouse handling
     this.handlers.set(GameState.LAUNCH, {})
   }
 
   initialize() {
-    if (this.isInitialized || !this.gameStore) return
+    if (this.isInitialized || !this.gameStore) return this
 
     window.addEventListener('mousemove', this.boundHandlers.mousemove)
     window.addEventListener('mousedown', this.boundHandlers.mousedown)
@@ -82,6 +92,7 @@ export class MouseEventManager {
     window.addEventListener('wheel', this.boundHandlers.wheel, { passive: false })
 
     this.isInitialized = true
+    return this // Support chain calls
   }
 
   cleanup() {
@@ -96,56 +107,32 @@ export class MouseEventManager {
   }
 
   private handleMouseMove(event: MouseEvent) {
-    const currentState = gameStateManager.getCurrentState()
-    const handler = this.handlers.get(currentState)
-
-    if (handler?.onMouseMove) {
-      handler.onMouseMove(event)
-    }
+    const handler = this.handlers.get(gameStateManager.getCurrentState())
+    handler?.onMouseMove?.(event)
   }
 
   private handleMouseDown(event: MouseEvent) {
-    const currentState = gameStateManager.getCurrentState()
-    const handler = this.handlers.get(currentState)
-
-    if (handler?.onMouseDown) {
-      handler.onMouseDown(event)
-    }
+    const handler = this.handlers.get(gameStateManager.getCurrentState())
+    handler?.onMouseDown?.(event)
   }
 
   private handleMouseUp(event: MouseEvent) {
-    const currentState = gameStateManager.getCurrentState()
-    const handler = this.handlers.get(currentState)
-
-    if (handler?.onMouseUp) {
-      handler.onMouseUp(event)
-    }
+    const handler = this.handlers.get(gameStateManager.getCurrentState())
+    handler?.onMouseUp?.(event)
   }
 
   private handleWheel(event: WheelEvent) {
-    const currentState = gameStateManager.getCurrentState()
-    const handler = this.handlers.get(currentState)
-
+    const handler = this.handlers.get(gameStateManager.getCurrentState())
     if (handler?.onWheel) {
       event.preventDefault()
       handler.onWheel(event)
     }
   }
 
-  // Specific mouse behavior implementations
   private updateShipPosition(event: MouseEvent) {
     if (!this.gameStore) return
-
     this.gameStore.mutation.mouse.x = event.clientX - window.innerWidth / 2
     this.gameStore.mutation.mouse.y = event.clientY - window.innerHeight / 2
-  }
-
-  private handleShoot() {
-    if (!this.gameStore) return
-
-    if (gameStateManager.canShoot()) {
-      this.gameStore.actions.shoot()
-    }
   }
 
   private startOrbitDrag(event: MouseEvent) {
@@ -155,8 +142,8 @@ export class MouseEventManager {
   }
 
   private handleOrbitRotation(event: MouseEvent) {
-    if (!this.gameStore || !this.isDragging) return
-
+    if (!this.gameStore) return
+    
     const deltaX = event.clientX - this.lastMouseX
     const deltaY = event.clientY - this.lastMouseY
 
@@ -167,13 +154,9 @@ export class MouseEventManager {
     this.lastMouseY = event.clientY
   }
 
-  private endOrbitDrag() {
-    this.isDragging = false
-  }
-
   private handleOrbitZoom(event: WheelEvent) {
     if (!this.gameStore) return
-
+    
     const delta = event.deltaY > 0 ? 5 : -5
     this.gameStore.mutation.orbitDistance = Math.max(30, Math.min(200, this.gameStore.mutation.orbitDistance + delta))
   }
