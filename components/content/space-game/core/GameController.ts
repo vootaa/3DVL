@@ -73,6 +73,14 @@ export class GameController implements IGameController {
     return this.gameStore.modal.show
   }
 
+  isExploreMode(): boolean {
+    return gameStateManager.isExploreMode()
+  }
+
+  isObservationMode(): boolean {
+    return gameStateManager.isObservationMode()
+  }
+
   // State transition methods
   startBattleMode(): boolean {
     if (!gameStateManager.setState(GameState.BATTLE)) return false

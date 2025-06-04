@@ -33,6 +33,8 @@ export interface IGameController {
   canShoot(): boolean
   canObserve(): boolean
   isInteractionBlocked(): boolean
+  isExploreMode(): boolean
+  isObservationMode(): boolean
   startBattleMode(): boolean
   startExploreMode(): boolean
   enterObservation(pointOfInterestKey: keyof typeof POINTS_OF_INTEREST): boolean
