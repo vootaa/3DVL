@@ -25,8 +25,7 @@ export default defineNuxtConfig({
     '@nuxt/devtools',
   ],
 
-  css: ['./assets/css/fonts.css', './assets/css/main.css', '@unocss/reset/tailwind-compat.css', '@tresjs/leches/styles'],
-  declare: ['*.glsl'],
+  css: ['./assets/css/main.css', '@unocss/reset/tailwind-compat.css', '@tresjs/leches/styles'],
 
   tres: {
     devtools: true,
@@ -119,8 +118,11 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [svgLoader()],
+    optimizeDeps: {
+      exclude: ['*.glsl'],
+    },
   },
-
+  
   build: {
     transpile: ['fsevents', 'postprocessing'],
   },

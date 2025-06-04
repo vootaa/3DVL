@@ -52,7 +52,7 @@ const currentGameModeLabel = computed(() => {
         SPEED
       </div>
       <div class="control-value">
-        {{ SPEED_SETTINGS[gameStore.speedMode].label) }}
+        {{ SPEED_SETTINGS[gameStore.speedMode].label }}
       </div>
       <div v-if="gameStateManager.enableGameModeSwitching()" class="control-hint">
         click to change
