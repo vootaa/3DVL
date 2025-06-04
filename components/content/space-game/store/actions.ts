@@ -1,21 +1,23 @@
 import type { PerspectiveCamera } from 'three'
 import { Vector3 } from 'three'
 import {
-  GameMode,
-  ObservationMode,
-  POINTS_OF_INTEREST,
   SCORE_VALUES,
   SPEED_SETTINGS,
   TRACK_POSITIONS,
   SpeedMode,
+  ModalType,
 } from './constants'
+
 import { checkStardustCollection } from './utils'
-import { randomData, generateChainweb3D } from './generators'
+import { randomData } from './generators'
 
-export function initializeActions(gameStore: any) {
-  const guid = gameStore.guid
-  const track = gameStore.mutation.track
+import { GameState } from '../core/constants'
+import { gameStateManager } from '../core/GameStateManager'
 
+import type { HitType } from './types'
+import type { GameStore } from '../GameStore'
+
+export function initializeActions(gameStore: GameStore) {
   function playSound(name: string, loop = false, volume = 1.0) {
     if (gameStore.audioSystem && gameStore.sound) {
       return gameStore.audioSystem.play(name, loop, volume)
@@ -23,7 +25,11 @@ export function initializeActions(gameStore: any) {
     return null
   }
 
-  gameStore.actions.startGame = (switchMode: boolean) => {
+  // Initialize game with specific mode
+  gameStore.actions.startGame = (mode: GameState) => {
+    const track = gameStore.mutation.track
+    const guid = gameStore.guid
+
     // Clear entities
     gameStore.enemies = []
     gameStore.rocks = []
@@ -37,8 +43,7 @@ export function initializeActions(gameStore: any) {
     gameStore.stardust = 0
     gameStore.loopCount = 0
 
-    // Reset observationMode
-    gameStore.observationMode = ObservationMode.None
+    // Reset observation state
     gameStore.currentPointOfInterest = null
 
     // Reset time
@@ -55,20 +60,14 @@ export function initializeActions(gameStore: any) {
     gameStore.mutation.t = 0
     gameStore.mutation.position.set(0, 0, 0)
 
-    const currentIsBattleMode = gameStore.gameMode === GameMode.Battle
-
-    if (switchMode) {
-      gameStore.gameMode = currentIsBattleMode ? GameMode.Explore : GameMode.Battle
-    }
-    
-    if (currentIsBattleMode) {
+    // Setup entities based on game state
+    if (mode === GameState.BATTLE) {
       gameStore.initialEnemyCount = 10
       gameStore.initialRockCount = 100
       gameStore.particlesCount = 500
       gameStore.enemies = randomData(gameStore.initialEnemyCount, track, 20, 15, () => 1 + Math.random() * 1.5, guid)
       gameStore.rocks = randomData(gameStore.initialRockCount, track, 150, 8, () => 1 + Math.random() * 3, guid)
-    }
-    else {
+    } else if (mode === GameState.EXPLORE) {
       gameStore.enemies = []
       gameStore.rocks = []
       gameStore.initialRockCount = 0
@@ -78,11 +77,10 @@ export function initializeActions(gameStore: any) {
 
     gameStore.mutation.particles = randomData(gameStore.particlesCount,
       track, 100, 1, () => 0.5 + Math.random() * 0.8, guid)
-
   }
 
-  // Implement modal display method
-  gameStore.actions.showModal = (type: string) => {
+  // Modal display methods
+  gameStore.actions.showModal = (type: ModalType) => {
     gameStore.modal.show = true
     gameStore.modal.type = type
 
@@ -95,7 +93,7 @@ export function initializeActions(gameStore: any) {
     gameStore.modal.show = false
 
     // Ensure game time resumes counting (only if not game over)
-    if (gameStore.modal.type === 'switchConfirm') {
+    if (gameStore.modal.type === ModalType.SWITCH_CONFIRM) {
       gameStore.timeManager.actions.resume()
     }
   }
@@ -123,11 +121,12 @@ export function initializeActions(gameStore: any) {
     }, 3000)
   }
 
-  gameStore.actions.registerHit = (count: number, type: 'rock' | 'enemy') => {
+  // Combat system
+  gameStore.actions.registerHit = (count: number, type: HitType) => {
     const now = Date.now()
 
     // Only process combos in Battle mode
-    if (gameStore.gameMode !== GameMode.Battle) return
+    if (gameStateManager.getCurrentState() !== GameState.BATTLE) return
 
     // Base points
     const pointsPerItem = type === 'rock' ? SCORE_VALUES.ROCK : SCORE_VALUES.ENEMY
@@ -178,7 +177,8 @@ export function initializeActions(gameStore: any) {
     }, gameStore.comboSystem.timeWindow)
   }
 
-  gameStore.actions.toggleSound = (sound = !gameStore.sound) => {    
+  // Audio control
+  gameStore.actions.toggleSound = (sound = !gameStore.sound) => {
     if (!gameStore.audioSystem) {
       console.warn('Audio system not initialized yet, cannot toggle sound')
       return
@@ -188,10 +188,14 @@ export function initializeActions(gameStore: any) {
 
     if (sound) {
       gameStore.audioSystem.resumeAll()
-      if (gameStore.gameMode !== GameMode.None) {
+      const currentState = gameStateManager.getCurrentState()
+      if (currentState !== GameState.LAUNCH) {
         playSound('bg', true, 0.3)
-        playSound('engine', true, 1)
-        playSound('engine2', true, 0.3)
+
+        if (currentState !== GameState.OBSERVATION) {
+          playSound('engine', true, 1)
+          playSound('engine2', true, 0.3)
+        }
       }
     }
     else {
@@ -199,6 +203,7 @@ export function initializeActions(gameStore: any) {
     }
   }
 
+  // Initialize camera and game
   gameStore.actions.init = (camera: PerspectiveCamera) => {
     gameStore.sound = false
     gameStore.mutation.clock.start()
@@ -206,9 +211,10 @@ export function initializeActions(gameStore: any) {
     gameStore.camera.far = 10000
   }
 
+  // Shooting system
   gameStore.actions.shoot = () => {
     // Only allow shooting in Battle mode
-    if (gameStore.gameMode === GameMode.Battle) {
+    if (gameStateManager.canShoot()) {
       gameStore.lasers = [...gameStore.lasers, Date.now()]
       clearTimeout(gameStore.mutation.cancelLaserTO)
       gameStore.mutation.cancelLaserTO = setTimeout(() => {
@@ -216,9 +222,9 @@ export function initializeActions(gameStore: any) {
       }, 1000)
       playSound('zap')
     }
-    // In Explore mode, shooting is disabled
   }
 
+  // Collision detection
   gameStore.actions.test = (data: { size: number; offset: Vector3; scale: number; hit: any; distance: number }) => {
     const halfSize = data.size * data.scale / 2
 
@@ -238,85 +244,88 @@ export function initializeActions(gameStore: any) {
 
     const result = gameStore.mutation.ray.intersectBox(gameStore.mutation.box, data.hit)
 
-    if (result) {
-      return true
-    }
-
-    return false
+    return !!result
   }
 
-  gameStore.actions.updateMouse = (mouse: { clientX: number; clientY: number }) => {
-    if (gameStore.gameMode === GameMode.None) {
-      return
-    } else if (gameStore.gameMode === GameMode.Battle
-      || (gameStore.gameMode === GameMode.Explore && gameStore.observationMode === ObservationMode.None)) {
-      gameStore.mutation.mouse.set(mouse.clientX - window.innerWidth / 2, mouse.clientY - window.innerHeight / 2)
-    }
-  }
-
-  gameStore.actions.updateMouse = ({ clientX, clientY }: { clientX: number; clientY: number }) => {
-    if (gameStore.gameMode === GameMode.None) {
-      return
-    } else if (gameStore.gameMode === GameMode.Battle
-      || (gameStore.gameMode === GameMode.Explore && gameStore.observationMode === ObservationMode.None)) {
-      gameStore.mutation.mouse.x = clientX - window.innerWidth / 2
-      gameStore.mutation.mouse.y = clientY - window.innerHeight / 2
-    }
-  }
-
+  // Main update loop
   gameStore.actions.update = () => {
-    const { observationMode } = gameStore
+    const currentState = gameStateManager.getCurrentState()
     const mutation = gameStore.mutation
 
-    if (observationMode === ObservationMode.None) {
-      const { rocks, enemies, gameMode, speedMode } = gameStore
+    if (currentState === GameState.OBSERVATION) {
+      // In observation mode, update camera position based on orbit parameters
+      const horizontalRadius = mutation.orbitDistance * Math.cos(gameStore.orbitHeight)
+      const x = mutation.orbitCenter.x + horizontalRadius * Math.cos(gameStore.orbitAngle)
+      const z = mutation.orbitCenter.z + horizontalRadius * Math.sin(gameStore.orbitAngle)
+      const y = mutation.orbitCenter.y + mutation.orbitDistance * Math.sin(gameStore.orbitHeight)
+
+      mutation.position.set(x, y, z)
+
+      // Automatically slowly rotate if mouse input is not controlling it
+      gameStore.orbitAngle += mutation.orbitSpeed
+
+      // Point camera at the center point
+      if (gameStore.camera) {
+        gameStore.camera.position.copy(mutation.position)
+        gameStore.camera.lookAt(mutation.orbitCenter)
+      }
+
+      if (gameStore.currentPointOfInterest) {
+        checkStardustCollection(gameStore)
+      }
+      return
+    }
+
+    // Normal gameplay update (BATTLE or EXPLORE states)
+    if (currentState === GameState.BATTLE || currentState === GameState.EXPLORE) {
+      const { rocks, enemies, speedMode } = gameStore
 
       const time = Date.now()
       const t = (mutation.t = ((time - mutation.startTime) % mutation.looptime) / mutation.looptime)
 
       if (mutation.lastT > 0.9 && t < 0.1) {
-        // Track loop completed
         gameStore.loopCount++
       }
       mutation.lastT = t
 
-      mutation.position = track.parameters.path.getPointAt(t)
+      mutation.position = gameStore.spline.getPointAt(t)
       mutation.position.multiplyScalar(mutation.scale)
 
       const speedFactor = SPEED_SETTINGS[speedMode as keyof typeof SPEED_SETTINGS].factor
-      gameStore.camera.fov = 70 + (speedFactor - 1.0) * 10
-      gameStore.camera.updateProjectionMatrix()
+      if (gameStore.camera) {
+        gameStore.camera.fov = 70 + (speedFactor - 1.0) * 10
+        gameStore.camera.updateProjectionMatrix()
+      }
 
-      // test for wormhole/warp
+      // Test for wormhole/warp
       let warping = false
       if (t > TRACK_POSITIONS.WARP_BEGIN && t < TRACK_POSITIONS.WARP_END) {
         if (!warping) {
           warping = true
           playSound('warp', true, 0.5)
         }
-      }
-      else if (t > TRACK_POSITIONS.WARP_RESET) {
+      } else if (t > TRACK_POSITIONS.WARP_RESET) {
         warping = false
       }
 
       // Only process hits and collisions in Battle mode
-      if (gameMode === GameMode.Battle) {
-        // test for hits
+      if (currentState === GameState.BATTLE) {
         const rocksHit = rocks.filter((data: any) => gameStore.actions.test(data))
         const enemiesHit = enemies.filter((data: any) => gameStore.actions.test(data))
         const allHit = rocksHit.concat(enemiesHit)
-        
+
         mutation.hits = allHit.length
         const previousHits = mutation.hits || 0
         if (previousHits === 0 && mutation.hits) {
           playSound('click', false, 0.5)
         }
-        
+
         const lasers = gameStore.lasers
         if (mutation.hits && lasers.length && time - lasers[lasers.length - 1] < 100) {
           playSound('explosion', false, 0.5)
           const updates: any[] = []
-          
+
+          // Create explosion particles
           allHit.forEach((data: any) => {
             updates.push({
               time: Date.now(),
@@ -332,7 +341,7 @@ export function initializeActions(gameStore: any) {
               })),
             })
           })
-          
+
           allHit.forEach((data: any) => {
             updates.push({
               time: Date.now(),
@@ -348,7 +357,7 @@ export function initializeActions(gameStore: any) {
               })),
             })
           })
-          
+
           gameStore.explosions = [...gameStore.explosions, ...updates]
 
           clearTimeout(gameStore.mutation.cancelExplosionTO)
@@ -361,7 +370,7 @@ export function initializeActions(gameStore: any) {
           if (rocksHit.length > 0) {
             gameStore.actions.registerHit(rocksHit.length, 'rock')
           }
-          
+
           if (enemiesHit.length > 0) {
             gameStore.actions.registerHit(enemiesHit.length, 'enemy')
           }
@@ -371,242 +380,59 @@ export function initializeActions(gameStore: any) {
             (enemy: any) => !enemiesHit.find((e: any) => e.guid === enemy.guid),
           )
 
-          // Check if all enemies are destroyed
+          // Check completion bonuses
           if (enemiesHit.length > 0 && gameStore.enemies.length === 0 && gameStore.initialEnemyCount > 0) {
-            // All enemies destroyed, provide bonus reward
             gameStore.battleScore += SCORE_VALUES.ALL_ENEMIES_BONUS
             gameStore.actions.addScoreNotification('No Enemy', SCORE_VALUES.ALL_ENEMIES_BONUS, true)
           }
 
-          // Check if all rocks are destroyed
           if (rocksHit.length > 0 && gameStore.rocks.length === 0 && gameStore.initialRockCount > 0) {
-            // All rocks cleared, provide bonus reward
             gameStore.battleScore += SCORE_VALUES.ALL_ROCKS_BONUS
             gameStore.actions.addScoreNotification('No Rock', SCORE_VALUES.ALL_ROCKS_BONUS, true)
           }
         }
-      }
-      else {
+      } else {
         // In Explore mode, set hits to 0 to avoid targeting UI
         mutation.hits = 0
       }
     }
-    else if (observationMode === ObservationMode.Orbiting) {
-      // In orbiting mode, update camera position based on orbit parameters
 
-      // Calculate orbit position
-      const horizontalRadius = mutation.orbitDistance * Math.cos(gameStore.orbitHeight)
-      const x = mutation.orbitCenter.x + horizontalRadius * Math.cos(gameStore.orbitAngle)
-      const z = mutation.orbitCenter.z + horizontalRadius * Math.sin(gameStore.orbitAngle)
-      const y = mutation.orbitCenter.y + mutation.orbitDistance * Math.sin(gameStore.orbitHeight)
-
-      mutation.position.set(x, y, z)
-
-      // Automatically slowly rotate if mouse input is not controlling it
-      gameStore.orbitAngle += mutation.orbitSpeed
-
-      // Point camera at the center point
-      gameStore.camera.position.copy(mutation.position)
-      gameStore.camera.lookAt(mutation.orbitCenter)
-
-      if (gameStore.currentPointOfInterest) {
-        checkStardustCollection(gameStore)
-      }
-    }
-
-    // Check if total loops reached (ensure check only happens once)
+    // Check if total loops reached
     if (gameStore.loopCount >= gameStore.totalLoops && !gameStore.modal.show) {
-      // Show game over dialog
-      gameStore.actions.showModal('gameOver')
+      gameStore.actions.showModal(ModalType.GAME_OVER)
     }
   }
 
-  // Add the toggle info text function
+  // Info text toggle
   gameStore.actions.toggleInfoText = (show?: boolean) => {
     if (show !== false && show !== true) show = !gameStore.showInfoText
     gameStore.showInfoText = show
   }
 
-  gameStore.actions.toggleObservationMode = (pointOfInterestKey: keyof typeof POINTS_OF_INTEREST | null) => {
-    // Only available in explore mode
-    if (gameStore.gameMode !== GameMode.Explore) return
-
-    const { mutation } = gameStore
-
-    // If already in observation mode or no point specified, reset to normal journey
-    if (gameStore.observationMode !== ObservationMode.None || !pointOfInterestKey) {
-      return gameStore.actions.resumeJourney()
-    }
-
-    // Get point of interest data
-    const poi = POINTS_OF_INTEREST[pointOfInterestKey]
-    if (!poi) return
-
-    // When entering observation mode, pause background sounds but keep warp sound playing if active
-    if (pointOfInterestKey && gameStore.audioSystem && gameStore.sound) {
-      gameStore.audioSystem.stop('warp')
-    }
-
-    // Store current position and pause time info
-    mutation.previousPosition.copy(mutation.position)
-    mutation.previousTime = Date.now()
-    mutation.isPaused = true
-
-    // Set up orbit parameters
-    mutation.orbitCenter.copy(track.parameters.path.getPointAt(poi.trackPosition).multiplyScalar(mutation.scale))
-    mutation.orbitDistance = poi.orbitDistance
-    mutation.orbitSpeed = poi.orbitSpeed
-
-    // Initialize orbit angle
-    gameStore.orbitAngle = 0
-    gameStore.orbitHeight = 0
-
-    // Set observation mode and current point of interest
-    gameStore.observationMode = ObservationMode.Orbiting
-    gameStore.currentPointOfInterest = pointOfInterestKey
-
-    // Force game to pause movement along the track
-    mutation.pausedTime = Date.now() - mutation.previousTime
-
-    // Record observation start time for stardust collection
-    if (pointOfInterestKey && !gameStore.observedPoints.includes(pointOfInterestKey)) {
-      gameStore.mutation.observationStartTime = Date.now()
-    }
-
-    // If exiting observation mode, check if can collect Stardust
-    if (!pointOfInterestKey && gameStore.mutation.observationStartTime) {
-      checkStardustCollection(gameStore)
-    }
-  }
-
-  gameStore.actions.updateOrbitPosition = (horizontalAngle: number, verticalAngle: number) => {
-    if (gameStore.observationMode === ObservationMode.Orbiting) {
-      // Update orbit angles based on input
-      gameStore.orbitAngle = horizontalAngle
-      gameStore.orbitHeight = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, verticalAngle))
-    }
-  }
-
-  gameStore.actions.resumeJourney = () => {
-    const { mutation } = gameStore
-
-    // Only do something if we're in observation mode
-    if (gameStore.observationMode === ObservationMode.None) return
-
-    // Reset observation mode
-    gameStore.observationMode = ObservationMode.None
-    gameStore.currentPointOfInterest = null
-
-    // Resume normal movement
-    if (mutation.isPaused) {
-      // Update start time to account for the paused duration
-      mutation.startTime += (Date.now() - mutation.previousTime)
-      mutation.isPaused = false
-    }
-
-    // Journey resumed
-  }
-
-  // Completely reset all game state when switching modes
-  const originalSwitchGameMode = () => {
-    const currentIsBattleMode = gameStore.gameMode === GameMode.Battle
-
-    // Toggle between Battle and Explore modes
-    gameStore.gameMode = currentIsBattleMode ? GameMode.Explore : GameMode.Battle
-    gameStore.chainweb3D = generateChainweb3D(30, track, TRACK_POSITIONS.Chainweb3D, currentIsBattleMode)
-
-    // Reset score,loopCount regardless of mode
-    gameStore.battleScore = 0
-    gameStore.loopCount = 0
-
-    // Reset time by updating startTime to current time
-    gameStore.mutation.startTime = Date.now()
-
-    // Reset timer
-    gameStore.timeManager.actions.reset(false)
-
-    // Clear existing entities
-    gameStore.lasers = []
-    gameStore.explosions = []
-
-    // Clear observed points for stardust collection when switching modes
-    gameStore.observedPoints = []
-
-    // Reset combo system
-    gameStore.comboSystem.count = 0
-    gameStore.comboSystem.active = false
-    gameStore.comboSystem.lastHitTime = 0
-    clearTimeout(gameStore.comboSystem.resetTimer)
-
-    // Clear score notifications
-    gameStore.scoreNotifications = []
-
-    // Reset player position to the start of the track (t=0)
-    gameStore.mutation.t = 0
-
-    // Immediately update position to match t=0
-    const startPos = track.parameters.path.getPointAt(0)
-    gameStore.mutation.position.copy(startPos.multiplyScalar(gameStore.mutation.scale))
-
-    // Regenerate game entities based on mode
-    if (gameStore.gameMode === GameMode.Battle) {
-      // Full set of rocks and enemies for Battle mode
-      gameStore.rocks = randomData(100, track, 150, 8, () => 1 + Math.random() * 2.5, guid)
-      gameStore.enemies = randomData(10, track, 20, 15, 1, guid)
-
-      gameStore.initialRockCount = 100
-      gameStore.initialEnemyCount = 10
-
-      // Reset particles to full density for Battle mode
-      gameStore.mutation.particles = randomData(500, track, 100, 1, () => 0.5 + Math.random() * 0.8, guid)
-    }
-    else {
-      // Empty arrays for Explore mode
-      gameStore.rocks = []
-      gameStore.enemies = []
-
-      gameStore.initialRockCount = 0
-      gameStore.initialEnemyCount = 0
-
-      // Reduce particles to 10% for a cleaner Explore mode
-      gameStore.mutation.particles = randomData(50, track, 100, 1, () => 0.5 + Math.random() * 0.8, guid)
-    }
-
-    // Mode switch completed
-  }
-
+  // Mode switching - now delegates to GameController
   gameStore.actions.switchGameMode = () => {
-    // If game is in progress (loopCount > 0) and modal is not shown
+    // If game is in progress and modal is not shown
     if (gameStore.loopCount > 0 && !gameStore.modal.show) {
-      // Show switch confirmation dialog
-      gameStore.actions.showModal('switchConfirm')
+      gameStore.actions.showModal(ModalType.SWITCH_CONFIRM)
     }
-    else {
-      // Direct switch
-      originalSwitchGameMode()
-    }
+    // Actual mode switching is handled by GameController
   }
 
+  // Speed mode switching
   gameStore.actions.switchSpeedMode = () => {
-    // Toggle between speed modes
     if (gameStore.speedMode === SpeedMode.Fast) {
       gameStore.speedMode = SpeedMode.Slow
-    }
-    else if (gameStore.speedMode === SpeedMode.Slow) {
+    } else if (gameStore.speedMode === SpeedMode.Slow) {
       gameStore.speedMode = SpeedMode.Normal
-    }
-    else {
+    } else {
       gameStore.speedMode = SpeedMode.Fast
     }
 
     const targetLooptime = SPEED_SETTINGS[gameStore.speedMode as keyof typeof SPEED_SETTINGS].looptime
-    
-    // Preserve current position in the track when changing speed
+
     const currentTime = Date.now()
     const currentT = gameStore.mutation.t
     gameStore.mutation.startTime = currentTime - (currentT * targetLooptime)
     gameStore.mutation.looptime = targetLooptime
-
-    // Speed has been changed to new setting
   }
 }
