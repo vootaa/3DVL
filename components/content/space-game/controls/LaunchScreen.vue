@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { ref, defineEmits, watch, onMounted, computed } from 'vue'
 import { ResourceLoader } from '../utils/ResourceLoader'
+import { ResourceType } from '../utils/constants'
 
 // Receive loading status passed from parent component
 const props = defineProps({
@@ -51,36 +52,36 @@ const formatTime = (ms: number) => {
 }
 
 const componentProgress = computed(() => {
-  const stats = loadingStats.value.component
+  const stats = loadingStats.value[ResourceType.Component]
   return stats.loaded > 0 ? `${stats.loaded}/${stats.total}` : '0/0'
 })
 
 const modelProgress = computed(() => {
-  const stats = loadingStats.value.model
+  const stats = loadingStats.value[ResourceType.Model]
   return stats.loaded > 0 ? `${stats.loaded}/${stats.total}` : '0/0'
 })
 
 const textureProgress = computed(() => {
-  const stats = loadingStats.value.texture
+  const stats = loadingStats.value[ResourceType.Texture]
   return stats.loaded > 0 ? `${stats.loaded}/${stats.total}` : '0/0'
 })
 
 const audioProgress = computed(() => {
-  const stats = loadingStats.value.audio
+  const stats = loadingStats.value[ResourceType.Audio]
   return stats.loaded > 0 ? `${stats.loaded}/${stats.total}` : '0/0'
 })
 
 const fontProgress = computed(() => {
-  const stats = loadingStats.value.font
+  const stats = loadingStats.value[ResourceType.Font]
   return stats && stats.loaded > 0 ? `${stats.loaded}/${stats.total}` : '0/0'
 })
 
 const currentLoading = computed(() => {
-  if (loadingStats.value.component.current) return `component: ${loadingStats.value.component.current}`
-  if (loadingStats.value.model.current) return `model: ${loadingStats.value.model.current}`
-  if (loadingStats.value.texture.current) return `texture: ${loadingStats.value.texture.current}`
-  if (loadingStats.value.audio.current) return `audio: ${loadingStats.value.audio.current}`
-  if (loadingStats.value.font?.current) return `font: ${loadingStats.value.font.current}`
+  if (loadingStats.value[ResourceType.Component].current) return `component: ${loadingStats.value[ResourceType.Component].current}`
+  if (loadingStats.value[ResourceType.Model].current) return `model: ${loadingStats.value[ResourceType.Model].current}`
+  if (loadingStats.value[ResourceType.Texture].current) return `texture: ${loadingStats.value[ResourceType.Texture].current}`
+  if (loadingStats.value[ResourceType.Audio].current) return `audio: ${loadingStats.value[ResourceType.Audio].current}`
+  if (loadingStats.value[ResourceType.Font]?.current) return `font: ${loadingStats.value[ResourceType.Font].current}`
   return 'Loading resources completed'
 })
 
