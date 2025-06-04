@@ -163,7 +163,7 @@ const getTitleText = () => {
             PLAY AGAIN
           </button>
           <button class="modal-btn secondary" @click="switchMode">
-            SWITCH TO {{ getOppositeModeTitle }}
+            SWITCH TO {{ getOppositeModeTitle() }}
           </button>
         </template>
 
@@ -173,7 +173,7 @@ const getTitleText = () => {
             CONTINUE
           </button>
           <button class="modal-btn warning" @click="switchMode">
-            SWITCH TO {{ getOppositeModeTitle }}
+            SWITCH TO {{ getOppositeModeTitle() }}
           </button>
         </template>
       </div>

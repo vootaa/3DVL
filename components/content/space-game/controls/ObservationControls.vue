@@ -2,20 +2,32 @@
 import { computed, ref, watch, onUnmounted, inject } from 'vue'
 
 import { GameState } from '../core/constants'
+import { GameController } from '../core/GameController'
 import { POINTS_OF_INTEREST } from '../store/constants'
-import type { IGameController } from '../core/types'
 import type { GameStore } from '../GameStore'
 
 const gameStore = inject('gameStore') as GameStore
-const gameController = inject('gameController') as IGameController | null
+const gameController = inject('gameController') as GameController | null
+
+const currentGameState = computed(() => {
+  return gameController?.getCurrentState?.() || null
+})
+
+const isExploreMode = computed(() => {
+  return gameController?.isExploreMode?.() || false
+})
+
+const isObservationMode = computed(() => {
+  return gameController?.isObservationMode?.() || false
+})
 
 // observation timer
 const observationTime = ref(0)
-const observationInterval = ref < number | null > (null)
+const observationInterval = ref<number | null>(null)
 const requiredObservationTime = 20 // Seconds required to obtain stardust
 
 // Watch for changes in current observation point to start/stop timer
-watch(() => [gameStore.currentPointOfInterest, gameController?.getCurrentState()],
+watch(() => [gameStore.currentPointOfInterest, currentGameState.value],
   ([newPOI, newState]) => {
     if (observationInterval.value) {
       clearInterval(observationInterval.value)
@@ -91,7 +103,7 @@ onUnmounted(() => {
 <template>
   <div class="observation-controls">
     <!-- POI Selection UI - when in explore mode but not in observation mode -->
-    <div v-if="gameController?.isExploreMode()">
+    <div v-if="isExploreMode">
       <div class="poi-header">
         Observe Points:
       </div>
@@ -103,7 +115,7 @@ onUnmounted(() => {
       </div>
     </div>
     <!-- Observation UI - when in observation mode -->
-    <div v-else-if="gameController?.isObservationMode()" class="orbit-controls">
+    <div v-else-if="isObservationMode" class="orbit-controls">
       <div class="orbit-info">
         <span class="observation-title">Observing: {{ currentPoiName }}</span>
         <div class="observation-timer" :class="{ completed: hasCollectedStardust }">
