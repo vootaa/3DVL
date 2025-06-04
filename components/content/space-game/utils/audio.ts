@@ -5,6 +5,8 @@ import { AudioListener, Audio as ThreeAudio } from 'three'
 import { watch } from 'vue'
 import { ResourceLoader } from './ResourceLoader'
 
+import type { AudioSystem } from './types'
+
 // Create a global audio listener
 let listener: AudioListener | null = null
 const audioObjects: Record<string, ThreeAudio> = {}
@@ -171,14 +173,3 @@ async function createAudio(name: string, path: string): Promise<void> {
     console.error(`Error initializing audio ${name}:`, error)
   }
 }
-
-export interface AudioSystem {
-  play: (name: string, loop?: boolean, volume?: number) => ThreeAudio<GainNode> | null
-  stop: (name: string) => void
-  get: (name: string) => ThreeAudio<GainNode> | null
-  pauseAll: () => void
-  resumeAll: () => void
-  setGlobalVolume: (volume: number) => void
-  isPlaying: (name: string) => boolean
-}
-

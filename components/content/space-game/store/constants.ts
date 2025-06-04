@@ -1,21 +1,7 @@
-// Define game modes
-export enum GameMode {
-  None = 'None',
-  Battle = 'Battle',
-  Explore = 'Explore',
-}
-
 export enum SpeedMode {
   Slow = 'Slow',
   Normal = 'Normal',
   Fast = 'Fast',
-}
-
-// Define observation modes
-export enum ObservationMode {
-  None = 'None', // Normal movement
-  Fixed = 'Fixed', // Fixed position observation
-  Orbiting = 'Orbiting', // Orbiting around a point of interest
 }
 
 export const SCORE_VALUES = {

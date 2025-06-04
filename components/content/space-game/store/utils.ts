@@ -1,6 +1,8 @@
 import { Euler, Matrix4, Vector3 } from 'three'
 import type { TubeGeometry } from 'three'
 import { GrannyKnot } from 'three/examples/jsm/curves/CurveExtras.js'
+import { GameState, gameStateManager } from '../core/GameStateManager'
+import type { GameStore } from '../GameStore'
 
 export class WiderGrannyKnot extends GrannyKnot {
   override getPoint(t: number) {
@@ -58,14 +60,12 @@ export function calculateTrackPositionAndRotation(
   return { position: pos, rotation }
 }
 
-export function checkStardustCollection(gameStore: any) {
-  if (gameStore.gameMode !== 'Explore') return
-
+export function checkStardustCollection(gameStore: GameStore) {
   // Safety check for currentPointOfInterest
   const poi = gameStore.currentPointOfInterest
   if (!poi) return
 
-  if (gameStore.observationMode !== 'None'
+  if (gameStateManager.getCurrentState() === GameState.OBSERVATION
         && !gameStore.observedPoints.includes(poi)) {
 
     const observationStartTime = gameStore.mutation.observationStartTime || 0
