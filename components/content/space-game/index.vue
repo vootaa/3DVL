@@ -138,11 +138,11 @@ const start = async (mode: 'battle' | 'explore') => {
         <Game />
       </TresCanvas>
 
-      <SoundControl v-if="gameController && !gameController.isLaunchMode()" />
-      <InfoTextControl v-if="gameController && !gameController.isLaunchMode()" />
-      <ControlPanel v-if="gameController && (gameController.isExploreMode() || gameController.isBattleMode())" />
-      <ObservationControls v-if="gameController && (gameController.isExploreMode() || gameController.isObservationMode())" />
-      <HudControl v-if="gameController && !gameController.isLaunchMode()" />
+      <SoundControl />
+      <InfoTextControl />
+      <ControlPanel />
+      <ObservationControls />
+      <HudControl />
     </div>
   </div>
 </template>
