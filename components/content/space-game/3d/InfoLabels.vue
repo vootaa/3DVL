@@ -9,7 +9,7 @@ const gameStore = inject('gameStore') as GameStore
 </script>
 
 <template>
-  <TresGroup v-if="gameStateManager.canShowInfoTextMode() && gameStore.showInfoText">
+  <TresGroup v-if="gameStateManager.isExploreOrObservationMode() && gameStore.showInfoText">
     <TextPlane
       v-for="(label, i) of gameStore.infoLabels"
       :key="i"

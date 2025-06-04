@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { inject, type PropType } from 'vue'
 
+import { GameState } from '../core/constants'
 import { gameStateManager } from '../core/GameStateManager'
 import { timeManager } from '../store/TimeManager'
 import { ModalType } from '../store/constants'
@@ -49,7 +50,7 @@ const props = defineProps({
 
 const restartGame = () => {
   // Restart game, keep current mode
-  gameStore.actions.startGame(false)
+  gameStore.actions.startGame(gameStateManager.getCurrentState())
   timeManager.actions.reset()
   gameStore.actions.hideModal()
 }
@@ -58,7 +59,7 @@ const switchMode = () => {
   // Switch game mode and restart
   // If switching from game over dialog, need complete reset
   if (props.type === ModalType.GAME_OVER) {
-    gameStore.actions.startGame(true) // true means switch mode
+    gameStore.actions.startGame( gameStateManager.isBattleMode() ? GameState.EXPLORE : GameState.BATTLE) // switch to opposite mode
     timeManager.actions.reset()
   }
   else {
@@ -74,8 +75,7 @@ const continueGame = () => {
   timeManager.actions.resume()
 }
 
-
-const getOppositeMode = () => gameStateManager.isBattleMode() ? 'Explore' : 'Battle'
+const getOppositeModeTitle = () => gameStateManager.isBattleMode() ? 'EXPLORE' : 'BATTLE'
 
 const getTitleText = () => {
   if (props.type === ModalType.GAME_OVER) {
@@ -163,7 +163,7 @@ const getTitleText = () => {
             PLAY AGAIN
           </button>
           <button class="modal-btn secondary" @click="switchMode">
-            SWITCH TO {{ getOppositeMode().toUpperCase() }}
+            SWITCH TO {{ getOppositeModeTitle }}
           </button>
         </template>
 
@@ -173,7 +173,7 @@ const getTitleText = () => {
             CONTINUE
           </button>
           <button class="modal-btn warning" @click="switchMode">
-            SWITCH TO {{ getOppositeMode().toUpperCase() }}
+            SWITCH TO {{ getOppositeModeTitle }}
           </button>
         </template>
       </div>

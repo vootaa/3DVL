@@ -138,15 +138,11 @@ export class GameStateManager {
     return this.isBattleMode() || this.isExploreMode()
   }
 
-  enableInfoTextControl(): boolean {
+  isExploreOrObservationMode(): boolean {
     return this.isExploreMode() || this.isObservationMode()
   }
 
-  enableObservationControl(): boolean {
-    return this.isExploreMode() || this.isObservationMode()
-  }
-
-  enableGameModeSwitching(): boolean {
+  isBattleOrExploreMode(): boolean {
     return this.isBattleMode() || this.isExploreMode()
   }
 

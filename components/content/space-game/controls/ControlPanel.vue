@@ -26,11 +26,16 @@ const currentGameModeLabel = computed(() => {
     default: return 'Launch'
   }
 })
+
+const enableGameModeSwitching = computed(() => {
+  return gameStateManager.isBattleOrExploreMode()
+})
+
 </script>
 
 <template>
   <div class="control-panel">
-    <div class="control-item game-mode" :class="{ disabled: !gameStateManager.enableGameModeSwitching() }"
+    <div class="control-item game-mode" :class="{ disabled: !enableGameModeSwitching }"
       @click="gameStore.actions.switchGameMode()">
       <div class="control-label">
         GAME MODE
@@ -38,7 +43,7 @@ const currentGameModeLabel = computed(() => {
       <div class="control-value">
         {{ currentGameModeLabel }}
       </div>
-      <div v-if="gameStateManager.enableGameModeSwitching()" class="control-hint">
+      <div v-if="enableGameModeSwitching" class="control-hint">
         click to switch
       </div>
       <div v-else class="control-hint warning">
@@ -46,7 +51,7 @@ const currentGameModeLabel = computed(() => {
       </div>
     </div>
 
-    <div class="control-item speed-mode" :class="{ disabled: !gameStateManager.enableGameModeSwitching() }"
+    <div class="control-item speed-mode" :class="{ disabled: !enableGameModeSwitching }"
       @click="gameStore.actions.switchSpeedMode()">
       <div class="control-label">
         SPEED
@@ -54,7 +59,7 @@ const currentGameModeLabel = computed(() => {
       <div class="control-value">
         {{ SPEED_SETTINGS[gameStore.speedMode].label }}
       </div>
-      <div v-if="gameStateManager.enableGameModeSwitching()" class="control-hint">
+      <div v-if="enableGameModeSwitching" class="control-hint">
         click to change
       </div>
       <div v-else class="control-hint warning">
