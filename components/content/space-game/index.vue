@@ -111,8 +111,8 @@ const start = async (mode: 'battle' | 'explore') => {
 
 <template>
   <div>
-    <LaunchScreen v-if="gameStateManager.isLaunchMode()" :resources-loaded="resourcesLoaded" :progress="loadingProgress" @launch="start" />
-    <div v-if="!gameStateManager.isLaunchMode()" class="full-screen">
+    <LaunchScreen v-if="!gameActive" :resources-loaded="resourcesLoaded" :progress="loadingProgress" @launch="start" />
+    <div v-if="gameActive" class="full-screen">
       <TresCanvas clear-color="#010104" :linear="true" :flat="true" :antialias="false" :tone-mapping="NoToneMapping"
         :output-encoding="SRGBColorSpace">
         <TresPerspectiveCamera ref="cameraRef" :position="[0, 0, 2000]" :near="0.01" :far="10000"
@@ -121,11 +121,11 @@ const start = async (mode: 'battle' | 'explore') => {
         <Game />
       </TresCanvas>
 
-      <SoundControl />
-      <InfoTextControl v-if="gameStateManager.enableInfoTextControl()"/>
+      <SoundControl v-if="!gameStateManager.isLaunchMode()" />
+      <InfoTextControl v-if="gameStateManager.enableInfoTextControl()" />
       <ControlPanel v-if="gameStateManager.enableGameModeSwitching()" />
       <ObservationControls v-if="gameStateManager.enableObservationControl()" />
-      <HudControl/>
+      <HudControl v-if="!gameStateManager.isLaunchMode()" />
     </div>
   </div>
 </template>
