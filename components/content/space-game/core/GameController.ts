@@ -69,8 +69,12 @@ export class GameController implements IGameController {
     return gameStateManager.canObserve()
   }
 
-  isInteractionBlocked(): boolean {
-    return this.gameStore.modal.show
+  isLaunchMode(): boolean {
+    return gameStateManager.isLaunchMode()
+  }
+
+  isBattleMode(): boolean {
+    return gameStateManager.isBattleMode()
   }
 
   isExploreMode(): boolean {
@@ -82,18 +86,38 @@ export class GameController implements IGameController {
   }
 
   // State transition methods
-  startBattleMode(): boolean {
-    if (!gameStateManager.setState(GameState.BATTLE)) return false
+  async startBattleMode(): Promise<boolean> {
+    try {
+      if (!this.gameStore || !this.gameStore.camera) {
+        console.error("Game store or camera not initialized")
+        return false
+      }
 
-    this.gameStore.actions.startGame(GameState.BATTLE)
-    return true
+      gameStateManager.setState(GameState.BATTLE)
+
+      this.gameStore.actions.startGame(GameState.BATTLE)
+      return true
+    } catch (error) {
+      console.error('Failed to start battle mode:', error)
+      return false
+    }
   }
 
-  startExploreMode(): boolean {
-    if (!gameStateManager.setState(GameState.EXPLORE)) return false
+  async startExploreMode(): Promise<boolean> {
+    try {
+      if (!this.gameStore || !this.gameStore.camera) {
+        console.error("Game store or camera not initialized")
+        return false
+      }
 
-    this.gameStore.actions.startGame(GameState.EXPLORE)
-    return true
+      gameStateManager.setState(GameState.EXPLORE)
+
+      this.gameStore.actions.startGame(GameState.EXPLORE)
+      return true
+    } catch (error) {
+      console.error('Failed to start explore mode:', error)
+      return false
+    }
   }
 
   enterObservation(pointOfInterestKey: keyof typeof POINTS_OF_INTEREST): boolean {
@@ -112,12 +136,10 @@ export class GameController implements IGameController {
   }
 
   switchGameMode(): boolean {
-    const currentState = gameStateManager.getCurrentState()
-
-    if (currentState === GameState.BATTLE) {
-      return this.startExploreMode()
-    } else if (currentState === GameState.EXPLORE) {
-      return this.startBattleMode()
+    if (gameStateManager.isBattleMode()) {
+      return this.startExploreMode() as unknown as boolean
+    } else if (gameStateManager.isExploreMode()) {
+      return this.startBattleMode() as unknown as boolean
     }
 
     return false

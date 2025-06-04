@@ -32,11 +32,12 @@ export interface IGameController {
   getCurrentState(): GameState
   canShoot(): boolean
   canObserve(): boolean
-  isInteractionBlocked(): boolean
+  isLaunchMode(): boolean
+  isBattleMode(): boolean
   isExploreMode(): boolean
   isObservationMode(): boolean
-  startBattleMode(): boolean
-  startExploreMode(): boolean
+  startBattleMode(): Promise<boolean>
+  startExploreMode(): Promise<boolean>
   enterObservation(pointOfInterestKey: keyof typeof POINTS_OF_INTEREST): boolean
   exitObservation(): boolean
   switchGameMode(): boolean

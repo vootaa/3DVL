@@ -2,10 +2,9 @@
 <script setup lang="ts">
 import { TresCanvas } from '@tresjs/core'
 import { SRGBColorSpace, NoToneMapping, PerspectiveCamera } from 'three'
-import { onMounted, onUnmounted, provide, shallowRef, ref, watch } from 'vue'
+import { onMounted, onUnmounted, provide, shallowRef, ref, watch, nextTick } from 'vue'
 
 import { GameController } from './core/GameController'
-import { gameStateManager } from './core/GameStateManager'
 
 import { ResourceLoader } from './utils/ResourceLoader'
 
@@ -24,14 +23,19 @@ import { gameStore } from './GameStore'
 // Provide game store and controller
 provide('gameStore', gameStore)
 
+// Provide game controller
+const gameControllerRef = shallowRef<GameController | null>(null)
+provide('gameController', gameControllerRef)
+
+// Declare gameController variable
+let gameController: GameController | null = null
+
 const cameraRef = shallowRef(new PerspectiveCamera())
 
 const isMounted = ref(false)
 const resourcesLoaded = ref(false)
 const loadingProgress = ref(0)
 const gameActive = ref(false)
-
-let gameController: GameController | null = null
 
 onMounted(async () => {
   isMounted.value = true
@@ -61,50 +65,63 @@ const initializeGame = async () => {
 
   try {
     // Initialize audio system
-    const audioSystem = await initializeAudio(cameraRef.value)
-    gameStore.audioSystem = audioSystem
+    try {
+      const audioSystem = await initializeAudio(cameraRef.value)
+      gameStore.audioSystem = audioSystem
+    } catch (error) {
+      console.error('Failed to initialize audio:', error)
+      gameStore.audioError = true
+      gameStore.sound = false
+    }
+
+    if (!isMounted.value) return
+
+    await nextTick()
+
+    // Initialize game controller
+    const controller = new GameController(gameStore)
+    gameControllerRef.value = controller
+    gameController = controller
+
+    // Initialize camera
+    if (cameraRef.value) {
+      gameStore.camera = cameraRef.value
+      gameStore.camera.far = 10000
+      gameStore.actions.init(cameraRef.value)
+    }
+
+    // Start game clock
+    gameStore.mutation.clock.start()
+
+    if (isMounted.value) {
+      gameActive.value = true
+      console.log('Game initialized successfully')
+    }
   } catch (error) {
-    console.error('Failed to initialize audio:', error)
-    gameStore.audioError = true
-    gameStore.sound = false
+    console.error('Game initialization failed:', error)
+    return false
   }
 
-  if (!isMounted.value) return
-
-  // Initialize game controller
-  gameController = new GameController(gameStore)
-
-  // Provide game controller to child components
-  provide('gameController', gameController)
-
-  // Initialize camera
-  if (cameraRef.value) {
-    gameStore.camera = cameraRef.value
-    gameStore.camera.far = 10000
-    gameStore.actions.init(cameraRef.value)
-  }
-
-  // Start game clock
-  gameStore.mutation.clock.start()
-
-  if (isMounted.value) {
-    gameActive.value = true
-    console.log('Game initialized successfully')
-  }
+  return true
 }
 
 const start = async (mode: 'battle' | 'explore') => {
   if (!isMounted.value || !resourcesLoaded.value) return
 
-  await initializeGame()
+  const success = await initializeGame()
+  if (!success || !gameController) return
 
-  if (!gameController) return
+  try {
+    await nextTick()
 
-  // Start the selected game mode
-  if (mode === 'battle') {
-    gameController.startBattleMode()
-  } else {
-    gameController.startExploreMode()
+    // Start the selected game mode
+    if (mode === 'battle') {
+      await gameController.startBattleMode()
+    } else {
+      await gameController.startExploreMode()
+    }
+  } catch (error) {
+    console.error(`Failed to start ${mode} mode:`, error)
   }
 }
 </script>
@@ -121,11 +138,11 @@ const start = async (mode: 'battle' | 'explore') => {
         <Game />
       </TresCanvas>
 
-      <SoundControl v-if="!gameStateManager.isLaunchMode()" />
-      <InfoTextControl v-if="gameStateManager.enableInfoTextControl()" />
-      <ControlPanel v-if="gameStateManager.enableGameModeSwitching()" />
-      <ObservationControls v-if="gameStateManager.enableObservationControl()" />
-      <HudControl v-if="!gameStateManager.isLaunchMode()" />
+      <SoundControl v-if="gameController && !gameController.isLaunchMode()" />
+      <InfoTextControl v-if="gameController && !gameController.isLaunchMode()" />
+      <ControlPanel v-if="gameController && (gameController.isExploreMode() || gameController.isBattleMode())" />
+      <ObservationControls v-if="gameController && (gameController.isExploreMode() || gameController.isObservationMode())" />
+      <HudControl v-if="gameController && !gameController.isLaunchMode()" />
     </div>
   </div>
 </template>
