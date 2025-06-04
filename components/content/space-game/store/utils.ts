@@ -1,7 +1,8 @@
 import { Euler, Matrix4, Vector3 } from 'three'
 import type { TubeGeometry } from 'three'
 import { GrannyKnot } from 'three/examples/jsm/curves/CurveExtras.js'
-import { GameState, gameStateManager } from '../core/GameStateManager'
+
+import { gameStateManager } from '../core/GameStateManager'
 import type { GameStore } from '../GameStore'
 
 export class WiderGrannyKnot extends GrannyKnot {
@@ -65,8 +66,7 @@ export function checkStardustCollection(gameStore: GameStore) {
   const poi = gameStore.currentPointOfInterest
   if (!poi) return
 
-  if (gameStateManager.getCurrentState() === GameState.OBSERVATION
-        && !gameStore.observedPoints.includes(poi)) {
+  if (gameStateManager.isObservationMode() && !gameStore.observedPoints.includes(poi)) {
 
     const observationStartTime = gameStore.mutation.observationStartTime || 0
     const observationTime = Date.now() - observationStartTime
