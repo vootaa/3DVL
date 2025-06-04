@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { inject } from 'vue'
-import { GameState, gameStateManager } from '../core/GameStateManager'
+import { GameState } from '../core/constants'
+import { gameStateManager } from '../core/GameStateManager'
 
 import { SpeedMode, SPEED_SETTINGS } from '../store/constants'
 

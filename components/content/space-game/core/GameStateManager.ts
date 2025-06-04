@@ -1,0 +1,155 @@
+/**
+ * Game State Manager
+ * Manages the 4 core states of the game and their transitions
+ */
+
+import { GameState } from './constants'
+import type { StateTransition, StateChangeHandler } from './types'
+
+export class GameStateManager {
+  private currentState: GameState = GameState.LAUNCH
+  private previousState: GameState | null = null
+  private stateChangeCallbacks: Map<GameState, StateChangeHandler[]> = new Map()
+  private globalStateChangeCallbacks: StateChangeHandler[] = []
+  
+  // Define valid state transitions
+  private validTransitions: StateTransition[] = [
+    { from: GameState.LAUNCH, to: GameState.BATTLE },
+    { from: GameState.LAUNCH, to: GameState.EXPLORE },
+    { from: GameState.BATTLE, to: GameState.EXPLORE },
+    { from: GameState.EXPLORE, to: GameState.BATTLE },
+    { from: GameState.EXPLORE, to: GameState.OBSERVATION },
+    { from: GameState.OBSERVATION, to: GameState.EXPLORE }
+  ]
+
+  constructor() {
+    this.initializeStateCallbacks()
+  }
+
+  private initializeStateCallbacks() {
+    Object.values(GameState).forEach(state => {
+      this.stateChangeCallbacks.set(state, [])
+    })
+  }
+
+  getCurrentState(): GameState {
+    return this.currentState
+  }
+
+  getPreviousState(): GameState | null {
+    return this.previousState
+  }
+
+  canTransition(to: GameState): boolean {
+    return this.validTransitions.some(
+      transition => transition.from === this.currentState &&
+        transition.to === to &&
+        (!transition.condition || transition.condition())
+    )
+  }
+
+  setState(newState: GameState, force: boolean = false): boolean {
+    if (!force && !this.canTransition(newState)) {
+      console.warn(`Invalid state transition from ${this.currentState} to ${newState}`)
+      return false
+    }
+
+    const oldState = this.currentState
+    this.previousState = oldState
+    this.currentState = newState
+
+    // Trigger state change callbacks
+    this.executeStateCallbacks(newState)
+
+    // Trigger global state change callbacks
+    this.executeGlobalStateCallbacks(newState)
+
+    console.log(`State changed: ${oldState} -> ${newState}`)
+    return true
+  }
+
+  onStateChange(state: GameState, callback: StateChangeHandler) {
+    const callbacks = this.stateChangeCallbacks.get(state)
+    if (callbacks) {
+      callbacks.push(callback)
+    }
+    return () => this.removeStateChangeCallback(state, callback)
+  }
+
+  onAnyStateChange(callback: StateChangeHandler) {
+    this.globalStateChangeCallbacks.push(callback)
+    return () => this.removeGlobalStateChangeCallback(callback)
+  }
+
+  private removeStateChangeCallback(state: GameState, callback: StateChangeHandler) {
+    const callbacks = this.stateChangeCallbacks.get(state)
+    if (callbacks) {
+      const index = callbacks.indexOf(callback)
+      if (index !== -1) {
+        callbacks.splice(index, 1)
+      }
+    }
+  }
+
+  private removeGlobalStateChangeCallback(callback: StateChangeHandler) {
+    const index = this.globalStateChangeCallbacks.indexOf(callback)
+    if (index !== -1) {
+      this.globalStateChangeCallbacks.splice(index, 1)
+    }
+  }
+
+  private executeStateCallbacks(state: GameState) {
+    const callbacks = this.stateChangeCallbacks.get(state)
+    if (callbacks) {
+      callbacks.forEach(callback => callback(state))
+    }
+  }
+
+  private executeGlobalStateCallbacks(state: GameState) {
+    this.globalStateChangeCallbacks.forEach(callback => callback(state))
+  }
+
+  // Helper methods for common state checks
+  isLaunchMode(): boolean {
+    return this.currentState === GameState.LAUNCH
+  }
+
+  isBattleMode(): boolean {
+    return this.currentState === GameState.BATTLE
+  }
+
+  isExploreMode(): boolean {
+    return this.currentState === GameState.EXPLORE
+  }
+
+  isObservationMode(): boolean {
+    return this.currentState === GameState.OBSERVATION
+  }
+
+  canShoot(): boolean {
+    return this.isBattleMode()
+  }
+
+  canObserve(): boolean {
+    return this.isExploreMode()
+  }
+
+  canShowInfoTextMode(): boolean {
+    return this.isExploreMode() || this.isObservationMode()
+  }
+
+  canFlightMode(): boolean {
+    return this.isBattleMode() || this.isExploreMode()
+  }
+
+  enableGameModeSwitching(): boolean {
+    return this.isBattleMode() || this.isExploreMode()
+  }
+
+  reset() {
+    this.setState(GameState.LAUNCH, true)
+    this.previousState = null
+  }
+}
+
+export const gameStateManager = new GameStateManager()

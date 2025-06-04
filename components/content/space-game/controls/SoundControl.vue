@@ -1,21 +1,15 @@
 <script setup lang="ts">
 import { inject } from 'vue'
 
-// eslint-disable-next-line import/namespace
 import type { GameStore } from '../GameStore'
-
 const gameStore = inject('gameStore') as GameStore
-
-const toggleSound = () => {
-  gameStore.actions.toggleSound(!gameStore.sound)
-}
 </script>
 
 <template>
   <div
     class="sound-control"
     :class="{ 'audio-error': gameStore.audioError }"
-    @click="toggleSound"
+    @click="gameStore.actions.toggleSound(!gameStore.sound)"
   >
     <div class="control-label">
       SOUND
