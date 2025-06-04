@@ -1,24 +1,17 @@
 <script setup lang="ts">
-import { inject, computed } from 'vue'
+import { inject, type PropType } from 'vue'
 
-import { GameMode } from '../store/constants'
+import { gameStateManager } from '../core/GameStateManager'
 import { timeManager } from '../store/TimeManager'
+import { ModalType } from '../store/constants'
 
-// eslint-disable-next-line import/namespace
 import type { GameStore } from '../GameStore'
+const gameStore = inject('gameStore') as GameStore
 
 const props = defineProps({
   type: {
-    type: String,
+    type: Object as PropType<ModalType>,
     required: true,
-    validator: (value: string) => ['gameOver', 'switchConfirm'].includes(value),
-  },
-  currentMode: {
-    type: [Number, String] as PropType<GameMode>,
-    required: true,
-    validator: (value: number | string) => typeof value === 'number' 
-        ? Object.values(GameMode).includes(value as GameMode)
-        : ['Battle', 'Explore', 'None'].includes(value as string),
   },
   battleScore: {
     type: Number,
@@ -54,8 +47,6 @@ const props = defineProps({
   },
 })
 
-const gameStore = inject('gameStore') as GameStore
-
 const restartGame = () => {
   // Restart game, keep current mode
   gameStore.actions.startGame(false)
@@ -66,7 +57,7 @@ const restartGame = () => {
 const switchMode = () => {
   // Switch game mode and restart
   // If switching from game over dialog, need complete reset
-  if (props.type === 'gameOver') {
+  if (props.type === ModalType.GAME_OVER) {
     gameStore.actions.startGame(true) // true means switch mode
     timeManager.actions.reset()
   }
@@ -83,14 +74,12 @@ const continueGame = () => {
   timeManager.actions.resume()
 }
 
-// Check if current mode is battle mode
-const isBattleMode = computed(() => props.currentMode === GameMode.Battle)
 
-const getOppositeMode = () => isBattleMode.value ? 'Explore' : 'Battle'
+const getOppositeMode = () => gameStateManager.isBattleMode() ? 'Explore' : 'Battle'
 
 const getTitleText = () => {
-  if (props.type === 'gameOver') {
-    return isBattleMode.value ? 'BATTLE COMPLETE' : 'EXPLORATION COMPLETE'
+  if (props.type === ModalType.GAME_OVER) {
+    return gameStateManager.isBattleMode() ? 'BATTLE COMPLETE' : 'EXPLORATION COMPLETE'
   }
   else {
     return 'SWITCH MODE?'
@@ -106,12 +95,9 @@ const getTitleText = () => {
       </div>
 
       <!-- Game over prompt -->
-      <div
-        v-if="type === 'gameOver'"
-        class="modal-content"
-      >
+      <div v-if="type === ModalType.GAME_OVER" class="modal-content">
         <!-- Battle mode ended -->
-        <template v-if="isBattleMode">
+        <template v-if="gameStateManager.isBattleMode()">
           <div class="stats-row">
             <span class="label">FINAL SCORE:</span>
             <span class="value">{{ battleScore }}</span>
@@ -119,18 +105,12 @@ const getTitleText = () => {
           <div class="stats-row">
             <span class="label">ENEMIES DESTROYED:</span>
             <span class="value">{{ destroyedEnemies }}</span>
-            <span
-              v-if="destroyedEnemies === totalEnemies"
-              class="bonus-tag"
-            >+1000</span>
+            <span v-if="destroyedEnemies === totalEnemies" class="bonus-tag">+1000</span>
           </div>
           <div class="stats-row">
             <span class="label">ROCKS BLASTED:</span>
             <span class="value">{{ destroyedRocks }}</span>
-            <span
-              v-if="destroyedRocks === totalRocks"
-              class="bonus-tag"
-            >+1000</span>
+            <span v-if="destroyedRocks === totalRocks" class="bonus-tag">+1000</span>
           </div>
           <div class="stats-row">
             <span class="label">MISSION TIME:</span>
@@ -162,12 +142,9 @@ const getTitleText = () => {
       </div>
 
       <!-- Switch mode confirmation -->
-      <div
-        v-else
-        class="modal-content"
-      >
+      <div v-else class="modal-content">
         <div class="warning-message">
-          <template v-if="isBattleMode">
+          <template v-if="gameStateManager.isBattleMode()">
             Your current battle score will be lost if you switch to Explore mode.
           </template>
           <template v-else>
@@ -181,33 +158,21 @@ const getTitleText = () => {
 
       <div class="modal-footer">
         <!-- Game over buttons -->
-        <template v-if="type === 'gameOver'">
-          <button
-            class="modal-btn primary"
-            @click="restartGame"
-          >
+        <template v-if="type === ModalType.GAME_OVER">
+          <button class="modal-btn primary" @click="restartGame">
             PLAY AGAIN
           </button>
-          <button
-            class="modal-btn secondary"
-            @click="switchMode"
-          >
+          <button class="modal-btn secondary" @click="switchMode">
             SWITCH TO {{ getOppositeMode().toUpperCase() }}
           </button>
         </template>
 
         <!-- Switch confirmation buttons -->
         <template v-else>
-          <button
-            class="modal-btn primary"
-            @click="continueGame"
-          >
+          <button class="modal-btn primary" @click="continueGame">
             CONTINUE
           </button>
-          <button
-            class="modal-btn warning"
-            @click="switchMode"
-          >
+          <button class="modal-btn warning" @click="switchMode">
             SWITCH TO {{ getOppositeMode().toUpperCase() }}
           </button>
         </template>
@@ -218,89 +183,89 @@ const getTitleText = () => {
 
 <style lang="css" scoped>
 .modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-    backdrop-filter: blur(5px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
 }
 
 .modal-container {
-    background-color: rgba(20, 20, 20, 0.9);
-    border: 2px solid #666;
-    border-radius: 10px;
-    width: 460px;
-    max-width: 90%;
-    box-shadow: 0 0 30px rgba(255, 204, 0, 0.3);
-    font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
-    animation: modal-appear 0.4s ease-out;
+  background-color: rgba(20, 20, 20, 0.9);
+  border: 2px solid #666;
+  border-radius: 10px;
+  width: 460px;
+  max-width: 90%;
+  box-shadow: 0 0 30px rgba(255, 204, 0, 0.3);
+  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  animation: modal-appear 0.4s ease-out;
 }
 
 @keyframes modal-appear {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .modal-header {
-    background: linear-gradient(to right, #333, #111);
-    color: #ff6600;
-    font-size: 1.8em;
-    font-weight: 700;
-    padding: 15px 20px;
-    border-bottom: 1px solid #444;
-    border-radius: 8px 8px 0 0;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    text-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
+  background: linear-gradient(to right, #333, #111);
+  color: #ff6600;
+  font-size: 1.8em;
+  font-weight: 700;
+  padding: 15px 20px;
+  border-bottom: 1px solid #444;
+  border-radius: 8px 8px 0 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
 }
 
 .modal-content {
-    padding: 25px 20px;
-    color: white;
-    font-size: 1.1em;
+  padding: 25px 20px;
+  color: white;
+  font-size: 1.1em;
 }
 
 .stats-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .stats-row:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .label {
-    font-weight: 500;
-    opacity: 0.9;
-    color: #aaa;
+  font-weight: 500;
+  opacity: 0.9;
+  color: #aaa;
 }
 
 .value {
-    font-weight: 700;
-    font-size: 1.2em;
-    color: #ffcc00;
+  font-weight: 700;
+  font-size: 1.2em;
+  color: #ffcc00;
 }
 
 .time-unit {
-    font-size: 0.7em;
-    opacity: 0.7;
-    margin-left: 5px;
+  font-size: 0.7em;
+  opacity: 0.7;
+  margin-left: 5px;
 }
 
 .bonus-tag {
@@ -315,79 +280,79 @@ const getTitleText = () => {
 }
 
 .warning-message {
-    color: #ff6600;
-    font-weight: 500;
-    margin-bottom: 20px;
-    line-height: 1.4;
-    text-align: center;
-    padding: 10px;
-    border: 1px solid rgba(255, 102, 0, 0.3);
-    border-radius: 5px;
-    background-color: rgba(255, 102, 0, 0.1);
+  color: #ff6600;
+  font-weight: 500;
+  margin-bottom: 20px;
+  line-height: 1.4;
+  text-align: center;
+  padding: 10px;
+  border: 1px solid rgba(255, 102, 0, 0.3);
+  border-radius: 5px;
+  background-color: rgba(255, 102, 0, 0.1);
 }
 
 .stardust-icon {
-    color: #ffde87;
-    text-shadow: 0 0 5px #ffaa00;
-    display: inline-block;
-    margin-right: 5px;
+  color: #ffde87;
+  text-shadow: 0 0 5px #ffaa00;
+  display: inline-block;
+  margin-right: 5px;
 }
 
 .question {
-    text-align: center;
-    font-weight: 700;
-    margin-top: 15px;
-    font-size: 1.2em;
+  text-align: center;
+  font-weight: 700;
+  margin-top: 15px;
+  font-size: 1.2em;
 }
 
 .modal-footer {
-    padding: 15px 20px 20px;
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-    border-top: 1px solid #444;
+  padding: 15px 20px 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  border-top: 1px solid #444;
 }
 
 .modal-btn {
-    flex: 1;
-    padding: 12px 15px;
-    font-family: 'Kode Mono', monospace;
-    font-size: 1em;
-    font-weight: 700;
-    text-transform: uppercase;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.2s;
+  flex: 1;
+  padding: 12px 15px;
+  font-family: 'Kode Mono', monospace;
+  font-size: 1em;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .modal-btn.primary {
-    background-color: #2980b9;
-    color: white;
+  background-color: #2980b9;
+  color: white;
 }
 
 .modal-btn.primary:hover {
-    background-color: #3498db;
-    box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
+  background-color: #3498db;
+  box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
 }
 
 .modal-btn.secondary {
-    background-color: #27ae60;
-    color: white;
+  background-color: #27ae60;
+  color: white;
 }
 
 .modal-btn.secondary:hover {
-    background-color: #2ecc71;
-    box-shadow: 0 0 15px rgba(46, 204, 113, 0.5);
+  background-color: #2ecc71;
+  box-shadow: 0 0 15px rgba(46, 204, 113, 0.5);
 }
 
 .modal-btn.warning {
-    background-color: #c0392b;
-    color: white;
+  background-color: #c0392b;
+  color: white;
 }
 
 .modal-btn.warning:hover {
-    background-color: #e74c3c;
-    box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+  background-color: #e74c3c;
+  box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
 }
 </style>

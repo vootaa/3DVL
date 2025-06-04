@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import { inject, computed } from 'vue'
-import type { GameStore } from '../GameStore'
-import { GameMode } from '../store/constants'
+import { inject } from 'vue'
+import { gameStateManager } from '../core/GameStateManager'
+
 import TextPlane from './TextPlane.vue'
 
-const gameStore: GameStore = inject('gameStore') as GameStore
-
-const showLabels = computed(() => gameStore.gameMode === GameMode.Explore && gameStore.showInfoText)
+import type { GameStore } from '../GameStore'
+const gameStore = inject('gameStore') as GameStore
 </script>
 
 <template>
-  <TresGroup v-if="showLabels">
+  <TresGroup v-if="gameStateManager.canShowInfoTextMode() && gameStore.showInfoText">
     <TextPlane
       v-for="(label, i) of gameStore.infoLabels"
       :key="i"

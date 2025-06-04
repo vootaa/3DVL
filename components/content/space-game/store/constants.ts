@@ -4,6 +4,11 @@ export enum SpeedMode {
   Fast = 'Fast',
 }
 
+export enum ModalType {
+  GAME_OVER = 'gameOver',
+  SWITCH_CONFIRM = 'switchConfirm'
+}
+
 export const SCORE_VALUES = {
   ENEMY: 150, // 150 points per enemy
   ROCK: 10, // 10 points per rock

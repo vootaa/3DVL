@@ -4,13 +4,13 @@ import type { BufferGeometry, Material } from 'three'
 
 import { useLoop } from '@tresjs/core'
 import { BoxGeometry, Color, Group, MeshBasicMaterial, PerspectiveCamera, PointLight, Vector3 } from 'three'
-import { onMounted, onUnmounted, inject, shallowRef, computed, watch, ref } from 'vue'
+import { onMounted, onUnmounted, inject, shallowRef, watch, ref } from 'vue'
 
-// eslint-disable-next-line import/namespace
-import type { GameStore } from '../GameStore'
-
-import { GameMode, ObservationMode } from '../store/constants'
 import { ResourceLoader } from '../utils/ResourceLoader'
+import { gameStateManager } from '../core/GameStateManager'
+
+import type { GameStore } from '../GameStore'
+const gameStore = inject('gameStore') as GameStore
 
 interface GLTFNode {
   geometry: BufferGeometry
@@ -72,7 +72,6 @@ const crossMaterial = new MeshBasicMaterial({ color: hotpink, fog: false })
 const position = new Vector3()
 const direction = new Vector3()
 
-const gameStore = inject('gameStore') as GameStore
 const mutation = gameStore.mutation
 const { clock, mouse, ray } = mutation
 
@@ -82,9 +81,6 @@ const laserLight = shallowRef<PointLight>(new PointLight())
 const exhaust = shallowRef<Group>(new Group())
 const cross = shallowRef<Group>(new Group())
 const target = shallowRef<Group>(new Group())
-
-// Add computed property to check current game mode
-const isBattleMode = computed(() => gameStore.gameMode === GameMode.Battle)
 
 // Define margin values (percentage of screen)
 const margins: { x: number; y: number } = {
@@ -176,7 +172,19 @@ useLoop().onBeforeRender(() => {
   const time = clock.getElapsedTime()
   main.value.position.z = Math.sin(time * 40) * Math.PI * 0.2
 
-  if (gameStore.observationMode === ObservationMode.None) {
+  if (gameStateManager.isObservationMode()) {
+    main.value.rotation.z -= main.value.rotation.z * 0.05
+    main.value.rotation.x -= main.value.rotation.x * 0.05
+    main.value.rotation.y -= main.value.rotation.y * 0.05
+
+    main.value.position.x -= main.value.position.x * 0.05
+    main.value.position.y += (25 - main.value.position.y) * 0.05
+
+    const period = 3.0
+    const amplitude = 0.3
+    main.value.position.x += Math.sin(time / period) * amplitude
+    main.value.position.y += Math.cos(time / period * 1.3) * amplitude
+  } else if (gameStateManager.canFlightMode()) {
     // Clamp mouse coordinates to stay within boundaries
     const clampedMouseX = clampValue(mouse.x, boundaries.value.x.min * 5, boundaries.value.x.max * 5)
     const clampedMouseY = clampValue(mouse.y, boundaries.value.y.min * 12, boundaries.value.y.max * 12)
@@ -198,19 +206,6 @@ useLoop().onBeforeRender(() => {
     ray.origin.copy(position)
     ray.direction.copy(direction.negate())
   }
-  else {
-    main.value.rotation.z -= main.value.rotation.z * 0.05
-    main.value.rotation.x -= main.value.rotation.x * 0.05
-    main.value.rotation.y -= main.value.rotation.y * 0.05
-
-    main.value.position.x -= main.value.position.x * 0.05
-    main.value.position.y += (25 - main.value.position.y) * 0.05
-
-    const period = 3.0
-    const amplitude = 0.3
-    main.value.position.x += Math.sin(time / period) * amplitude
-    main.value.position.y += Math.cos(time / period * 1.3) * amplitude
-  }
 
   exhaust.value.scale.x = 1 + Math.sin(time * 200)
   exhaust.value.scale.y = 1 + Math.sin(time * 200)
@@ -229,14 +224,14 @@ useLoop().onBeforeRender(() => {
   // Only show crosshair and target in Battle mode
   crossMaterial.color = mutation.hits ? lightgreen : hotpink
 
-  // Hide crosshair in Explore mode
+  // In Battle mode, show crosshair
   if (cross.value) {
-    cross.value.visible = isBattleMode.value && !mutation.hits
+    cross.value.visible = gameStateManager.isBattleMode() && !mutation.hits
   }
 
   // In Battle mode, show target indicator when targeting
   if (target.value) {
-    target.value.visible = isBattleMode.value && !!mutation.hits
+    target.value.visible = gameStateManager.isBattleMode() && !!mutation.hits
   }
 })
 </script>

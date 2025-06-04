@@ -1,23 +1,16 @@
 <script setup lang="ts">
 import { inject } from 'vue'
+import { gameStateManager } from '../core/GameStateManager'
 
-import { GameMode } from '../store/constants'
-
-// eslint-disable-next-line import/namespace
 import type { GameStore } from '../GameStore'
-
 const gameStore = inject('gameStore') as GameStore
-
-const toggleInfoText = () => {
-  gameStore.actions.toggleInfoText(!gameStore.showInfoText)
-}
 </script>
 
 <template>
   <div
-    v-if="gameStore.gameMode === GameMode.Explore"
+    v-if="gameStateManager.canShowInfoTextMode()"
     class="info-text-control"
-    @click="toggleInfoText"
+    @click="gameStore.actions.toggleInfoText(!gameStore.showInfoText)"
   >
     <div class="control-label">
       INFO Labels

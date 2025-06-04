@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { inject } from 'vue'
-import type { GameStore } from '../GameStore'
-import { GameMode, ObservationMode } from '../store/constants'
+import { gameStateManager } from '../core/GameStateManager'
 
+import type { GameStore } from '../GameStore'
 const gameStore = inject('gameStore') as GameStore
+
 const { scale: s, track } = gameStore.mutation
 const trackColor = computed(() => {
-  if (gameStore.gameMode === GameMode.Battle) {
+  if (gameStateManager.isBattleMode()) {
     return '#FF8C00'
   }
-  else if (gameStore.observationMode !== ObservationMode.None) {
+  else if (gameStateManager.isExploreMode()) {
     return '#20B2AA'
   }
   else {
