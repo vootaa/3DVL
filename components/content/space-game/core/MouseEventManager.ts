@@ -113,13 +113,20 @@ export class MouseEventManager {
   }
 
   initialize() {
-    if (this.isInitialized || !this.gameStore) return this
+    if (this.isInitialized) {
+      this.cleanup();
+    }
+
+    if (!this.gameStore) {
+      console.error('Cannot initialize MouseEventManager - gameStore is null');
+      return this;
+    }
 
     const target = this.canvasElement || window;
 
-    target.addEventListener('mousemove', this.boundHandlers.mousemove)
-    target.addEventListener('mousedown', this.boundHandlers.mousedown)
-    target.addEventListener('mouseup', this.boundHandlers.mouseup)
+    target.addEventListener('mousemove', this.boundHandlers.mousemove, { passive: false })
+    target.addEventListener('mousedown', this.boundHandlers.mousedown, { passive: false })
+    target.addEventListener('mouseup', this.boundHandlers.mouseup, { passive: false })
     target.addEventListener('wheel', this.boundHandlers.wheel, { passive: false })
 
     this.isInitialized = true
@@ -178,6 +185,12 @@ export class MouseEventManager {
       return;
     }
 
+    if (Math.random() < 0.01) {
+      console.log('Mouse position update:', {
+        x: event.clientX - window.innerWidth / 2,
+        y: event.clientY - window.innerHeight / 2
+      });
+    }
     this.gameStore.mutation.mouse.x = event.clientX - window.innerWidth / 2
     this.gameStore.mutation.mouse.y = event.clientY - window.innerHeight / 2
   }

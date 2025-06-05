@@ -73,7 +73,8 @@ const position = new Vector3()
 const direction = new Vector3()
 
 const mutation = gameStore.mutation
-const { clock, mouse, ray } = mutation
+const clock = mutation.clock
+const ray = mutation.ray
 
 const main = shallowRef<Group>(new Group())
 const laserGroup = shallowRef<Group | Group[]>(new Group())
@@ -185,9 +186,12 @@ useLoop().onBeforeRender(() => {
     main.value.position.x += Math.sin(time / period) * amplitude
     main.value.position.y += Math.cos(time / period * 1.3) * amplitude
   } else if (gameStateManager.canFlightMode()) {
+    const mouseX = gameStore.mutation.mouse.x
+    const mouseY = gameStore.mutation.mouse.y
+
     // Clamp mouse coordinates to stay within boundaries
-    const clampedMouseX = clampValue(mouse.x, boundaries.value.x.min * 5, boundaries.value.x.max * 5)
-    const clampedMouseY = clampValue(mouse.y, boundaries.value.y.min * 12, boundaries.value.y.max * 12)
+    const clampedMouseX = clampValue(mouseX, boundaries.value.x.min * 5, boundaries.value.x.max * 5)
+    const clampedMouseY = clampValue(mouseY, boundaries.value.y.min * 12, boundaries.value.y.max * 12)
 
     main.value.rotation.z += (clampedMouseX / 500 - main.value.rotation.z) * 0.2
     main.value.rotation.x += (-clampedMouseY / 1200 - main.value.rotation.x) * 0.2

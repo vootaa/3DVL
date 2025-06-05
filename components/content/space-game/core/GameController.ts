@@ -157,13 +157,11 @@ export class GameController implements IGameController {
   private handleLaunchState() {
     console.log('Initializing game in Launch mode')
 
-    mouseEventManager.setGameStore(this.gameStore).initialize();
-    mouseEventManager.setActiveState(false);
+    mouseEventManager.setGameStore(this.gameStore).setActiveState(false)
   }
 
   private handleBattleState() {
-    mouseEventManager.setGameStore(this.gameStore).initialize();
-    mouseEventManager.setActiveState(true);
+    mouseEventManager.setGameStore(this.gameStore).setActiveState(true)
 
     // Start appropriate sounds
     if (this.gameStore.sound && this.gameStore.audioSystem) {
@@ -174,8 +172,7 @@ export class GameController implements IGameController {
   }
 
   private handleExploreState() {
-    mouseEventManager.setGameStore(this.gameStore).initialize();
-    mouseEventManager.setActiveState(true);
+    mouseEventManager.setGameStore(this.gameStore).setActiveState(true)
 
     // Start appropriate sounds
     if (this.gameStore.sound && this.gameStore.audioSystem) {
@@ -186,8 +183,7 @@ export class GameController implements IGameController {
   }
 
   private handleObservationState() {
-    mouseEventManager.setGameStore(this.gameStore).initialize();
-    mouseEventManager.setActiveState(true);
+    mouseEventManager.setGameStore(this.gameStore).setActiveState(true)
 
     // Adjust sounds for observation mode
     if (this.gameStore.sound && this.gameStore.audioSystem) {

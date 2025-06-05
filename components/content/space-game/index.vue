@@ -30,6 +30,7 @@ const gameController = shallowRef<GameController | null>(null)
 provide('gameController', gameController)
 
 const cameraRef = shallowRef(new PerspectiveCamera())
+const tresCanvasRef = ref<ComponentPublicInstance | null>(null)
 
 const isMounted = ref(false)
 const resourcesLoaded = ref(false)
@@ -47,23 +48,30 @@ onUnmounted(() => {
     gameController.value.cleanup()
   }
 })
-const tresCanvasRef = ref<ComponentPublicInstance | null>(null)
 
 watch(() => gameActive.value, (isActive) => {
   if (isActive) {
-    // After game activation, Canvas is rendered, wait for the next render cycle
     nextTick(() => {
-      // Get Canvas element and set it to MouseEventManager
       setTimeout(() => {
-        // Get the canvas element under the TresCanvas root element
-        const canvasElement = tresCanvasRef.value?.$el.querySelector('canvas')
-        if (canvasElement) {
-          console.log('Setting canvas element to MouseEventManager', canvasElement)
-          mouseEventManager.setGameStore(gameStore).setCanvasElement(canvasElement).setActiveState(true)
+        const canvas = tresCanvasRef.value?.$el?.querySelector('canvas')
+
+        if (canvas) {
+          console.log('Canvas element found via ref', canvas)
+          mouseEventManager.setGameStore(gameStore).setCanvasElement(canvas).setActiveState(true)
         } else {
-          console.warn('Canvas element not found')
+          const canvasBySelector = document.querySelector('.full-screen canvas')
+
+          if (canvasBySelector) {
+            console.log('Canvas element found via selector', canvasBySelector)
+            mouseEventManager
+              .setGameStore(gameStore)
+              .setCanvasElement(canvasBySelector as HTMLCanvasElement)
+              .setActiveState(true)
+          } else {
+            console.error('Canvas element not found')
+          }
         }
-      }, 200) // Short delay to ensure Canvas is fully rendered
+      }, 500)
     })
   }
 })
