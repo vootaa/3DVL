@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { inject } from 'vue'
-import { GameState } from '../core/constants'
+import { computed } from 'vue'
+import {GameState} from '../core/constants'
 import { gameStateManager } from '../core/GameStateManager'
-
 import { SpeedMode, SPEED_SETTINGS } from '../store/constants'
 
 import type { GameStore } from '../GameStore'
@@ -18,19 +17,19 @@ const speedBars = computed(() => {
 })
 
 const currentGameModeLabel = computed(() => {
-  const state = gameStateManager.getCurrentState()
+  const state = gameStateManager.state.value  // Access reactively
   switch (state) {
+    case GameState.LAUNCH: return 'Launch'
     case GameState.BATTLE: return 'Battle'
     case GameState.EXPLORE: return 'Explore'
     case GameState.OBSERVATION: return 'Observing'
-    default: return 'Launch'
+    default: return 'Unknown'
   }
 })
 
 const enableGameModeSwitching = computed(() => {
   return gameStateManager.isBattleOrExploreMode()
 })
-
 </script>
 
 <template>

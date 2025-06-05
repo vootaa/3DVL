@@ -2,15 +2,40 @@
  * Game State Manager
  * Manages the 4 core states of the game and their transitions
  */
-
+import { ref, type Ref } from 'vue'
 import { GameState } from './constants'
 import type { StateTransition, StateChangeHandler } from './types'
 
 export class GameStateManager {
-  private currentState: GameState = GameState.LAUNCH
-  private previousState: GameState | null = null
+  private _currentState: Ref<GameState> = ref(GameState.LAUNCH)
+  private _previousState: Ref<GameState | null> = ref(null)
+
   private stateChangeCallbacks: Map<GameState, StateChangeHandler[]> = new Map()
   private globalStateChangeCallbacks: StateChangeHandler[] = []
+
+  public readonly state = ref<GameState>(GameState.LAUNCH)
+
+  get currentState(): GameState {
+    return this._currentState.value
+  }
+
+  set currentState(newState: GameState) {
+    this._previousState.value = this._currentState.value
+    this._currentState.value = newState
+
+    // Synchronize the external reactive state
+    this.state.value = newState
+
+    this.onStateChange(newState)
+  }
+
+  get previousState(): GameState | null {
+    return this._previousState.value
+  }
+
+  set previousState(value: GameState | null) {
+    this._previousState.value = value
+  }
   
   // Define valid state transitions
   private validTransitions: StateTransition[] = [
@@ -68,7 +93,7 @@ export class GameStateManager {
     return true
   }
 
-  onStateChange(state: GameState, callback: StateChangeHandler) {
+  registerStateChangeCallback(state: GameState, callback: StateChangeHandler) {
     const callbacks = this.stateChangeCallbacks.get(state)
     if (callbacks) {
       callbacks.push(callback)
@@ -76,9 +101,22 @@ export class GameStateManager {
     return () => this.removeStateChangeCallback(state, callback)
   }
 
-  onAnyStateChange(callback: StateChangeHandler) {
+  registerGlobalStateChangeCallback(callback: StateChangeHandler) {
     this.globalStateChangeCallbacks.push(callback)
     return () => this.removeGlobalStateChangeCallback(callback)
+  }
+
+  onStateChange(state: GameState, callback?: StateChangeHandler) {
+    if (callback) {
+      return this.registerStateChangeCallback(state, callback)
+    } else {
+      this.executeStateCallbacks(state);
+      this.executeGlobalStateCallbacks(state);
+    }
+  }
+
+  onAnyStateChange(callback: StateChangeHandler) {
+    return this.registerGlobalStateChangeCallback(callback)
   }
 
   private removeStateChangeCallback(state: GameState, callback: StateChangeHandler) {
