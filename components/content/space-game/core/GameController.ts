@@ -161,8 +161,6 @@ export class GameController implements IGameController {
   }
 
   private handleBattleState() {
-    console.log('Entering Battle Mode')
-
     // Start appropriate sounds
     if (this.gameStore.sound && this.gameStore.audioSystem) {
       this.gameStore.audioSystem.play('bg', true, 0.3)
@@ -172,8 +170,6 @@ export class GameController implements IGameController {
   }
 
   private handleExploreState() {
-    console.log('Entering Explore Mode')
-
     // Start appropriate sounds
     if (this.gameStore.sound && this.gameStore.audioSystem) {
       this.gameStore.audioSystem.play('bg', true, 0.3)
@@ -183,8 +179,6 @@ export class GameController implements IGameController {
   }
 
   private handleObservationState() {
-    console.log('Entering Observation Mode')
-
     // Adjust sounds for observation mode
     if (this.gameStore.sound && this.gameStore.audioSystem) {
       this.gameStore.audioSystem.stop('bg')
