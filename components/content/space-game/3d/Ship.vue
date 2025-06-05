@@ -72,10 +72,6 @@ const crossMaterial = new MeshBasicMaterial({ color: hotpink, fog: false })
 const position = new Vector3()
 const direction = new Vector3()
 
-const mutation = gameStore.mutation
-const clock = mutation.clock
-const ray = mutation.ray
-
 const main = shallowRef<Group>(new Group())
 const laserGroup = shallowRef<Group | Group[]>(new Group())
 const laserLight = shallowRef<PointLight>(new PointLight())
@@ -169,8 +165,11 @@ watch(() => {
   }
 })
 
+const mouseX = computed(() => gameStore.mutation.mouse.x)
+const mouseY = computed(() => gameStore.mutation.mouse.y)
+
 useLoop().onBeforeRender(() => {
-  const time = clock.getElapsedTime()
+  const time = gameStore.mutation.clock.getElapsedTime()
   main.value.position.z = Math.sin(time * 40) * Math.PI * 0.2
 
   if (gameStateManager.isObservationMode()) {
@@ -186,12 +185,16 @@ useLoop().onBeforeRender(() => {
     main.value.position.x += Math.sin(time / period) * amplitude
     main.value.position.y += Math.cos(time / period * 1.3) * amplitude
   } else if (gameStateManager.canFlightMode()) {
-    const mouseX = gameStore.mutation.mouse.x
-    const mouseY = gameStore.mutation.mouse.y
+    const mx = mouseX.value;
+    const my = mouseY.value;
+
+    if (Math.random() < 0.001) {
+      console.log('Ship using mouse position:', { x: mx, y: my })
+    }
 
     // Clamp mouse coordinates to stay within boundaries
-    const clampedMouseX = clampValue(mouseX, boundaries.value.x.min * 5, boundaries.value.x.max * 5)
-    const clampedMouseY = clampValue(mouseY, boundaries.value.y.min * 12, boundaries.value.y.max * 12)
+    const clampedMouseX = clampValue(mx, boundaries.value.x.min * 5, boundaries.value.x.max * 5)
+    const clampedMouseY = clampValue(my, boundaries.value.y.min * 12, boundaries.value.y.max * 12)
 
     main.value.rotation.z += (clampedMouseX / 500 - main.value.rotation.z) * 0.2
     main.value.rotation.x += (-clampedMouseY / 1200 - main.value.rotation.x) * 0.2
@@ -207,8 +210,8 @@ useLoop().onBeforeRender(() => {
     // Get ships orientation and save it to the stores ray
     main.value.getWorldPosition(position)
     main.value.getWorldDirection(direction)
-    ray.origin.copy(position)
-    ray.direction.copy(direction.negate())
+    gameStore.mutation.ray.origin.copy(position)
+    gameStore.mutation.ray.direction.copy(direction.negate())
   }
 
   exhaust.value.scale.x = 1 + Math.sin(time * 200)
@@ -226,16 +229,16 @@ useLoop().onBeforeRender(() => {
   laserLight.value.intensity += (targetIntensity - laserLight.value.intensity) * 0.3
 
   // Only show crosshair and target in Battle mode
-  crossMaterial.color = mutation.hits ? lightgreen : hotpink
+  crossMaterial.color = gameStore.mutation.hits ? lightgreen : hotpink
 
   // In Battle mode, show crosshair
   if (cross.value) {
-    cross.value.visible = gameStateManager.isBattleMode() && !mutation.hits
+    cross.value.visible = gameStateManager.isBattleMode() && !gameStore.mutation.hits
   }
 
   // In Battle mode, show target indicator when targeting
   if (target.value) {
-    target.value.visible = gameStateManager.isBattleMode() && !!mutation.hits
+    target.value.visible = gameStateManager.isBattleMode() && !!gameStore.mutation.hits
   }
 })
 </script>
