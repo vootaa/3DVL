@@ -1,24 +1,36 @@
 <script setup lang="ts">
-import { computed, ref, watch, onUnmounted, inject } from 'vue'
+import { computed, ref, shallowRef, watch, onUnmounted, inject } from 'vue'
 
 import { GameState } from '../core/constants'
-import { GameController } from '../core/GameController'
+import { gameStateManager } from '../core/GameStateManager'
 import { POINTS_OF_INTEREST } from '../store/constants'
+
+import type { IGameController } from '../core/types'
 import type { GameStore } from '../GameStore'
 
 const gameStore = inject('gameStore') as GameStore
-const gameController = inject('gameController') as GameController | null
+const gameController = inject('gameController') as { value: IGameController }
+console.log('GameController injected:', gameController)
 
 const currentGameState = computed(() => {
-  return gameController?.getCurrentState?.() || null
+  if (gameController?.value?.getCurrentState) {
+    return gameController.value.getCurrentState()
+  }
+  return gameStateManager.getCurrentState()
 })
 
 const isExploreMode = computed(() => {
-  return gameController?.isExploreMode?.() || false
+  if (gameController?.value?.isExploreMode) {
+    return gameController.value.isExploreMode()
+  }
+  return gameStateManager.isExploreMode()
 })
 
 const isObservationMode = computed(() => {
-  return gameController?.isObservationMode?.() || false
+  if (gameController?.value?.isObservationMode) {
+    return gameController.value.isObservationMode()
+  }
+  return gameStateManager.isObservationMode()
 })
 
 // observation timer
@@ -77,14 +89,76 @@ const isNearPointOfInterest = (poiKey: keyof typeof POINTS_OF_INTEREST) => {
 }
 
 const observePointOfInterest = (poiKey: keyof typeof POINTS_OF_INTEREST) => {
-  if (gameController) {
-    gameController.enterObservation(poiKey)
+  console.log('Attempting to observe:', poiKey, 'with controller:', gameController);
+  
+  // Consistently use reactive reference
+  if (gameController?.value) {
+    if (typeof gameController.value.enterObservation === 'function') {
+      gameController.value.enterObservation(poiKey);
+    } else {
+      console.error('enterObservation is not a function on gameController.value', gameController.value);
+      
+      // Fallback strategy - directly use gameStateManager
+      if (gameStateManager.canObserve()) {
+        if (gameStateManager.setState(GameState.OBSERVATION)) {
+          // Manually set observation point
+          gameStore.currentPointOfInterest = poiKey;
+          
+          // Set observation mode parameters
+          const poi = POINTS_OF_INTEREST[poiKey];
+          const track = gameStore.mutation.track;
+          const mutation = gameStore.mutation;
+          
+          // Pause movement
+          mutation.previousPosition.copy(mutation.position);
+          mutation.previousTime = Date.now();
+          mutation.isPaused = true;
+          
+          // Set orbit parameters
+          const poiPosition = Array.isArray(poi.trackPosition)
+            ? poi.trackPosition[0]
+            : poi.trackPosition;
+            
+          mutation.orbitCenter.copy(track.parameters.path.getPointAt(poiPosition).multiplyScalar(mutation.scale));
+          mutation.orbitDistance = poi.orbitDistance;
+          mutation.orbitSpeed = poi.orbitSpeed;
+          
+          // Initialize orbit angles
+          gameStore.orbitAngle = 0;
+          gameStore.orbitHeight = 0;
+        }
+      }
+    }
+  } else {
+    console.error('No gameController available');
   }
 }
 
 const resumeJourney = () => {
-  if (gameController) {
-    gameController.exitObservation()
+  console.log('Attempting to resume journey with controller:', gameController);
+  
+  // Consistently use reactive reference
+  if (gameController?.value) {
+    if (typeof gameController.value.exitObservation === 'function') {
+      gameController.value.exitObservation();
+    } else {
+      console.error('exitObservation is not a function on gameController.value');
+      
+      // Fallback strategy
+      if (gameStateManager.setState(GameState.EXPLORE)) {
+        const mutation = gameStore.mutation;
+        
+        // Resume movement
+        if (mutation.isPaused) {
+          mutation.startTime += (Date.now() - mutation.previousTime);
+          mutation.isPaused = false;
+        }
+        
+        gameStore.currentPointOfInterest = null;
+      }
+    }
+  } else {
+    console.error('No gameController available');
   }
 }
 
@@ -101,16 +175,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="observation-controls">
+  <div class="observation-controls" v-show="isExploreMode || isObservationMode">
     <!-- POI Selection UI - when in explore mode but not in observation mode -->
     <div v-if="isExploreMode">
       <div class="poi-header">
         Observe Points:
       </div>
       <div class="poi-buttons">
-        <button v-for="(poi, key) in POINTS_OF_INTEREST" :key="key" :disabled="!isNearPointOfInterest(key)"
+        <button v-for="(poi, key, index) in POINTS_OF_INTEREST" :key="key" :disabled="!isNearPointOfInterest(key)"
           class="poi-button" @click="observePointOfInterest(key)">
-          <span class="poi-number">{{ Number(key) + 1 }}</span> {{ poi.name }}
+          <span class="poi-number">{{ index + 1 }}</span> {{ poi.name }}
         </button>
       </div>
     </div>

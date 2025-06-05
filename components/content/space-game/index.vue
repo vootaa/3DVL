@@ -24,11 +24,8 @@ import { gameStore } from './GameStore'
 provide('gameStore', gameStore)
 
 // Provide game controller
-const gameControllerRef = shallowRef<GameController | null>(null)
-provide('gameController', gameControllerRef)
-
-// Declare gameController variable
-let gameController: GameController | null = null
+const gameController = shallowRef<GameController | null>(null)
+provide('gameController', gameController)
 
 const cameraRef = shallowRef(new PerspectiveCamera())
 
@@ -44,9 +41,8 @@ onMounted(async () => {
 
 onUnmounted(() => {
   isMounted.value = false
-  if (gameController) {
-    gameController.cleanup()
-    gameController = null
+  if (gameController.value) {
+    gameController.value.cleanup()
   }
 })
 
@@ -79,9 +75,7 @@ const initializeGame = async () => {
     await nextTick()
 
     // Initialize game controller
-    const controller = new GameController(gameStore)
-    gameControllerRef.value = controller
-    gameController = controller
+    gameController.value = new GameController(gameStore)
 
     // Initialize camera
     if (cameraRef.value) {
@@ -109,16 +103,16 @@ const start = async (mode: 'battle' | 'explore') => {
   if (!isMounted.value || !resourcesLoaded.value) return
 
   const success = await initializeGame()
-  if (!success || !gameController) return
+  if (!success || !gameController.value) return
 
   try {
     await nextTick()
 
     // Start the selected game mode
     if (mode === 'battle') {
-      await gameController.startBattleMode()
+      await gameController.value.startBattleMode()
     } else {
-      await gameController.startExploreMode()
+      await gameController.value.startExploreMode()
     }
   } catch (error) {
     console.error(`Failed to start ${mode} mode:`, error)
