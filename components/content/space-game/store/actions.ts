@@ -18,6 +18,14 @@ import type { HitType } from './types'
 import type { GameStore } from '../GameStore'
 
 export function initializeActions(gameStore: GameStore) {
+  let gameController: any = null
+
+  function setGameController(controller: any) {
+    gameController = controller
+  }
+
+  gameStore.actions.setGameController = setGameController
+
   function playSound(name: string, loop = false, volume = 1.0) {
     if (gameStore.audioSystem && gameStore.sound) {
       return gameStore.audioSystem.play(name, loop, volume)
@@ -188,12 +196,12 @@ export function initializeActions(gameStore: GameStore) {
 
     if (sound) {
       gameStore.audioSystem.resumeAll()
-      const currentState = gameStateManager.getCurrentState()
+      const currentState = gameController ? gameController.getCurrentState() : gameStateManager.getCurrentState()
       if (currentState !== GameState.LAUNCH) {
         playSound('bg', true, 0.3)
 
         if (currentState !== GameState.OBSERVATION) {
-          playSound('engine', true, 1)
+          playSound('engine', true, 0.7)
           playSound('engine2', true, 0.3)
         }
       }
@@ -214,7 +222,8 @@ export function initializeActions(gameStore: GameStore) {
   // Shooting system
   gameStore.actions.shoot = () => {
     // Only allow shooting in Battle mode
-    if (gameStateManager.canShoot()) {
+    const canShoot = gameController ? gameController.canShoot() : gameStateManager.canShoot()
+    if (canShoot) {
       gameStore.lasers = [...gameStore.lasers, Date.now()]
       clearTimeout(gameStore.mutation.cancelLaserTO)
       gameStore.mutation.cancelLaserTO = setTimeout(() => {
@@ -249,7 +258,7 @@ export function initializeActions(gameStore: GameStore) {
 
   // Main update loop
   gameStore.actions.update = () => {
-    const currentState = gameStateManager.getCurrentState()
+    const currentState = gameController ? gameController.getCurrentState() : gameStateManager.getCurrentState()
     const mutation = gameStore.mutation
 
     if (currentState === GameState.OBSERVATION) {
@@ -412,10 +421,24 @@ export function initializeActions(gameStore: GameStore) {
   // Mode switching - now delegates to GameController
   gameStore.actions.switchGameMode = () => {
     // If game is in progress and modal is not shown
-    if (gameStore.loopCount > 0 && !gameStore.modal.show) {
+    if (!gameStore.modal.show) {
       gameStore.actions.showModal(ModalType.SWITCH_CONFIRM)
+    } else {
+      if (gameController) {
+        gameController.switchGameMode();
+      } else {
+        if (gameStateManager.isBattleMode()) {
+          gameStateManager.setState(GameState.EXPLORE);
+          gameStore.actions.startGame(GameState.EXPLORE);
+        } else if (gameStateManager.isExploreMode()) {
+          gameStateManager.setState(GameState.BATTLE);
+          gameStore.actions.startGame(GameState.BATTLE);
+        }
+      }
+
+      // Close the confirmation modal
+      gameStore.actions.hideModal()
     }
-    // Actual mode switching is handled by GameController
   }
 
   // Speed mode switching

@@ -135,10 +135,10 @@ const comboSystem = computed(() => gameStore.comboSystem)
   </div>
 
   <!-- Game over/mode switch dialog -->
-  <ModalDialog v-if="gameStore.modal.show" :type="gameStore.modal.type" :current-mode="gameStateManager.isBattleMode()"
-    :battle-score="gameStore.battleScore" :destroyed-enemies="destroyedEnemies" :destroyed-rocks="destroyedRocks"
-    :stardust="gameStore.stardust" :time="formattedSessionTime" :total-loops="gameStore.totalLoops"
-    :total-enemies="gameStore.initialEnemyCount" :total-rocks="gameStore.initialRockCount" />
+  <ModalDialog v-if="gameStore.modal.show" :type="gameStore.modal.type" :battle-score="gameStore.battleScore"
+    :destroyed-enemies="destroyedEnemies" :destroyed-rocks="destroyedRocks" :stardust="gameStore.stardust"
+    :time="formattedSessionTime" :total-loops="gameStore.totalLoops" :total-enemies="gameStore.initialEnemyCount"
+    :total-rocks="gameStore.initialRockCount" />
 </template>
 
 <style lang="css" scoped>

@@ -5,8 +5,8 @@ export enum SpeedMode {
 }
 
 export enum ModalType {
-  GAME_OVER = 'gameOver',
-  SWITCH_CONFIRM = 'switchConfirm'
+  GAME_OVER = 'GameOver',
+  SWITCH_CONFIRM = 'SwitchConfirm'
 }
 
 export const SCORE_VALUES = {

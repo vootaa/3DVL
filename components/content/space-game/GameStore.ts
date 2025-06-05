@@ -46,6 +46,7 @@ const createDefaultActions = (): GameActions => ({
   addStardust: () => { console.warn('Game actions not initialized yet') },
   switchGameMode: () => { console.warn('Game actions not initialized yet') },
   switchSpeedMode: () => { console.warn('Game actions not initialized yet') },
+  setGameController() { console.warn('Game actions not initialized yet') },
 })
 
 export const gameStore = reactive({

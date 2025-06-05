@@ -85,6 +85,8 @@ export interface GameActions {
   // Mode switching
   switchGameMode(): void
   switchSpeedMode(): void
+
+  setGameController: (controller: any) => void
 }
 
 // Point of Interest interface

@@ -11,7 +11,7 @@ const gameStore = inject('gameStore') as GameStore
 
 const props = defineProps({
   type: {
-    type: Object as PropType<ModalType>,
+    type: String as PropType<ModalType>,
     required: true,
   },
   battleScore: {

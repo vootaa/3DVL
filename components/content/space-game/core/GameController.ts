@@ -22,6 +22,12 @@ export class GameController implements IGameController {
     // Initialize actions
     initializeActions(this.gameStore)
 
+   if (typeof this.gameStore.actions.setGameController === 'function') {
+      this.gameStore.actions.setGameController(this)
+    } else {
+      console.error("setGameController is not a function in gameStore.actions", this.gameStore.actions)
+    }
+
     // Set gameStore in mouseEventManager
     mouseEventManager.setGameStore(this.gameStore)
 
@@ -32,25 +38,25 @@ export class GameController implements IGameController {
   private setupStateChangeHandlers() {
     // Setup handlers for each state
     this.stateChangeUnsubscribers.push(
-      gameStateManager.onStateChange(GameState.LAUNCH, () => {
+      gameStateManager.registerStateChangeCallback(GameState.LAUNCH, () => {
         this.handleLaunchState()
       })
     )
 
     this.stateChangeUnsubscribers.push(
-      gameStateManager.onStateChange(GameState.BATTLE, () => {
+      gameStateManager.registerStateChangeCallback(GameState.BATTLE, () => {
         this.handleBattleState()
       })
     )
 
     this.stateChangeUnsubscribers.push(
-      gameStateManager.onStateChange(GameState.EXPLORE, () => {
+      gameStateManager.registerStateChangeCallback(GameState.EXPLORE, () => {
         this.handleExploreState()
       })
     )
 
     this.stateChangeUnsubscribers.push(
-      gameStateManager.onStateChange(GameState.OBSERVATION, () => {
+      gameStateManager.registerStateChangeCallback(GameState.OBSERVATION, () => {
         this.handleObservationState()
       })
     )
@@ -94,7 +100,6 @@ export class GameController implements IGameController {
       }
 
       gameStateManager.setState(GameState.BATTLE)
-
       this.gameStore.actions.startGame(GameState.BATTLE)
       return true
     } catch (error) {
@@ -111,7 +116,6 @@ export class GameController implements IGameController {
       }
 
       gameStateManager.setState(GameState.EXPLORE)
-
       this.gameStore.actions.startGame(GameState.EXPLORE)
       return true
     } catch (error) {
@@ -136,13 +140,17 @@ export class GameController implements IGameController {
   }
 
   switchGameMode(): boolean {
-    if (gameStateManager.isBattleMode()) {
-      return this.startExploreMode() as unknown as boolean
-    } else if (gameStateManager.isExploreMode()) {
-      return this.startBattleMode() as unknown as boolean
+    try {
+      if (gameStateManager.isBattleMode()) {
+        return this.startExploreMode() as unknown as boolean
+      } else if (gameStateManager.isExploreMode()) {
+        return this.startBattleMode() as unknown as boolean
+      }
+      return false
+    } catch (error) {
+      console.error('Failed to switch game mode:', error)
+      return false
     }
-
-    return false
   }
 
   // State handlers
