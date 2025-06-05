@@ -13,9 +13,11 @@ export class MouseEventManager {
   private handlers: Map<GameState, MouseHandler> = new Map()
   private isInitialized = false
   private isDragging = false
+  private isActive = false;
   private lastMouseX = 0
   private lastMouseY = 0
   private gameStore: GameStore | null = null
+  private canvasElement: HTMLElement | null = null;
   
   // Store bound event handlers for easier cleanup
   private boundHandlers = {
@@ -33,6 +35,33 @@ export class MouseEventManager {
     this.gameStore = gameStore
     this.initializeHandlers()
     return this // Support chain calls
+  }
+
+  setActiveState(active: boolean) {
+    this.isActive = active;
+
+    if (!active) {
+      this.isDragging = false;
+    }
+
+    console.log(`Mouse event manager active state: ${active}`);
+    return this; // Support chain calls
+  }
+
+  setCanvasElement(element: HTMLElement) {
+    if (element !== this.canvasElement) {
+      if (this.isInitialized) {
+        this.cleanup();
+      }
+
+      this.canvasElement = element;
+      console.log('Canvas element set:', element)
+
+      if (this.isActive) {
+        this.initialize();
+      }
+    }
+    return this; // Support chain calls
   }
 
   private initializeHandlers() {
@@ -86,42 +115,56 @@ export class MouseEventManager {
   initialize() {
     if (this.isInitialized || !this.gameStore) return this
 
-    window.addEventListener('mousemove', this.boundHandlers.mousemove)
-    window.addEventListener('mousedown', this.boundHandlers.mousedown)
-    window.addEventListener('mouseup', this.boundHandlers.mouseup)
-    window.addEventListener('wheel', this.boundHandlers.wheel, { passive: false })
+    const target = this.canvasElement || window;
+
+    target.addEventListener('mousemove', this.boundHandlers.mousemove)
+    target.addEventListener('mousedown', this.boundHandlers.mousedown)
+    target.addEventListener('mouseup', this.boundHandlers.mouseup)
+    target.addEventListener('wheel', this.boundHandlers.wheel, { passive: false })
 
     this.isInitialized = true
+    console.log('Mouse event manager initialized on', this.canvasElement ? 'canvas element' : 'window');
     return this // Support chain calls
   }
 
   cleanup() {
     if (!this.isInitialized) return
 
-    window.removeEventListener('mousemove', this.boundHandlers.mousemove)
-    window.removeEventListener('mousedown', this.boundHandlers.mousedown)
-    window.removeEventListener('mouseup', this.boundHandlers.mouseup)
-    window.removeEventListener('wheel', this.boundHandlers.wheel)
+    const target = this.canvasElement || window;
+
+    target.removeEventListener('mousemove', this.boundHandlers.mousemove)
+    target.removeEventListener('mousedown', this.boundHandlers.mousedown)
+    target.removeEventListener('mouseup', this.boundHandlers.mouseup)
+    target.removeEventListener('wheel', this.boundHandlers.wheel)
 
     this.isInitialized = false
+    console.log('Mouse event manager cleaned up');
   }
 
   private handleMouseMove(event: MouseEvent) {
+    if (!this.isActive) return;
+
     const handler = this.handlers.get(gameStateManager.getCurrentState())
     handler?.onMouseMove?.(event)
   }
 
   private handleMouseDown(event: MouseEvent) {
+    if (!this.isActive) return;
+
     const handler = this.handlers.get(gameStateManager.getCurrentState())
     handler?.onMouseDown?.(event)
   }
 
   private handleMouseUp(event: MouseEvent) {
+    if (!this.isActive) return;
+
     const handler = this.handlers.get(gameStateManager.getCurrentState())
     handler?.onMouseUp?.(event)
   }
 
   private handleWheel(event: WheelEvent) {
+    if (!this.isActive) return;    
+
     const handler = this.handlers.get(gameStateManager.getCurrentState())
     if (handler?.onWheel) {
       event.preventDefault()
@@ -130,7 +173,11 @@ export class MouseEventManager {
   }
 
   private updateShipPosition(event: MouseEvent) {
-    if (!this.gameStore) return
+    if (!this.gameStore) {
+      console.warn('Cannot update ship position - gameStore is null');
+      return;
+    }
+
     this.gameStore.mutation.mouse.x = event.clientX - window.innerWidth / 2
     this.gameStore.mutation.mouse.y = event.clientY - window.innerHeight / 2
   }
@@ -142,7 +189,10 @@ export class MouseEventManager {
   }
 
   private handleOrbitRotation(event: MouseEvent) {
-    if (!this.gameStore) return
+    if (!this.gameStore) {
+      console.warn('Cannot handle orbit rotation - gameStore is null');
+      return;
+    }
     
     const deltaX = event.clientX - this.lastMouseX
     const deltaY = event.clientY - this.lastMouseY

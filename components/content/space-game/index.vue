@@ -3,8 +3,10 @@
 import { TresCanvas } from '@tresjs/core'
 import { SRGBColorSpace, NoToneMapping, PerspectiveCamera } from 'three'
 import { onMounted, onUnmounted, provide, shallowRef, ref, watch, nextTick } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 
 import { GameController } from './core/GameController'
+import { mouseEventManager } from './core/MouseEventManager'
 
 import { ResourceLoader } from './utils/ResourceLoader'
 
@@ -43,6 +45,26 @@ onUnmounted(() => {
   isMounted.value = false
   if (gameController.value) {
     gameController.value.cleanup()
+  }
+})
+const tresCanvasRef = ref<ComponentPublicInstance | null>(null)
+
+watch(() => gameActive.value, (isActive) => {
+  if (isActive) {
+    // After game activation, Canvas is rendered, wait for the next render cycle
+    nextTick(() => {
+      // Get Canvas element and set it to MouseEventManager
+      setTimeout(() => {
+        // Get the canvas element under the TresCanvas root element
+        const canvasElement = tresCanvasRef.value?.$el.querySelector('canvas')
+        if (canvasElement) {
+          console.log('Setting canvas element to MouseEventManager', canvasElement)
+          mouseEventManager.setGameStore(gameStore).setCanvasElement(canvasElement).setActiveState(true)
+        } else {
+          console.warn('Canvas element not found')
+        }
+      }, 200) // Short delay to ensure Canvas is fully rendered
+    })
   }
 })
 
@@ -124,8 +146,8 @@ const start = async (mode: 'battle' | 'explore') => {
   <div>
     <LaunchScreen v-if="!gameActive" :resources-loaded="resourcesLoaded" :progress="loadingProgress" @launch="start" />
     <div v-if="gameActive" class="full-screen">
-      <TresCanvas clear-color="#010104" :linear="true" :flat="true" :antialias="false" :tone-mapping="NoToneMapping"
-        :output-encoding="SRGBColorSpace">
+      <TresCanvas ref="tresCanvasRef" clear-color="#010104" :linear="true" :flat="true" :antialias="false"
+        :tone-mapping="NoToneMapping" :output-encoding="SRGBColorSpace">
         <TresPerspectiveCamera ref="cameraRef" :position="[0, 0, 2000]" :near="0.01" :far="10000"
           :fov="gameStore.mutation.fov" />
         <TresFog color="#121225" :near="150" :far="600" />
