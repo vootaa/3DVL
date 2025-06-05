@@ -122,18 +122,26 @@ export class MouseEventManager {
     if (this.isInitialized) {
       this.cleanup()
     }
-
+    // Reset dragging state when re-initializing
+    this.isDragging = false
     if (!this.gameStore) {
       console.error('Cannot initialize MouseEventManager - gameStore is null')
       return this
     }
 
+    // Use more explicit event listening options
+    const eventOptions = {
+      passive: false,
+      capture: true  // Add capture phase handling to ensure events are captured
+    }
+
     const target = this.canvasElement || window
 
-    target.addEventListener('mousemove', this.boundHandlers.mousemove, { passive: false })
-    target.addEventListener('mousedown', this.boundHandlers.mousedown, { passive: false })
-    target.addEventListener('mouseup', this.boundHandlers.mouseup, { passive: false })
-    target.addEventListener('wheel', this.boundHandlers.wheel, { passive: false })
+    target.addEventListener('mousemove', this.boundHandlers.mousemove, eventOptions)
+    target.addEventListener('mousedown', this.boundHandlers.mousedown, eventOptions)
+    target.addEventListener('mouseup', this.boundHandlers.mouseup, eventOptions)
+    target.addEventListener('wheel', this.boundHandlers.wheel, eventOptions)
+    target.addEventListener('mouseleave', this.boundHandlers.mouseup, eventOptions)
 
     this.isInitialized = true
     console.log('Mouse event manager initialized on', this.canvasElement ? 'canvas element' : 'window')
@@ -149,6 +157,7 @@ export class MouseEventManager {
     target.removeEventListener('mousedown', this.boundHandlers.mousedown)
     target.removeEventListener('mouseup', this.boundHandlers.mouseup)
     target.removeEventListener('wheel', this.boundHandlers.wheel)
+    target.removeEventListener('mouseleave', this.boundHandlers.mouseup)
 
     this.isInitialized = false
     console.log('Mouse event manager cleaned up')
@@ -161,17 +170,17 @@ export class MouseEventManager {
 
     const currentState = gameStateManager.getCurrentState()
 
-    if (Math.random() < 0.01) {
-      console.log(`Mouse move in state: ${currentState}, isDragging: ${this.isDragging}`)
+    // Specifically handle dragging in observation mode
+    if (this.isDragging && gameStateManager.isObservationMode()) {
+      console.log('Direct orbit drag handling')
+      this.handleOrbitDrag(event)
+      return  // Return after direct handling, skip regular process
     }
 
+    // Regular handling process
     const handler = this.handlers.get(currentState)
-
     if (handler?.onMouseMove) {
       handler.onMouseMove(event)
-    } else if (this.isDragging && gameStateManager.isObservationMode()) {
-      console.log('Fallback orbit drag handling')
-      this.handleOrbitDrag(event)
     }
   }
 

@@ -4,7 +4,7 @@ import type { BufferGeometry, Material } from 'three'
 
 import { useLoop } from '@tresjs/core'
 import { BoxGeometry, Color, Group, MeshBasicMaterial, PerspectiveCamera, PointLight, Vector3 } from 'three'
-import { onMounted, onUnmounted, inject, shallowRef, watch, ref } from 'vue'
+import { onMounted, onUnmounted, inject, shallowRef, watch, ref, computed } from 'vue'
 
 import { ResourceLoader } from '../utils/ResourceLoader'
 import { gameStateManager } from '../core/GameStateManager'
@@ -185,8 +185,8 @@ useLoop().onBeforeRender(() => {
     main.value.position.x += Math.sin(time / period) * amplitude
     main.value.position.y += Math.cos(time / period * 1.3) * amplitude
   } else if (gameStateManager.canFlightMode()) {
-    const mx = mouseX.value;
-    const my = mouseY.value;
+    const mx = mouseX.value
+    const my = mouseY.value
 
     if (Math.random() < 0.001) {
       console.log('Ship using mouse position:', { x: mx, y: my })
