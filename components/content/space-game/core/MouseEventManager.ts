@@ -3,7 +3,8 @@
  * Unified management of mouse behaviors in different states
  */
 
-import { GameState } from './constants'
+import { GameState, DEV_Config } from './constants'
+import { Logger } from './logger'
 import { gameStateManager } from './GameStateManager'
 
 import type { MouseHandler } from './types'
@@ -46,7 +47,7 @@ export class MouseEventManager {
       this.isDragging = false
     }
 
-    console.log(`Mouse event manager active state: ${active}`)
+    Logger.log('MouseManager', `Active state: ${active}`)
     return this // Support chain calls
   }
 
@@ -57,7 +58,7 @@ export class MouseEventManager {
       }
 
       this.canvasElement = element
-      console.log('Canvas element set:', element)
+      Logger.log('MouseManager', 'Canvas element set', element)
 
       if (this.isActive) {
         this.initialize()
@@ -97,17 +98,17 @@ export class MouseEventManager {
     // Observation mode
     this.handlers.set(GameState.OBSERVATION, {
       onMouseMove: (event: PointerEvent) => {
-        console.log('Observation mode dragging active')
+        Logger.throttle('ObservationMode', 'Dragging active', null, 500)
         if (this.isDragging) {
           this.handleOrbitDrag(event)
         }
       },
       onMouseDown: (event: PointerEvent) => {
-        console.log('Observation mode mousedown')
+        Logger.log('ObservationMode', 'Mouse down')
         this.startOrbitDrag(event)
       },
       onMouseUp: () => {
-        console.log('Observation mode mouseup')
+        Logger.log('ObservationMode', 'Mouse up')
         this.isDragging = false
       },
       onWheel: (event: WheelEvent) => {
@@ -128,7 +129,7 @@ export class MouseEventManager {
     this.isDragging = false
 
     if (!this.gameStore) {
-      console.error('Cannot initialize MouseEventManager - gameStore is null')
+      Logger.error('MouseManager', 'Cannot initialize - gameStore is null')
       return this
     }
 
@@ -147,7 +148,7 @@ export class MouseEventManager {
     target.addEventListener('pointerleave', this.boundHandlers.pointerup, eventOptions)
 
     this.isInitialized = true
-    console.log('Mouse event manager initialized on', this.canvasElement ? 'canvas element' : 'window')
+    Logger.log('MouseManager', `Initialized on ${this.canvasElement ? 'canvas element' : 'window'}`)
     return this // Support chain calls
   }
 
@@ -163,7 +164,7 @@ export class MouseEventManager {
     target.removeEventListener('pointerleave', this.boundHandlers.pointerup)
 
     this.isInitialized = false
-    console.log('Mouse event manager cleaned up')
+    Logger.log('MouseManager', 'Cleaned up')
   }
 
   private handleMouseMove(event: PointerEvent) {
@@ -173,20 +174,18 @@ export class MouseEventManager {
 
     const currentState = gameStateManager.getCurrentState()
 
-    if (Math.random() < 0.05) {
-      console.log(`Pointer move in state: ${currentState}, isDragging: ${this.isDragging}`)
-    }
+    Logger.random('MouseMove', `State: ${currentState}, isDragging: ${this.isDragging}`)
 
     // Specifically handle dragging in observation mode
     if (this.isDragging && gameStateManager.isObservationMode()) {
-      console.log('Handling orbit drag movement')
+      Logger.throttle('OrbitControl', 'Handling orbit drag movement', null, 200)
       this.handleOrbitDrag(event)
       return  // Return after direct handling, skip regular process
     }
 
     // Handle regular mouse position updates
     if (gameStateManager.canFlightMode()) {
-      console.log('Updating ship position in flight mode')
+      Logger.throttle('FlightMode', 'Updating ship position', null, 300)
       this.updateShipPosition(event)
       return
     }
@@ -200,19 +199,19 @@ export class MouseEventManager {
 
   private handleMouseDown(event: PointerEvent) {
     if (!this.isActive) {
-      console.log('Mouse down ignored - manager not active')
+      Logger.log('MouseManager', 'Mouse down ignored - manager not active')
       return
     }
 
     const currentState = gameStateManager.getCurrentState()
-    console.log(`Mouse down in state: ${currentState}`)
+    Logger.log('MouseDown', `State: ${currentState}`)
 
     const handler = this.handlers.get(currentState)
 
     if (handler?.onMouseDown) {
       handler.onMouseDown(event)
     } else if (gameStateManager.isObservationMode()) {
-      console.log('Fallback orbit drag start')
+      Logger.log('OrbitControl', 'Fallback orbit drag start')
       this.startOrbitDrag(event)
     }
   }
@@ -221,15 +220,15 @@ export class MouseEventManager {
     if (!this.isActive) return
 
     const currentState = gameStateManager.getCurrentState()
-    console.log(`Pointer up in state: ${currentState}`)
+    Logger.log('MouseUp', `State: ${currentState}`)
 
     if (this.pointerCapture && this.canvasElement && this.currentPointerId === event.pointerId) {
       try {
         this.canvasElement.releasePointerCapture(event.pointerId)
-        console.log('Pointer capture released for ID:', event.pointerId)
+        Logger.log('PointerCapture', `Released for ID: ${event.pointerId}`)
         this.pointerCapture = false
       } catch (e) {
-        console.error('Failed to release pointer capture:', e)
+        Logger.error('PointerCapture', 'Failed to release pointer capture', e)
       }
     }
 
@@ -240,7 +239,7 @@ export class MouseEventManager {
 
     if (this.isDragging && gameStateManager.isObservationMode()) {
       this.isDragging = false
-      console.log('Drag state reset on pointer up')
+      Logger.log('OrbitControl', 'Drag state reset on pointer up')
     }
   }
 
@@ -264,22 +263,22 @@ export class MouseEventManager {
     const x = event.clientX - window.innerWidth / 2
     const y = event.clientY - window.innerHeight / 2
 
-    console.log('Ship position update:', { x, y, clientX: event.clientX, clientY: event.clientY })
+    Logger.throttle('ShipPosition', 'Update', { x, y, clientX: event.clientX, clientY: event.clientY }, 200)
 
     // Ensure direct modification of mutation object properties
     this.gameStore.mutation.mouse.x = x
     this.gameStore.mutation.mouse.y = y
 
-    console.log('Updated mouse position:', this.gameStore.mutation.mouse)
+    Logger.throttle('MousePosition', 'Updated', this.gameStore.mutation.mouse, 500)
   }
 
   private startOrbitDrag(event: PointerEvent) {
     if (!gameStateManager.isObservationMode()) {
-      console.log('Not starting orbit drag - not in observation mode')
+      Logger.log('OrbitControl', 'Not starting orbit drag - not in observation mode')
       return
     }
 
-    console.log('Start orbit drag', { x: event.clientX, y: event.clientY })
+    Logger.log('OrbitControl', 'Start drag', { x: event.clientX, y: event.clientY })
 
     this.isDragging = true
     this.lastMouseX = event.clientX
@@ -288,11 +287,11 @@ export class MouseEventManager {
     if (this.canvasElement) {
       try {
         this.canvasElement.setPointerCapture(event.pointerId)
-        console.log('Pointer capture set for ID:', event.pointerId)
+        Logger.log('PointerCapture', `Set for ID: ${event.pointerId}`)
         this.pointerCapture = true
         this.currentPointerId = event.pointerId
       } catch (e) {
-        console.error('Failed to set pointer capture:', e)
+        Logger.error('PointerCapture', 'Failed to set pointer capture', e)
       }
     }
 
@@ -308,9 +307,7 @@ export class MouseEventManager {
     const deltaX = event.clientX - this.lastMouseX
     const deltaY = event.clientY - this.lastMouseY
 
-    if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
-      console.log('Orbit drag delta', { deltaX, deltaY })
-    }
+    Logger.throttle('OrbitDelta', '', { deltaX, deltaY }, 100)
 
     const prevAngle = this.gameStore.orbitAngle
     const prevHeight = this.gameStore.orbitHeight
@@ -324,10 +321,10 @@ export class MouseEventManager {
 
     if (Math.abs(this.gameStore.orbitAngle - prevAngle) > 0.001 ||
       Math.abs(this.gameStore.orbitHeight - prevHeight) > 0.001) {
-      console.log('Updated orbit angles:', {
+      Logger.throttle('OrbitAngles', 'Updated', {
         orbitAngle: this.gameStore.orbitAngle.toFixed(3),
         orbitHeight: this.gameStore.orbitHeight.toFixed(3)
-      })
+      }, 200)
     }
 
     this.lastMouseX = event.clientX
@@ -342,6 +339,8 @@ export class MouseEventManager {
     
     const delta = event.deltaY > 0 ? 5 : -5
     this.gameStore.mutation.orbitDistance = Math.max(30, Math.min(200, this.gameStore.mutation.orbitDistance + delta))
+
+    Logger.throttle('OrbitZoom', 'Changed', { distance: this.gameStore.mutation.orbitDistance }, 200)
   }
 }
 

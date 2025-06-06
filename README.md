@@ -69,7 +69,6 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 
 [MIT](/LICENSE)
 
-
 ## 🧾 Attribution & Credits
 
 This project is an early-stage experimental fork of the TresJS Showcase, created by the amazing @tresjs team.
@@ -101,7 +100,7 @@ This fork is an open-ended experiment. The possible development direction includ
 
  • Leveraging GitHub Copilot and AI coding models to iteratively implement new features and custom shaders
 
-⚠️ Please note: 
+⚠️ Please note:
 
 I’m not a professional frontend or Web3D developer. This project began as a zero-experience learning journey.
 
@@ -116,4 +115,3 @@ The main motivation behind this fork was to explore whether Kadena’s Chainweb 
 The initial demo was shared to gauge interest from the $KDA and Chainweb communities, rather than to present a polished or standalone Web3D project.
 
 In hindsight, the lack of proper context may have caused confusion or frustration for developers in the Web3D space. That was never the intention, and I sincerely appreciate the feedback and perspective from the community.
-
