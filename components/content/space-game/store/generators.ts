@@ -32,7 +32,7 @@ export function randomData(
     horizontalOffset.y = verticalOffset
 
     const offset = pos.clone().add(horizontalOffset)
-    const speed = 0.1 + Math.random()
+    const speed = 1.0 + Math.random()
 
     results.push({
       guid: guid++,
@@ -189,11 +189,11 @@ export function generateSpaceProbeData(track: TubeGeometry, startT: number = TRA
   const t = startT
 
   // Get position and rotation with offset
-  const { position, rotation } = calculateTrackPositionAndRotation(track, t, 70)
+  const { position, rotation } = calculateTrackPositionAndRotation(track, t, 100)
 
   return {
     position: position.toArray(),
     rotation,
-    scale: 3,
+    scale: 5,
   }
 }

@@ -19,11 +19,11 @@ const rocksGroupRef = shallowRef(new Group())
 // Performance optimization parameters
 const PERFORMANCE = {
   // Visible range radius - rocks beyond this range won't have transformations calculated
-  VISIBLE_RADIUS: 150,
+  VISIBLE_RADIUS: 450,
   // Update throttling - update distant rocks' transformations every N frames
   UPDATE_THROTTLE: 3,
   // Maximum active rocks - limit the number of rocks animating simultaneously
-  MAX_ACTIVE_ROCKS: 25
+  MAX_ACTIVE_ROCKS: 30
 }
 
 // Pre-allocated reusable objects - avoid creating new objects in loops
@@ -46,17 +46,9 @@ interface RockVariation {
   scaleX: number
   scaleY: number
   scaleZ: number
-  // Pre-calculated rotation information
-  rotAxisX: number
-  rotAxisY: number
-  rotAxisZ: number
-  rotInitX: number
-  rotInitY: number
-  rotInitZ: number
-  rotSpeedFactor: number // Rotation speed factor based on rock speed
+  rotSpeed: number 
   // Performance optimization flags
   isActive: boolean      // Whether in active range
-  lastUpdateFrame: number // Last frame updated
   distance: number       // Distance to camera/origin
 }
 
@@ -86,30 +78,18 @@ function initializeRockVariations() {
     
     // Base scale value
     const baseScale = rock.scale
-    const variationRange = 0.3
-
-    // Rotation speed factor based on rock speed
-    const rotationSpeedFactor = 2.0 + rng() * 8.0
     
     // Pre-calculate all random values and store for performance
     rockVariations.set(String(rock.guid), {
       // Non-uniform scaling
-      scaleX: baseScale * (1 + (rng() - 0.5) * variationRange),
-      scaleY: baseScale * (1 + (rng() - 0.5) * variationRange),
-      scaleZ: baseScale * (1 + (rng() - 0.5) * variationRange),
-      
-      // Rotation axis and initial rotation
-      rotAxisX: rng() * 2 - 1,
-      rotAxisY: rng() * 2 - 1,
-      rotAxisZ: rng() * 2 - 1,
-      rotInitX: rng() * Math.PI * 2,
-      rotInitY: rng() * Math.PI * 2,
-      rotInitZ: rng() * Math.PI * 2,
-      rotSpeedFactor: rotationSpeedFactor,
-      
+      scaleX: baseScale * (1 + (rng() - 0.5) * 0.95),
+      scaleY: baseScale * (1 + (rng() - 0.5) * 1.0),
+      scaleZ: baseScale * (1 + (rng() - 0.5) * 1.05),
+
+      rotSpeed: 1.0 + (rng() - 0.5) * 4.0,
+
       // Active by default
       isActive: true,
-      lastUpdateFrame: 0,
       distance: 0
     })
   }
@@ -223,7 +203,7 @@ useLoop().onBeforeRender(() => {
   frameCount++
   
   // Update rock activity state every 30 frames
-  if (frameCount % 30 === 0) {
+  if (frameCount % 25 === 0) {
     updateRockActivity()
   }
   
@@ -254,20 +234,13 @@ useLoop().onBeforeRender(() => {
     }
     
     // Calculate rotation
-    const r = clock.elapsedTime * data.speed * variation.rotSpeedFactor
+    const rotationAmount = clock.elapsedTime * data.speed * variation.rotSpeed
     
     // Apply scaling
     rock.scale.set(variation.scaleX, variation.scaleY, variation.scaleZ)
     
     // Apply rotation
-    rock.rotation.set(
-      variation.rotInitX + r * variation.rotAxisX,
-      variation.rotInitY + r * variation.rotAxisY,
-      variation.rotInitZ + r * variation.rotAxisZ
-    )
-    
-    // Record update frame
-    variation.lastUpdateFrame = frameCount
+    rock.rotation.set(rotationAmount * 0.5, rotationAmount, rotationAmount * 0.3)
     
     i++
   }
@@ -284,7 +257,7 @@ useLoop().onBeforeRender(() => {
       <TresGroup
         :position="[-0.016, -0.012, 0.24]"
         :rotation="[3.00, 0.27, -0.22]"
-        :scale="[3.5, 3.5, 3.5]"
+        :scale="[2.95, 3.0, 3.05]"
       >
         <template v-if="modelData.isLoaded && modelData.stoneNode">
           <TresMesh

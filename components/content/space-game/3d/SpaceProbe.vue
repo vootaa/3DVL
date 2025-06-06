@@ -63,8 +63,8 @@ onMounted(async () => {
 useLoop().onBeforeRender(({ elapsed }) => {
   if (probeGroup.value) {
     // Rotate the probe at a different speed than the space station
-    probeGroup.value.rotation.y += 0.002
-    probeGroup.value.rotation.x += 0.001
+    probeGroup.value.rotation.y += 0.008
+    probeGroup.value.rotation.x += 0.004
 
     if (probeLight.value) {
       // Make the light pulse at a different frequency

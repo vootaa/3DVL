@@ -2,9 +2,8 @@ import { reactive } from 'vue'
 import type { PerspectiveCamera } from 'three'
 import { Clock, Object3D, Ray, Box3, TubeGeometry, Vector2, Vector3 } from 'three'
 
-import { POINTS_OF_INTEREST } from './store/constants'
+import { POINTS_OF_INTEREST, SPEED_SETTINGS, SpeedMode } from './store/constants'
 import { timeManager } from './store/TimeManager'
-import { SpeedMode } from './store/constants'
 import { WiderGrannyKnot } from './store/utils'
 import {
   generateRings,
@@ -102,7 +101,7 @@ export const gameStore = reactive({
   comboSystem: {
     count: 0,
     lastHitTime: 0,
-    timeWindow: 2000,
+    timeWindow: 1500,
     active: false,
     resetTimer: 0 as unknown as ReturnType<typeof setTimeout>,
   } as ComboSystem,
@@ -131,7 +130,7 @@ export const gameStore = reactive({
 
     // Dynamic entities
     particles: [] as ObjectData[],
-    looptime: 40 * 1000, // default to fast mode
+    looptime: SPEED_SETTINGS[SpeedMode.Fast].looptime,
     binormal: new Vector3(),
     normal: new Vector3(),
     clock: new Clock(false),

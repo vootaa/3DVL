@@ -79,7 +79,7 @@ export const POINTS_OF_INTEREST = {
 
 export const SPEED_SETTINGS = {
   [SpeedMode.Slow]: {
-    looptime: 80 * 1000,
+    looptime: 90 * 1000,
     label: 'SLOW',
     factor: 0.5,
   },
@@ -89,7 +89,7 @@ export const SPEED_SETTINGS = {
     factor: 1.0,
   },
   [SpeedMode.Fast]: {
-    looptime: 40 * 1000,
+    looptime: 45 * 1000,
     label: 'FAST',
     factor: 1.5,
   },
