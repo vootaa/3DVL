@@ -3,7 +3,7 @@
  * Unified management of mouse behaviors in different states
  */
 
-import { GameState, DEV_Config } from './constants'
+import { GameState, CAMERA_CONSTANTS } from './constants'
 import { Logger } from './logger'
 import { gameStateManager } from './GameStateManager'
 
@@ -21,7 +21,14 @@ export class MouseEventManager {
   private currentPointerId = -1
   private gameStore: GameStore | null = null
   private canvasElement: HTMLElement | null = null
-  
+
+  // Orbit control smoothing
+  private targetOrbitAngle = 0
+  private targetOrbitHeight = 0
+  private currentOrbitVelocityX = 0
+  private currentOrbitVelocityY = 0
+  private orbitDamping = CAMERA_CONSTANTS.ORBIT_CONTROL.DAMPING
+
   // Store bound event handlers for easier cleanup
   private boundHandlers = {
     pointermove: (e: Event) => this.handleMouseMove(e as PointerEvent),
@@ -36,6 +43,13 @@ export class MouseEventManager {
 
   setGameStore(gameStore: GameStore) {
     this.gameStore = gameStore
+
+    // Initialize orbit control targets with current values
+    if (gameStore) {
+      this.targetOrbitAngle = gameStore.orbitAngle || 0
+      this.targetOrbitHeight = gameStore.orbitHeight || 0
+    }
+
     this.initializeHandlers()
     return this // Support chain calls
   }
@@ -67,6 +81,33 @@ export class MouseEventManager {
     return this // Support chain calls
   }
 
+  // Call this method in animation loop to update orbit control smoothing
+  updateOrbitControls() {
+    if (!this.gameStore) return;
+
+    // Calculate the difference between current and target angles
+    const diffAngle = this.targetOrbitAngle - this.gameStore.orbitAngle;
+    const diffHeight = this.targetOrbitHeight - this.gameStore.orbitHeight;
+
+    // Apply damping for smooth motion
+    this.currentOrbitVelocityX = this.currentOrbitVelocityX * this.orbitDamping + diffAngle * (1 - this.orbitDamping);
+    this.currentOrbitVelocityY = this.currentOrbitVelocityY * this.orbitDamping + diffHeight * (1 - this.orbitDamping);
+
+    // Only update if velocity is above threshold
+    if (Math.abs(this.currentOrbitVelocityX) > CAMERA_CONSTANTS.ORBIT_CONTROL.MIN_VELOCITY) {
+      this.gameStore.orbitAngle += this.currentOrbitVelocityX;
+    }
+
+    if (Math.abs(this.currentOrbitVelocityY) > CAMERA_CONSTANTS.ORBIT_CONTROL.MIN_VELOCITY) {
+      this.gameStore.orbitHeight += this.currentOrbitVelocityY;
+      // Ensure height stays within limits
+      this.gameStore.orbitHeight = Math.max(
+        CAMERA_CONSTANTS.MIN_ORBIT_HEIGHT,
+        Math.min(CAMERA_CONSTANTS.MAX_ORBIT_HEIGHT, this.gameStore.orbitHeight)
+      );
+    }
+  }
+
   private initializeHandlers() {
     if (!this.gameStore) return
 
@@ -74,7 +115,7 @@ export class MouseEventManager {
     this.handlers.clear()
 
     this.handlers.set(GameState.LAUNCH, {})
-    
+
     // Battle mode
     this.handlers.set(GameState.BATTLE, {
       onMouseMove: (event: PointerEvent) => {
@@ -86,7 +127,7 @@ export class MouseEventManager {
         this.gameStore.actions.shoot()
       }
     })
-    
+
     // Explore mode
     this.handlers.set(GameState.EXPLORE, {
       onMouseMove: (event: PointerEvent) => {
@@ -94,7 +135,7 @@ export class MouseEventManager {
         this.updateShipPosition(event)
       }
     })
-    
+
     // Observation mode
     this.handlers.set(GameState.OBSERVATION, {
       onMouseMove: (event: PointerEvent) => {
@@ -116,7 +157,7 @@ export class MouseEventManager {
         this.handleOrbitZoom(event)
       }
     })
-    
+
     // Launch mode - no mouse handling
     this.handlers.set(GameState.LAUNCH, {})
   }
@@ -284,6 +325,12 @@ export class MouseEventManager {
     this.lastMouseX = event.clientX
     this.lastMouseY = event.clientY
 
+    // Sync target angles with current values at drag start
+    if (this.gameStore) {
+      this.targetOrbitAngle = this.gameStore.orbitAngle
+      this.targetOrbitHeight = this.gameStore.orbitHeight
+    }
+
     if (this.canvasElement) {
       try {
         this.canvasElement.setPointerCapture(event.pointerId)
@@ -309,21 +356,24 @@ export class MouseEventManager {
 
     Logger.throttle('OrbitDelta', '', { deltaX, deltaY }, 100)
 
-    const prevAngle = this.gameStore.orbitAngle
-    const prevHeight = this.gameStore.orbitHeight
+    // Update target angles with reduced sensitivity
+    this.targetOrbitAngle += deltaX * CAMERA_CONSTANTS.ORBIT_CONTROL.HORIZONTAL_SENSITIVITY
+    this.targetOrbitHeight += deltaY * CAMERA_CONSTANTS.ORBIT_CONTROL.VERTICAL_SENSITIVITY
 
-    this.gameStore.orbitAngle += deltaX * 0.01
-
-    this.gameStore.orbitHeight = Math.max(
-      -Math.PI / 3,
-      Math.min(Math.PI / 3, this.gameStore.orbitHeight + deltaY * 0.01)
+    // Constrain target height within limits
+    this.targetOrbitHeight = Math.max(
+      CAMERA_CONSTANTS.MIN_ORBIT_HEIGHT,
+      Math.min(CAMERA_CONSTANTS.MAX_ORBIT_HEIGHT, this.targetOrbitHeight)
     )
 
-    if (Math.abs(this.gameStore.orbitAngle - prevAngle) > 0.001 ||
-      Math.abs(this.gameStore.orbitHeight - prevHeight) > 0.001) {
-      Logger.throttle('OrbitAngles', 'Updated', {
-        orbitAngle: this.gameStore.orbitAngle.toFixed(3),
-        orbitHeight: this.gameStore.orbitHeight.toFixed(3)
+    // Log changes when significant
+    if (Math.abs(this.gameStore.orbitAngle - this.targetOrbitAngle) > 0.01 ||
+      Math.abs(this.gameStore.orbitHeight - this.targetOrbitHeight) > 0.01) {
+      Logger.throttle('OrbitTargets', 'Updated', {
+        targetAngle: this.targetOrbitAngle.toFixed(3),
+        targetHeight: this.targetOrbitHeight.toFixed(3),
+        currentAngle: this.gameStore.orbitAngle.toFixed(3),
+        currentHeight: this.gameStore.orbitHeight.toFixed(3)
       }, 200)
     }
 
@@ -336,11 +386,26 @@ export class MouseEventManager {
 
   private handleOrbitZoom(event: WheelEvent) {
     if (!this.gameStore) return
-    
-    const delta = event.deltaY > 0 ? 5 : -5
-    this.gameStore.mutation.orbitDistance = Math.max(30, Math.min(200, this.gameStore.mutation.orbitDistance + delta))
+
+    // Smoother zooming with smaller delta
+    const delta = event.deltaY > 0 ? CAMERA_CONSTANTS.ORBIT_CONTROL.ZOOM_SPEED : -CAMERA_CONSTANTS.ORBIT_CONTROL.ZOOM_SPEED;
+
+    const newDistance = Math.max(
+      CAMERA_CONSTANTS.MIN_ORBIT_DISTANCE,
+      Math.min(
+        CAMERA_CONSTANTS.MAX_ORBIT_DISTANCE,
+        this.gameStore.mutation.orbitDistance + delta
+      )
+    )
+
+    // Apply zoom with some damping
+    this.gameStore.mutation.orbitDistance = this.gameStore.mutation.orbitDistance * CAMERA_CONSTANTS.ORBIT_CONTROL.ZOOM_DAMPING +
+      newDistance * (1 - CAMERA_CONSTANTS.ORBIT_CONTROL.ZOOM_DAMPING)
 
     Logger.throttle('OrbitZoom', 'Changed', { distance: this.gameStore.mutation.orbitDistance }, 200)
+
+    event.preventDefault();
+    event.stopPropagation();
   }
 }
 

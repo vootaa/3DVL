@@ -15,6 +15,7 @@ import type { GameStore } from '../GameStore'
 export class GameController implements IGameController {
   private gameStore: GameStore
   private stateChangeUnsubscribers: Array<() => void> = []
+  private animationFrameId: number | null = null
 
   constructor(gameStore: GameStore) {
     this.gameStore = gameStore
@@ -191,6 +192,8 @@ export class GameController implements IGameController {
       this.gameStore.audioSystem.stop('engine')
       this.gameStore.audioSystem.stop('engine2')
     }
+
+    this.startOrbitControlLoop();
   }
 
   private setupObservationMode(pointOfInterestKey: keyof typeof POINTS_OF_INTEREST) {
@@ -221,6 +224,12 @@ export class GameController implements IGameController {
     // Initialize orbit angles
     this.gameStore.orbitAngle = 0
     this.gameStore.orbitHeight = 0
+
+    // Ensure target values are synchronized after setting orbit parameters
+    if (mouseEventManager) {
+      // Notify mouse event manager to reset target values
+      mouseEventManager.setGameStore(this.gameStore);
+    }
   }
 
   private resumeExploration() {
@@ -238,9 +247,47 @@ export class GameController implements IGameController {
     if (this.gameStore.sound && this.gameStore.audioSystem) {
       this.gameStore.audioSystem.play('engine', true, 0.6)
     }
+
+    // Stop orbit control update loop
+    this.stopOrbitControlLoop();
+  }
+
+  // Start orbit control update loop
+  private startOrbitControlLoop() {
+    // Ensure any existing loop is stopped first
+    this.stopOrbitControlLoop();
+
+    // Create update function
+    const updateLoop = () => {
+      // Only update in observation mode
+      if (gameStateManager.isObservationMode()) {
+        // Update orbit controls
+        mouseEventManager.updateOrbitControls();
+
+        // Continue the loop
+        this.animationFrameId = requestAnimationFrame(updateLoop);
+      } else {
+        // If no longer in observation mode, stop the loop
+        this.stopOrbitControlLoop();
+      }
+    };
+
+    // Start the loop
+    this.animationFrameId = requestAnimationFrame(updateLoop);
+  }
+
+  // Stop orbit control update loop
+  private stopOrbitControlLoop() {
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
   }
 
   cleanup() {
+    // Stop orbit control updates
+    this.stopOrbitControlLoop();
+
     // Clean up event handlers
     this.stateChangeUnsubscribers.forEach(unsubscribe => unsubscribe())
     this.stateChangeUnsubscribers = []
