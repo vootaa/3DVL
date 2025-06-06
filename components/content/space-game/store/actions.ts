@@ -420,6 +420,10 @@ export function initializeActions(gameStore: GameStore) {
 
   // Mode switching - now delegates to GameController
   gameStore.actions.switchGameMode = () => {
+    if (gameStateManager.isObservationMode()) {
+      return
+    }
+
     // If game is in progress and modal is not shown
     if (!gameStore.modal.show) {
       gameStore.actions.showModal(ModalType.SWITCH_CONFIRM)
@@ -443,6 +447,10 @@ export function initializeActions(gameStore: GameStore) {
 
   // Speed mode switching
   gameStore.actions.switchSpeedMode = () => {
+    if (gameStateManager.isObservationMode()) {
+      return
+    }
+
     if (gameStore.speedMode === SpeedMode.Fast) {
       gameStore.speedMode = SpeedMode.Slow
     } else if (gameStore.speedMode === SpeedMode.Slow) {
