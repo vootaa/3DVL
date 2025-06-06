@@ -56,15 +56,12 @@ const restartGame = () => {
 }
 
 const switchMode = () => {
-  // Switch game mode and restart
-  // If switching from game over dialog, need complete reset
   if (props.type === ModalType.GAME_OVER) {
-    gameStore.actions.startGame( gameStateManager.isBattleMode() ? GameState.EXPLORE : GameState.BATTLE) // switch to opposite mode
+    // If switching from game over dialog, need complete reset
     timeManager.actions.reset()
   }
-  else {
-    gameStore.actions.switchGameMode()
-  }
+
+  gameStore.actions.switchGameMode()
   gameStore.actions.hideModal()
 }
 
