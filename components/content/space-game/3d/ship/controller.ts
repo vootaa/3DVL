@@ -1,6 +1,6 @@
 import type { ComputedRef } from 'vue'
 import { ShipPhysics } from './physics'
-import { SHIP_CONTROLS } from './config'
+import { SHIP_CONTROLS } from './constants'
 import type { ShipRefs, ShipControlState } from './types'
 import type { GameStore } from '../../GameStore'
 

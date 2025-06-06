@@ -1,5 +1,5 @@
 import { reactive } from 'vue'
-import { SHIP_CONTROLS } from './config'
+import { SHIP_CONTROLS } from './constants'
 import type { ShipRefs, ShipControlState } from './types'
 
 export class ShipPhysics {
