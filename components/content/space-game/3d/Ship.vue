@@ -3,8 +3,8 @@
 import type { BufferGeometry, Material } from 'three'
 
 import { useLoop } from '@tresjs/core'
-import { BoxGeometry, Color, Group, MeshBasicMaterial, PerspectiveCamera, PointLight, Vector3 } from 'three'
-import { onMounted, onUnmounted, inject, shallowRef, watch, ref, computed } from 'vue'
+import { BoxGeometry, Color, Group, MeshBasicMaterial, PointLight, Vector3 } from 'three'
+import { onMounted, inject, shallowRef, watch, ref, computed } from 'vue'
 
 import { ResourceLoader } from '../utils/ResourceLoader'
 import { gameStateManager } from '../core/GameStateManager'
@@ -79,101 +79,12 @@ const exhaust = shallowRef<Group>(new Group())
 const cross = shallowRef<Group>(new Group())
 const target = shallowRef<Group>(new Group())
 
-// Define margin values (percentage of screen)
-const margins: { x: number; y: number } = {
-  x: 0.12,
-  y: 0.1,
-}
-
-function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
-  let timeout: ReturnType<typeof setTimeout> | null = null
-
-  return (...args: Parameters<F>): ReturnType<F> | undefined => {
-    if (timeout !== null) {
-      clearTimeout(timeout)
-      timeout = null
-    }
-    timeout = setTimeout(() => func(...args), waitFor)
-    return undefined as any
-  }
-}
-
-// Calculate boundaries based on window size
-const boundaries = shallowRef<{
-  x: { min: number; max: number }
-  y: { min: number; max: number }
-}>({
-  x: { min: 0, max: 0 },
-  y: { min: 0, max: 0 },
-})
-
-// Function to update boundaries based on current screen size
-function updateBoundaries(): void {
-  const camera = gameStore.camera as unknown as PerspectiveCamera | undefined
-  if (!camera || camera.position.z <= 0) {
-    setTimeout(updateBoundaries, 100)
-    return
-  }
-  const width: number = window.innerWidth
-  const height: number = window.innerHeight
-
-  const effectiveWidth: number = width * (1 - 2 * margins.x)
-  const effectiveHeight: number = height * (1 - 2 * margins.y)
-
-  const cameraZ: number = Math.max(camera.position.z, 100)
-  const worldWidth: number = Math.tan(Math.PI * gameStore.mutation.fov / 360) * cameraZ * 2
-  const worldHeight: number = worldWidth / (window.innerWidth / window.innerHeight)
-
-  const worldScaleX: number = worldWidth / effectiveWidth
-  const worldScaleY: number = worldHeight / effectiveHeight
-
-  boundaries.value = {
-    x: {
-      min: -(width / 2 - width * margins.x) * worldScaleX,
-      max: (width / 2 - width * margins.x) * worldScaleX,
-    },
-    y: {
-      min: -(height / 2 - height * margins.y) * worldScaleY,
-      max: (height / 2 - height * margins.y) * worldScaleY,
-    },
-  }
-
-  console.log('Updated boundaries:', boundaries.value)
-}
-
-// Function to clamp values within boundaries
-function clampValue(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max)
-}
-
-const debouncedUpdateBoundaries = debounce(updateBoundaries, 100)
-// Update boundaries when component is mounted and on window resize
-onMounted(() => {
-  updateBoundaries()
-  window.addEventListener('resize', debouncedUpdateBoundaries)
-  setTimeout(updateBoundaries, 500)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', debouncedUpdateBoundaries)
-})
-
-watch(() => {
-  const camera = gameStore.camera as unknown as PerspectiveCamera | undefined
-  return camera?.position.z
-}, (newValue) => {
-  if (newValue !== undefined && gameStore.camera) {
-    updateBoundaries()
-  }
-})
-
 const mouseX = computed(() => gameStore.mutation.mouse.x)
 const mouseY = computed(() => gameStore.mutation.mouse.y)
 
 watch([mouseX, mouseY], ([newX, newY]) => {
   console.log('Mouse position updated:', { x: newX, y: newY })
 }, { immediate: true })
-
 
 useLoop().onBeforeRender(() => {
   const time = gameStore.mutation.clock.getElapsedTime()
@@ -213,11 +124,6 @@ useLoop().onBeforeRender(() => {
 
     main.value.position.x += (targetX - main.value.position.x) * 0.1
     main.value.position.y += (targetY - main.value.position.y) * 0.1
-
-    console.log('Simple ship control:', {
-      normalized: { x: normalizedX, y: normalizedY },
-      target: { x: targetX, y: targetY }
-    })
 
     // Get ships orientation and save it to the stores ray
     main.value.getWorldPosition(position)
