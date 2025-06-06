@@ -21,9 +21,9 @@ export interface StateChangeHandler {
  * Provides a unified interface for handling mouse interactions
  */
 export interface MouseHandler {
-  onMouseMove?: (event: MouseEvent) => void
-  onMouseDown?: (event: MouseEvent) => void
-  onMouseUp?: (event: MouseEvent) => void
+  onMouseMove?: (event: PointerEvent) => void
+  onMouseDown?: (event: PointerEvent) => void
+  onMouseUp?: (event: PointerEvent) => void
   onWheel?: (event: WheelEvent) => void
 }
 

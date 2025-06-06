@@ -16,14 +16,16 @@ export class MouseEventManager {
   private isActive = false
   private lastMouseX = 0
   private lastMouseY = 0
+  private pointerCapture = false
+  private currentPointerId = -1
   private gameStore: GameStore | null = null
   private canvasElement: HTMLElement | null = null
   
   // Store bound event handlers for easier cleanup
   private boundHandlers = {
-    mousemove: (e: Event) => this.handleMouseMove(e as MouseEvent),
-    mousedown: (e: Event) => this.handleMouseDown(e as MouseEvent),
-    mouseup: (e: Event) => this.handleMouseUp(e as MouseEvent),
+    pointermove: (e: Event) => this.handleMouseMove(e as PointerEvent),
+    pointerdown: (e: Event) => this.handleMouseDown(e as PointerEvent),
+    pointerup: (e: Event) => this.handleMouseUp(e as PointerEvent),
     wheel: (e: Event) => this.handleWheel(e as WheelEvent)
   }
 
@@ -74,7 +76,7 @@ export class MouseEventManager {
     
     // Battle mode
     this.handlers.set(GameState.BATTLE, {
-      onMouseMove: (event: MouseEvent) => {
+      onMouseMove: (event: PointerEvent) => {
         if (!this.gameStore) return
         this.updateShipPosition(event)
       },
@@ -86,7 +88,7 @@ export class MouseEventManager {
     
     // Explore mode
     this.handlers.set(GameState.EXPLORE, {
-      onMouseMove: (event: MouseEvent) => {
+      onMouseMove: (event: PointerEvent) => {
         if (!this.gameStore) return
         this.updateShipPosition(event)
       }
@@ -94,13 +96,13 @@ export class MouseEventManager {
     
     // Observation mode
     this.handlers.set(GameState.OBSERVATION, {
-      onMouseMove: (event: MouseEvent) => {
+      onMouseMove: (event: PointerEvent) => {
         console.log('Observation mode dragging active')
         if (this.isDragging) {
           this.handleOrbitDrag(event)
         }
       },
-      onMouseDown: (event: MouseEvent) => {
+      onMouseDown: (event: PointerEvent) => {
         console.log('Observation mode mousedown')
         this.startOrbitDrag(event)
       },
@@ -124,6 +126,7 @@ export class MouseEventManager {
     }
     // Reset dragging state when re-initializing
     this.isDragging = false
+
     if (!this.gameStore) {
       console.error('Cannot initialize MouseEventManager - gameStore is null')
       return this
@@ -137,11 +140,11 @@ export class MouseEventManager {
 
     const target = this.canvasElement || window
 
-    target.addEventListener('mousemove', this.boundHandlers.mousemove, eventOptions)
-    target.addEventListener('mousedown', this.boundHandlers.mousedown, eventOptions)
-    target.addEventListener('mouseup', this.boundHandlers.mouseup, eventOptions)
+    target.addEventListener('pointermove', this.boundHandlers.pointermove, eventOptions)
+    target.addEventListener('pointerdown', this.boundHandlers.pointerdown, eventOptions)
+    target.addEventListener('pointerup', this.boundHandlers.pointerup, eventOptions)
     target.addEventListener('wheel', this.boundHandlers.wheel, eventOptions)
-    target.addEventListener('mouseleave', this.boundHandlers.mouseup, eventOptions)
+    target.addEventListener('pointerleave', this.boundHandlers.pointerup, eventOptions)
 
     this.isInitialized = true
     console.log('Mouse event manager initialized on', this.canvasElement ? 'canvas element' : 'window')
@@ -153,28 +156,38 @@ export class MouseEventManager {
 
     const target = this.canvasElement || window
 
-    target.removeEventListener('mousemove', this.boundHandlers.mousemove)
-    target.removeEventListener('mousedown', this.boundHandlers.mousedown)
-    target.removeEventListener('mouseup', this.boundHandlers.mouseup)
+    target.removeEventListener('pointermove', this.boundHandlers.pointermove)
+    target.removeEventListener('pointerdown', this.boundHandlers.pointerdown)
+    target.removeEventListener('pointerup', this.boundHandlers.pointerup)
     target.removeEventListener('wheel', this.boundHandlers.wheel)
-    target.removeEventListener('mouseleave', this.boundHandlers.mouseup)
+    target.removeEventListener('pointerleave', this.boundHandlers.pointerup)
 
     this.isInitialized = false
     console.log('Mouse event manager cleaned up')
   }
 
-  private handleMouseMove(event: MouseEvent) {
+  private handleMouseMove(event: PointerEvent) {
     if (!this.isActive) {
       return
     }
 
     const currentState = gameStateManager.getCurrentState()
 
+    if (Math.random() < 0.05) {
+      console.log(`Pointer move in state: ${currentState}, isDragging: ${this.isDragging}`)
+    }
+
     // Specifically handle dragging in observation mode
     if (this.isDragging && gameStateManager.isObservationMode()) {
-      console.log('Direct orbit drag handling')
+      console.log('Handling orbit drag movement')
       this.handleOrbitDrag(event)
       return  // Return after direct handling, skip regular process
+    }
+
+    // Handle regular mouse position updates
+    if (gameStateManager.canFlightMode()) {
+      this.updateShipPosition(event)
+      return
     }
 
     // Regular handling process
@@ -184,7 +197,7 @@ export class MouseEventManager {
     }
   }
 
-  private handleMouseDown(event: MouseEvent) {
+  private handleMouseDown(event: PointerEvent) {
     if (!this.isActive) {
       console.log('Mouse down ignored - manager not active')
       return
@@ -203,13 +216,30 @@ export class MouseEventManager {
     }
   }
 
-  private handleMouseUp(event: MouseEvent) {
+  private handleMouseUp(event: PointerEvent) {
     if (!this.isActive) return
 
     const currentState = gameStateManager.getCurrentState()
+    console.log(`Pointer up in state: ${currentState}`)
+
+    if (this.pointerCapture && this.canvasElement && this.currentPointerId === event.pointerId) {
+      try {
+        this.canvasElement.releasePointerCapture(event.pointerId)
+        console.log('Pointer capture released for ID:', event.pointerId)
+        this.pointerCapture = false
+      } catch (e) {
+        console.error('Failed to release pointer capture:', e)
+      }
+    }
+
     const handler = this.handlers.get(currentState)
     if (handler?.onMouseUp) {
       handler.onMouseUp(event)
+    }
+
+    if (this.isDragging && gameStateManager.isObservationMode()) {
+      this.isDragging = false
+      console.log('Drag state reset on pointer up')
     }
   }
 
@@ -224,34 +254,48 @@ export class MouseEventManager {
     }
   }
 
-  private updateShipPosition(event: MouseEvent) {
+  private updateShipPosition(event: PointerEvent) {
     if (!this.gameStore || !this.isActive) {
       return
     }
 
-    if (Math.random() < 0.01) {
-      console.log('Mouse position update:', {
-        x: event.clientX - window.innerWidth / 2,
-        y: event.clientY - window.innerHeight / 2
-      })
+    // Calculate coordinates relative to window center
+    const x = event.clientX - window.innerWidth / 2
+    const y = event.clientY - window.innerHeight / 2
+
+    // Increase logging frequency
+    if (Math.random() < 0.05) {
+      console.log('Ship position update:', { x, y })
     }
 
-    this.gameStore.mutation.mouse.x = event.clientX - window.innerWidth / 2
-    this.gameStore.mutation.mouse.y = event.clientY - window.innerHeight / 2
+    // Ensure direct modification of mutation object properties
+    this.gameStore.mutation.mouse.x = x
+    this.gameStore.mutation.mouse.y = y
   }
 
-  private startOrbitDrag(event: MouseEvent) {
+  private startOrbitDrag(event: PointerEvent) {
     console.log('Start orbit drag', { x: event.clientX, y: event.clientY })
 
     this.isDragging = true
     this.lastMouseX = event.clientX
     this.lastMouseY = event.clientY
 
+    if (this.canvasElement) {
+      try {
+        this.canvasElement.setPointerCapture(event.pointerId)
+        console.log('Pointer capture set for ID:', event.pointerId)
+        this.pointerCapture = true
+        this.currentPointerId = event.pointerId
+      } catch (e) {
+        console.error('Failed to set pointer capture:', e)
+      }
+    }
+
     event.preventDefault()
     event.stopPropagation()
   }
 
-  private handleOrbitDrag(event: MouseEvent) {
+  private handleOrbitDrag(event: PointerEvent) {
     if (!this.isDragging || !this.gameStore) {
       return
     }
