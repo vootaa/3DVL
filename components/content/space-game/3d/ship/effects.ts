@@ -18,7 +18,7 @@ export class ShipVisualEffects {
     this.hotpink = new Color('hotpink')
   }
   
-  // 更新所有视觉效果
+  // Update all visual effects
   updateVisualEffects(time: number): void {
     this.updateExhaust(time)
     this.updateLasers()
@@ -26,7 +26,7 @@ export class ShipVisualEffects {
     this.updateHUDElements()
   }
   
-  // 更新引擎尾焰
+  // Update engine exhaust
   private updateExhaust(time: number): void {
     const { exhaust } = this.refs
     if (exhaust?.value) {
@@ -35,7 +35,7 @@ export class ShipVisualEffects {
     }
   }
   
-  // 更新激光
+  // Update lasers
   private updateLasers(): void {
     const { laserGroup } = this.refs
     if (Array.isArray(laserGroup.value)) {
@@ -45,7 +45,7 @@ export class ShipVisualEffects {
     }
   }
   
-  // 更新激光光效
+  // Update laser light effects
   private updateLaserLight(): void {
     const { laserLight } = this.refs
     const laserActive = this.gameStore.lasers.length && 
@@ -57,22 +57,22 @@ export class ShipVisualEffects {
     }
   }
   
-  // 更新HUD元素
+  // Update HUD elements
   private updateHUDElements(): void {
     const { cross, target } = this.refs
     
-    // 根据命中状态设置准心颜色
+    // Set crosshair color based on hit status
     if (this.crossMaterial) {
       this.crossMaterial.color = this.gameStore.mutation.hits ? 
         this.lightgreen : this.hotpink
     }
     
-    // 战斗模式下显示准心
+    // Display crosshair in battle mode
     if (cross.value) {
       cross.value.visible = gameStateManager.isBattleMode() && !this.gameStore.mutation.hits
     }
     
-    // 战斗模式下显示目标指示器
+    // Display target indicator in battle mode
     if (target.value) {
       target.value.visible = gameStateManager.isBattleMode() && !!this.gameStore.mutation.hits
     }

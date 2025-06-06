@@ -1,40 +1,40 @@
-// 飞船控制参数 - 集中管理所有常量便于调整
+// Ship control parameters - Centralized management of all constants for easy adjustment
 export const SHIP_CONTROLS = {
-  // 飞行位置控制
+  // Flight position control
   POSITION: {
-    RANGE_X: 20,        // X轴移动范围
-    RANGE_Y: 15,        // Y轴移动范围
-    OFFSET_Y: 15,       // Y轴偏移量(保持在屏幕上方)
-    SMOOTHING: 0.1,     // 位置平滑系数(越小越平滑)
-    RESPONSE_CURVE: 1.5 // 响应曲线指数(>1更灵敏边缘,<1更灵敏中心)
+    RANGE_X: 30,        // X-axis movement range
+    RANGE_Y: 20,        // Y-axis movement range
+    OFFSET_Y: 10,       // Y-axis offset (keeps ship in upper portion of screen)
+    SMOOTHING: 0.1,     // Position smoothing factor (smaller = smoother)
+    RESPONSE_CURVE: 1.5 // Response curve exponent (>1 more sensitive at edges, <1 more sensitive at center)
   },
-  // 飞船旋转控制
+  // Ship rotation control
   ROTATION: {
-    Z_FACTOR: 0.3,      // Z轴旋转系数(侧倾)
-    X_FACTOR: 0.2,      // X轴旋转系数(俯仰)
-    Y_FACTOR: 0.1,      // Y轴旋转系数(偏航)
-    SMOOTHING: 0.15     // 旋转平滑系数
+    Z_FACTOR: 0.4,      // Z-axis rotation factor (banking)
+    X_FACTOR: 0.3,      // X-axis rotation factor (pitch)
+    Y_FACTOR: 0.2,      // Y-axis rotation factor (yaw)
+    SMOOTHING: 0.15     // Rotation smoothing factor
   },
-  // 惯性物理模型
+  // Inertial physics model
   PHYSICS: {
-    MASS: 1.0,          // 质量感
-    DAMPING: 0.92,      // 阻尼(空气阻力)
-    RETURN_FORCE: 0.05  // 重置力度(自动回正)
+    MASS: 1.0,          // Mass feeling
+    DAMPING: 0.88,      // Damping (air resistance)
+    RETURN_FORCE: 0.04  // Reset force (auto-centering)
   },
-  // 观察模式
+  // Observation mode
   OBSERVATION: {
-    RESET_RATE: 0.05,   // 复位速率
-    HOVER_PERIOD: 3.0,  // 悬停周期(秒)
-    HOVER_AMPLITUDE: 0.3 // 悬停幅度
+    RESET_RATE: 0.05,   // Reset rate
+    HOVER_PERIOD: 3.0,  // Hover period (seconds)
+    HOVER_AMPLITUDE: 0.3 // Hover amplitude
   },
-  // 浮动效果
+  // Float effect
   FLOAT_EFFECT: {
-    FREQUENCY: 40,      // 浮动频率 
-    AMPLITUDE: 0.2      // 浮动幅度
+    FREQUENCY: 40,      // Float frequency
+    AMPLITUDE: 0.2      // Float amplitude
   },
-  // 开发配置
+  // Development configuration
   DEV: {
     LOG_ENABLED: process.env.NODE_ENV === 'development',
-    LOG_INTERVAL: 1000  // 日志间隔(毫秒)
+    LOG_INTERVAL: 1000  // Log interval (milliseconds)
   }
 }

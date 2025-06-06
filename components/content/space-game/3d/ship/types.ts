@@ -1,7 +1,7 @@
 import type { BufferGeometry, Material, Group, PointLight, Vector3 } from 'three'
 import type { ShallowRef } from 'vue'
 
-// 飞船模型数据类型
+// Ship model data types
 export interface GLTFNode {
   geometry: BufferGeometry
   material: Material | Material[]
@@ -17,7 +17,7 @@ export interface ShipModelData {
   isLoaded: boolean
 }
 
-// 飞船引用对象类型
+// Ship reference object types
 export interface ShipRefs {
   main: ShallowRef<Group>
   laserGroup: ShallowRef<Group | Group[]>
@@ -29,7 +29,8 @@ export interface ShipRefs {
   direction: Vector3
 }
 
-// 飞船控制状态类型
+// Ship control state type
+
 export interface ShipControlState {
   velocity: {
     position: { x: number, y: number },

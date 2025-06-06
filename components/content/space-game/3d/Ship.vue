@@ -12,26 +12,26 @@ import { ShipModelLoader } from './ship/loader'
 import type { ShipModelData } from './ship/types'
 import type { GameStore } from '../GameStore'
 
-// 游戏存储
+// Game store
 const gameStore = inject('gameStore') as GameStore
 
-// 模型数据
+// Model data
 const modelData = ref<ShipModelData>({
   isLoaded: false,
 })
 
-// 几何体和材质
+// Geometry and materials
 const geometry = new BoxGeometry(1, 1, 40)
 const lightgreen = new Color('lightgreen')
 const hotpink = new Color('hotpink')
 const laserMaterial = new MeshBasicMaterial({ color: lightgreen })
 const crossMaterial = new MeshBasicMaterial({ color: hotpink, fog: false })
 
-// 向量
+// Vectors
 const position = new Vector3()
 const direction = new Vector3()
 
-// 3D对象引用
+// 3D object references
 const main = shallowRef<Group>(new Group())
 const laserGroup = shallowRef<Group | Group[]>(new Group())
 const laserLight = shallowRef<any>(null)
@@ -39,40 +39,40 @@ const exhaust = shallowRef<Group>(new Group())
 const cross = shallowRef<Group>(new Group())
 const target = shallowRef<Group>(new Group())
 
-// 鼠标位置
+// Mouse position
 const mouseX = computed(() => gameStore.mutation.mouse.x)
 const mouseY = computed(() => gameStore.mutation.mouse.y)
 
-// 创建控制器和效果管理器
+// Create controller and effects manager
 const shipRefs = {
   main, laserGroup, laserLight, exhaust, cross, target, position, direction
 }
 const shipController = new ShipController(shipRefs, gameStore, mouseX, mouseY)
 const visualEffects = new ShipVisualEffects(shipRefs, gameStore, crossMaterial)
 
-// 加载模型
+// Load model
 onMounted(() => {
   ShipModelLoader.loadModel(modelData)
 })
 
-// 渲染循环
+// Render loop
 useLoop().onBeforeRender(() => {
   const time = gameStore.mutation.clock.getElapsedTime()
   
-  // 通用浮动效果
+  // Generic floating effect
   shipController.handleFloatEffect(time)
   
-  // 根据游戏状态控制飞船
+  // Control ship based on game state
   if (gameStateManager.isObservationMode()) {
     shipController.handleObservationMode(time)
   } else if (gameStateManager.canFlightMode()) {
     shipController.handleFlightMode()
   }
   
-  // 更新视觉效果
+  // Update visual effects
   visualEffects.updateVisualEffects(time)
   
-  // 调试日志
+  // Debug logs
   shipController.logDebugInfo()
 })
 </script>
@@ -86,7 +86,7 @@ useLoop().onBeforeRender(() => {
       :position-z="10"
     />
     <TresGroup :scale="[3.5, 3.5, 3.5]">
-      <!-- 准心 -->
+      <!-- Crosshair -->
       <TresGroup
         ref="cross"
         :position="[0, 0, -300]"
@@ -106,7 +106,7 @@ useLoop().onBeforeRender(() => {
         </TresMesh>
       </TresGroup>
       
-      <!-- 目标指示器 -->
+      <!-- Target indicator -->
       <TresGroup
         ref="target"
         :position="[0, 0, -300]"
@@ -142,7 +142,7 @@ useLoop().onBeforeRender(() => {
         </TresMesh>
       </TresGroup>
       
-      <!-- 激光光效 -->
+      <!-- Laser light effect -->
       <TresPointLight
         ref="laserLight"
         :position="[0, 0, -20]"
@@ -151,7 +151,7 @@ useLoop().onBeforeRender(() => {
         color="lightgreen"
       />
       
-      <!-- 激光 -->
+      <!-- Laser -->
       <TresGroup
         v-for="_ in gameStore.lasers"
         :key="_"
@@ -169,7 +169,7 @@ useLoop().onBeforeRender(() => {
         />
       </TresGroup>
       
-      <!-- 飞船模型 -->
+      <!-- Ship model -->
       <TresGroup :rotation="[Math.PI / 2, Math.PI, 0]">
         <template v-if="modelData.isLoaded">
           <TresMesh v-if="modelData.Renault_0" :geometry="modelData.Renault_0.geometry" :material="modelData.Renault_0.material" />
@@ -182,7 +182,7 @@ useLoop().onBeforeRender(() => {
       </TresGroup>
     </TresGroup>
     
-    <!-- 引擎尾焰 -->
+    <!-- Engine exhaust -->
     <TresMesh
       ref="exhaust"
       :scale="[1, 1, 30]"

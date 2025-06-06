@@ -24,77 +24,77 @@ export class ShipController {
     this.physics = new ShipPhysics(refs)
   }
   
-  // 获取物理状态
+  // Get physics state
   getPhysicsState(): ShipControlState {
     return this.physics.getState()
   }
   
-  // 处理浮动效果
+  // Handle float effect
   handleFloatEffect(time: number): void {
     this.refs.main.value.position.z = Math.sin(time * SHIP_CONTROLS.FLOAT_EFFECT.FREQUENCY) * 
                                       Math.PI * SHIP_CONTROLS.FLOAT_EFFECT.AMPLITUDE
   }
   
-  // 处理观察模式
+  // Handle observation mode
   handleObservationMode(time: number): void {
     const { main } = this.refs
     const resetRate = SHIP_CONTROLS.OBSERVATION.RESET_RATE
     
-    // 缓慢重置旋转
+    // Slowly reset rotation
     main.value.rotation.z -= main.value.rotation.z * resetRate
     main.value.rotation.x -= main.value.rotation.x * resetRate
     main.value.rotation.y -= main.value.rotation.y * resetRate
     
-    // 缓慢重置位置
+    // Slowly reset position
     main.value.position.x -= main.value.position.x * resetRate
     main.value.position.y += (25 - main.value.position.y) * resetRate
     
-    // 悬停效果
+    // Hover effect
     const period = SHIP_CONTROLS.OBSERVATION.HOVER_PERIOD
     const amplitude = SHIP_CONTROLS.OBSERVATION.HOVER_AMPLITUDE
     main.value.position.x += Math.sin(time / period) * amplitude
     main.value.position.y += Math.cos(time / period * 1.3) * amplitude
     
-    // 重置惯性
+    // Reset inertia
     this.physics.resetForces()
   }
   
-  // 处理飞行模式
+  // Handle flight mode
   handleFlightMode(): void {
     const mx = this.mouseX.value
     const my = this.mouseY.value
     const screenWidth = window.innerWidth
     const screenHeight = window.innerHeight
     
-    // 将屏幕坐标转换为[-1,1]范围内的归一化坐标
+    // Convert screen coordinates to normalized coordinates in range [-1,1]
     const normalizedX = mx / (screenWidth / 2)
     const normalizedY = my / (screenHeight / 2)
     
-    // 应用响应曲线，提高控制精度
+    // Apply response curve for better control precision
     const curvedX = this.physics.applyResponseCurve(normalizedX)
     const curvedY = this.physics.applyResponseCurve(normalizedY)
     
-    // 计算目标旋转值
+    // Calculate target rotation values
     const targetRotation = {
       x: -curvedY * SHIP_CONTROLS.ROTATION.X_FACTOR,
       y: -curvedX * SHIP_CONTROLS.ROTATION.Y_FACTOR,
       z: curvedX * SHIP_CONTROLS.ROTATION.Z_FACTOR
     }
     
-    // 计算目标位置
+    // Calculate target position
     const targetPosition = {
       x: curvedX * SHIP_CONTROLS.POSITION.RANGE_X,
       y: -curvedY * SHIP_CONTROLS.POSITION.RANGE_Y + SHIP_CONTROLS.POSITION.OFFSET_Y
     }
     
-    // 应用物理系统
+    // Apply physics system
     this.physics.updatePhysics(targetPosition, targetRotation)
     
-    // 更新射线数据
+    // Update ray data
     this.updateShipRay()
   }
   
-  // 更新飞船射线
+  // Update ship ray
   updateShipRay(): void {
     const { main, position, direction } = this.refs
     
@@ -104,7 +104,7 @@ export class ShipController {
     this.gameStore.mutation.ray.direction.copy(direction.negate())
   }
   
-  // 记录调试信息
+  // Log debug information
   logDebugInfo(): void {
     const { lastLogTime } = this.physics.getState()
     
