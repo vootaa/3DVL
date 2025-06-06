@@ -197,9 +197,6 @@ onUnmounted(() => {
             <div class="stardust-collected">
               <span class="stardust-icon">✧</span> Stardust Collected!
             </div>
-            <div class="timer-value">
-              {{ observationTime }}s
-            </div>
           </template>
           <template v-else>
             <div class="timer-label">
@@ -223,7 +220,13 @@ onUnmounted(() => {
         Drag mouse to orbit • Scroll to zoom
       </div>
       <div class="orbit-data">
-        <span class="orbit-distance">Distance: {{ Math.round(gameStore.mutation.orbitDistance) }} KM</span>
+        <div class="orbit-row">
+          <span class="orbit-distance">Distance: {{ Math.round(gameStore.mutation.orbitDistance) }} KM</span>
+        </div>
+        <div class="orbit-row">
+          <span class="orbit-angle">Angle: {{ Math.round(gameStore.orbitAngle * 57.3) }}°</span>
+          <span class="orbit-height">Height: {{ Math.round(gameStore.orbitHeight * 57.3) }}°</span>
+        </div>
       </div>
     </div>
   </div>
@@ -352,21 +355,49 @@ onUnmounted(() => {
 }
 
 .orbit-data {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    font-size: 0.9em;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 5px 8px;
-    border-radius: 4px;
-    margin-bottom: 5px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  font-size: 0.9em;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 5px 8px;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  gap: 5px;
+}
+
+.orbit-row {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.orbit-row:first-child {
+  justify-content: center;
 }
 
 .orbit-distance {
-    font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
-    font-weight: 500;
-    color: #a0e0ff;
-    text-align: center;
+  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  font-weight: 500;
+  color: #a0e0ff;
+  text-align: center;
+}
+
+.orbit-angle,
+.orbit-height {
+  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  font-weight: 500;
+  text-align: center;
+  flex: 1;
+}
+
+.orbit-angle {
+  color: #ffcc77;
+}
+
+.orbit-height {
+  color: #77ffaa;
 }
 
 .observation-timer {
@@ -408,12 +439,6 @@ onUnmounted(() => {
     to {
         text-shadow: 0 0 15px rgba(255, 218, 135, 0.9), 0 0 20px rgba(255, 255, 255, 0.5);
     }
-}
-
-.timer-value {
-    font-size: 1.2em;
-    font-weight: 700;
-    color: #00ffaa;
 }
 
 .timer-progress {

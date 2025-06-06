@@ -8,17 +8,20 @@ export enum GameState {
 // Camera and view settings
 export const CAMERA_CONSTANTS = {
   // Orbit control limits
-  MIN_ORBIT_DISTANCE: 50,     // Minimum camera distance in orbit mode
+  MIN_ORBIT_DISTANCE: 30,     // Minimum camera distance in orbit mode
   MAX_ORBIT_DISTANCE: 450,    // Maximum camera distance in orbit mode
 
   // Orbit angle limits
   MIN_ORBIT_HEIGHT: -Math.PI / 3,  // Minimum orbit height angle (radians)
   MAX_ORBIT_HEIGHT: Math.PI / 3,   // Maximum orbit height angle (radians)
 
+  MIN_ORBIT_ANGLE: -Math.PI * 1.5,  //  Minimum orbit angle (radians)
+  MAX_ORBIT_ANGLE: Math.PI * 1.5,   // Maximum orbit angle (radians)
+
   // Orbit control parameters
   ORBIT_CONTROL: {
-    HORIZONTAL_SENSITIVITY: 0.004, // Horizontal rotation sensitivity
-    VERTICAL_SENSITIVITY: 0.003,   // Vertical rotation sensitivity
+    HORIZONTAL_SENSITIVITY: 0.0025, // Horizontal rotation sensitivity
+    VERTICAL_SENSITIVITY: 0.0015,   // Vertical rotation sensitivity
     DAMPING: 0.92,                 // Orbit damping coefficient
     MIN_VELOCITY: 0.0001,          // Minimum velocity threshold
     ZOOM_SPEED: 10,                // Zoom speed

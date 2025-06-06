@@ -360,6 +360,12 @@ export class MouseEventManager {
     this.targetOrbitAngle += deltaX * CAMERA_CONSTANTS.ORBIT_CONTROL.HORIZONTAL_SENSITIVITY
     this.targetOrbitHeight += deltaY * CAMERA_CONSTANTS.ORBIT_CONTROL.VERTICAL_SENSITIVITY
 
+    // Constrain target angle within limits
+    this.targetOrbitAngle = Math.max(
+      CAMERA_CONSTANTS.MIN_ORBIT_ANGLE,
+      Math.min(CAMERA_CONSTANTS.MAX_ORBIT_ANGLE, this.targetOrbitAngle)
+    )
+
     // Constrain target height within limits
     this.targetOrbitHeight = Math.max(
       CAMERA_CONSTANTS.MIN_ORBIT_HEIGHT,
