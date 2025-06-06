@@ -186,6 +186,7 @@ export class MouseEventManager {
 
     // Handle regular mouse position updates
     if (gameStateManager.canFlightMode()) {
+      console.log('Updating ship position in flight mode')
       this.updateShipPosition(event)
       return
     }
@@ -263,17 +264,21 @@ export class MouseEventManager {
     const x = event.clientX - window.innerWidth / 2
     const y = event.clientY - window.innerHeight / 2
 
-    // Increase logging frequency
-    if (Math.random() < 0.05) {
-      console.log('Ship position update:', { x, y })
-    }
+    console.log('Ship position update:', { x, y, clientX: event.clientX, clientY: event.clientY })
 
     // Ensure direct modification of mutation object properties
     this.gameStore.mutation.mouse.x = x
     this.gameStore.mutation.mouse.y = y
+
+    console.log('Updated mouse position:', this.gameStore.mutation.mouse)
   }
 
   private startOrbitDrag(event: PointerEvent) {
+    if (!gameStateManager.isObservationMode()) {
+      console.log('Not starting orbit drag - not in observation mode')
+      return
+    }
+
     console.log('Start orbit drag', { x: event.clientX, y: event.clientY })
 
     this.isDragging = true

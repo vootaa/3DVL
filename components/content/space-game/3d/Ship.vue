@@ -137,6 +137,8 @@ function updateBoundaries(): void {
       max: (height / 2 - height * margins.y) * worldScaleY,
     },
   }
+
+  console.log('Updated boundaries:', boundaries.value)
 }
 
 // Function to clamp values within boundaries
@@ -168,6 +170,11 @@ watch(() => {
 const mouseX = computed(() => gameStore.mutation.mouse.x)
 const mouseY = computed(() => gameStore.mutation.mouse.y)
 
+watch([mouseX, mouseY], ([newX, newY]) => {
+  console.log('Mouse position updated:', { x: newX, y: newY })
+}, { immediate: true })
+
+
 useLoop().onBeforeRender(() => {
   const time = gameStore.mutation.clock.getElapsedTime()
   main.value.position.z = Math.sin(time * 40) * Math.PI * 0.2
@@ -188,24 +195,29 @@ useLoop().onBeforeRender(() => {
     const mx = mouseX.value
     const my = mouseY.value
 
-    if (Math.random() < 0.001) {
-      console.log('Ship using mouse position:', { x: mx, y: my })
-    }
+    const screenWidth = window.innerWidth
+    const screenHeight = window.innerHeight
 
-    // Clamp mouse coordinates to stay within boundaries
-    const clampedMouseX = clampValue(mx, boundaries.value.x.min * 5, boundaries.value.x.max * 5)
-    const clampedMouseY = clampValue(my, boundaries.value.y.min * 12, boundaries.value.y.max * 12)
+    // Convert to normalized coordinates in the [-1,1] range
+    const normalizedX = mx / (screenWidth / 2)
+    const normalizedY = my / (screenHeight / 2)
 
-    main.value.rotation.z += (clampedMouseX / 500 - main.value.rotation.z) * 0.2
-    main.value.rotation.x += (-clampedMouseY / 1200 - main.value.rotation.x) * 0.2
-    main.value.rotation.y += (-clampedMouseX / 1200 - main.value.rotation.y) * 0.2
+    // Set ship rotation
+    main.value.rotation.z += (normalizedX * 0.3 - main.value.rotation.z) * 0.15
+    main.value.rotation.x += (-normalizedY * 0.2 - main.value.rotation.x) * 0.15
+    main.value.rotation.y += (-normalizedX * 0.1 - main.value.rotation.y) * 0.15
 
-    // Apply clamped values to ship position
-    const targetX = clampValue(clampedMouseX / 10, boundaries.value.x.min, boundaries.value.x.max)
-    const targetY = clampValue(25 + -clampedMouseY / 10, boundaries.value.y.min, boundaries.value.y.max)
+    // Set ship position - constrained to reasonable range
+    const targetX = normalizedX * 20 // Multiply by desired movement range
+    const targetY = -normalizedY * 15 + 15 // Keep in upper center of view
 
-    main.value.position.x += (targetX - main.value.position.x) * 0.2
-    main.value.position.y += (targetY - main.value.position.y) * 0.2
+    main.value.position.x += (targetX - main.value.position.x) * 0.1
+    main.value.position.y += (targetY - main.value.position.y) * 0.1
+
+    console.log('Simple ship control:', {
+      normalized: { x: normalizedX, y: normalizedY },
+      target: { x: targetX, y: targetY }
+    })
 
     // Get ships orientation and save it to the stores ray
     main.value.getWorldPosition(position)
