@@ -221,11 +221,19 @@ onUnmounted(() => {
       </div>
       <div class="orbit-data">
         <div class="orbit-row">
-          <span class="orbit-distance">Distance: {{ Math.round(gameStore.mutation.orbitDistance) }} KM</span>
+          <span class="orbit-distance">
+            <i class="orbit-icon distance-icon">↕</i> Zoom Distance: {{ Math.round(gameStore.mutation.orbitDistance) }} KM
+          </span>
         </div>
         <div class="orbit-row">
-          <span class="orbit-angle">Angle: {{ Math.round(gameStore.orbitAngle * 57.3) }}°</span>
-          <span class="orbit-height">Height: {{ Math.round(gameStore.orbitHeight * 57.3) }}°</span>
+          <span class="orbit-angle">
+            <i class="orbit-icon angle-icon">↻</i> Rotation: {{ Math.round(gameStore.orbitAngle * 57.3) }}°
+          </span>
+        </div>
+        <div class="orbit-row">
+          <span class="orbit-height">
+            <i class="orbit-icon height-icon">⇅</i> Elevation: {{ Math.round(gameStore.orbitHeight * 57.3) }}°
+          </span>
         </div>
       </div>
     </div>
@@ -369,27 +377,26 @@ onUnmounted(() => {
 .orbit-row {
   display: flex;
   width: 100%;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.orbit-row:first-child {
   justify-content: center;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.orbit-distance {
-  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
-  font-weight: 500;
-  color: #a0e0ff;
-  text-align: center;
+.orbit-row:last-child {
+  border-bottom: none;
 }
 
+.orbit-distance,
 .orbit-angle,
 .orbit-height {
   font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
   font-weight: 500;
   text-align: center;
-  flex: 1;
+  width: 100%;
+}
+
+.orbit-distance {
+  color: #a0e0ff;
 }
 
 .orbit-angle {
@@ -398,6 +405,24 @@ onUnmounted(() => {
 
 .orbit-height {
   color: #77ffaa;
+}
+
+.orbit-icon {
+  display: inline-block;
+  margin-right: 4px;
+  font-style: normal;
+}
+
+.distance-icon {
+  transform: rotate(45deg);
+}
+
+.angle-icon {
+  font-size: 1.1em;
+}
+
+.height-icon {
+  font-weight: bold;
 }
 
 .observation-timer {
@@ -410,10 +435,11 @@ onUnmounted(() => {
 }
 
 .stardust-icon {
-    color: #ffde87;
-    text-shadow: 0 0 5px #ffaa00;
-    font-size: 1.2em;
-    margin-right: 2px;
+  color: #ffde87;
+  text-shadow: 0 0 5px #ffaa00;
+  font-size: 1.2em;
+  margin-right: 6px;
+  display: inline-block;
 }
 
 .timer-label {
@@ -423,12 +449,17 @@ onUnmounted(() => {
 }
 
 .stardust-collected {
-    font-size: 1.1em;
-    color: #ffde87;
-    font-weight: 500;
-    text-shadow: 0 0 8px rgba(255, 218, 135, 0.8);
-    margin-bottom: 5px;
-    animation: glow 1.5s infinite alternate;
+  font-size: 1.1em;
+  color: #ffde87;
+  font-weight: 500;
+  text-shadow: 0 0 8px rgba(255, 218, 135, 0.8);
+  margin-bottom: 5px;
+  animation: glow 1.5s infinite alternate;
+  text-align: center;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes glow {
