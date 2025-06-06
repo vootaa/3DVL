@@ -121,6 +121,8 @@ const comboSystem = computed(() => gameStore.comboSystem)
         <div class="info-line">
           Score: {{ formattedBattleScore }}
         </div>
+      </template>
+      <template v-else>
         <div class="info-line">
           Stardust: {{ gameStore.stardust }} <span class="stardust-icon">✧</span>
         </div>

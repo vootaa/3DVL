@@ -4,7 +4,7 @@ import type { BufferGeometry, Material } from 'three'
 
 import { useLoop } from '@tresjs/core'
 import { BoxGeometry, Color, Group, MeshBasicMaterial, PointLight, Vector3 } from 'three'
-import { onMounted, inject, shallowRef, watch, ref, computed } from 'vue'
+import { onMounted, inject, shallowRef, ref, computed } from 'vue'
 
 import { ResourceLoader } from '../utils/ResourceLoader'
 import { gameStateManager } from '../core/GameStateManager'
@@ -81,10 +81,6 @@ const target = shallowRef<Group>(new Group())
 
 const mouseX = computed(() => gameStore.mutation.mouse.x)
 const mouseY = computed(() => gameStore.mutation.mouse.y)
-
-watch([mouseX, mouseY], ([newX, newY]) => {
-  console.log('Mouse position updated:', { x: newX, y: newY })
-}, { immediate: true })
 
 useLoop().onBeforeRender(() => {
   const time = gameStore.mutation.clock.getElapsedTime()
