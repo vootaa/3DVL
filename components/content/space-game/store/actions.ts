@@ -71,7 +71,7 @@ export function initializeActions(gameStore: GameStore) {
     // Setup entities based on game state
     if (mode === GameState.BATTLE) {
       gameStore.initialEnemyCount = 10
-      gameStore.initialRockCount = 100
+      gameStore.initialRockCount = 150
       gameStore.particlesCount = 500
       gameStore.enemies = randomData(gameStore.initialEnemyCount, track, 20, 15, () => 1 + Math.random() * 1.5, guid)
       gameStore.rocks = randomData(gameStore.initialRockCount, track, 150, 8, () => 1 + Math.random() * 3, guid)
@@ -83,8 +83,7 @@ export function initializeActions(gameStore: GameStore) {
       gameStore.particlesCount = 50
     }
 
-    gameStore.mutation.particles = randomData(gameStore.particlesCount,
-      track, 100, 1, () => 0.5 + Math.random() * 0.8, guid)
+    gameStore.mutation.particles = randomData(gameStore.particlesCount, track, 100, 1, () => 0.5 + Math.random() * 0.8, guid)
   }
 
   // Modal display methods
