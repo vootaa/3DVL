@@ -63,6 +63,7 @@ export interface GameActions {
   toggleSound(sound?: boolean): void
   
   // UI control
+  toggleTrack(show?: boolean): void
   toggleInfoText(show?: boolean): void
   showModal(type: string): void
   hideModal(): void

@@ -12,6 +12,7 @@ import { ResourceLoader } from './utils/ResourceLoader'
 
 import LaunchScreen from './controls/LaunchScreen.vue'
 import SoundControl from './controls/SoundControl.vue'
+import TrackControl from './controls/TrackControl.vue'
 import InfoTextControl from './controls/InfoTextControl.vue'
 import ControlPanel from './controls/ControlPanel.vue'
 import ObservationControls from './controls/ObservationControls.vue'
@@ -163,6 +164,7 @@ const start = async (mode: 'battle' | 'explore') => {
       </TresCanvas>
 
       <SoundControl />
+      <TrackControl />
       <InfoTextControl />
       <ControlPanel />
       <ObservationControls />

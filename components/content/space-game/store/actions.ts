@@ -411,6 +411,12 @@ export function initializeActions(gameStore: GameStore) {
     }
   }
 
+  // Track visibility toggle
+  gameStore.actions.toggleTrack = (show?: boolean) => {
+    if (show !== false && show !== true) show = !gameStore.showTrack
+    gameStore.showTrack = show
+  }
+
   // Info text toggle
   gameStore.actions.toggleInfoText = (show?: boolean) => {
     if (show !== false && show !== true) show = !gameStore.showInfoText

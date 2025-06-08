@@ -35,6 +35,7 @@ const createDefaultActions = (): GameActions => ({
   update: () => { console.warn('Game actions not initialized yet') },
   startGame: () => { console.warn('Game actions not initialized yet') },
   toggleSound: () => { console.warn('Game actions not initialized yet') },
+  toggleTrack: () => { console.warn('Game actions not initialized yet') },
   toggleInfoText: () => { console.warn('Game actions not initialized yet') },
   showModal: () => { console.warn('Game actions not initialized yet') },
   hideModal: () => { console.warn('Game actions not initialized yet') },
@@ -79,6 +80,7 @@ export const gameStore = reactive({
   camera: null as PerspectiveCamera | null,
   sound: false,
   showInfoText: true, // state to control text visibility
+  showTrack: true, // state to control track visibility
   speedMode: SpeedMode.Fast, // Default to Fast mode
   particlesCount: 50, // Default particle count
 

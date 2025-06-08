@@ -20,10 +20,7 @@ const trackColor = computed(() => {
 </script>
 
 <template>
-  <TresMesh
-    :geometry="track"
-    :scale="[s, s, s]"
-  >
+  <TresMesh v-if="gameStore.showTrack" :geometry="track" :scale="[s, s, s]">
     <TresMeshBasicMaterial :color="trackColor" />
   </TresMesh>
 </template>

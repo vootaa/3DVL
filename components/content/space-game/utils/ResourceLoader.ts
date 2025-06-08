@@ -289,6 +289,7 @@ export const ResourceLoader = reactive({
     this.registerResource('Track', import('../3d/Track.vue'))
 
     this.registerResource('SoundControl', import('../controls/SoundControl.vue'))
+    this.registerResource('TrackControl', import('../controls/TrackControl.vue'))
     this.registerResource('InfoTextControl', import('../controls/InfoTextControl.vue'))
     this.registerResource('ControlPanel', import('../controls/ControlPanel.vue'))
     this.registerResource('ObservationControls', import('../controls/ObservationControls.vue'))

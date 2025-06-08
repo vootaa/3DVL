@@ -1,28 +1,26 @@
 <script setup lang="ts">
 import { inject } from 'vue'
-import { gameStateManager } from '../core/GameStateManager'
 
 import type { GameStore } from '../GameStore'
 const gameStore = inject('gameStore') as GameStore
 </script>
 
 <template>
-  <div class="info-text-control" v-if="gameStateManager.isExploreOrObservationMode()"
-    @click="gameStore.actions.toggleInfoText(!gameStore.showInfoText)">
-    <div class="control-label">LABELS</div>
-    <div class="control-value"> {{ gameStore.showInfoText ? 'ON' : 'OFF' }}</div>
+  <div class="track-control" @click="gameStore.actions.toggleTrack(!gameStore.showTrack)">
+    <div class="control-label"> TRACK</div>
+    <div class="control-value"> {{ gameStore.showTrack ? 'ON' : 'OFF' }}</div>
   </div>
 </template>
 
 <style lang="css" scoped>
-.info-text-control {
+.track-control {
   position: absolute;
-  top: 160px;
+  top: 90px;
   left: 20px;
   background: rgba(0, 0, 0, 0.5);
   border-radius: 8px;
   padding: 10px 15px;
-  color: #4286f4;
+  color: #FF8C00;
   font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
   font-weight: 500;
   font-variant-numeric: slashed-zero tabular-nums;
@@ -40,7 +38,7 @@ const gameStore = inject('gameStore') as GameStore
   transition: background 0.2s;
 }
 
-.info-text-control:hover {
+.track-control:hover {
   background: rgba(0, 0, 0, 0.7);
 }
 
@@ -57,7 +55,7 @@ const gameStore = inject('gameStore') as GameStore
 }
 
 @media only screen and (max-width: 900px) {
-  .info-text-control {
+  .track-control {
     padding: 8px 12px;
     width: 100px;
     min-height: 50px;
