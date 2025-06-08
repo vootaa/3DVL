@@ -360,16 +360,18 @@ export function initializeActions(gameStore: GameStore) {
       }
 
       // Test for wormhole/warp
-      let warping = false
       if (t > TRACK_POSITIONS.WARP_BEGIN && t < TRACK_POSITIONS.WARP_END) {
-        if (!warping) {
-          warping = true
+        if (!gameStore.warpState.isWarping) {
+          gameStore.warpState.isWarping = true
           playSound('warp', true, 0.5)
-          Logger.log('ACTIONS', 'Warp sequence started', { t })
+          gameStore.warpState.lastWarpSound = Date.now()
+          Logger.log('ACTIONS', 'Warp sequence started', { t, lastWarpSound: gameStore.warpState.lastWarpSound })
         }
       } else if (t > TRACK_POSITIONS.WARP_RESET) {
-        warping = false
-        Logger.log('ACTIONS', 'Warp sequence ended', { t })
+        if (gameStore.warpState.isWarping) {
+          gameStore.warpState.isWarping = false
+          Logger.log('ACTIONS', 'Warp sequence ended', { t })
+        }
       }
 
       // Only process hits and collisions in Battle mode

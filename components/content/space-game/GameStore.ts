@@ -99,6 +99,12 @@ export const gameStore = reactive({
   orbitAngle: 0,
   orbitHeight: 0,
 
+  // Warp state
+  warpState : {
+    isWarping: false,
+    lastWarpSound: 0,
+  },
+
   // Combat system
   comboSystem: {
     count: 0,

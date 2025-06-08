@@ -1,4 +1,3 @@
-<!-- eslint-disable no-console -->
 <script setup lang="ts">
 import { useLoop } from '@tresjs/core'
 
@@ -17,14 +16,17 @@ import Ship from './3d/Ship.vue'
 import SpaceObjects from './3d/SpaceObjects.vue'
 import SpaceGameEffects from './3d/SpaceGameEffects.vue'
 
-// eslint-disable-next-line import/namespace
+import { Logger } from './core/logger'
 import { gameStore } from './GameStore'
 
 if (gameStore) {
   useLoop().onBeforeRender(gameStore.actions.update)
-}
-else {
-  console.error('GameStore not injected in Game.vue')
+  Logger.log('GAME', 'Game loop initialized with gameStore update handler')
+} else {
+  Logger.error('GAME', 'GameStore not injected in Game.vue', {
+    gameStoreType: typeof gameStore,
+    gameStoreValue: gameStore
+  })
 }
 </script>
 

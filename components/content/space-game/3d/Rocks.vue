@@ -219,6 +219,11 @@ const { clock } = gameStore.mutation
 
 // Performance-optimized render loop
 useLoop().onBeforeRender(() => {
+  // Early exit if no rocks to render
+  if (!gameStore.rocks || gameStore.rocks.length === 0) {
+    return
+  }
+
   // Increase frame counter
   frameCount++
   
@@ -285,7 +290,7 @@ useLoop().onBeforeRender(() => {
 </script>
 
 <template>
-  <TresGroup ref="rocksGroupRef">
+  <TresGroup ref="rocksGroupRef" v-if="gameStore.rocks && gameStore.rocks.length > 0">
     <TresGroup
       v-for="data of gameStore.rocks as ObjectData[]"
       :key="data.guid"
