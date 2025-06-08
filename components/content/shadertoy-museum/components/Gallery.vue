@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Camera, Light, Mesh } from 'three'
-import { Box3, Color, MeshPhongMaterial, Quaternion, Vector3 } from 'three'
+import { Box3, Color, MeshPhongMaterial, Vector3 } from 'three'
 import { inject } from 'vue'
 import { shaderToySrc } from '../fns/shaderToySrc'
 import type { State } from '../index.vue'
@@ -12,13 +12,13 @@ const { scene } = await useGLTF('/models/shadertoy-museum/gallery.glb', { draco:
 
 const material = new MeshPhongMaterial({ color: new Color('#000022') })
 
-// 定制映射表：每个展示台对应的着色器数组，第一个是默认最佳的
+// Custom mapping table: each display stand corresponds to a shader array, the first one is the default best
 const customMappings = {
-  ShaderToy000: ['octgrams', 'tiles', 'truchet'],                    // 几何图案类
-  ShaderToy001: ['sinusoidalTresJS', 'sinusoidalTresJS2', 'rainbow'], // 波浪效果类
-  ShaderToy002: ['mandelbulb', 'fractalPyramid', 'star'],            // 3D 分形类
-  ShaderToy003: ['gamesOfSinus', 'prettyHip', 'raymarchingBasic'],   // 游戏风格类
-  ShaderToy004: ['sinusoidalTresJS2', 'seventiesMelt']   // 波浪变体类
+  ShaderToy000: ['octgrams', 'tiles', 'truchet'],                    // Geometric pattern type
+  ShaderToy001: ['sinusoidalTresJS', 'sinusoidalTresJS2', 'rainbow'], // Wave effect type
+  ShaderToy002: ['mandelbulb', 'fractalPyramid', 'star'],            // 3D fractal type
+  ShaderToy003: ['gamesOfSinus', 'prettyHip', 'raymarchingBasic'],   // Game style type
+  ShaderToy004: ['sinusoidalTresJS2', 'seventiesMelt']   // Wave variant type
 } as const
 
 console.log('🎨 Custom mappings configured:')
@@ -64,7 +64,7 @@ function createShaderTarget(standName: string, shaderName: string, obj: any) {
   }
 }
 
-// 根据映射表创建着色器目标
+// Create shader targets based on mapping table
 scene.traverse((obj) => {
   if ('material' in obj) {
     obj.material = material
@@ -77,10 +77,9 @@ scene.traverse((obj) => {
 
     if (assignedShaders && assignedShaders.length > 0) {
       console.log(`📋 Assigned shaders for ${obj.name}:`, assignedShaders)
-
-      // 为这个展示台创建所有分配的着色器目标
+      // Create all assigned shader targets for this display stand
       assignedShaders.forEach((shaderName, index) => {
-        // 检查着色器是否存在
+        // Check if shader exists
         if (!(shaderName in shaderToySrc)) {
           console.warn(`⚠️ Shader "${shaderName}" not found in shaderToySrc, skipping`)
           return
