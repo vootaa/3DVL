@@ -1,4 +1,3 @@
-<!-- eslint-disable no-console -->
 <script setup lang="ts">
 import type { BufferGeometry, Material } from 'three'
 
@@ -7,6 +6,7 @@ import { MeshStandardMaterial, Color, Group, PointLight } from 'three'
 import { shallowRef, ref, onMounted } from 'vue'
 
 import { ResourceLoader } from '../utils/ResourceLoader'
+import { Logger } from '../core/logger'
 
 const props = defineProps({
   position: {
@@ -44,20 +44,39 @@ const stationMaterial = new MeshStandardMaterial({
 })
 
 onMounted(async () => {
+  Logger.log('SPACE_STATION', 'Initializing space station component', {
+    position: props.position,
+    rotation: props.rotation,
+    scale: props.scale
+  })
+
   try {
     const result = await ResourceLoader.registerModel('SpaceStationModel',
       '/models/space-game/InternationalSpaceStation.glb')
+    
     if (result?.nodes?.InternationalSpaceStation_mesh) {
       modelData.value.stationNode = result.nodes.InternationalSpaceStation_mesh as GLTFNode
       modelData.value.isLoaded = true
-      console.log('SpaceStationModel loaded successfully')
+      
+      Logger.log('SPACE_STATION', 'Space station model loaded successfully', {
+        modelName: 'SpaceStationModel',
+        nodeName: 'InternationalSpaceStation_mesh',
+        hasGeometry: !!modelData.value.stationNode.geometry,
+        hasMaterial: !!modelData.value.stationNode.material
+      })
+    } else {
+      Logger.error('SPACE_STATION', 'Space station model missing required node', {
+        modelName: 'SpaceStationModel',
+        expectedNode: 'InternationalSpaceStation_mesh',
+        availableNodes: result?.nodes ? Object.keys(result.nodes) : []
+      })
     }
-    else {
-      console.error('SpaceStationModel missing SpaceStation node')
-    }
-  }
-  catch (error) {
-    console.error('Failed to load SpaceStationModel:', error)
+  } catch (error) {
+    Logger.error('SPACE_STATION', 'Failed to load space station model', {
+      modelName: 'SpaceStationModel',
+      modelPath: '/models/space-game/InternationalSpaceStation.glb',
+      error
+    })
   }
 })
 
@@ -66,7 +85,15 @@ useLoop().onBeforeRender(({ elapsed }) => {
     stationGroup.value.rotation.y += 0.001
 
     if (stationLight.value) {
-      stationLight.value.intensity = 2 + Math.sin(elapsed * 0.5)
+      const newIntensity = 2 + Math.sin(elapsed * 0.5)
+      stationLight.value.intensity = newIntensity
+      
+      // Log animation state occasionally
+      Logger.random('SPACE_STATION', 'Animation update', {
+        rotationY: stationGroup.value.rotation.y,
+        lightIntensity: newIntensity,
+        elapsed
+      }, 0.01)
     }
   }
 })

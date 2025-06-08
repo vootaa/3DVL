@@ -1,4 +1,3 @@
-<!-- eslint-disable no-console -->
 <script setup lang="ts">
 import type { BufferGeometry, Material } from 'three'
 
@@ -7,6 +6,7 @@ import { MeshStandardMaterial, Color, Group, PointLight } from 'three'
 import { shallowRef, ref, onMounted } from 'vue'
 
 import { ResourceLoader } from '../utils/ResourceLoader'
+import { Logger } from '../core/logger'
 
 const props = defineProps({
   position: {
@@ -44,19 +44,38 @@ const probeMaterial = new MeshStandardMaterial({
 })
 
 onMounted(async () => {
+  Logger.log('SPACE_PROBE', 'Initializing space probe component', {
+    position: props.position,
+    rotation: props.rotation,
+    scale: props.scale
+  })
+
   try {
     const result = await ResourceLoader.registerModel('SpaceProbeModel', '/models/space-game/SpaceProbe.glb')
+    
     if (result?.nodes?.SpaceProbe_mesh) {
       modelData.value.spaceProbeNode = result.nodes.SpaceProbe_mesh as GLTFNode
       modelData.value.isLoaded = true
-      console.log('SpaceProbeModel loaded successfully')
+      
+      Logger.log('SPACE_PROBE', 'Space probe model loaded successfully', {
+        modelName: 'SpaceProbeModel',
+        nodeName: 'SpaceProbe_mesh',
+        hasGeometry: !!modelData.value.spaceProbeNode.geometry,
+        hasMaterial: !!modelData.value.spaceProbeNode.material
+      })
+    } else {
+      Logger.error('SPACE_PROBE', 'Space probe model missing required node', {
+        modelName: 'SpaceProbeModel',
+        expectedNode: 'SpaceProbe_mesh',
+        availableNodes: result?.nodes ? Object.keys(result.nodes) : []
+      })
     }
-    else {
-      console.error('SpaceProbe missing SpaceProbe node')
-    }
-  }
-  catch (error) {
-    console.error('Failed to load SpaceProbeModel:', error)
+  } catch (error) {
+    Logger.error('SPACE_PROBE', 'Failed to load space probe model', {
+      modelName: 'SpaceProbeModel',
+      modelPath: '/models/space-game/SpaceProbe.glb',
+      error
+    })
   }
 })
 
@@ -68,7 +87,16 @@ useLoop().onBeforeRender(({ elapsed }) => {
 
     if (probeLight.value) {
       // Make the light pulse at a different frequency
-      probeLight.value.intensity = 1.5 + Math.sin(elapsed * 0.8)
+      const newIntensity = 1.5 + Math.sin(elapsed * 0.8)
+      probeLight.value.intensity = newIntensity
+      
+      // Log animation state occasionally
+      Logger.random('SPACE_PROBE', 'Animation update', {
+        rotationY: probeGroup.value.rotation.y,
+        rotationX: probeGroup.value.rotation.x,
+        lightIntensity: newIntensity,
+        elapsed
+      }, 0.01)
     }
   }
 })

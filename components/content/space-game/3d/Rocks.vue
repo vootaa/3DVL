@@ -1,6 +1,4 @@
-<!-- eslint-disable no-console -->
 <script setup lang="ts">
-import type { BufferGeometry, Material } from 'three'
 import { useLoop } from '@tresjs/core'
 import { Group, MeshStandardMaterial, Color, Vector3 } from 'three'
 import { inject, shallowRef, ref, onMounted, computed, watch } from 'vue'
@@ -8,8 +6,9 @@ import { inject, shallowRef, ref, onMounted, computed, watch } from 'vue'
 import { ResourceLoader } from '../utils/ResourceLoader'
 import { GameState } from '../core/constants'
 import { gameStateManager } from '../core/GameStateManager'
-import { DEV_Config } from '../core/constants'
+import { Logger } from '../core/logger'
 
+import type { BufferGeometry, Material } from 'three'
 import type { ObjectData } from '../store/types'
 import type { GameStore } from '../GameStore'
 
@@ -94,9 +93,10 @@ function initializeRockVariations() {
     })
   }
   
-  if (DEV_Config.LOG_ENABLED) {
-    console.log(`Initialized variations for ${rockVariations.size} rocks with varied rotation speeds`)
-  }
+  Logger.log('ROCKS', 'Rock variations initialized', {
+    totalRocks: rockVariations.size,
+    performance: PERFORMANCE
+  })
 }
 
 // Create a numeric hash based on string (for seeds)
@@ -158,9 +158,19 @@ function updateRockActivity() {
       activeCount++
     }
   }
+  
+  // Log performance statistics occasionally
+  Logger.random('ROCKS', 'Rock activity updated', {
+    totalRocks: gameStore.rocks.length,
+    activeRocks: activeCount,
+    visibleRadius: PERFORMANCE.VISIBLE_RADIUS,
+    maxActiveRocks: PERFORMANCE.MAX_ACTIVE_ROCKS
+  }, 0.02)
 }
 
 onMounted(async () => {
+  Logger.log('ROCKS', 'Initializing rocks component')
+  
   try {
     const result = await ResourceLoader.registerModel('RockModel', '/models/space-game/Stone.glb')
     if (result?.nodes?.Stone) {
@@ -170,25 +180,35 @@ onMounted(async () => {
       // Initialize rock transformations
       initializeRockVariations()
       
-      if (DEV_Config.LOG_ENABLED) {
-        console.log('RockModel loaded successfully')
-      }
+      Logger.log('ROCKS', 'Rock model loaded successfully', {
+        modelName: 'RockModel',
+        nodeName: 'Stone',
+        hasGeometry: !!modelData.value.stoneNode.geometry,
+        hasMaterial: !!modelData.value.stoneNode.material
+      })
+    } else {
+      Logger.error('ROCKS', 'Rock model missing required node', {
+        modelName: 'RockModel',
+        expectedNode: 'Stone',
+        availableNodes: result?.nodes ? Object.keys(result.nodes) : []
+      })
     }
-    else {
-      console.error('RockModel missing Stone node')
-    }
-  }
-  catch (error) {
-    console.error('Failed to load RockModel:', error)
+  } catch (error) {
+    Logger.error('ROCKS', 'Failed to load rock model', {
+      modelName: 'RockModel',
+      modelPath: '/models/space-game/Stone.glb',
+      error
+    })
   }
 })
 
 // Watch for game state changes
 watch(() => gameStateManager.getCurrentState(), (newState) => {
   if (newState === GameState.BATTLE && modelData.value.isLoaded && gameStore.rocks.length > 0) {
-    if (DEV_Config.LOG_ENABLED) {
-      console.log('[Rocks] Reinitializing rock variations for battle mode')
-    }
+    Logger.log('ROCKS', 'Reinitializing rock variations for battle mode', {
+      rockCount: gameStore.rocks.length,
+      gameState: newState
+    })
     // Slight delay to ensure rock data is updated
     setTimeout(() => initializeRockVariations(), 100)
   }
@@ -207,7 +227,9 @@ useLoop().onBeforeRender(() => {
     updateRockActivity()
   }
   
+  let activeRocksProcessed = 0
   let i = 0
+  
   for (const data of gameStore.rocks as ObjectData[]) {
     const rock = rocksGroupRef.value.children[i]
     if (!rock) {
@@ -242,7 +264,22 @@ useLoop().onBeforeRender(() => {
     // Apply rotation
     rock.rotation.set(rotationAmount * 0.5, rotationAmount, rotationAmount * 0.3)
     
+    activeRocksProcessed++
     i++
+  }
+  
+  // Log render performance occasionally
+  if (frameCount % 300 === 0) {
+    Logger.throttle('ROCKS', 'Render performance', {
+      frameCount,
+      totalRocks: gameStore.rocks.length,
+      activeRocksProcessed,
+      cameraPosition: {
+        x: cameraPosition.value.x,
+        y: cameraPosition.value.y,
+        z: cameraPosition.value.z
+      }
+    })
   }
 })
 </script>
