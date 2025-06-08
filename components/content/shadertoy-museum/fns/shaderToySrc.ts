@@ -26,95 +26,6 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 */
 `
 
-const unyo = `
-// Source: https://www.shadertoy.com/view/MX2BWR
-// 球の距離関数
-float sphereSDF(vec3 p, float radius) {
-    return length(p) - radius;
-}
-
-// 立方体の距離関数
-float boxSDF(vec3 p, vec3 size) {
-    vec3 d = abs(p) - size;
-    float outsideDistance = length(max(d, 0.0));
-    float insideDistance = min(max(d.x, max(d.y, d.z)), 0.0);
-    return outsideDistance + insideDistance;
-}
-
-// スムーズな最小値を計算する関数
-float smin(float a, float b, float k) {
-    float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
-    return mix(b, a, h) - k * h * (1.0 - h);
-}
-
-float sceneSDF(vec3 p) {
-    float time = iTime;
-    float d = 100.0;
-    
-    // 球の数を定義
-    int numSpheres = 20;
-    
-    // 複数の球を生成して結合するためのループ
-    for (int i = 0; i < numSpheres; i++) {
-        float angle = float(i) * 1.1 + time; 
-        vec3 spherePos = vec3(sin(angle), cos(angle * 1.5), sin(angle * 0.7));
-        
-        // 半径を変える
-        float radius = 0.4 + 0.1 * float(i % 3);  // 球の半径を少し変化させる
-        
-        // 結合
-        float dSphere = sphereSDF(p - spherePos, radius);
-        d = smin(d, dSphere, 0.5);
-    }
-    
-    return d;  // 最終的なSDFを返す
-}
-
-void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
-    // 画面の座標を正規化
-    vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
-    
-    // カメラの設定
-    vec3 cp = vec3(0.0, 0.0, -5.0);  // カメラの位置を近づける
-    vec3 target = vec3(0.0, 0.0, 0.0); // 注目するターゲット
-    vec3 cd = normalize(target - cp);   // カメラの向き
-    vec3 cs = normalize(cross(cd, vec3(0.0, 1.0, 0.0)));  // カメラの右方向
-    vec3 cu = normalize(cross(cs, cd)); // カメラの上方向
-    
-    // レイの方向
-    vec3 rd = normalize(cs * uv.x + cu * uv.y + cd);  // 視野角調整
-    
-    // レイマーチングのループ
-    float t = 0.0;
-    float maxDistance = 100.0;
-    int maxSteps = 100;
-    float d;
-    for (int i = 0; i < maxSteps; i++) {
-        vec3 p = cp + t * rd;  // 現在のレイの位置
-        d = sceneSDF(p);       // 距離を計算
-        if (d < 0.001) break;  // 十分近づいたら終了
-        t += d;                // レイを進める
-        if (t > maxDistance) break;  // 最大距離を超えたら終了
-    }
-    
-    // ヒットしたかどうかで色を決定
-    vec3 color;
-    if (t < maxDistance) {
-        // オブジェクトがヒットしたらカラフルな色にする
-        float r = 0.5 + 0.5 * sin(iTime + t);
-        float g = 0.5 + 0.5 * cos(iTime + t * 1.3);
-        float b = 0.5 + 0.5 * sin(iTime + t * 2.0);
-        color = vec3(r, g, b);  // カラフルな色
-    } else {
-        color = vec3(0.0);  // ヒットしなかったら黒色
-    }
-    
-    // 最終的なフラグメントの色を設定
-    fragColor = vec4(color, 1.0);
-}
-
-`
-
 const prettyHip = `
 // NOTE: https://www.shadertoy.com/view/XsBfRW
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
@@ -152,100 +63,6 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     //fragColor = vec4(value);
     fragColor = mix(vec4(1.0,1.0,1.0,1.0),vec4(edge,0.0,0.0,1.0), value);
     fragColor.a = clamp(value, 0.0, 1.0);
-}
-`
-
-const mainImageDrawCircle = `
-// NOTE: https://www.shadertoy.com/view/3tdSRn
-vec3 drawCircle(vec2 pos, float radius, float width, float power, vec4 color)
-{
-    vec2 mousePos = iMouse.xy - vec2(0.5);
-    float dist1 = length(pos);
-    dist1 = fract((dist1 * 5.0) - fract(iTime));
-    float dist2 = dist1 - radius;
-    float intensity = pow(radius / abs(dist2), width); 
-    vec3 col = color.rgb * intensity * power * max((0.8- abs(dist2)), 0.0);
-    return col;
-}
-
-vec3 hsv2rgb(float h, float s, float v)
-{
-    vec4 t = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
-    vec3 p = abs(fract(vec3(h) + t.xyz) * 6.0 - vec3(t.w));
-    return v * mix(vec3(t.x), clamp(p - vec3(t.x), 0.0, 1.0), s);
-}
-
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
-{
-    // // -1.0 ~ 1.0
-    vec2 pos = (fragCoord.xy * 2.0 - iResolution.xy) / min(iResolution.x, iResolution.y);
-    
-    float h = mix(0.5, 0.65, length(pos));
-    vec4 color = vec4(hsv2rgb(h, 1.0, 1.0), 1.0);
-    float radius = 0.5;
-    float width = 0.8;
-    float power = 0.1;
-    vec3 finalColor = drawCircle(pos, radius, width, power, color);
-
-    pos = abs(pos);
-    // vec3 finalColor = vec3(pos.x, 0.0, pos.y);
-
-    fragColor = vec4(finalColor, finalColor.r);
-}
-`
-
-const cellular = `
-// NOTE: https://www.shadertoy.com/view/Xs2GDd
-#define PI 3.14159265359
-
-vec3 col1 = vec3(0.216, 0.471, 0.698); // blue
-vec3 col2 = vec3(1.00, 0.329, 0.298); // yellow
-vec3 col3 = vec3(0.867, 0.910, 0.247); // red
-
-float disk(vec2 r, vec2 center, float radius) {
-	return 1.0 - smoothstep( radius-0.008, radius+0.008, length(r-center));
-}
-
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
-{
-	float t = iTime*2.;
-	vec2 r = (2.0*fragCoord.xy - iResolution.xy) / iResolution.y;
-	r *= 1.0 + 0.05*sin(r.x*5.+iTime) + 0.05*sin(r.y*3.+iTime);
-	r *= 1.0 + 0.2*length(r);
-	float side = 0.5;
-	vec2 r2 = mod(r, side);
-	vec2 r3 = r2-side/2.;
-	float i = floor(r.x/side)+2.;
-	float j = floor(r.y/side)+4.;
-	float ii = r.x/side+2.;
-	float jj = r.y/side+4.;	
-	
-	vec3 pix = vec3(1.0);
-	
-	float rad, disks;
-		
-	rad = 0.15 + 0.05*sin(t+ii*jj);
-	disks = disk(r3, vec2(0.,0.), rad);
-	pix = mix(pix, col2, disks);
-
-	float speed = 2.0;
-	float tt = iTime*speed+0.1*i+0.08*j;
-	float stopEveryAngle = PI/2.0;
-	float stopRatio = 0.7;
-	float t1 = (floor(tt) + smoothstep(0.0, 1.0-stopRatio, fract(tt)) )*stopEveryAngle;
-		
-	float x = -0.07*cos(t1+i);
-	float y = 0.055*(sin(t1+j)+cos(t1+i));
-	rad = 0.1 + 0.05*sin(t+i+j);
-	disks = disk(r3, vec2(x,y), rad);
-	pix = mix(pix, col1, disks);
-	
-	rad = 0.2 + 0.05*sin(t*(1.0+0.01*i));
-	disks = disk(r3, vec2(0.,0.), rad);
-	pix += 0.2*col3*disks * sin(t+i*j+i);
-
-	pix -= smoothstep(0.3, 5.5, length(r));	
-	fragColor = vec4(pix, disks);
 }
 `
 
@@ -670,84 +487,6 @@ vec3 intersect( in vec3 ro, in vec3 rd )
 "author": "evilryu",
 "description": "a mandelbulb",
 "href": "https://www.shadertoy.com/view/MdXSWn"
-}
-*/
-`
-
-const shader02 = `
-// NOTE: https://www.shadertoy.com/view/wt3SWj
-float opSmoothUnion( float d1, float d2, float k )
-{
-    float h = clamp( 0.876 + 1.284*(d2-d1)/k, 0.112, 2.616 );
-    return mix( d2, d1, h ) - k*h*(1.0-h);
-}
-
-float sdSphere( vec3 p, float s )
-{
-  return length(p)-s;
-} 
-
-float map(vec3 p)
-{
-	float d = 0.480;
-	for (int i = 0; i < 16; i++)
-	{
-		float fi = float(i);
-		float time = iTime * (fract(fi * 412.531 + 1.073) - 1.020) * 1.152;
-		d = opSmoothUnion(
-            sdSphere(p + sin(time + fi * vec3(52.5126, 64.62744, 632.25)) * vec3(2.0, 2.0, 0.8), mix(0.5, 1.0, fract(fi * 412.531 + 0.5124))),
-			d,
-			0.024
-		);
-	}
-	return d;
-}
-
-vec3 calcNormal( in vec3 p )
-{
-    const float h = 1e-5; // or some other value
-    const vec2 k = vec2(1,-1);
-    return normalize( k.xyy*map( p + k.xyy*h ) + 
-                      k.yyx*map( p + k.yyx*h ) + 
-                      k.yxy*map( p + k.yxy*h ) + 
-                      k.xxx*map( p + k.xxx*h ) );
-}
-
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
-{
-    vec2 uv = fragCoord/iResolution.xy;
-    
-    // screen size is 6m x 6m
-	vec3 rayOri = vec3((uv - 0.5) * vec2(iResolution.x/iResolution.y, 0.368) * 6.0, 3.0);
-	vec3 rayDir = vec3(0.0, 0.0, -1.0);
-	
-	float depth = 0.0;
-	vec3 p;
-	
-	for(int i = 0; i < 64; i++) {
-		p = rayOri + rayDir * depth;
-		float dist = map(p);
-        depth += dist;
-		if (dist < 1e-6) {
-			break;
-		}
-	}
-	
-    depth = min(6.0, depth);
-	vec3 n = calcNormal(p);
-    float b = max(0.0, dot(n, vec3(0.577)));
-    vec3 col = (0.5 + 0.5 * cos((b + iTime * 3.0) + uv.xyx * 2.0 + vec3(0,2,4))) * (0.85 + b * 0.35);
-    col *= exp( -depth * 0.15 );
-	
-    // maximum thickness is 2m in alpha channel
-    fragColor = vec4(col, 0.0 );
-}
-
-/** SHADERDATA
-{
-	"title": "shader2",
-	"description": "sure",
-	"model": "nothing"
 }
 */
 `
@@ -1289,7 +1028,6 @@ precision highp float;
 float gTime = 0.;
 const float REPEAT = 5.0;
 
-// 回転行列
 mat2 rot(float a) {
 	float c = cos(a), s = sin(a);
 	return mat2(c,s,-s,c);
@@ -1396,11 +1134,9 @@ export const shaderToySrc = {
   star,
   fractalPyramid,
   mandelbulb,
-  shader02,
   rainbow,
   prettyHip,
   raymarchingBasic,
-  unyo,
   seventiesMelt,
   sinusoidalTresJS,
   sinusoidalTresJS2,
