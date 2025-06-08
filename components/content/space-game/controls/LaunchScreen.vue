@@ -224,8 +224,8 @@ const launchMode = (mode: 'battle' | 'explore') => {
 
       <!-- Credits footer -->
       <div class="credits" :class="{ 'collapsed': isTechCreditsCollapsed }">
-        <p>Vootaa <a href="https://github.com/vootaa/3DVL" target="_blank" rel="noopener noreferrer"
-            class="credit-link">3D Visual Lab</a></p>
+        <p><a href="https://github.com/vootaa/3DVL" target="_blank" rel="noopener noreferrer" class="credit-link">3D
+            Visual Lab</a> @ Vootaa </p>
         <p class="credit-note">
           Based on <a href="https://twitter.com/0xca0a" target="_blank" rel="noopener noreferrer"
             class="credit-link">0xca0a</a>'s <a href="https://codesandbox.io/p/sandbox/i2160" target="_blank"
