@@ -129,10 +129,7 @@ const launchMode = (mode: 'battle' | 'explore') => {
 
       <!-- Progress section -->
       <div class="loading-section" :class="{ 'collapsed': isLoadingSectionCollapsed }">
-        <div
-          v-if="!isResourcesLoaded"
-          class="spinner"
-        />
+        <div v-if="!isResourcesLoaded" class="spinner" />
 
         <div class="progress-container">
           <div class="progress-stats">
@@ -141,11 +138,8 @@ const launchMode = (mode: 'battle' | 'explore') => {
           </div>
 
           <div class="progress-bar-container">
-            <div
-              class="progress-bar"
-              :class="{ 'progress-complete': isResourcesLoaded }"
-              :style="{ width: `${loadingProgress}%` }"
-            />
+            <div class="progress-bar" :class="{ 'progress-complete': isResourcesLoaded }"
+              :style="{ width: `${loadingProgress}%` }" />
           </div>
 
           <div class="current-resource">
@@ -177,27 +171,16 @@ const launchMode = (mode: 'battle' | 'explore') => {
             </div>
           </div>
 
-          <div
-            v-if="ResourceLoader.loadingErrors.length > 0"
-            class="loading-errors"
-          >
+          <div v-if="ResourceLoader.loadingErrors.length > 0" class="loading-errors">
             <span class="error-count">{{ ResourceLoader.loadingErrors.length }} resources failed to load</span>
-            <button
-              class="error-button"
-              @click="diagnoseLoading"
-            >
+            <button class="error-button" @click="diagnoseLoading">
               Diagnose
             </button>
           </div>
 
-          <div
-            v-if="loadingProgress >= 85 && !isResourcesLoaded && loadingStats.elapsedTime > 10000"
-            class="stuck-loading"
-          >
-            <button
-              class="force-button"
-              @click="forceComplete"
-            >
+          <div v-if="loadingProgress >= 85 && !isResourcesLoaded && loadingStats.elapsedTime > 10000"
+            class="stuck-loading">
+            <button class="force-button" @click="forceComplete">
               continue loading
             </button>
           </div>
@@ -205,21 +188,11 @@ const launchMode = (mode: 'battle' | 'explore') => {
       </div>
 
       <!-- Buttons section -->
-      <div
-        v-if="isResourcesLoaded"
-        class="buttons"
-      >
-        <button
-          class="btn game-btn"
-          @click="launchMode('battle')"
-          :class="{ 'centered': allSectionsCollapsed }"
-        >
+      <div v-if="isResourcesLoaded" class="buttons">
+        <button class="btn game-btn" @click="launchMode('battle')" :class="{ 'centered': allSectionsCollapsed }">
           Battle
         </button>
-        <button
-          class="btn explore-btn"
-          @click="launchMode('explore')"
-        >
+        <button class="btn explore-btn" @click="launchMode('explore')">
           Explore
         </button>
       </div>
@@ -251,24 +224,26 @@ const launchMode = (mode: 'battle' | 'explore') => {
 
       <!-- Credits footer -->
       <div class="credits" :class="{ 'collapsed': isTechCreditsCollapsed }">
-        <p>Developed by Vootaa Labs</p>
+        <p>Vootaa <a href="https://github.com/vootaa/3DVL" target="_blank" rel="noopener noreferrer"
+            class="credit-link">3D Visual Lab</a></p>
         <p class="credit-note">
-          Based on 0xca0a's R3F game prototype
+          Based on <a href="https://twitter.com/0xca0a" target="_blank" rel="noopener noreferrer"
+            class="credit-link">0xca0a</a>'s <a href="https://codesandbox.io/p/sandbox/i2160" target="_blank"
+            rel="noopener noreferrer" class="credit-link">R3F game prototype</a>
+        </p>
+        <p class="credit-fonts">
+          Fonts: <a href="https://kodemono.com/" target="_blank" rel="noopener noreferrer" class="credit-link">Kode
+            Mono</a> & <a href="https://www.1001fonts.com/teko-font.html" target="_blank" rel="noopener noreferrer"
+            class="credit-link">Teko</a>
         </p>
         <p class="credit-tools">
           AI-assisted: GitHub Copilot & Claude Sonnet
-        </p>
-        <p class="credit-fonts">
-          Fonts: Kode Mono & Teko
         </p>
       </div>
 
       <!-- Hidden debug controls -->
       <div class="debug-controls">
-        <button
-          class="debug-button"
-          @click="diagnoseLoading"
-        >
+        <button class="debug-button" @click="diagnoseLoading">
           Debug
         </button>
       </div>
@@ -514,6 +489,19 @@ h1 {
   opacity: 0.7;
   color: #ccc;
   margin-top: auto;
+}
+
+.credit-link {
+  color: #6495ed;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.credit-link:hover {
+  color: #8bb8ff;
+  border-bottom-color: #8bb8ff;
+  text-shadow: 0 0 5px rgba(100, 149, 237, 0.5);
 }
 
 .credit-note {
