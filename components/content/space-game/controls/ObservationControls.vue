@@ -1,16 +1,20 @@
 <script setup lang="ts">
-import { computed, ref, shallowRef, watch, onUnmounted, inject } from 'vue'
+import { computed, ref, watch, onUnmounted, inject } from 'vue'
 
 import { GameState } from '../core/constants'
 import { gameStateManager } from '../core/GameStateManager'
+import { Logger } from '../core/logger'
 import { POINTS_OF_INTEREST } from '../store/constants'
-
 import type { IGameController } from '../core/types'
 import type { GameStore } from '../GameStore'
 
 const gameStore = inject('gameStore') as GameStore
 const gameController = inject('gameController') as { value: IGameController }
-console.log('GameController injected:', gameController)
+
+Logger.log('OBSERVATION_CONTROLS', 'GameController injected', {
+  hasController: !!gameController,
+  hasValue: !!gameController?.value
+})
 
 const currentGameState = computed(() => {
   if (gameController?.value?.getCurrentState) {
@@ -52,8 +56,16 @@ watch(() => [gameStore.currentPointOfInterest, currentGameState.value],
       observationInterval.value = window.setInterval(() => {
         observationTime.value++
       }, 1000)
+      
+      Logger.log('OBSERVATION_CONTROLS', 'Observation timer started', {
+        pointOfInterest: newPOI,
+        requiredTime: requiredObservationTime
+      })
     } else {
       observationTime.value = 0
+      if (newPOI === null) {
+        Logger.log('OBSERVATION_CONTROLS', 'Observation timer stopped')
+      }
     }
   },
   { immediate: true }
@@ -89,76 +101,113 @@ const isNearPointOfInterest = (poiKey: keyof typeof POINTS_OF_INTEREST) => {
 }
 
 const observePointOfInterest = (poiKey: keyof typeof POINTS_OF_INTEREST) => {
-  console.log('Attempting to observe:', poiKey, 'with controller:', gameController);
+  Logger.log('OBSERVATION_CONTROLS', 'Attempting to observe point of interest', {
+    poiKey,
+    hasController: !!gameController?.value,
+    hasEnterObservationMethod: !!gameController?.value?.enterObservation
+  })
   
   // Consistently use reactive reference
   if (gameController?.value) {
     if (typeof gameController.value.enterObservation === 'function') {
-      gameController.value.enterObservation(poiKey);
+      gameController.value.enterObservation(poiKey)
+      Logger.log('OBSERVATION_CONTROLS', 'Observation started via controller', { poiKey })
     } else {
-      console.error('enterObservation is not a function on gameController.value', gameController.value);
+      Logger.error('OBSERVATION_CONTROLS', 'enterObservation is not a function on gameController.value', {
+        controllerMethods: Object.keys(gameController.value),
+        poiKey
+      })
       
       // Fallback strategy - directly use gameStateManager
       if (gameStateManager.canObserve()) {
         if (gameStateManager.setState(GameState.OBSERVATION)) {
           // Manually set observation point
-          gameStore.currentPointOfInterest = poiKey;
+          gameStore.currentPointOfInterest = poiKey
           
           // Set observation mode parameters
-          const poi = POINTS_OF_INTEREST[poiKey];
-          const track = gameStore.mutation.track;
-          const mutation = gameStore.mutation;
+          const poi = POINTS_OF_INTEREST[poiKey]
+          const track = gameStore.mutation.track
+          const mutation = gameStore.mutation
           
           // Pause movement
-          mutation.previousPosition.copy(mutation.position);
-          mutation.previousTime = Date.now();
-          mutation.isPaused = true;
+          mutation.previousPosition.copy(mutation.position)
+          mutation.previousTime = Date.now()
+          mutation.isPaused = true
           
           // Set orbit parameters
           const poiPosition = Array.isArray(poi.trackPosition)
             ? poi.trackPosition[0]
-            : poi.trackPosition;
+            : poi.trackPosition
             
-          mutation.orbitCenter.copy(track.parameters.path.getPointAt(poiPosition).multiplyScalar(mutation.scale));
-          mutation.orbitDistance = poi.orbitDistance;
-          mutation.orbitSpeed = poi.orbitSpeed;
+          mutation.orbitCenter.copy(track.parameters.path.getPointAt(poiPosition).multiplyScalar(mutation.scale))
+          mutation.orbitDistance = poi.orbitDistance
+          mutation.orbitSpeed = poi.orbitSpeed
           
           // Initialize orbit angles
-          gameStore.orbitAngle = 0;
-          gameStore.orbitHeight = 0;
+          gameStore.orbitAngle = 0
+          gameStore.orbitHeight = 0
+          
+          Logger.log('OBSERVATION_CONTROLS', 'Observation started via fallback method', {
+            poiKey,
+            poiName: poi.name,
+            orbitDistance: poi.orbitDistance,
+            orbitSpeed: poi.orbitSpeed
+          })
+        } else {
+          Logger.error('OBSERVATION_CONTROLS', 'Failed to set observation state', { poiKey })
         }
+      } else {
+        Logger.error('OBSERVATION_CONTROLS', 'Cannot observe - state manager restriction', { 
+          poiKey,
+          currentState: gameStateManager.getCurrentState()
+        })
       }
     }
   } else {
-    console.error('No gameController available');
+    Logger.error('OBSERVATION_CONTROLS', 'No gameController available for observation', { poiKey })
   }
 }
 
 const resumeJourney = () => {
-  console.log('Attempting to resume journey with controller:', gameController);
+  Logger.log('OBSERVATION_CONTROLS', 'Attempting to resume journey', {
+    hasController: !!gameController?.value,
+    hasExitObservationMethod: !!gameController?.value?.exitObservation,
+    currentPOI: gameStore.currentPointOfInterest
+  })
   
   // Consistently use reactive reference
   if (gameController?.value) {
     if (typeof gameController.value.exitObservation === 'function') {
-      gameController.value.exitObservation();
+      gameController.value.exitObservation()
+      Logger.log('OBSERVATION_CONTROLS', 'Journey resumed via controller')
     } else {
-      console.error('exitObservation is not a function on gameController.value');
+      Logger.error('OBSERVATION_CONTROLS', 'exitObservation is not a function on gameController.value', {
+        controllerMethods: Object.keys(gameController.value)
+      })
       
       // Fallback strategy
       if (gameStateManager.setState(GameState.EXPLORE)) {
-        const mutation = gameStore.mutation;
+        const mutation = gameStore.mutation
         
         // Resume movement
         if (mutation.isPaused) {
-          mutation.startTime += (Date.now() - mutation.previousTime);
-          mutation.isPaused = false;
+          mutation.startTime += (Date.now() - mutation.previousTime)
+          mutation.isPaused = false
         }
         
-        gameStore.currentPointOfInterest = null;
+        const previousPOI = gameStore.currentPointOfInterest
+        gameStore.currentPointOfInterest = null
+        
+        Logger.log('OBSERVATION_CONTROLS', 'Journey resumed via fallback method', {
+          previousPOI,
+          wasePaused: mutation.isPaused
+        })
+      } else {
+        Logger.error('OBSERVATION_CONTROLS', 'Failed to set explore state for journey resume')
       }
     }
   } else {
-    console.error('No gameController available');
+    Logger.error('OBSERVATION_CONTROLS', 'No gameController available for resume')
   }
 }
 
@@ -170,6 +219,7 @@ const currentPoiName = computed(() => {
 onUnmounted(() => {
   if (observationInterval.value) {
     clearInterval(observationInterval.value)
+    Logger.log('OBSERVATION_CONTROLS', 'Component unmounted, cleared observation timer')
   }
 })
 </script>
