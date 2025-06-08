@@ -56,7 +56,7 @@ watch(() => [gameStore.currentPointOfInterest, currentGameState.value],
       observationInterval.value = window.setInterval(() => {
         observationTime.value++
       }, 1000)
-      
+
       Logger.log('OBSERVATION_CONTROLS', 'Observation timer started', {
         pointOfInterest: newPOI,
         requiredTime: requiredObservationTime
@@ -106,7 +106,7 @@ const observePointOfInterest = (poiKey: keyof typeof POINTS_OF_INTEREST) => {
     hasController: !!gameController?.value,
     hasEnterObservationMethod: !!gameController?.value?.enterObservation
   })
-  
+
   // Consistently use reactive reference
   if (gameController?.value) {
     if (typeof gameController.value.enterObservation === 'function') {
@@ -117,36 +117,36 @@ const observePointOfInterest = (poiKey: keyof typeof POINTS_OF_INTEREST) => {
         controllerMethods: Object.keys(gameController.value),
         poiKey
       })
-      
+
       // Fallback strategy - directly use gameStateManager
       if (gameStateManager.canObserve()) {
         if (gameStateManager.setState(GameState.OBSERVATION)) {
           // Manually set observation point
           gameStore.currentPointOfInterest = poiKey
-          
+
           // Set observation mode parameters
           const poi = POINTS_OF_INTEREST[poiKey]
           const track = gameStore.mutation.track
           const mutation = gameStore.mutation
-          
+
           // Pause movement
           mutation.previousPosition.copy(mutation.position)
           mutation.previousTime = Date.now()
           mutation.isPaused = true
-          
+
           // Set orbit parameters
           const poiPosition = Array.isArray(poi.trackPosition)
             ? poi.trackPosition[0]
             : poi.trackPosition
-            
+
           mutation.orbitCenter.copy(track.parameters.path.getPointAt(poiPosition).multiplyScalar(mutation.scale))
           mutation.orbitDistance = poi.orbitDistance
           mutation.orbitSpeed = poi.orbitSpeed
-          
+
           // Initialize orbit angles
           gameStore.orbitAngle = 0
           gameStore.orbitHeight = 0
-          
+
           Logger.log('OBSERVATION_CONTROLS', 'Observation started via fallback method', {
             poiKey,
             poiName: poi.name,
@@ -157,7 +157,7 @@ const observePointOfInterest = (poiKey: keyof typeof POINTS_OF_INTEREST) => {
           Logger.error('OBSERVATION_CONTROLS', 'Failed to set observation state', { poiKey })
         }
       } else {
-        Logger.error('OBSERVATION_CONTROLS', 'Cannot observe - state manager restriction', { 
+        Logger.error('OBSERVATION_CONTROLS', 'Cannot observe - state manager restriction', {
           poiKey,
           currentState: gameStateManager.getCurrentState()
         })
@@ -174,7 +174,7 @@ const resumeJourney = () => {
     hasExitObservationMethod: !!gameController?.value?.exitObservation,
     currentPOI: gameStore.currentPointOfInterest
   })
-  
+
   // Consistently use reactive reference
   if (gameController?.value) {
     if (typeof gameController.value.exitObservation === 'function') {
@@ -184,20 +184,20 @@ const resumeJourney = () => {
       Logger.error('OBSERVATION_CONTROLS', 'exitObservation is not a function on gameController.value', {
         controllerMethods: Object.keys(gameController.value)
       })
-      
+
       // Fallback strategy
       if (gameStateManager.setState(GameState.EXPLORE)) {
         const mutation = gameStore.mutation
-        
+
         // Resume movement
         if (mutation.isPaused) {
           mutation.startTime += (Date.now() - mutation.previousTime)
           mutation.isPaused = false
         }
-        
+
         const previousPOI = gameStore.currentPointOfInterest
         gameStore.currentPointOfInterest = null
-        
+
         Logger.log('OBSERVATION_CONTROLS', 'Journey resumed via fallback method', {
           previousPOI,
           wasePaused: mutation.isPaused
@@ -267,17 +267,19 @@ onUnmounted(() => {
 
       <!-- Orbit control instructions -->
       <div class="orbit-instructions">
-        Drag mouse to orbit • Scroll to zoom
+        <div>Drag mouse to orbit</div>
+        <div>Scroll to zoom</div>
       </div>
       <div class="orbit-data">
         <div class="orbit-row">
           <span class="orbit-distance">
-            <i class="orbit-icon distance-icon">↕</i> Zoom Distance: {{ Math.round(gameStore.mutation.orbitDistance) }} KM
+            <i class="orbit-icon distance-icon">↕</i> Zoom Distance: {{ (gameStore.mutation.orbitDistance /
+            1000).toFixed(2) }} AU
           </span>
         </div>
         <div class="orbit-row">
           <span class="orbit-angle">
-            <i class="orbit-icon angle-icon">↻</i> Rotation: {{ Math.round(gameStore.orbitAngle * 57.3) }}°
+            <i class="orbit-icon angle-icon">↻</i> Azimuth: {{ Math.round(gameStore.orbitAngle * 57.3) }}°
           </span>
         </div>
         <div class="orbit-row">
@@ -292,124 +294,134 @@ onUnmounted(() => {
 
 <style>
 .observation-controls {
-    position: absolute;
-    top: 280px;
-    right: 20px;
-    z-index: 100;
-    font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  position: absolute;
+  top: 280px;
+  right: 20px;
+  z-index: 100;
+  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
 }
 
 .poi-header {
-    padding: 8px 12px;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    border-radius: 4px 4px 0 0;
-    font-weight: 500;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border-radius: 4px 4px 0 0;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .poi-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 10px;
-    border-radius: 0 0 4px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 10px;
+  border-radius: 0 0 4px 4px;
 }
 
 .poi-number {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    line-height: 20px;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    margin-right: 5px;
-    font-size: 0.8em;
-    font-weight: bold;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  margin-right: 5px;
+  font-size: 0.8em;
+  font-weight: bold;
 }
 
 .poi-button {
-    padding: 8px 12px;
-    background: transparent;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-    min-width: 180px;
-    text-align: left;
-    position: relative;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 12px;
+  background: transparent;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 180px;
+  text-align: left;
+  position: relative;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .poi-button:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .poi-button:hover:not([disabled]) {
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 1);
 }
 
 .poi-button[disabled] {
-    opacity: 0.5;
-    cursor: not-allowed;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .observation-controls>div {
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
-    overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .orbit-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 15px;
-    border-radius: 8px;
-    color: white;
-    min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 15px;
+  border-radius: 8px;
+  color: white;
+  min-width: 180px;
 }
 
 .orbit-info {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
 }
 
 .observation-title {
-    font-weight: 500;
-    margin-bottom: 5px;
-    font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  font-weight: 500;
+  margin-bottom: 5px;
+  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
 }
 
 .resume-button {
-    padding: 5px 10px;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    border-radius: 4px;
-    color: white;
-    cursor: pointer;
-    margin-left: 0;
-    width: 100%;
-    text-align: center;
-    font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
-    font-weight: 500;
-    transition: all 0.2s;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  margin-left: 0;
+  width: 100%;
+  text-align: center;
+  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
 .resume-button:hover {
-    background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .orbit-instructions {
-    font-size: 0.8em;
-    opacity: 0.8;
+  font-size: 0.8em;
+  opacity: 0.8;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.orbit-instructions div {
+  margin-bottom: 2px;
+}
+
+.orbit-instructions div:last-child {
+  margin-bottom: 0;
 }
 
 .orbit-data {
@@ -476,12 +488,12 @@ onUnmounted(() => {
 }
 
 .observation-timer {
-    width: 100%;
-    margin: 10px 0;
-    padding: 8px;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
+  width: 100%;
+  margin: 10px 0;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
 }
 
 .stardust-icon {
@@ -493,9 +505,9 @@ onUnmounted(() => {
 }
 
 .timer-label {
-    font-size: 0.9em;
-    color: #a0e0ff;
-    margin-bottom: 5px;
+  font-size: 0.9em;
+  color: #a0e0ff;
+  margin-bottom: 5px;
 }
 
 .stardust-collected {
@@ -513,49 +525,50 @@ onUnmounted(() => {
 }
 
 @keyframes glow {
-    from {
-        text-shadow: 0 0 5px rgba(255, 218, 135, 0.5);
-    }
+  from {
+    text-shadow: 0 0 5px rgba(255, 218, 135, 0.5);
+  }
 
-    to {
-        text-shadow: 0 0 15px rgba(255, 218, 135, 0.9), 0 0 20px rgba(255, 255, 255, 0.5);
-    }
+  to {
+    text-shadow: 0 0 15px rgba(255, 218, 135, 0.9), 0 0 20px rgba(255, 255, 255, 0.5);
+  }
 }
 
 .timer-progress {
-    height: 20px;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 10px;
-    overflow: hidden;
-    position: relative;
-    margin-top: 5px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  margin-top: 5px;
 }
 
 .timer-bar {
-    height: 100%;
-    background: linear-gradient(90deg, #4b6cb7, #8e54e9);
-    box-shadow: 0 0 10px rgba(142, 84, 233, 0.8);
-    border-radius: 10px;
-    transition: width 1s linear;
+  height: 100%;
+  background: linear-gradient(90deg, #4b6cb7, #8e54e9);
+  box-shadow: 0 0 10px rgba(142, 84, 233, 0.8);
+  border-radius: 10px;
+  transition: width 1s linear;
 }
 
 .timer-text {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 0.8em;
-    font-weight: 500;
-    text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.8em;
+  font-weight: 500;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
 }
 
 .observation-timer.completed {
-    background: rgba(255, 218, 135, 0.15);
-    border-color: rgba(255, 218, 135, 0.4);
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 </style>
