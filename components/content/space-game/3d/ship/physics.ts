@@ -94,55 +94,5 @@ export class ShipPhysics {
       }
     })
   }
-
-  // Collision detection helper
-  checkCollisionBounds(): boolean {
-    const { main } = this.refs
-    const position = main.value.position
-
-    // Define collision boundaries
-    const bounds = {
-      minX: -100, maxX: 100,
-      minY: -100, maxY: 100
-    }
-
-    const hasCollision = (
-      position.x < bounds.minX || position.x > bounds.maxX ||
-      position.y < bounds.minY || position.y > bounds.maxY
-    )
-
-    if (hasCollision) {
-      Logger.log('SHIP_PHYSICS', 'Collision detected', {
-        position: { x: position.x, y: position.y },
-        bounds,
-        violatedBounds: {
-          x: position.x < bounds.minX ? 'minX' : position.x > bounds.maxX ? 'maxX' : null,
-          y: position.y < bounds.minY ? 'minY' : position.y > bounds.maxY ? 'maxY' : null
-        }
-      })
-    }
-
-    return hasCollision
-  }
-
-  // Get physics performance metrics
-  getPerformanceMetrics(): object {
-    const { velocity } = this.state
-    const totalVelocity = Math.sqrt(
-      velocity.position.x ** 2 + velocity.position.y ** 2
-    )
-    const totalRotationalVelocity = Math.sqrt(
-      velocity.rotation.x ** 2 + velocity.rotation.y ** 2 + velocity.rotation.z ** 2
-    )
-
-    const metrics = {
-      totalVelocity: parseFloat(totalVelocity.toFixed(4)),
-      totalRotationalVelocity: parseFloat(totalRotationalVelocity.toFixed(4)),
-      isStable: totalVelocity < 0.001 && totalRotationalVelocity < 0.001
-    }
-
-    Logger.random('SHIP_PHYSICS', 'Performance metrics', metrics, 0.02)
-
-    return metrics
-  }
+  
 }
