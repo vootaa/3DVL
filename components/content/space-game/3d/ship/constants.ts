@@ -1,3 +1,5 @@
+import type { DEV_Config } from "../../core/constants";
+
 // Ship control parameters - Centralized management of all constants for easy adjustment
 export const SHIP_CONTROLS = {
   // Flight position control
@@ -32,9 +34,4 @@ export const SHIP_CONTROLS = {
     FREQUENCY: 40,      // Float frequency
     AMPLITUDE: 0.2      // Float amplitude
   },
-  // Development configuration
-  DEV: {
-    LOG_ENABLED: process.env.NODE_ENV === 'development',
-    LOG_INTERVAL: 1000  // Log interval (milliseconds)
-  }
 }

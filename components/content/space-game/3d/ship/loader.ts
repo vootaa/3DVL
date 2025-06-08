@@ -1,9 +1,16 @@
 import { ResourceLoader } from '../../utils/ResourceLoader'
+import { Logger } from '../../core/logger'
+
 import type { Ref } from 'vue'
 import type { ShipModelData } from './types'
 
 export class ShipModelLoader {
   static async loadModel(modelData: Ref<ShipModelData>): Promise<void> {
+    Logger.log('SHIP_LOADER', 'Starting ship model load', {
+      modelPath: '/models/space-game/Ship.glb',
+      modelName: 'ShipModel'
+    })
+
     try {
       const result = await ResourceLoader.registerModel('ShipModel', '/models/space-game/Ship.glb')
       if (result?.nodes) {
@@ -18,20 +25,36 @@ export class ShipModelLoader {
         }
 
         if (!modelData.value['Renault_1']) {
-          console.error('Missing main Ship component (Renault_1)')
+          Logger.error('SHIP_LOADER', 'Missing main ship component (Renault_1)', {
+            loadedNodes: Object.keys(result.nodes),
+            expectedNode: 'Renault_1'
+          })
           modelData.value.isLoaded = false
         }
         else {
-          console.log('ShipModel loaded successfully')
+          Logger.log('SHIP_LOADER', 'Ship model loaded successfully', {
+            modelName: 'ShipModel',
+            loadedComponents: Object.keys(modelData.value).filter(key =>
+              key !== 'isLoaded' && modelData.value[key as keyof ShipModelData] !== null
+            ),
+            totalNodes: Object.keys(result.nodes).length
+          })
         }
       }
       else {
-        console.error('ShipModel loaded but nodes are missing')
+        Logger.error('SHIP_LOADER', 'Ship model loaded but nodes are missing', {
+          modelName: 'ShipModel',
+          resultStructure: result ? Object.keys(result) : 'null'
+        })
         modelData.value.isLoaded = false
       }
     }
     catch (error) {
-      console.error('Failed to load ShipModel:', error)
+      Logger.error('SHIP_LOADER', 'Failed to load ship model', {
+        modelPath: '/models/space-game/Ship.glb',
+        modelName: 'ShipModel',
+        error: error
+      })
       modelData.value.isLoaded = false
     }
   }

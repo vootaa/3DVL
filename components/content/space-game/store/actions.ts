@@ -1,5 +1,5 @@
-import type { PerspectiveCamera } from 'three'
 import { Vector3 } from 'three'
+
 import {
   SCORE_VALUES,
   SPEED_SETTINGS,
@@ -7,13 +7,14 @@ import {
   SpeedMode,
   ModalType,
 } from './constants'
-
 import { checkStardustCollection } from './utils'
 import { randomData } from './generators'
 
 import { GameState } from '../core/constants'
 import { gameStateManager } from '../core/GameStateManager'
+import { Logger } from '../core/logger'
 
+import type { PerspectiveCamera } from 'three'
 import type { HitType } from './types'
 import type { GameStore } from '../GameStore'
 
@@ -22,6 +23,7 @@ export function initializeActions(gameStore: GameStore) {
 
   function setGameController(controller: any) {
     gameController = controller
+    Logger.log('ACTIONS', 'Game controller set', { hasController: !!controller })
   }
 
   gameStore.actions.setGameController = setGameController
@@ -35,6 +37,8 @@ export function initializeActions(gameStore: GameStore) {
 
   // Initialize game with specific mode
   gameStore.actions.startGame = (mode: GameState) => {
+    Logger.log('ACTIONS', 'Starting game', { mode, timestamp: Date.now() })
+
     const track = gameStore.mutation.track
     const guid = gameStore.guid
 
@@ -75,12 +79,20 @@ export function initializeActions(gameStore: GameStore) {
       gameStore.particlesCount = 500
       gameStore.enemies = randomData(gameStore.initialEnemyCount, track, 20, 15, () => 1 + Math.random() * 1.5, guid)
       gameStore.rocks = randomData(gameStore.initialRockCount, track, 150, 8, () => 1 + Math.random() * 3, guid)
+
+      Logger.log('ACTIONS', 'Battle mode initialized', {
+        enemyCount: gameStore.initialEnemyCount,
+        rockCount: gameStore.initialRockCount,
+        particlesCount: gameStore.particlesCount
+      })
     } else if (mode === GameState.EXPLORE) {
       gameStore.enemies = []
       gameStore.rocks = []
       gameStore.initialRockCount = 0
       gameStore.initialEnemyCount = 0
       gameStore.particlesCount = 50
+
+      Logger.log('ACTIONS', 'Explore mode initialized', { particlesCount: gameStore.particlesCount })
     }
 
     gameStore.mutation.particles = randomData(gameStore.particlesCount, track, 100, 1, () => 0.5 + Math.random() * 0.8, guid)
@@ -93,6 +105,8 @@ export function initializeActions(gameStore: GameStore) {
 
     // Pause game time, but continue total time
     gameStore.timeManager.actions.pause()
+
+    Logger.log('ACTIONS', 'Modal shown', { type })
   }
 
   // Implement hide modal method
@@ -103,11 +117,15 @@ export function initializeActions(gameStore: GameStore) {
     if (gameStore.modal.type === ModalType.SWITCH_CONFIRM) {
       gameStore.timeManager.actions.resume()
     }
+
+    Logger.log('ACTIONS', 'Modal hidden', { previousType: gameStore.modal.type })
   }
 
   gameStore.actions.addStardust = () => {
     gameStore.stardust++
     gameStore.actions.addScoreNotification('Stardust', 1, false)
+
+    Logger.random('ACTIONS', 'Stardust collected', { newTotal: gameStore.stardust }, 0.2)
   }
 
   gameStore.actions.addScoreNotification = (text: string, points: number, isBonus = false) => {
@@ -126,6 +144,13 @@ export function initializeActions(gameStore: GameStore) {
         (n: { id: number }) => n.id !== notification.id,
       )
     }, 3000)
+
+    Logger.random('ACTIONS', 'Score notification added', {
+      text,
+      points,
+      isBonus,
+      totalNotifications: gameStore.scoreNotifications.length
+    }, 0.1)
   }
 
   // Combat system
@@ -150,11 +175,11 @@ export function initializeActions(gameStore: GameStore) {
     gameStore.actions.addScoreNotification(`${itemText} +${basePoints}`, basePoints, false)
 
     // Handle combo
+    let bonusPoints = 0
     if (now - gameStore.comboSystem.lastHitTime < gameStore.comboSystem.timeWindow) {
       gameStore.comboSystem.count += count
 
       // Add combo bonus
-      let bonusPoints = 0
       if (gameStore.comboSystem.count >= SCORE_VALUES.COMBO_THRESHOLD_LARGE) {
         bonusPoints = gameStore.comboSystem.count * SCORE_VALUES.COMBO_BONUS_LARGE
         gameStore.actions.addScoreNotification(`${gameStore.comboSystem.count}x COMBO!`, bonusPoints, true)
@@ -182,12 +207,22 @@ export function initializeActions(gameStore: GameStore) {
       gameStore.comboSystem.active = false
       gameStore.comboSystem.count = 0
     }, gameStore.comboSystem.timeWindow)
+
+    Logger.log('ACTIONS', 'Hit registered', {
+      count,
+      type,
+      basePoints,
+      bonusPoints,
+      totalScore: gameStore.battleScore,
+      comboCount: gameStore.comboSystem.count,
+      comboActive: gameStore.comboSystem.active
+    })
   }
 
   // Audio control
   gameStore.actions.toggleSound = (sound = !gameStore.sound) => {
     if (!gameStore.audioSystem) {
-      console.warn('Audio system not initialized yet, cannot toggle sound')
+      Logger.error('ACTIONS', 'Audio system not initialized, cannot toggle sound')
       return
     }
 
@@ -204,9 +239,11 @@ export function initializeActions(gameStore: GameStore) {
           playSound('engine2', true, 0.3)
         }
       }
+      Logger.log('ACTIONS', 'Sound enabled', { currentState })
     }
     else {
       gameStore.audioSystem.stopAll()
+      Logger.log('ACTIONS', 'Sound disabled')
     }
   }
 
@@ -216,6 +253,11 @@ export function initializeActions(gameStore: GameStore) {
     gameStore.mutation.clock.start()
     gameStore.camera = camera
     gameStore.camera.far = 10000
+
+    Logger.log('ACTIONS', 'Game initialized', {
+      cameraFar: gameStore.camera.far,
+      soundEnabled: gameStore.sound
+    })
   }
 
   // Shooting system
@@ -229,6 +271,8 @@ export function initializeActions(gameStore: GameStore) {
         gameStore.lasers = gameStore.lasers.filter((t: number) => Date.now() - t <= 1000)
       }, 1000)
       playSound('zap')
+
+      Logger.random('ACTIONS', 'Laser fired', { totalLasers: gameStore.lasers.length }, 0.2)
     }
   }
 
@@ -281,6 +325,12 @@ export function initializeActions(gameStore: GameStore) {
       if (gameStore.currentPointOfInterest) {
         checkStardustCollection(gameStore)
       }
+
+      Logger.throttle('ACTIONS', 'Observation mode update', {
+        orbitAngle: gameStore.orbitAngle,
+        orbitHeight: gameStore.orbitHeight,
+        position: { x, y, z }
+      })
       return
     }
 
@@ -293,6 +343,10 @@ export function initializeActions(gameStore: GameStore) {
 
       if (mutation.lastT > 0.9 && t < 0.1) {
         gameStore.loopCount++
+        Logger.log('ACTIONS', 'Loop completed', {
+          loopCount: gameStore.loopCount,
+          totalLoops: gameStore.totalLoops
+        })
       }
       mutation.lastT = t
 
@@ -311,9 +365,11 @@ export function initializeActions(gameStore: GameStore) {
         if (!warping) {
           warping = true
           playSound('warp', true, 0.5)
+          Logger.log('ACTIONS', 'Warp sequence started', { t })
         }
       } else if (t > TRACK_POSITIONS.WARP_RESET) {
         warping = false
+        Logger.log('ACTIONS', 'Warp sequence ended', { t })
       }
 
       // Only process hits and collisions in Battle mode
@@ -388,15 +444,25 @@ export function initializeActions(gameStore: GameStore) {
             (enemy: any) => !enemiesHit.find((e: any) => e.guid === enemy.guid),
           )
 
+          Logger.log('ACTIONS', 'Collision processed', {
+            rocksHit: rocksHit.length,
+            enemiesHit: enemiesHit.length,
+            remainingRocks: gameStore.rocks.length,
+            remainingEnemies: gameStore.enemies.length,
+            explosionsCreated: updates.length
+          })
+
           // Check completion bonuses
           if (enemiesHit.length > 0 && gameStore.enemies.length === 0 && gameStore.initialEnemyCount > 0) {
             gameStore.battleScore += SCORE_VALUES.ALL_ENEMIES_BONUS
             gameStore.actions.addScoreNotification('No Enemy', SCORE_VALUES.ALL_ENEMIES_BONUS, true)
+            Logger.log('ACTIONS', 'All enemies destroyed bonus', { bonus: SCORE_VALUES.ALL_ENEMIES_BONUS })
           }
 
           if (rocksHit.length > 0 && gameStore.rocks.length === 0 && gameStore.initialRockCount > 0) {
             gameStore.battleScore += SCORE_VALUES.ALL_ROCKS_BONUS
             gameStore.actions.addScoreNotification('No Rock', SCORE_VALUES.ALL_ROCKS_BONUS, true)
+            Logger.log('ACTIONS', 'All rocks destroyed bonus', { bonus: SCORE_VALUES.ALL_ROCKS_BONUS })
           }
         }
       } else {
@@ -408,6 +474,10 @@ export function initializeActions(gameStore: GameStore) {
     // Check if total loops reached
     if (gameStore.loopCount >= gameStore.totalLoops && !gameStore.modal.show) {
       gameStore.actions.showModal(ModalType.GAME_OVER)
+      Logger.log('ACTIONS', 'Game over triggered', {
+        loopCount: gameStore.loopCount,
+        totalLoops: gameStore.totalLoops
+      })
     }
   }
 
@@ -415,24 +485,30 @@ export function initializeActions(gameStore: GameStore) {
   gameStore.actions.toggleTrack = (show?: boolean) => {
     if (show !== false && show !== true) show = !gameStore.showTrack
     gameStore.showTrack = show
+    Logger.log('ACTIONS', 'Track visibility toggled', { show })
   }
 
   // Info text toggle
   gameStore.actions.toggleInfoText = (show?: boolean) => {
     if (show !== false && show !== true) show = !gameStore.showInfoText
     gameStore.showInfoText = show
+    Logger.log('ACTIONS', 'Info text visibility toggled', { show })
   }
 
   // Mode switching - now delegates to GameController
   gameStore.actions.switchGameMode = () => {
     if (gameStateManager.isObservationMode()) {
+      Logger.log('ACTIONS', 'Mode switch ignored - in observation mode')
       return
     }
 
     // If game is in progress and modal is not shown
     if (!gameStore.modal.show) {
       gameStore.actions.showModal(ModalType.SWITCH_CONFIRM)
+      Logger.log('ACTIONS', 'Switch confirmation modal shown')
     } else {
+      const oldState = gameStateManager.getCurrentState()
+
       if (gameController) {
         gameController.switchGameMode();
       } else {
@@ -445,6 +521,12 @@ export function initializeActions(gameStore: GameStore) {
         }
       }
 
+      Logger.log('ACTIONS', 'Game mode switched', {
+        from: oldState,
+        to: gameStateManager.getCurrentState(),
+        viaController: !!gameController
+      })
+
       // Close the confirmation modal
       gameStore.actions.hideModal()
     }
@@ -453,8 +535,11 @@ export function initializeActions(gameStore: GameStore) {
   // Speed mode switching
   gameStore.actions.switchSpeedMode = () => {
     if (gameStateManager.isObservationMode()) {
+      Logger.log('ACTIONS', 'Speed mode switch ignored - in observation mode')
       return
     }
+
+    const oldSpeedMode = gameStore.speedMode
 
     if (gameStore.speedMode === SpeedMode.Fast) {
       gameStore.speedMode = SpeedMode.Slow
@@ -470,5 +555,12 @@ export function initializeActions(gameStore: GameStore) {
     const currentT = gameStore.mutation.t
     gameStore.mutation.startTime = currentTime - (currentT * targetLooptime)
     gameStore.mutation.looptime = targetLooptime
+
+    Logger.log('ACTIONS', 'Speed mode switched', {
+      from: oldSpeedMode,
+      to: gameStore.speedMode,
+      newLooptime: targetLooptime,
+      currentT: currentT
+    })
   }
 }

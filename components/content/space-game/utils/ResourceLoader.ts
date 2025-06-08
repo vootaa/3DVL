@@ -4,6 +4,8 @@ import { TextureLoader, AudioLoader } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 import { ResourceType } from './constants'
+import { Logger } from '../core/logger'
+
 import type { Resource, LoadingStats, LoadingError } from './types'
 
 export const ResourceLoader = reactive({
@@ -55,9 +57,16 @@ export const ResourceLoader = reactive({
       (sum, type) => sum + stats[type].loaded, 0
     );
 
-    this.loadingProgress = this.totalResources > 0 
+    this.loadingProgress = this.totalResources > 0
       ? Math.floor((totalLoaded / this.totalResources) * 100)
       : 0;
+
+    Logger.throttle('RESOURCE_LOADER', 'Loading progress update', {
+      totalResources: this.totalResources,
+      loadedResources: totalLoaded,
+      progress: this.loadingProgress,
+      elapsedTime: stats.elapsedTime
+    })
   },
 
   registerResource(name: string, modulePromise: Promise<any>,
@@ -74,10 +83,17 @@ export const ResourceLoader = reactive({
     this.loadingStats[type].items.push(name)
     this.loadingStats[type].total = this.loadingStats[type].items.length
     this.updateLoadingStats()
+
+    Logger.random('RESOURCE_LOADER', 'Resource registered', {
+      name,
+      type,
+      totalResources: this.totalResources
+    }, 0.1)
   },
 
   async registerFont(fontFamily: string, weights: number[] = [400]) {
     if (this.fontCache.has(fontFamily)) {
+      Logger.log('RESOURCE_LOADER', 'Font already cached', { fontFamily })
       return Promise.resolve(true)
     }
 
@@ -94,11 +110,11 @@ export const ResourceLoader = reactive({
       this.fontCache.add(fontFamily)
 
       this.registerResource(fontFamily, Promise.resolve(true), ResourceType.Font)
-      console.log(`Font loaded: ${fontFamily}`)
+      Logger.log('RESOURCE_LOADER', 'Font loaded successfully', { fontFamily, weights })
       return true
     }
     catch (error) {
-      console.error(`Failed to load font: ${fontFamily}`, error)
+      Logger.error('RESOURCE_LOADER', 'Failed to load font', { fontFamily, weights, error })
       this.loadingErrors.push({ name: fontFamily, type: ResourceType.Font, error: error as Error })
       return false
     }
@@ -109,6 +125,7 @@ export const ResourceLoader = reactive({
 
   async registerModel(name: string, path: string) {
     if (this.modelCache.has(path)) {
+      Logger.log('RESOURCE_LOADER', 'Model already cached', { name, path })
       return Promise.resolve(this.modelCache.get(path))
     }
 
@@ -144,22 +161,28 @@ export const ResourceLoader = reactive({
           (progress) => {
             if (progress.lengthComputable) {
               const percentComplete = (progress.loaded / progress.total) * 100
-              console.log(`Model ${name} loading: ${percentComplete.toFixed(2)}%`)
+              Logger.throttle('RESOURCE_LOADER', 'Model loading progress', {
+                name,
+                progress: percentComplete,
+                loaded: progress.loaded,
+                total: progress.total
+              })
             }
           },
           (error) => {
             clearTimeout(timeoutId)
-            console.error(`Error loading model ${name}:`, error)
+            Logger.error('RESOURCE_LOADER', 'Error loading model', { name, path, error })
             reject(error)
           },
         )
       })
 
       this.registerResource(name, Promise.resolve(result), ResourceType.Model)
+      Logger.log('RESOURCE_LOADER', 'Model loaded successfully', { name, path })
       return result
     }
     catch (error) {
-      console.error(`Failed to load model ${name}:`, error)
+      Logger.error('RESOURCE_LOADER', 'Failed to load model', { name, path, error })
       this.loadingErrors.push({ name, type: ResourceType.Model, error: error as Error })
       return { scene: null, nodes: {}, animations: [] }
     }
@@ -170,6 +193,7 @@ export const ResourceLoader = reactive({
 
   async registerTexture(name: string, path: string) {
     if (this.textureCache.has(path)) {
+      Logger.log('RESOURCE_LOADER', 'Texture already cached', { name, path })
       return Promise.resolve(this.textureCache.get(path))
     }
 
@@ -191,22 +215,28 @@ export const ResourceLoader = reactive({
           (progress) => {
             if (progress.lengthComputable) {
               const percentComplete = (progress.loaded / progress.total) * 100
-              console.log(`Texture ${name} loading: ${percentComplete.toFixed(2)}%`)
+              Logger.throttle('RESOURCE_LOADER', 'Texture loading progress', {
+                name,
+                progress: percentComplete,
+                loaded: progress.loaded,
+                total: progress.total
+              })
             }
           },
           (error) => {
             clearTimeout(timeoutId)
-            console.error(`Error loading texture ${name}:`, error)
+            Logger.error('RESOURCE_LOADER', 'Error loading texture', { name, path, error })
             reject(error)
           },
         )
       })
 
       this.registerResource(name, Promise.resolve(texture), ResourceType.Texture)
+      Logger.log('RESOURCE_LOADER', 'Texture loaded successfully', { name, path })
       return texture
     }
     catch (error) {
-      console.error(`Failed to load texture ${name}:`, error)
+      Logger.error('RESOURCE_LOADER', 'Failed to load texture', { name, path, error })
       this.loadingErrors.push({ name, type: ResourceType.Texture, error: error as Error })
       return null
     }
@@ -217,6 +247,7 @@ export const ResourceLoader = reactive({
 
   async registerAudio(name: string, path: string) {
     if (this.audioCache.has(path)) {
+      Logger.log('RESOURCE_LOADER', 'Audio already cached', { name, path })
       return Promise.resolve(this.audioCache.get(path))
     }
 
@@ -238,22 +269,28 @@ export const ResourceLoader = reactive({
           (progress) => {
             if (progress.lengthComputable) {
               const percentComplete = (progress.loaded / progress.total) * 100
-              console.log(`Audio ${name} loading: ${percentComplete.toFixed(2)}%`)
+              Logger.throttle('RESOURCE_LOADER', 'Audio loading progress', {
+                name,
+                progress: percentComplete,
+                loaded: progress.loaded,
+                total: progress.total
+              })
             }
           },
           (error) => {
             clearTimeout(timeoutId)
-            console.error(`Failed to load audio ${name} (${path}):`, error)
+            Logger.error('RESOURCE_LOADER', 'Failed to load audio', { name, path, error })
             reject(error)
           },
         )
       })
 
       this.registerResource(name, Promise.resolve(buffer), ResourceType.Audio)
+      Logger.log('RESOURCE_LOADER', 'Audio loaded successfully', { name, path })
       return buffer
     }
     catch (error) {
-      console.error(`Failed to load audio ${name}:`, error)
+      Logger.error('RESOURCE_LOADER', 'Failed to load audio', { name, path, error })
       this.loadingErrors.push({ name, type: ResourceType.Audio, error: error as Error })
       return null
     }
@@ -264,6 +301,7 @@ export const ResourceLoader = reactive({
 
   async loadAllResources() {
     this.loadingStats.startTime = Date.now()
+    Logger.log('RESOURCE_LOADER', 'Starting resource loading process')
 
     this.registerResource('Game', import('../Game.vue'))
 
@@ -334,7 +372,11 @@ export const ResourceLoader = reactive({
         this.updateLoadingStats()
       }
       catch (error) {
-        console.error(`Failed to load resource: ${resource.name} (${resource.type})`, error)
+        Logger.error('RESOURCE_LOADER', 'Failed to load resource', {
+          name: resource.name,
+          type: resource.type,
+          error
+        })
         resource.error = error as Error
         this.loadingErrors.push({
           name: resource.name,
@@ -355,62 +397,57 @@ export const ResourceLoader = reactive({
       this.isLoaded = this.loadedResources === this.totalResources
         || (this.loadedResources > 0 && this.loadingProgress >= 95)
 
-      console.log(`Loading complete. ${this.loadedResources}/${this.totalResources} resources loaded.`)
+      Logger.log('RESOURCE_LOADER', 'Loading process completed', {
+        loadedResources: this.loadedResources,
+        totalResources: this.totalResources,
+        successRate: Math.round((this.loadedResources / this.totalResources) * 100),
+        elapsedTime: this.loadingStats.elapsedTime,
+        errorCount: this.loadingErrors.length
+      })
       if (this.loadingErrors.length > 0) {
-        console.warn(`${this.loadingErrors.length} resources failed to load.`)
+        Logger.error('RESOURCE_LOADER', 'Some resources failed to load', {
+          errorCount: this.loadingErrors.length,
+          errors: this.loadingErrors.map(err => ({ name: err.name, type: err.type, message: err.error.message }))
+        })
       }
 
       return this.isLoaded
     }
     catch (error) {
-      console.error('Error during resource loading:', error)
+      Logger.error('RESOURCE_LOADER', 'Error during resource loading', { error })
       return false
     }
   },
 
   diagnose() {
-    console.log('=== Resource Loader Diagnostics ===')
-    console.log(`Total resources: ${this.totalResources}`)
-    console.log(`Loaded resources: ${this.loadedResources}`)
-    console.log(`Loading progress: ${this.loadingProgress}%`)
-    console.log(`Is loaded: ${this.isLoaded}`)
-    console.log(`Loading errors: ${this.loadingErrors.length}`)
-
-    console.log('\n=== Resource Type Breakdown ===')
-    console.log(`Components: ${this.loadingStats.component.loaded}/${this.loadingStats.component.total}`)
-    console.log(`Models: ${this.loadingStats.model.loaded}/${this.loadingStats.model.total}`)
-    console.log(`Textures: ${this.loadingStats.texture.loaded}/${this.loadingStats.texture.total}`)
-    console.log(`Audio: ${this.loadingStats.audio.loaded}/${this.loadingStats.audio.total}`)
-    console.log(`Font: ${this.loadingStats.font.loaded}/${this.loadingStats.font.total}`)
-
-    if (this.loadingErrors.length > 0) {
-      console.log('\n=== Loading Errors ===')
-      this.loadingErrors.forEach((err, index) => {
-        console.log(`${index + 1}. ${err.name} (${err.type}): ${err.error.message}`)
-      })
-    }
-
-    const unloadedResources = this.resources.filter(r => !r.loaded)
-    if (unloadedResources.length > 0) {
-      console.log('\n=== Unloaded Resources ===')
-      unloadedResources.forEach((res, index) => {
-        console.log(`${index + 1}. ${res.name} (${res.type})`)
-      })
-    }
-
-    return {
+    const diagnosticData = {
       totalResources: this.totalResources,
       loadedResources: this.loadedResources,
       progress: this.loadingProgress,
       isLoaded: this.isLoaded,
-      errors: this.loadingErrors.length,
-      stats: this.loadingStats,
-      unloaded: unloadedResources.map(r => r.name),
+      errorsSize: this.loadingErrors.length,
+      stats: {
+        component: `${this.loadingStats.component.loaded}/${this.loadingStats.component.total}`,
+        model: `${this.loadingStats.model.loaded}/${this.loadingStats.model.total}`,
+        texture: `${this.loadingStats.texture.loaded}/${this.loadingStats.texture.total}`,
+        audio: `${this.loadingStats.audio.loaded}/${this.loadingStats.audio.total}`,
+        font: `${this.loadingStats.font.loaded}/${this.loadingStats.font.total}`
+      },
+      unloaded: this.resources.filter(r => !r.loaded).map(r => ({ name: r.name, type: r.type })),
+      errors: this.loadingErrors.map(err => ({ name: err.name, type: err.type, message: err.error.message }))
     }
+
+    Logger.log('RESOURCE_LOADER', 'Resource loader diagnostics', diagnosticData)
+
+    return diagnosticData
   },
 
   forceComplete() {
-    console.warn('Forcing resource loading completion')
+    Logger.error('RESOURCE_LOADER', 'Forcing resource loading completion', {
+      loadedResources: this.loadedResources,
+      totalResources: this.totalResources,
+      originalProgress: this.loadingProgress
+    })
     this.isLoaded = true
     this.loadingProgress = 100
     return true

@@ -1,6 +1,8 @@
 import type { ComputedRef } from 'vue'
+import { Logger } from '../../core/logger'
 import { ShipPhysics } from './physics'
 import { SHIP_CONTROLS } from './constants'
+
 import type { ShipRefs, ShipControlState } from './types'
 import type { GameStore } from '../../GameStore'
 
@@ -22,6 +24,8 @@ export class ShipController {
     this.mouseX = mouseX
     this.mouseY = mouseY
     this.physics = new ShipPhysics(refs)
+
+    Logger.log('SHIP_CONTROLLER', 'Ship controller initialized')
   }
   
   // Get physics state
@@ -57,6 +61,11 @@ export class ShipController {
     
     // Reset inertia
     this.physics.resetForces()
+
+    Logger.throttle('SHIP_CONTROLLER', 'Observation mode update', {
+      position: { x: main.value.position.x, y: main.value.position.y },
+      rotation: { x: main.value.rotation.x, y: main.value.rotation.y, z: main.value.rotation.z }
+    })
   }
   
   // Handle flight mode
@@ -92,6 +101,13 @@ export class ShipController {
     
     // Update ray data
     this.updateShipRay()
+
+    // Log flight mode updates with throttling
+    Logger.throttle('SHIP_CONTROLLER', 'Flight mode update', {
+      targetPosition,
+      targetRotation,
+      mouseInput: { normalizedX, normalizedY }
+    })
   }
   
   // Update ship ray
@@ -102,35 +118,32 @@ export class ShipController {
     main.value.getWorldDirection(direction)
     this.gameStore.mutation.ray.origin.copy(position)
     this.gameStore.mutation.ray.direction.copy(direction.negate())
+
+    // Log ray updates with low probability to avoid spam
+    Logger.random('SHIP_CONTROLLER', 'Ship ray updated', {
+      origin: { x: position.x, y: position.y, z: position.z },
+      direction: { x: direction.x, y: direction.y, z: direction.z }
+    }, 0.01)
   }
   
   // Log debug information
   logDebugInfo(): void {
-    const { lastLogTime } = this.physics.getState()
-    
-    if (!SHIP_CONTROLS.DEV.LOG_ENABLED) return
-    
-    const now = Date.now()
-    if (now - lastLogTime > SHIP_CONTROLS.DEV.LOG_INTERVAL) {
-      const { main } = this.refs
-      const { velocity } = this.physics.getState()
-      
-      console.log('Ship status:', {
-        position: { 
-          x: main.value.position.x.toFixed(2), 
-          y: main.value.position.y.toFixed(2) 
-        },
-        velocity: { 
-          x: velocity.position.x.toFixed(2), 
-          y: velocity.position.y.toFixed(2) 
-        },
-        mouse: { 
-          x: this.mouseX.value.toFixed(2), 
-          y: this.mouseY.value.toFixed(2) 
-        }
-      })
-      
-      this.physics.getState().lastLogTime = now
-    }
+    const { main } = this.refs
+    const { velocity } = this.physics.getState()
+
+    Logger.throttle('SHIP_CONTROLLER', 'Ship status', {
+      position: {
+        x: parseFloat(main.value.position.x.toFixed(2)),
+        y: parseFloat(main.value.position.y.toFixed(2))
+      },
+      velocity: {
+        x: parseFloat(velocity.position.x.toFixed(2)),
+        y: parseFloat(velocity.position.y.toFixed(2))
+      },
+      mouse: {
+        x: parseFloat(this.mouseX.value.toFixed(2)),
+        y: parseFloat(this.mouseY.value.toFixed(2))
+      }
+    })
   }
 }

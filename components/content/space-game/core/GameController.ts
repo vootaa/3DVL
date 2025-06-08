@@ -8,6 +8,7 @@ import { gameStateManager } from './GameStateManager'
 import { mouseEventManager } from './MouseEventManager'
 import { POINTS_OF_INTEREST } from '../store/constants'
 import { initializeActions } from '../store/actions'
+import { Logger } from './logger'
 
 import type { IGameController } from './types'
 import type { GameStore } from '../GameStore'
@@ -26,7 +27,7 @@ export class GameController implements IGameController {
    if (typeof this.gameStore.actions.setGameController === 'function') {
       this.gameStore.actions.setGameController(this)
     } else {
-      console.error("setGameController is not a function in gameStore.actions", this.gameStore.actions)
+     Logger.error('GAME_CONTROLLER', 'setGameController is not a function in gameStore.actions', this.gameStore.actions)
     }
 
     // Set gameStore in mouseEventManager
@@ -96,15 +97,16 @@ export class GameController implements IGameController {
   async startBattleMode(): Promise<boolean> {
     try {
       if (!this.gameStore || !this.gameStore.camera) {
-        console.error("Game store or camera not initialized")
+        Logger.error('GAME_CONTROLLER', 'Game store or camera not initialized')
         return false
       }
 
       gameStateManager.setState(GameState.BATTLE)
       this.gameStore.actions.startGame(GameState.BATTLE)
+      Logger.log('GAME_CONTROLLER', 'Battle mode started successfully')
       return true
     } catch (error) {
-      console.error('Failed to start battle mode:', error)
+      Logger.error('GAME_CONTROLLER', 'Failed to start battle mode:', error)
       return false
     }
   }
@@ -112,15 +114,16 @@ export class GameController implements IGameController {
   async startExploreMode(): Promise<boolean> {
     try {
       if (!this.gameStore || !this.gameStore.camera) {
-        console.error("Game store or camera not initialized")
+        Logger.error('GAME_CONTROLLER', 'Game store or camera not initialized')
         return false
       }
 
       gameStateManager.setState(GameState.EXPLORE)
       this.gameStore.actions.startGame(GameState.EXPLORE)
+      Logger.log('GAME_CONTROLLER', 'Explore mode started successfully')
       return true
     } catch (error) {
-      console.error('Failed to start explore mode:', error)
+      Logger.error('GAME_CONTROLLER', 'Failed to start explore mode:', error)
       return false
     }
   }
@@ -143,25 +146,27 @@ export class GameController implements IGameController {
   switchGameMode(): boolean {
     try {
       if (gameStateManager.isBattleMode()) {
+        Logger.log('GAME_CONTROLLER', 'Switching from battle to explore mode')
         return this.startExploreMode() as unknown as boolean
       } else if (gameStateManager.isExploreMode()) {
+        Logger.log('GAME_CONTROLLER', 'Switching from explore to battle mode')
         return this.startBattleMode() as unknown as boolean
       }
       return false
     } catch (error) {
-      console.error('Failed to switch game mode:', error)
+      Logger.error('GAME_CONTROLLER', 'Failed to switch game mode:', error)
       return false
     }
   }
 
   // State handlers
   private handleLaunchState() {
-    console.log('Initializing game in Launch mode')
-
+    Logger.log('GAME_CONTROLLER', 'Initializing game in Launch mode')
     mouseEventManager.setGameStore(this.gameStore).setActiveState(false)
   }
 
   private handleBattleState() {
+    Logger.log('GAME_CONTROLLER', 'Entering Battle state')
     mouseEventManager.setGameStore(this.gameStore).setActiveState(true)
 
     // Start appropriate sounds
@@ -173,6 +178,7 @@ export class GameController implements IGameController {
   }
 
   private handleExploreState() {
+    Logger.log('GAME_CONTROLLER', 'Entering Explore state')
     mouseEventManager.setGameStore(this.gameStore).setActiveState(true)
 
     // Start appropriate sounds
@@ -184,6 +190,7 @@ export class GameController implements IGameController {
   }
 
   private handleObservationState() {
+    Logger.log('GAME_CONTROLLER', 'Entering Observation state')
     mouseEventManager.setGameStore(this.gameStore).setActiveState(true)
 
     // Adjust sounds for observation mode

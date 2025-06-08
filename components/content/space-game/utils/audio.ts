@@ -1,10 +1,9 @@
-/* eslint-disable eslint-comments/disable-enable-pair */
-/* eslint-disable no-console */
-import type { PerspectiveCamera, Camera } from 'three'
 import { AudioListener, Audio as ThreeAudio } from 'three'
 import { watch } from 'vue'
 import { ResourceLoader } from './ResourceLoader'
+import { Logger } from '../core/logger'
 
+import type { PerspectiveCamera, Camera } from 'three'
 import type { AudioSystem } from './types'
 
 // Create a global audio listener
@@ -28,13 +27,13 @@ const AUDIO_RESOURCES = {
  * @returns Audio control interface
  */
 export async function initializeAudio(camera: PerspectiveCamera | Camera): Promise<AudioSystem> {
-  console.log('Initializing audio system...')
+  Logger.log('AUDIO_SYSTEM', 'Initializing audio system')
 
   listener = new AudioListener()
   camera.add(listener)
 
   if (!ResourceLoader.isLoaded) {
-    console.log('Waiting for ResourceLoader to complete...')
+    Logger.log('AUDIO_SYSTEM', 'Waiting for ResourceLoader to complete')
     await new Promise<void>((resolve) => {
       if (ResourceLoader.isLoaded) {
         resolve()
@@ -44,7 +43,7 @@ export async function initializeAudio(camera: PerspectiveCamera | Camera): Promi
       const unwatch = watch(() => ResourceLoader.isLoaded, (loaded) => {
         if (loaded) {
           unwatch()
-          console.log('ResourceLoader completed')
+          Logger.log('AUDIO_SYSTEM', 'ResourceLoader completed')
           resolve()
         }
       })
@@ -56,7 +55,10 @@ export async function initializeAudio(camera: PerspectiveCamera | Camera): Promi
   )
   
   if (missingAudios.length > 0) {
-    console.log(`Loading ${missingAudios.length} missing audio resources...`)
+    Logger.log('AUDIO_SYSTEM', 'Loading missing audio resources', {
+      missingCount: missingAudios.length,
+      missingAudios: missingAudios.map(([name, { path }]) => ({ name, path }))
+    })
     await Promise.all(
       missingAudios.map(([, { resourceName, path }]) =>
         ResourceLoader.registerAudio(resourceName, path),
@@ -64,17 +66,22 @@ export async function initializeAudio(camera: PerspectiveCamera | Camera): Promi
     )
   }
 
-  console.log('Creating audio objects...')
+  Logger.log('AUDIO_SYSTEM', 'Creating audio objects', {
+    totalAudioObjects: Object.keys(AUDIO_RESOURCES).length
+  })
   const audioPromises = Object.entries(AUDIO_RESOURCES).map(
     ([name, { path }]) => createAudio(name, path),
   )
 
   try {
     await Promise.all(audioPromises)
-    console.log('Audio system initialized successfully')
+    Logger.log('AUDIO_SYSTEM', 'Audio system initialized successfully', {
+      audioObjectsCreated: Object.keys(audioObjects).length,
+      availableAudios: Object.keys(audioObjects)
+    })
   }
   catch (error) {
-    console.error('Error initializing audio system:', error)
+    Logger.error('AUDIO_SYSTEM', 'Error initializing audio system', { error })
   }
 
   return {
@@ -89,47 +96,73 @@ export async function initializeAudio(camera: PerspectiveCamera | Camera): Promi
         }
 
         sound.play()
+        Logger.random('AUDIO_SYSTEM', 'Audio played', {
+          name,
+          loop,
+          volume
+        }, 0.1)
         return sound
       }
-      console.warn(`Audio '${name}' not found`)
+      Logger.error('AUDIO_SYSTEM', 'Audio not found', {
+        requestedAudio: name,
+        availableAudios: Object.keys(audioObjects)
+      })
       return null
     },
 
     stop: (name: string) => {
       if (audioObjects[name] && audioObjects[name].isPlaying) {
         audioObjects[name].stop()
+        Logger.random('AUDIO_SYSTEM', 'Audio stopped', { name }, 0.1)
       }
     },
 
     get: (name: string) => audioObjects[name] || null,
 
     pauseAll: () => {
-      Object.values(audioObjects).forEach((sound) => {
+      const pausedCount = Object.values(audioObjects).filter((sound) => {
         if (sound.isPlaying) {
           sound.pause()
+          return true
         }
-      })
+        return false
+      }).length
+
+      Logger.log('AUDIO_SYSTEM', 'All audio paused', { pausedCount })
     },
 
     resumeAll: () => {
-      Object.values(audioObjects).forEach((sound) => {
+      const resumedCount = Object.values(audioObjects).filter((sound) => {
         if (sound.buffer && !sound.isPlaying) {
           sound.play()
+          return true
         }
-      })
+        return false
+      }).length
+
+      Logger.log('AUDIO_SYSTEM', 'All audio resumed', { resumedCount })
     },
 
     stopAll: () => {
-      Object.values(audioObjects).forEach((sound) => {
+      const stoppedCount = Object.values(audioObjects).filter((sound) => {
         if (sound.buffer && sound.isPlaying) {
           sound.stop()
+          return true
         }
-      })
+        return false
+      }).length
+
+      Logger.log('AUDIO_SYSTEM', 'All audio stopped', { stoppedCount })
     },
 
     setGlobalVolume: (volume: number) => {
       if (listener) {
-        listener.gain.gain.value = Math.max(0, Math.min(1, volume))
+        const clampedVolume = Math.max(0, Math.min(1, volume))
+        listener.gain.gain.value = clampedVolume
+        Logger.log('AUDIO_SYSTEM', 'Global volume changed', {
+          requestedVolume: volume,
+          actualVolume: clampedVolume
+        })
       }
     },
 
@@ -145,7 +178,7 @@ export async function initializeAudio(camera: PerspectiveCamera | Camera): Promi
 async function createAudio(name: string, path: string): Promise<void> {
   try {
     if (!listener) {
-      console.error('AudioListener not initialized')
+      Logger.error('AUDIO_SYSTEM', 'AudioListener not initialized', { name, path })
       return
     }
         
@@ -153,13 +186,12 @@ async function createAudio(name: string, path: string): Promise<void> {
     let buffer = ResourceLoader.audioCache.get(path)
 
     if (!buffer) {
-      console.warn(`Audio buffer for ${name} (${path}) not found in cache`)
-            
+      Logger.log('AUDIO_SYSTEM', 'Audio buffer not found in cache, loading directly', { name, path })
       try {
         buffer = await ResourceLoader.registerAudio(`${name}Audio`, path)
       }
       catch (loadError) {
-        console.error(`Failed to load audio ${name} directly:`, loadError)
+        Logger.error('AUDIO_SYSTEM', 'Failed to load audio directly', { name, path, loadError })
       }
     }
 
@@ -167,9 +199,13 @@ async function createAudio(name: string, path: string): Promise<void> {
     sound.setBuffer(buffer)
     audioObjects[name] = sound
 
-    console.log(`Audio ${name} initialized successfully`)
+    Logger.log('AUDIO_SYSTEM', 'Audio initialized successfully', {
+      name,
+      path,
+      bufferDuration: buffer?.duration || 'unknown'
+    })
   }
   catch (error) {
-    console.error(`Error initializing audio ${name}:`, error)
+    Logger.error('AUDIO_SYSTEM', 'Error initializing audio', { name, path, error })
   }
 }

@@ -4,6 +4,8 @@
  */
 import { ref, type Ref } from 'vue'
 import { GameState } from './constants'
+import { Logger } from './logger'
+
 import type { StateTransition, StateChangeHandler } from './types'
 
 export class GameStateManager {
@@ -49,6 +51,7 @@ export class GameStateManager {
 
   constructor() {
     this.initializeStateCallbacks()
+    Logger.log('STATE_MANAGER', 'GameStateManager initialized', { initialState: GameState.LAUNCH })
   }
 
   private initializeStateCallbacks() {
@@ -75,7 +78,11 @@ export class GameStateManager {
 
   setState(newState: GameState, force: boolean = false): boolean {
     if (!force && !this.canTransition(newState)) {
-      console.warn(`Invalid state transition from ${this.currentState} to ${newState}`)
+      Logger.error('STATE_MANAGER', 'Invalid state transition attempted', {
+        from: this.currentState,
+        to: newState,
+        force: force
+      })
       return false
     }
 
@@ -89,7 +96,11 @@ export class GameStateManager {
     // Trigger global state change callbacks
     this.executeGlobalStateCallbacks(newState)
 
-    console.log(`State changed: ${oldState} -> ${newState}`)
+    Logger.log('STATE_MANAGER', 'State transition completed', {
+      from: oldState,
+      to: newState,
+      force: force
+    })
     return true
   }
 
@@ -97,12 +108,19 @@ export class GameStateManager {
     const callbacks = this.stateChangeCallbacks.get(state)
     if (callbacks) {
       callbacks.push(callback)
+      Logger.log('STATE_MANAGER', 'State change callback registered', {
+        state: state,
+        callbackCount: callbacks.length
+      })
     }
     return () => this.removeStateChangeCallback(state, callback)
   }
 
   registerGlobalStateChangeCallback(callback: StateChangeHandler) {
     this.globalStateChangeCallbacks.push(callback)
+    Logger.log('STATE_MANAGER', 'Global state change callback registered', {
+      globalCallbackCount: this.globalStateChangeCallbacks.length
+    })
     return () => this.removeGlobalStateChangeCallback(callback)
   }
 
@@ -125,6 +143,10 @@ export class GameStateManager {
       const index = callbacks.indexOf(callback)
       if (index !== -1) {
         callbacks.splice(index, 1)
+        Logger.log('STATE_MANAGER', 'State change callback removed', {
+          state: state,
+          remainingCallbacks: callbacks.length
+        })
       }
     }
   }
@@ -133,18 +155,31 @@ export class GameStateManager {
     const index = this.globalStateChangeCallbacks.indexOf(callback)
     if (index !== -1) {
       this.globalStateChangeCallbacks.splice(index, 1)
+      Logger.log('STATE_MANAGER', 'Global state change callback removed', {
+        remainingGlobalCallbacks: this.globalStateChangeCallbacks.length
+      })
     }
   }
 
   private executeStateCallbacks(state: GameState) {
     const callbacks = this.stateChangeCallbacks.get(state)
-    if (callbacks) {
+    if (callbacks && callbacks.length > 0) {
+      Logger.throttle('STATE_MANAGER', 'Executing state callbacks', {
+        state: state,
+        callbackCount: callbacks.length
+      })
       callbacks.forEach(callback => callback(state))
     }
   }
 
   private executeGlobalStateCallbacks(state: GameState) {
-    this.globalStateChangeCallbacks.forEach(callback => callback(state))
+    if (this.globalStateChangeCallbacks.length > 0) {
+      Logger.throttle('STATE_MANAGER', 'Executing global state callbacks', {
+        state: state,
+        globalCallbackCount: this.globalStateChangeCallbacks.length
+      })
+      this.globalStateChangeCallbacks.forEach(callback => callback(state))
+    }
   }
 
   // Helper methods for common state checks
@@ -187,6 +222,7 @@ export class GameStateManager {
   reset() {
     this.setState(GameState.LAUNCH, true)
     this.previousState = null
+    Logger.log('STATE_MANAGER', 'GameStateManager reset to initial state')
   }
 }
 
