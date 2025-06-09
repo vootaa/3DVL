@@ -51,7 +51,7 @@ export class MeshReflectionMaterial extends MeshStandardMaterial {
     this.setValues(parameters)
   }
 
-  onBeforeCompile(shader: any) {
+  override onBeforeCompile(shader: any) {
     if (!shader.defines?.USE_UV) {
       shader.defines.USE_UV = ''
     }

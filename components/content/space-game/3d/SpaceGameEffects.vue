@@ -7,7 +7,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 
-extend({ EffectComposer, RenderPass, OutputPass, UnrealBloomPass })
+extend({ EffectComposer, RenderPass, UnrealBloomPass, OutputPass })
 
 const { renderer, scene, camera, sizes } = useTres()
 const composer = shallowRef()
@@ -32,8 +32,7 @@ onUnmounted(() => {
   }
 })
 
-const loop = useLoop()
-loop.render(() => {
+useLoop().render(() => {
   try {
     if (composer.value) {
       composer.value.render()
@@ -49,18 +48,9 @@ loop.render(() => {
 </script>
 
 <template>
-  <TresEffectComposer
-    ref="composer"
-    :args="[renderer]"
-  >
-    <TresRenderPass
-      :args="[scene, camera]"
-      attach="passes-0"
-    />
-    <TresUnrealBloomPass
-      :args="[undefined, 0.5, 0.1, 0]"
-      attach="passes-1"
-    />
+  <TresEffectComposer ref="composer" :args="[renderer]">
+    <TresRenderPass :args="[scene, camera]" attach="passes-0" />
+    <TresUnrealBloomPass :args="[undefined, 0.5, 0.1, 0]" attach="passes-1" />
     <TresOutputPass attach="passes-2" />
   </TresEffectComposer>
 </template>

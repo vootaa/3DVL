@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useTexture } from '@tresjs/core'
-import { Euler, Mesh, Vector3 } from 'three'
+import { Euler, Vector3 } from 'three'
 import MeshReflectionMaterial from '../meshReflectionMaterial/index.vue'
 import type { State } from '../index.vue'
 

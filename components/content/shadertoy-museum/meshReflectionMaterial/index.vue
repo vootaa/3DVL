@@ -207,7 +207,7 @@ const fboBlur = new WebGLRenderTarget(
 function onBeforeRender(renderer: WebGLRenderer, scene: Scene, camera: Camera, object: Object3D) {
   invalidate()
 
-  if (!object.isMesh) return
+  if (!(object.type === 'Mesh')) return
 
   const currentXrEnabled = renderer.xr.enabled
   const currentShadowAutoUpdate = renderer.shadowMap.autoUpdate
