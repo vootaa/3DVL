@@ -18,11 +18,11 @@ const material = new MeshPhongMaterial({ color: new Color('#000022') })
 
 // Custom mapping table: each display stand corresponds to a shader array, the first one is the default best
 const customMappings = {
-  ShaderToy000: ['octgrams','star'],
-  ShaderToy001: ['sinusoidalTresJS', 'sinusoidalTresJS2'],
-  ShaderToy002: ['mandelbulb', 'fractalPyramid'],
-  ShaderToy003: ['gamesOfSinus', 'rainbow'],
-  ShaderToy004: ['sinusoidalTresJS2', 'sinusoidalTresJS']
+  ShaderToy000: ['octgrams'],
+  ShaderToy001: ['sinusoidalTresJS'],
+  ShaderToy002: ['mandelbulb'],
+  ShaderToy003: ['gamesOfSinus'],
+  ShaderToy004: ['sinusoidalTresJS2']
 }
 
 Logger.log('Gallery', '🎨 Custom mappings configured:')
