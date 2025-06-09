@@ -1,9 +1,10 @@
 import { Color } from 'three'
-import type { Vector2, type Light } from 'three'
 import { clamp } from 'three/src/math/MathUtils.js'
+
+import type { Vector2, Light } from 'three'
 import type { shaderToySrc } from './shaderToySrc'
 
-const { pow, sqrt, cos, abs, sin, max, min } = Math
+const { sqrt, cos, abs, sin} = Math
 
 export type LightFn = (light: Light, uv: Vector2, iTime: number) => void
 

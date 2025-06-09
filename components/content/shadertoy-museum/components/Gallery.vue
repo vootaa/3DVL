@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import type { Camera, Light, Mesh } from 'three'
-import { Box3, Color, MeshPhongMaterial, Vector3 } from 'three'
 import { inject } from 'vue'
+import { Box3, Color, MeshPhongMaterial, Vector3 } from 'three'
+
+import { Logger } from '../../logger'
+
 import { shaderToySrc } from '../fns/shaderToySrc'
-import type { State } from '../index.vue'
 import { shaderToyLights } from '../fns/shaderToyLights'
+
+import type { Camera, Light, Mesh } from 'three'
+import type { State } from '../index.vue'
 
 const state = inject('state') as State
 
@@ -14,16 +18,16 @@ const material = new MeshPhongMaterial({ color: new Color('#000022') })
 
 // Custom mapping table: each display stand corresponds to a shader array, the first one is the default best
 const customMappings = {
-  ShaderToy000: ['octgrams', 'tiles', 'truchet'],                    // Geometric pattern type
-  ShaderToy001: ['sinusoidalTresJS', 'sinusoidalTresJS2', 'rainbow'], // Wave effect type
-  ShaderToy002: ['mandelbulb', 'fractalPyramid', 'star'],            // 3D fractal type
-  ShaderToy003: ['gamesOfSinus', 'prettyHip', 'raymarchingBasic'],   // Game style type
-  ShaderToy004: ['sinusoidalTresJS2', 'seventiesMelt']   // Wave variant type
-} as const
+  ShaderToy000: ['octgrams'],
+  ShaderToy001: ['sinusoidalTresJS', 'sinusoidalTresJS2'],
+  ShaderToy002: ['mandelbulb', 'star', 'prettyHip'],
+  ShaderToy003: ['gamesOfSinus'],
+  ShaderToy004: ['sinusoidalTresJS2']
+}
 
-console.log('🎨 Custom mappings configured:')
+Logger.log('Gallery', '🎨 Custom mappings configured:')
 Object.entries(customMappings).forEach(([stand, shaders]) => {
-  console.log(`${stand}: [${shaders.join(', ')}] (default: ${shaders[0]})`)
+  Logger.log('Gallery', `${stand}: [${shaders.join(', ')}] (default: ${shaders[0]})`)
 })
 
 function createShaderTarget(standName: string, shaderName: string, obj: any) {
@@ -71,37 +75,37 @@ scene.traverse((obj) => {
   }
 
   if (obj.name.startsWith('ShaderToy')) {
-    console.log(`🏛️ Processing stand: ${obj.name}`)
+    Logger.log('Gallery', `🏛️ Processing stand: ${obj.name}`)
 
     const assignedShaders = customMappings[obj.name as keyof typeof customMappings]
 
     if (assignedShaders && assignedShaders.length > 0) {
-      console.log(`📋 Assigned shaders for ${obj.name}:`, assignedShaders)
+      Logger.log('Gallery', `📋 Assigned shaders for ${obj.name}:`, assignedShaders)
       // Create all assigned shader targets for this display stand
       assignedShaders.forEach((shaderName, index) => {
         // Check if shader exists
         if (!(shaderName in shaderToySrc)) {
-          console.warn(`⚠️ Shader "${shaderName}" not found in shaderToySrc, skipping`)
+          Logger.error('Gallery', `⚠️ Shader "${shaderName}" not found in shaderToySrc, skipping`)
           return
         }
 
         const isDefault = index === 0
-        console.log(`${isDefault ? '✅' : '🔄'} Creating target: ${obj.name} → ${shaderName} ${isDefault ? '(default)' : ''}`)
+        Logger.log('Gallery', `${isDefault ? '✅' : '🔄'} Creating target: ${obj.name} → ${shaderName} ${isDefault ? '(default)' : ''}`)
 
         try {
           const target = createShaderTarget(obj.name, shaderName, obj)
           state.shaderToyTargets.push(target)
         } catch (error) {
-          console.error(`💥 Error creating target for ${obj.name} → ${shaderName}:`, error)
+          Logger.error('Gallery', `💥 Error creating target for ${obj.name} → ${shaderName}:`, error)
         }
       })
     } else {
-      console.warn(`⚠️ No shaders assigned to ${obj.name}`)
+      Logger.error('Gallery', `⚠️ No shaders assigned to ${obj.name}`)
     }
   }
 })
 
-console.log(`🎯 Created ${state.shaderToyTargets.length} total targets`)
+Logger.log('Gallery', `🎯 Created ${state.shaderToyTargets.length} total targets`)
 
 state.shaderToyTargets.sort((a, b) => (a.name).localeCompare(b.name))
 
@@ -125,7 +129,7 @@ for (const info of state.shaderToyTargets) {
           }
         }
         catch (e) {
-          console.error(e)
+          Logger.error('Gallery', 'Error processing light userData:', e)
         }
       }
     }
