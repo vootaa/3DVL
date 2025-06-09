@@ -18,9 +18,9 @@ const material = new MeshPhongMaterial({ color: new Color('#000022') })
 
 // Custom mapping table: each display stand corresponds to a shader array, the first one is the default best
 const customMappings = {
-  ShaderToy000: ['octgrams'],
+  ShaderToy000: ['octgrams', 'petersenPlasmaGraph'],
   ShaderToy001: ['sinusoidalTresJS'],
-  ShaderToy002: ['mandelbulb'],
+  ShaderToy002: ['mandelbulb', 'petersenPlasmaGraph'],
   ShaderToy003: ['gamesOfSinus'],
   ShaderToy004: ['sinusoidalTresJS2']
 }
