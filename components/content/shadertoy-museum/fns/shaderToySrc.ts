@@ -727,15 +727,160 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
 /** SHADERDATA
 {
-	"title": "Petersen Plasma Graph",
-	"author": "Vootaa Labs",
-	"description": "Mathematical graph theory visualization with Chainweb inspiration",
+    "title": "Petersen Plasma Graph",
+    "author": "Vootaa Labs",
+    "description": "Mathematical graph theory visualization with Chainweb inspiration",
     "href": "https://github.com/vootaa/3DVL"
-    "model": "plane"
 }
 */
 `
 
+const petersenGraphTresJS = `
+// Petersen Graph - Optimized for museum display with fine details
+
+// Node positions (in radians)
+const float ANGLES[20] = float[20](
+    5.0265, 0.0, 1.2566, 2.5133, 3.7699,
+    5.0265, 0.0, 1.2566, 2.5133, 3.7699,
+    4.8521, 0.1745, 1.0821, 2.6878, 3.5954, 5.2009, 6.1087, 1.4312, 2.3387, 3.9444
+);
+
+const float INNER_RADIUS = 0.15;
+const float MIDDLE_RADIUS = 0.3;
+const float OUTER_RADIUS = 0.48;
+
+// Connections
+const ivec2 CONNECTIONS[30] = ivec2[30](
+    ivec2(0, 5), ivec2(1, 6), ivec2(2, 7), ivec2(3, 8), ivec2(4, 9),
+    ivec2(0, 10), ivec2(1, 11), ivec2(2, 12), ivec2(3, 13), ivec2(4, 14),
+    ivec2(0, 15), ivec2(1, 16), ivec2(2, 17), ivec2(3, 18), ivec2(4, 19),
+    ivec2(5, 7), ivec2(6, 8), ivec2(7, 9), ivec2(8, 5), ivec2(9, 6),
+    ivec2(10, 11), ivec2(11, 12), ivec2(12, 13), ivec2(13, 14), ivec2(14, 15), 
+    ivec2(15, 16), ivec2(16, 17), ivec2(17, 18), ivec2(18, 19), ivec2(19, 10)
+);
+
+// Get node position
+vec2 getNodePosition(int chainId) {
+    float angle = ANGLES[chainId];
+    float radius = chainId < 5 ? MIDDLE_RADIUS : (chainId < 10 ? INNER_RADIUS : OUTER_RADIUS);
+    return vec2(radius * cos(angle), radius * sin(angle));
+}
+
+// Smooth line drawing with anti-aliasing
+float drawLine(vec2 uv, vec2 p1, vec2 p2, float thickness) {
+    vec2 dir = p2 - p1;
+    float len = length(dir);
+    if (len < 0.001) return 0.0;
+    dir /= len;
+    
+    vec2 perpDir = vec2(-dir.y, dir.x);
+    float h = clamp(dot(uv - p1, dir), 0.0, len);
+    float d = abs(dot(uv - p1, perpDir));
+    
+    // Smooth anti-aliased line
+    return 1.0 - smoothstep(thickness * 0.5, thickness, d);
+}
+
+// Smooth circle with anti-aliasing
+float drawCircle(vec2 uv, vec2 pos, float radius) {
+    float d = length(uv - pos);
+    return 1.0 - smoothstep(radius * 0.8, radius, d);
+}
+
+// Smooth ring with anti-aliasing
+float drawRing(vec2 uv, float radius, float thickness) {
+    float dist = length(uv);
+    float inner = radius - thickness * 0.5;
+    float outer = radius + thickness * 0.5;
+    return smoothstep(inner - 0.001, inner, dist) * (1.0 - smoothstep(outer, outer + 0.001, dist));
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    // High-precision coordinate normalization
+    vec2 uv = (fragCoord * 2.0 - iResolution.xy) / min(iResolution.x, iResolution.y);
+    
+    // Fine-tuned scale for museum display
+    uv *= 0.9;
+    
+    // Slow rotation for better viewing
+    float time = iTime * 0.08;
+    mat2 rot = mat2(cos(time), sin(time), -sin(time), cos(time));
+    uv = rot * uv;
+    
+    // Initialize with background
+    vec3 color = vec3(0.0);
+    float alpha = 0.0;
+    
+    // Draw rings with fine details
+    float innerRing = drawRing(uv, INNER_RADIUS, 0.004);
+    float middleRing = drawRing(uv, MIDDLE_RADIUS, 0.004);
+    float outerRing = drawRing(uv, OUTER_RADIUS, 0.004);
+    
+    // High-contrast ring colors
+    color += vec3(0.3, 0.7, 1.0) * innerRing * 2.0;   // Bright blue
+    color += vec3(1.0, 0.4, 0.6) * middleRing * 2.0;  // Bright pink
+    color += vec3(1.0, 0.9, 0.3) * outerRing * 2.0;   // Bright gold
+    alpha += innerRing + middleRing + outerRing;
+    
+    // Draw connections with fine lines
+    for(int i = 0; i < 30; i++) {
+        vec2 p1 = getNodePosition(CONNECTIONS[i].x);
+        vec2 p2 = getNodePosition(CONNECTIONS[i].y);
+        
+        float line = drawLine(uv, p1, p2, 0.002);  // Thin but visible lines
+        
+        // Distinct colors for different connection types
+        vec3 lineColor;
+        if (i < 5) {
+            lineColor = vec3(0.9, 0.5, 1.0) * 1.8;     // Bright purple
+        } else if (i < 15) {
+            lineColor = vec3(1.0, 0.7, 0.4) * 1.8;     // Bright orange
+        } else if (i < 20) {
+            lineColor = vec3(0.5, 0.9, 1.0) * 1.8;     // Bright cyan
+        } else {
+            lineColor = vec3(1.0, 0.9, 0.5) * 1.8;     // Bright yellow
+        }
+        
+        color += lineColor * line;
+        alpha += line * 0.5;
+    }
+    
+    // Draw nodes with proper sizing
+    for(int i = 0; i < 20; i++) {
+        vec2 pos = getNodePosition(i);
+        float radius = i < 5 ? 0.012 : (i < 10 ? 0.010 : 0.008);  // Progressive sizing
+        float node = drawCircle(uv, pos, radius);
+        
+        // Bright, distinct node colors
+        vec3 nodeColor;
+        if (i < 5) {
+            nodeColor = vec3(1.0, 0.6, 0.8) * 3.0;   // Bright pink
+        } else if (i < 10) {
+            nodeColor = vec3(0.6, 0.9, 1.0) * 3.0;   // Bright cyan
+        } else {
+            nodeColor = vec3(1.0, 1.0, 0.6) * 3.0;   // Bright yellow
+        }
+        
+        color += nodeColor * node;
+        alpha += node;
+    }
+    
+    // Enhanced brightness and contrast for museum display
+    color = clamp(color * 1.2, 0.0, 3.0);
+    
+    // Clean output
+    fragColor = vec4(color, clamp(alpha, 0.0, 1.0));
+}
+
+/** SHADERDATA
+{
+    "title": "Petersen Graph Network",
+    "author": "Vootaa Labs",
+    "description": "Mathematical graph theory visualization with enhanced museum display optimization",
+    "href": "https://github.com/vootaa/3DVL"
+}
+*/
+`
 
 export const mainImage = gamesOfSinus
 
@@ -746,4 +891,5 @@ export const shaderToySrc = {
     sinusoidalTresJS2,
     octgrams,
     petersenPlasmaGraph,
+    petersenGraphTresJS,
 }
