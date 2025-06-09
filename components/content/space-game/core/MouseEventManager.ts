@@ -3,8 +3,8 @@
  * Unified management of mouse behaviors in different states
  */
 
+import { Logger } from '../../logger'
 import { GameState, CAMERA_CONSTANTS } from './constants'
-import { Logger } from './logger'
 import { gameStateManager } from './GameStateManager'
 
 import type { MouseHandler } from './types'

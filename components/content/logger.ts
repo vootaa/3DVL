@@ -2,7 +2,7 @@
  * Logger utility for conditional logging based on development configuration
  */
 
-import { DEV_Config } from './constants'
+import { DEV_Config } from './config'
 
 export class Logger {
   private static lastLogTimes: Record<string, number> = {}

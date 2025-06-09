@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useLoop } from '@tresjs/core'
 
+import { Logger } from '../logger'
+
 import Planets from './3d/Planets.vue'
 import Stars from './3d/Stars.vue'
 import Particles from './3d/Particles.vue'
@@ -16,7 +18,6 @@ import Ship from './3d/Ship.vue'
 import SpaceObjects from './3d/SpaceObjects.vue'
 import SpaceGameEffects from './3d/SpaceGameEffects.vue'
 
-import { Logger } from './core/logger'
 import { gameStore } from './GameStore'
 
 if (gameStore) {

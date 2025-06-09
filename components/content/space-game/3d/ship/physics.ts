@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
-import { Logger } from '../../core/logger'
+
+import { Logger } from '../../../logger'
 import { SHIP_CONTROLS } from './constants'
 
 import type { ShipRefs, ShipControlState } from './types'

@@ -1,5 +1,5 @@
+import { Logger } from '../../../logger'
 import { ResourceLoader } from '../../utils/ResourceLoader'
-import { Logger } from '../../core/logger'
 
 import type { Ref } from 'vue'
 import type { ShipModelData } from './types'

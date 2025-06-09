@@ -5,8 +5,8 @@ import { useLoop } from '@tresjs/core'
 import { MeshStandardMaterial, Color, Group, PointLight } from 'three'
 import { shallowRef, ref, onMounted } from 'vue'
 
+import { Logger } from '../../logger'
 import { ResourceLoader } from '../utils/ResourceLoader'
-import { Logger } from '../core/logger'
 
 const props = defineProps({
   position: {

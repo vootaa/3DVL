@@ -3,12 +3,12 @@
  * Coordinates interactions between the state manager and other systems
  */
 
+import { Logger } from '../../logger'
+import { POINTS_OF_INTEREST } from '../store/constants'
+import { initializeActions } from '../store/actions'
 import { GameState } from './constants'
 import { gameStateManager } from './GameStateManager'
 import { mouseEventManager } from './MouseEventManager'
-import { POINTS_OF_INTEREST } from '../store/constants'
-import { initializeActions } from '../store/actions'
-import { Logger } from './logger'
 
 import type { IGameController } from './types'
 import type { GameStore } from '../GameStore'

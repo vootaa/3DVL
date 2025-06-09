@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, ref, watch, onUnmounted, inject } from 'vue'
 
+import { Logger } from '../../logger'
 import { GameState } from '../core/constants'
 import { gameStateManager } from '../core/GameStateManager'
-import { Logger } from '../core/logger'
 import { POINTS_OF_INTEREST } from '../store/constants'
+
 import type { IGameController } from '../core/types'
 import type { GameStore } from '../GameStore'
 

@@ -1,5 +1,8 @@
 import { Vector3 } from 'three'
 
+import { Logger } from '../../logger'
+import { GameState } from '../core/constants'
+import { gameStateManager } from '../core/GameStateManager'
 import {
   SCORE_VALUES,
   SPEED_SETTINGS,
@@ -10,13 +13,10 @@ import {
 import { checkStardustCollection } from './utils'
 import { randomData } from './generators'
 
-import { GameState } from '../core/constants'
-import { gameStateManager } from '../core/GameStateManager'
-import { Logger } from '../core/logger'
-
 import type { PerspectiveCamera } from 'three'
-import type { HitType } from './types'
 import type { GameStore } from '../GameStore'
+import type { HitType } from './types'
+
 
 export function initializeActions(gameStore: GameStore) {
   let gameController: any = null

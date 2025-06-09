@@ -1,7 +1,8 @@
 import { AudioListener, Audio as ThreeAudio } from 'three'
 import { watch } from 'vue'
+
+import { Logger } from '../../logger'
 import { ResourceLoader } from './ResourceLoader'
-import { Logger } from '../core/logger'
 
 import type { PerspectiveCamera, Camera } from 'three'
 import type { AudioSystem } from './types'

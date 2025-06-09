@@ -1,5 +1,5 @@
 import type { ComputedRef } from 'vue'
-import { Logger } from '../../core/logger'
+import { Logger } from '../../../logger'
 import { ShipPhysics } from './physics'
 import { SHIP_CONTROLS } from './constants'
 

@@ -3,8 +3,9 @@
  * Manages the 4 core states of the game and their transitions
  */
 import { ref, type Ref } from 'vue'
+
+import { Logger } from '../../logger'
 import { GameState } from './constants'
-import { Logger } from './logger'
 
 import type { StateTransition, StateChangeHandler } from './types'
 
