@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject } from 'vue'
-import { Box3, Color, Vector3 } from 'three'
+import { Box3, Color, MeshPhongMaterial, Vector3 } from 'three'
 
 import { Logger } from '../../logger'
 
@@ -17,9 +17,9 @@ const { scene } = await useGLTF('/models/shadertoy-museum/gallery.glb', { draco:
 
 // Custom mapping table: each display stand corresponds to a shader array, the first one is the default best
 const customMappings = {
-  ShaderToy000: ['octgrams', 'petersenGraph'],
+  ShaderToy000: ['petersenGraph'],
   ShaderToy001: ['sinusoidalTresJS'],
-  ShaderToy002: ['mandelbulb','petersenGraph'],
+  ShaderToy002: ['petersenGraph'],
   ShaderToy003: ['gamesOfSinus'],
   ShaderToy004: ['sinusoidalTresJS2']
 }
@@ -69,15 +69,16 @@ function createShaderTarget(standName: string, shaderName: string, obj: any) {
 
 // Create shader targets based on mapping table
 scene.traverse((obj) => {
-  if ('material' in obj) {
-    if (obj.material) {
-      obj.material.roughness = 0.3
-      obj.material.metalness = 0.1
-    }
-  }
-
   if (obj.name.startsWith('ShaderToy')) {
     Logger.log('Gallery', `🏛️ Processing stand: ${obj.name}`)
+
+    if ('material' in obj) {
+      obj.material = new MeshPhongMaterial({
+        color: new Color('#ffffff'),
+        emissive: new Color('#111133'), // Subtle emissive glow
+        shininess: 100
+      })
+    }
 
     const assignedShaders = customMappings[obj.name as keyof typeof customMappings]
 

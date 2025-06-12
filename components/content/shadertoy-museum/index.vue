@@ -65,7 +65,7 @@ function click() {
   <Suspense>
     <div>
       <TextUi />
-      <TresCanvas clear-color="#2a2a2a" :anti-alias="true" :alpha="true" :tone-mapping="ACESFilmicToneMapping"
+      <TresCanvas clear-color="#3A3A3A" :anti-alias="true" :alpha="true" :tone-mapping="ACESFilmicToneMapping"
         :tone-mapping-exposure="1.0" window-size @pointerup="click">
         <TheExperience />
       </TresCanvas>

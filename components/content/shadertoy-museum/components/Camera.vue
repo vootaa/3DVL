@@ -19,12 +19,6 @@ watch(() => state.i, () => {
 
 <template>
   <Levioso :rotation-factor="0">
-    <TresPerspectiveCamera
-      ref="cam"
-      :position="[0, 5, 0]"
-      :fov="60"
-      :near="0.1"
-      :far="1000"
-    />
+    <TresPerspectiveCamera ref="cam" :position="[0, 5, 0]" :fov="60" :near="0.1" :far="1000" />
   </Levioso>
 </template>

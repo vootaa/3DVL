@@ -33,8 +33,8 @@ watch(() => state.i, () => {
 <template>
   <TresMesh :position="position" :scale="scale" :rotation="rotation">
     <TresPlaneGeometry />
-    <MeshReflectionMaterial :mix="0.4" :sharpMix="0.9" :blurMixSmooth="0.3" :normal-map="normalMap"
-      :roughness-map="roughnessMap" :displacement-map="displacementMap" :color="new Color('#989898')" :roughness="0.2"
-      :metalness="0.05" />
+    <MeshReflectionMaterial :mix="0.4" :sharpMix="0.9" :blurMixSmooth="0.2" :normal-map="normalMap"
+      :roughness-map="roughnessMap" :displacement-map="displacementMap" :color="new Color('#a5a5a5')" :roughness="0.1"
+      :metalness="0.1" />
   </TresMesh>
 </template>
