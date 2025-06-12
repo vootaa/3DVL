@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Material } from 'three'
 import { DoubleSide, MeshNormalMaterial, ShaderMaterial, Vector2 } from 'three'
+
 import type { State } from '../index.vue'
 
 const state = inject('state') as State
@@ -48,7 +49,7 @@ void main() {
 const material = shallowRef(new MeshNormalMaterial() as Material)
 
 const uniforms = {
-  iResolution: { value: new Vector2(256, 256) },
+  iResolution: { value: new Vector2(800, 1024) },
   iTime: { value: 0 },
 }
 

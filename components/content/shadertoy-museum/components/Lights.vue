@@ -52,4 +52,13 @@ useLoop().onBeforeRender(
 
 <template>
   <TresGroup ref="lightsGroup" />
+
+  <!-- Enhanced but not overly bright ambient lighting -->
+  <TresAmbientLight :intensity="0.3" color="#ffffff" />
+
+  <!-- Main directional light source - moderate intensity -->
+  <TresDirectionalLight :position="[10, 10, 5]" :intensity="0.8" color="#ffffff" :cast-shadow="true" />
+
+  <!-- Auxiliary light source -->
+  <TresDirectionalLight :position="[-5, 8, -3]" :intensity="0.4" color="#f0f8ff" />
 </template>

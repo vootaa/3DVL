@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject } from 'vue'
-import { Box3, Color, MeshPhongMaterial, Vector3 } from 'three'
+import { Box3, Color, Vector3 } from 'three'
 
 import { Logger } from '../../logger'
 
@@ -14,7 +14,6 @@ const state = inject('state') as State
 
 const { scene } = await useGLTF('/models/shadertoy-museum/gallery.glb', { draco: true })
 
-const material = new MeshPhongMaterial({ color: new Color('#000022') })
 
 // Custom mapping table: each display stand corresponds to a shader array, the first one is the default best
 const customMappings = {
@@ -71,7 +70,10 @@ function createShaderTarget(standName: string, shaderName: string, obj: any) {
 // Create shader targets based on mapping table
 scene.traverse((obj) => {
   if ('material' in obj) {
-    obj.material = material
+    if (obj.material) {
+      obj.material.roughness = 0.3
+      obj.material.metalness = 0.1
+    }
   }
 
   if (obj.name.startsWith('ShaderToy')) {

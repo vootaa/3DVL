@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Camera, Light } from 'three'
-import { Mesh, Clock, PlaneGeometry } from 'three'
+import { Mesh, Clock, PlaneGeometry, ACESFilmicToneMapping } from 'three'
 import { TresCanvas } from '@tresjs/core'
 import type { LightFn } from './fns/shaderToyLights'
 import { shaderToySrc } from './fns/shaderToySrc'
@@ -65,12 +65,8 @@ function click() {
   <Suspense>
     <div>
       <TextUi />
-      <TresCanvas
-        clear-color="#000"
-        :anti-alias="false"
-        window-size
-        @pointerup="click"
-      >
+      <TresCanvas clear-color="#2a2a2a" :anti-alias="true" :alpha="true" :tone-mapping="ACESFilmicToneMapping"
+        :tone-mapping-exposure="1.0" window-size @pointerup="click">
         <TheExperience />
       </TresCanvas>
     </div>
