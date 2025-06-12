@@ -416,9 +416,6 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 `
 
 const petersenGraphDCC = `
-
-precision highp float;
-
 float gTime = 0.;
 const float PI = 3.14159265;
 

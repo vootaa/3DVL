@@ -45,18 +45,8 @@ function createShaderTarget(standName: string, shaderName: string, obj: any) {
   dimensions.x = Math.floor(dimensions.x)
   dimensions.y = Math.floor(dimensions.y)
 
-  const shaderDataStr = (shader.split('/** SHADERDATA')[1] ?? '*/').split('*/')[0] ?? '{}'
-  const shaderMetaData = (() => {
-    let data = { title: '', author: '', description: '', href: 'https://www.shadertoy.com/' }
-    try {
-      data = { ...data, ...JSON.parse(shaderDataStr) }
-    } catch (_) { }
-    return data
-  })()
-
   return {
     shader,
-    ...shaderMetaData,
     lightFn,
     name: `${standName}_${shaderName}`,
     dimensions,

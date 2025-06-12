@@ -8,10 +8,6 @@ import TheExperience from './TheExperience.vue'
 
 interface ShaderToyTarget {
   shader: string
-  title: string
-  author: string
-  description: string
-  href: string
   lightFn: LightFn
   dimensions: { x: number; y: number }
   cameras: Camera[]
@@ -30,11 +26,6 @@ export type State = ShaderToyTarget & {
 
 const state = reactive({
   shader: shaderToySrc.gamesOfSinus,
-  title: 'ShaderToy Museum Lab',
-  author: 'andretchen0',
-  description: `Inspired by Cineshader, ShaderToy.com shaders applied to meshes using TresJS.
-  Loading...`,
-  href: '',
   lightFn: () => { },
   dimensions: { x: 1, y: 1 },
   cameras: [] as Camera[],
@@ -64,7 +55,6 @@ function click() {
 <template>
   <Suspense>
     <div>
-      <TextUi />
       <TresCanvas clear-color="#3A3A3A" :anti-alias="true" :alpha="true" :tone-mapping="ACESFilmicToneMapping"
         :tone-mapping-exposure="1.0" window-size @pointerup="click">
         <TheExperience />

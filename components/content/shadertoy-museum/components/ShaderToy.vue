@@ -49,7 +49,7 @@ void main() {
 const material = shallowRef(new MeshNormalMaterial() as Material)
 
 const uniforms = {
-  iResolution: { value: new Vector2(800, 1024) },
+  iResolution: { value: new Vector2(1000, 1280) },
   iTime: { value: 0 },
 }
 
