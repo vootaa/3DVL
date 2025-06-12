@@ -17,9 +17,9 @@ const { scene } = await useGLTF('/models/shadertoy-museum/gallery.glb', { draco:
 
 // Custom mapping table: each display stand corresponds to a shader array, the first one is the default best
 const customMappings = {
-  ShaderToy000: ['petersenGraph'],
+  ShaderToy000: ['petersenGraphDCC'],
   ShaderToy001: ['sinusoidalTresJS'],
-  ShaderToy002: ['petersenGraph'],
+  ShaderToy002: ['sinusoidalTresJS'],
   ShaderToy003: ['gamesOfSinus'],
   ShaderToy004: ['sinusoidalTresJS2']
 }

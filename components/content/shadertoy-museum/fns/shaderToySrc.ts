@@ -415,7 +415,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 */
 `
 
-const petersenGraph = `
+const petersenGraphDCC = `
 
 precision highp float;
 
@@ -815,5 +815,5 @@ export const shaderToySrc = {
     sinusoidalTresJS,
     sinusoidalTresJS2,
     petersenPlasmaGraph,
-    petersenGraph,
+    petersenGraphDCC, //Dynamic Color Cycling System - Ripple Cyberpunk
 }
