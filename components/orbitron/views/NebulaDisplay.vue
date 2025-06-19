@@ -133,6 +133,8 @@ const handleSave = () => {
 }
 
 .nebula-display-container {
-  @apply flex flex-col items-center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 </style>

@@ -1,6 +1,6 @@
 import { SPACE_GAME_FONTS } from './constants'
 
-export function formatSpaceText(text: string, variant: 'primary' | 'secondary' = 'primary'): string {
+export function formatSpaceText(text: string, _variant: 'primary' | 'secondary' = 'primary'): string {
   return text.toUpperCase()
 }
 
