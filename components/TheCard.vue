@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import CodeButton from './orbitron/views/CodeButton.vue'
 
 defineProps<{
   title: string
@@ -28,7 +27,6 @@ defineProps<{
           <h2 class="grow font-bold text-lg">
             {{ title }}
           </h2>
-          <CodeButton :to="repoPath" :title="repoTitle" />
         </div>
         <p class="text-sm text-gray-400 mb-2 min-h-75px">
           {{ description }}

@@ -14,7 +14,6 @@ export { CosmionClient } from './clients/cosmion-client'
 export { default as NebulaPanel } from './views/NebulaPanel.vue'
 export { default as NebulaDisplay } from './views/NebulaDisplay.vue'
 export { default as NebulaBadge } from './views/NebulaBadge.vue'
-export { default as CodeButton } from './views/CodeButton.vue'
 
 // Composables
 export { useOrbitron, useGlobalOrbitron } from './composables/useOrbitron'
