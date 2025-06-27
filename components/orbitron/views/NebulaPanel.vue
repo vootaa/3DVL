@@ -149,12 +149,15 @@ const handleExportIdentity = async (nebulaId: string) => {
   await performExportIdentity(nebulaId)
 }
 
-const openImportDialog = () => {
+const pendingImportType = ref<IdentityType>('main')
+
+const openImportDialog = (targetType: IdentityType) => {
   if (systemInfo.system_locked) {
     showError('System is locked. Please unlock to import identities.')
     return
   }
   
+  pendingImportType.value = targetType
   clearMessages()
   showImportDialog.value = true
 }
@@ -244,19 +247,14 @@ const handleImportIdentity = async () => {
       return
     }
     
-    if (!parsedIdentity.identity_type) {
-      showError('Missing required field: identity_type')
+    if (!parsedIdentity.generation_seed) {
+      showError('Missing required field: generation_seed')
       return
     }
     
-    if (!['main', 'test', 'private'].includes(parsedIdentity.identity_type)) {
-      showError('Invalid identity_type. Must be: main, test, or private')
+    if (!parsedIdentity.validation_hash) {
+      showError('Missing required field: validation_hash')
       return
-    }
-    
-    // Remove nickname from imported data if present
-    if (parsedIdentity.nebula_nickname) {
-      delete parsedIdentity.nebula_nickname
     }
     
     // Check if NebulaID already exists in any identity
@@ -266,7 +264,14 @@ const handleImportIdentity = async () => {
       return
     }
     
-    await importIdentity(JSON.stringify(parsedIdentity))
+    // Check if target type slot is already occupied
+    const existingTypeIdentity = identities.value.find(id => id.identity_type === pendingImportType.value)
+    if (existingTypeIdentity) {
+      showError(`${pendingImportType.value} identity slot already occupied`)
+      return
+    }
+    
+    await importIdentity(importData.value, pendingImportType.value)
     importData.value = ''
     showImportDialog.value = false
     await loadIdentities()
@@ -274,15 +279,7 @@ const handleImportIdentity = async () => {
   } catch (err: any) {
     // Provide more specific error messages
     const errorMessage = err.message || 'Import failed'
-    if (errorMessage.includes('Invalid identity format')) {
-      showError('Identity format is invalid. Please check the JSON structure.')
-    } else if (errorMessage.includes('already exists')) {
-      showError('An identity with this ID already exists.')
-    } else if (errorMessage.includes('permission')) {
-      showError('Permission denied. System may be locked.')
-    } else {
-      showError(`Import failed: ${errorMessage}`)
-    }
+    showError(`Import failed: ${errorMessage}`)
   }
 }
 
@@ -479,7 +476,7 @@ onMounted(() => {
                   Create
                 </button>
                 <button 
-                  @click="openImportDialog" 
+                  @click="openImportDialog(type)" 
                   :disabled="systemInfo.system_locked"
                   :class="systemInfo.system_locked ? 'px-2 py-1 text-xs bg-gray-600 text-gray-400 rounded cursor-not-allowed' : 'px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded'"
                 >
@@ -576,7 +573,7 @@ onMounted(() => {
     <div v-if="showImportDialog" class="fixed inset-0 bg-black/80 flex items-center justify-end z-60" @click="closeImportDialog">
       <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 max-w-md w-full mx-4 mr-16 orbitron-font" @click.stop>
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg text-cyan-400">Import Identity</h3>
+          <h3 class="text-lg text-cyan-400">Import Identity to {{ pendingImportType.toUpperCase() }}</h3>
           <button @click="closeImportDialog" class="text-gray-400 hover:text-white text-xl">×</button>
         </div>
         <div class="space-y-3">
