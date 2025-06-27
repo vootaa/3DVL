@@ -1,32 +1,19 @@
+import type { OrbitronConfig } from '../types'
+
 import { SPACE_THEME_COLORS, ANIMATION_DURATIONS } from '../utils/constants'
 
-export interface OrbitronConfig {
-  theme: {
-    colors: typeof SPACE_THEME_COLORS
-    animations: typeof ANIMATION_DURATIONS
-  }
-  storage: {
-    prefix: string
-    encryption: boolean
-  }
-  nebula: {
-    maxSize: number
-    compressionLevel: number
-  }
-}
-
 export const DEFAULT_CONFIG: OrbitronConfig = {
+  max_identities: 3,
+  auto_sync: true,
+  offline_cache: true,
+  pin_required: false,
+  storage: {
+    prefix: 'orbitron_v2_',
+    encryption: false // Simplified for demo, enable for production
+  },
   theme: {
     colors: SPACE_THEME_COLORS,
     animations: ANIMATION_DURATIONS
-  },
-  storage: {
-    prefix: 'orbitron_',
-    encryption: true
-  },
-  nebula: {
-    maxSize: 1024 * 1024, // 1MB
-    compressionLevel: 6
   }
 }
 
@@ -34,17 +21,31 @@ export function createConfig(overrides?: Partial<OrbitronConfig>): OrbitronConfi
   return {
     ...DEFAULT_CONFIG,
     ...overrides,
-    theme: {
-      ...DEFAULT_CONFIG.theme,
-      ...overrides?.theme
-    },
     storage: {
       ...DEFAULT_CONFIG.storage,
       ...overrides?.storage
     },
-    nebula: {
-      ...DEFAULT_CONFIG.nebula,
-      ...overrides?.nebula
+    theme: {
+      ...DEFAULT_CONFIG.theme,
+      ...overrides?.theme
     }
   }
 }
+
+export function validateConfig(config: OrbitronConfig): boolean {
+  // Validate max_identities
+  if (config.max_identities < 1 || config.max_identities > 10) {
+    console.warn('[Orbitron] max_identities should be between 1 and 10')
+    return false
+  }
+
+  // Validate storage prefix
+  if (!config.storage.prefix || config.storage.prefix.length < 3) {
+    console.warn('[Orbitron] storage.prefix should be at least 3 characters')
+    return false
+  }
+
+  return true
+}
+
+export { type OrbitronConfig }

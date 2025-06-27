@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import type { NebulaData } from '../core/nebula-generator'
 import { useNebula } from '../composables/useNebula'
 import { formatNebulaId, formatTimestamp } from '../utils/format-utils'
-import { getSpaceFontClass } from '../utils/format-utils'
 
 interface Props {
   seed?: string

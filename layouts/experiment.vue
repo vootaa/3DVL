@@ -24,7 +24,7 @@ const repoTitle = getRepoTitleFromPath(route.path)
   <div>
     <!-- Orbitron UI Components - positioned on the right side -->
     <div class="fixed right-5 top-1/2 transform -translate-y-1/2 z-20 flex flex-col items-end gap-4">
-      <!-- Nebula Identity Panel -->
+      <!-- Nebula Identity Panel - using refactored components -->
       <NebulaPanel variant="compact" />
       
       <!-- Code Access Button -->

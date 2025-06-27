@@ -1,52 +1,173 @@
-import { generateShortId, generateHash } from '../utils/hash-utils'
-import { formatNebulaId } from '../utils/format-utils'
+import type { NebulaIdentity, IdentityType } from '../types'
 import type { StorageEngine } from './storage-engine'
 
-export interface NebulaIdentity {
-  id: string
-  name: string
-  created: number
-  hash: string
-  metadata?: Record<string, any>
-}
+import { generateNebulaId, generateNebulaNickname, generateSeed } from '../utils/generators'
 
 export class IdentityManager {
-  constructor(private storage: StorageEngine) {}
+  private readonly maxIdentities = 3
+  private identities: NebulaIdentity[] = []
+  private activeIdentityId: string | null = null
 
-  async createIdentity(name: string, metadata?: Record<string, any>): Promise<NebulaIdentity> {
-    const id = generateShortId(12)
-    const hash = await generateHash(`${name}-${Date.now()}-${id}`)
-    
-    const identity: NebulaIdentity = {
-      id: formatNebulaId(id),
-      name,
-      created: Date.now(),
-      hash,
-      metadata
+  constructor(private storage: StorageEngine) {
+    this.loadFromStorage()
+  }
+
+  /**
+   * Create a new Nebula identity with new terminology
+   */
+  async createIdentity(type: IdentityType = 'main'): Promise<NebulaIdentity> {
+    if (this.identities.length >= this.maxIdentities) {
+      throw new Error(`Maximum ${this.maxIdentities} identities allowed`)
     }
+
+    const identity: NebulaIdentity = {
+      nebula_id: generateNebulaId(),
+      nebula_nickname: generateNebulaNickname(),
+      created_at: Date.now(),
+      identity_type: type,
+      generation_seed: generateSeed(),
+      is_active: false
+    }
+
+    this.identities.push(identity)
     
-    await this.storage.set(`identity_${identity.id}`, identity)
+    // Auto-activate first identity
+    if (this.identities.length === 1) {
+      this.activateIdentity(identity.nebula_id)
+    }
+
+    await this.saveToStorage()
+    console.log(`[Orbitron] Created new identity: ${identity.nebula_nickname} (${identity.nebula_id})`)
+    
     return identity
   }
 
-  async getIdentity(id: string): Promise<NebulaIdentity | null> {
-    return await this.storage.get<NebulaIdentity>(`identity_${id}`)
+  /**
+   * Get active identity
+   */
+  getActiveIdentity(): NebulaIdentity | null {
+    if (!this.activeIdentityId) return null
+    return this.identities.find(id => id.nebula_id === this.activeIdentityId) || null
   }
 
-  async listIdentities(): Promise<NebulaIdentity[]> {
-    const keys = this.storage.list()
-    const identityKeys = keys.filter(key => key.startsWith('identity_'))
+  /**
+   * Activate an identity
+   */
+  async activateIdentity(nebulaId: string): Promise<boolean> {
+    const identity = this.identities.find(id => id.nebula_id === nebulaId)
+    if (!identity) return false
+
+    // Deactivate all others
+    this.identities.forEach(id => id.is_active = false)
     
-    const identities: NebulaIdentity[] = []
-    for (const key of identityKeys) {
-      const identity = await this.storage.get<NebulaIdentity>(key)
-      if (identity) identities.push(identity)
+    // Activate selected
+    identity.is_active = true
+    this.activeIdentityId = nebulaId
+    
+    await this.saveToStorage()
+    console.log(`[Orbitron] Activated identity: ${identity.nebula_nickname}`)
+    
+    return true
+  }
+
+  /**
+   * Get all identities
+   */
+  getAllIdentities(): NebulaIdentity[] {
+    return [...this.identities]
+  }
+
+  /**
+   * Delete an identity
+   */
+  async deleteIdentity(nebulaId: string): Promise<boolean> {
+    const index = this.identities.findIndex(id => id.nebula_id === nebulaId)
+    if (index === -1) return false
+
+    const wasActive = this.activeIdentityId === nebulaId
+    this.identities.splice(index, 1)
+
+    if (wasActive && this.identities.length > 0) {
+      await this.activateIdentity(this.identities[0].nebula_id)
+    } else if (this.identities.length === 0) {
+      this.activeIdentityId = null
+    }
+
+    await this.saveToStorage()
+    console.log(`[Orbitron] Deleted identity: ${nebulaId}`)
+    
+    return true
+  }
+
+  /**
+   * Import identity from JSON
+   */
+  async importIdentity(identityJson: string): Promise<NebulaIdentity> {
+    try {
+      const identity: NebulaIdentity = JSON.parse(identityJson)
+      
+      // Validate structure
+      if (!identity.nebula_id || !identity.nebula_nickname || !identity.generation_seed) {
+        throw new Error('Invalid identity format')
+      }
+
+      // Check for duplicates
+      if (this.identities.find(id => id.nebula_id === identity.nebula_id)) {
+        throw new Error('Identity already exists')
+      }
+
+      if (this.identities.length >= this.maxIdentities) {
+        throw new Error(`Maximum ${this.maxIdentities} identities allowed`)
+      }
+
+      identity.is_active = false
+      this.identities.push(identity)
+      await this.saveToStorage()
+      
+      console.log(`[Orbitron] Imported identity: ${identity.nebula_nickname}`)
+      return identity
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to import identity: ${errorMessage}`)
+    }
+  }
+
+  /**
+   * Export identity to JSON
+   */
+  exportIdentity(nebulaId: string): string {
+    const identity = this.identities.find(id => id.nebula_id === nebulaId)
+    if (!identity) {
+      throw new Error('Identity not found')
+    }
+
+    // Create export copy without active status
+    const exportData = { ...identity, is_active: false }
+    return JSON.stringify(exportData, null, 2)
+  }
+
+  private async saveToStorage(): Promise<void> {
+    const data = {
+      identities: this.identities,
+      activeIdentityId: this.activeIdentityId,
+      version: '2.0.0'
     }
     
-    return identities.sort((a, b) => b.created - a.created)
+    await this.storage.set('orbitron_identities', data)
   }
 
-  async removeIdentity(id: string): Promise<void> {
-    this.storage.remove(`identity_${id}`)
+  private async loadFromStorage(): Promise<void> {
+    try {
+      const data = await this.storage.get<any>('orbitron_identities')
+      if (!data) return
+
+      this.identities = data.identities || []
+      this.activeIdentityId = data.activeIdentityId || null
+    } catch (error) {
+      console.warn('[Orbitron] Failed to load identities from storage:', error)
+      this.identities = []
+      this.activeIdentityId = null
+    }
   }
 }
+
