@@ -1,6 +1,7 @@
 import type { StorageEngine } from './storage-engine'
 
 import { generateHash } from '../utils/hash-utils'
+import { Logger } from '../../utils/logger'
 
 export class PinManager {
     private pinHash: string | null = null
@@ -31,7 +32,7 @@ export class PinManager {
         this.lockoutUntil = 0
 
         await this.saveToStorage()
-        console.log('[Orbitron] PIN protection enabled')
+        Logger.log('PinManager', 'PIN protection enabled')
     }
 
     /**
@@ -53,18 +54,18 @@ export class PinManager {
             this.failedAttempts = 0
             this.lockoutUntil = 0
             await this.saveToStorage()
-            console.log('[Orbitron] Successfully unlocked')
+            Logger.log('PinManager', 'Successfully unlocked')
             return true
         } else {
             this.failedAttempts++
 
             if (this.failedAttempts >= this.maxAttempts) {
                 this.lockoutUntil = Date.now() + (15 * 60 * 1000) // 15 minutes lockout
-                console.log('[Orbitron] Account locked due to failed attempts')
+                Logger.log('PinManager', 'Account locked due to failed attempts')
             }
 
             await this.saveToStorage()
-            console.log(`[Orbitron] Invalid PIN. Attempts: ${this.failedAttempts}/${this.maxAttempts}`)
+            Logger.log('PinManager', `Invalid PIN. Attempts: ${this.failedAttempts}/${this.maxAttempts}`)
             return false
         }
     }
@@ -75,7 +76,7 @@ export class PinManager {
     async lock(): Promise<void> {
         this.isLocked = true
         await this.saveToStorage()
-        console.log('[Orbitron] System locked')
+        Logger.log('PinManager', 'System locked')
     }
 
     /**
@@ -106,7 +107,7 @@ export class PinManager {
         this.lockoutUntil = 0
 
         await this.saveToStorage()
-        console.log('[Orbitron] PIN protection disabled')
+        Logger.log('PinManager', 'PIN protection disabled')
     }
 
     /**
@@ -118,7 +119,7 @@ export class PinManager {
         }
 
         await this.setupPin(newPin)
-        console.log('[Orbitron] PIN changed successfully')
+        Logger.log('PinManager', 'PIN changed successfully')
     }
 
     /**
@@ -172,7 +173,7 @@ export class PinManager {
             this.failedAttempts = data.failedAttempts || 0
             this.lockoutUntil = data.lockoutUntil || 0
         } catch (error) {
-            console.warn('[Orbitron] Failed to load PIN data from storage:', error)
+            Logger.warn('PinManager', 'Failed to load PIN data from storage:', error)
         }
     }
 }

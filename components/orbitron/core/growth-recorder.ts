@@ -2,6 +2,7 @@ import type { GameGrowthEvent, EventType } from '../types'
 import type { StorageEngine } from './storage-engine'
 
 import { generateSessionId } from '../utils/generators'
+import { Logger } from '../../utils/logger'
 
 export class GrowthRecorder {
   private events: GameGrowthEvent[] = []
@@ -41,7 +42,7 @@ export class GrowthRecorder {
 
     await this.saveToStorage()
     
-    console.log(`[Orbitron] Growth recorded: ${experiment}/${action} for ${nebulaId}`)
+    Logger.log('GrowthRecorder', `Growth recorded: ${experiment}/${action} for ${nebulaId}`)
     
     return event
   }
@@ -51,7 +52,7 @@ export class GrowthRecorder {
    */
   startNewSession(): string {
     this.currentSessionId = generateSessionId()
-    console.log(`[Orbitron] Started new session: ${this.currentSessionId}`)
+    Logger.log('GrowthRecorder', `Started new session: ${this.currentSessionId}`)
     return this.currentSessionId
   }
 
@@ -90,7 +91,7 @@ export class GrowthRecorder {
   async clearEventsForIdentity(nebulaId: string): Promise<void> {
     this.events = this.events.filter(event => event.nebula_id !== nebulaId)
     await this.saveToStorage()
-    console.log(`[Orbitron] Cleared events for identity: ${nebulaId}`)
+    Logger.log('GrowthRecorder', `Cleared events for identity: ${nebulaId}`)
   }
 
   /**
@@ -149,7 +150,7 @@ export class GrowthRecorder {
       this.events = data.events || []
       this.currentSessionId = data.current_session || this.currentSessionId
     } catch (error) {
-      console.warn('[Orbitron] Failed to load growth events from storage:', error)
+      Logger.warn('GrowthRecorder', 'Failed to load growth events from storage:', error)
       this.events = []
     }
   }

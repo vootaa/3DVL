@@ -2,6 +2,7 @@ import type { NebulaIdentity, GameGrowthEvent, EventType, IdentityType, Orbitron
 
 import { ref, reactive, computed, readonly } from 'vue'
 import { OrbitronCore } from '../core/orbitron-core'
+import { Logger } from '../../utils/logger'
 
 // Global instance for cross-component state sharing
 let orbitronInstance: OrbitronCore | null = null
@@ -39,10 +40,10 @@ export function useOrbitron(config?: Partial<OrbitronConfig>) {
       Object.assign(systemInfo, info)
       
       isInitialized.value = true
-      console.log('[Orbitron] ✅ System initialization completed')
+      Logger.log('useOrbitron', '✅ System initialization completed')
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Initialization failed'
-      console.error('[Orbitron] Initialization failed:', err)
+      Logger.error('useOrbitron', 'Initialization failed:', err)
       throw err
     } finally {
       isLoading.value = false
@@ -172,7 +173,7 @@ export function useOrbitron(config?: Partial<OrbitronConfig>) {
 
   // Auto-initialize if not already done
   if (!isInitialized.value && !isLoading.value) {
-    initialize().catch(console.error)
+    initialize().catch(err => Logger.error('useOrbitron', 'Auto-initialization failed', err))
   }
 
   return {

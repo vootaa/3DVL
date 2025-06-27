@@ -43,4 +43,6 @@ export * from './utils/hash-utils'
 // Constants
 export { SPACE_THEME_COLORS, ANIMATION_DURATIONS } from './utils/constants'
 
-console.log('[Orbitron] v2.0 module loaded - Global Identity Management System ready')
+import { Logger } from '../utils/logger'
+
+Logger.log('Orbitron', 'v2.0 module loaded - Global Identity Management System ready')

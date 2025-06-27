@@ -1,4 +1,5 @@
 import type { OrbitronConfig } from '../types'
+import { Logger } from '../../utils/logger'
 
 export class StorageEngine {
   constructor(private config: OrbitronConfig) { }
@@ -20,7 +21,7 @@ export class StorageEngine {
         localStorage.setItem(fullKey, JSON.stringify(value))
       }
     } catch (error) {
-      console.error('[StorageEngine] Failed to save data:', error)
+      Logger.error('StorageEngine', 'Failed to save data:', error)
       throw new Error('Storage operation failed')
     }
   }
@@ -40,7 +41,7 @@ export class StorageEngine {
         return JSON.parse(stored)
       }
     } catch (error) {
-      console.warn('[StorageEngine] Failed to parse stored data:', error)
+      Logger.warn('StorageEngine', 'Failed to parse stored data:', error)
       return null
     }
   }

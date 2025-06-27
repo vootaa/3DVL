@@ -7,6 +7,7 @@ import { StorageEngine } from './storage-engine'
 import { CosmionClient } from '../clients/cosmion-client'
 
 import { createConfig, type OrbitronConfig } from './config'
+import { Logger } from '../../utils/logger'
 
 export class OrbitronCore {
     private identityManager: IdentityManager
@@ -18,7 +19,7 @@ export class OrbitronCore {
     private initialized = false
 
     constructor(config?: Partial<OrbitronConfig>) {
-        console.log('[Orbitron] Initializing core system...')
+        Logger.log('OrbitronCore', 'Initializing core system...')
 
         const fullConfig = createConfig(config)
         this.storage = new StorageEngine(fullConfig)
@@ -28,7 +29,7 @@ export class OrbitronCore {
         this.cosmionClient = new CosmionClient()
 
         this.initialized = true
-        console.log('[Orbitron] ✅ Core system initialization complete')
+        Logger.log('OrbitronCore', '✅ Core system initialization complete')
     }
 
     // Identity Management

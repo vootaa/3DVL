@@ -1,6 +1,7 @@
 import type { OrbitronConfig } from '../types'
 
 import { SPACE_THEME_COLORS, ANIMATION_DURATIONS } from '../utils/constants'
+import { Logger } from '../../utils/logger'
 
 export const DEFAULT_CONFIG: OrbitronConfig = {
   max_identities: 3,
@@ -35,13 +36,13 @@ export function createConfig(overrides?: Partial<OrbitronConfig>): OrbitronConfi
 export function validateConfig(config: OrbitronConfig): boolean {
   // Validate max_identities
   if (config.max_identities < 1 || config.max_identities > 10) {
-    console.warn('[Orbitron] max_identities should be between 1 and 10')
+    Logger.warn('Config', 'max_identities should be between 1 and 10')
     return false
   }
 
   // Validate storage prefix
   if (!config.storage.prefix || config.storage.prefix.length < 3) {
-    console.warn('[Orbitron] storage.prefix should be at least 3 characters')
+    Logger.warn('Config', 'storage.prefix should be at least 3 characters')
     return false
   }
 

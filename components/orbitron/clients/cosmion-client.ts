@@ -1,5 +1,7 @@
 import type { NebulaIdentity, GameGrowthEvent } from '../types'
 
+import { Logger } from '../../utils/logger'
+
 export class CosmionClient {
   private isConnected: boolean = false
   private lastSyncTime: number = 0
@@ -15,7 +17,7 @@ export class CosmionClient {
    * Simulate connection to Cosmion backend
    */
   async connect(): Promise<boolean> {
-    console.log('[Cosmion] Attempting to connect to backend server...')
+    Logger.log('CosmionClient', 'Attempting to connect to backend server...')
     
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 1000))
@@ -26,12 +28,12 @@ export class CosmionClient {
     if (success) {
       this.isConnected = true
       this.retryAttempts = 0
-      console.log('[Cosmion] ✅ Successfully connected to backend server')
+      Logger.log('CosmionClient', '✅ Successfully connected to backend server')
       return true
     } else {
       this.isConnected = false
       this.retryAttempts++
-      console.log(`[Cosmion] ❌ Connection failed. Retry ${this.retryAttempts}/${this.maxRetries}`)
+      Logger.log('CosmionClient', `❌ Connection failed. Retry ${this.retryAttempts}/${this.maxRetries}`)
       return false
     }
   }
@@ -41,7 +43,7 @@ export class CosmionClient {
    */
   disconnect(): void {
     this.isConnected = false
-    console.log('[Cosmion] Disconnected from backend server')
+    Logger.log('CosmionClient', 'Disconnected from backend server')
   }
 
   /**
@@ -49,11 +51,11 @@ export class CosmionClient {
    */
   async syncIdentity(identity: NebulaIdentity): Promise<boolean> {
     if (!this.isConnected) {
-      console.log('[Cosmion] Cannot sync identity - not connected to backend server')
+      Logger.log('CosmionClient', 'Cannot sync identity - not connected to backend server')
       return false
     }
 
-    console.log(`[Cosmion] Syncing identity: ${identity.nebula_nickname} (${identity.nebula_id})`)
+    Logger.log('CosmionClient', `Syncing identity: ${identity.nebula_nickname} (${identity.nebula_id})`)
     
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500))
@@ -61,10 +63,10 @@ export class CosmionClient {
     const success = Math.random() > 0.1 // 90% success rate
     
     if (success) {
-      console.log(`[Cosmion] ✅ Identity sync successful`)
+      Logger.log('CosmionClient', `✅ Identity sync successful`)
       return true
     } else {
-      console.log(`[Cosmion] ❌ Identity sync failed`)
+      Logger.log('CosmionClient', `❌ Identity sync failed`)
       return false
     }
   }
@@ -74,16 +76,16 @@ export class CosmionClient {
    */
   async syncGrowthEvents(events: GameGrowthEvent[]): Promise<boolean> {
     if (!this.isConnected) {
-      console.log('[Cosmion] Cannot sync growth events - not connected to backend server')
+      Logger.log('CosmionClient', 'Cannot sync growth events - not connected to backend server')
       return false
     }
 
     if (events.length === 0) {
-      console.log('[Cosmion] No growth events to sync')
+      Logger.log('CosmionClient', 'No growth events to sync')
       return true
     }
 
-    console.log(`[Cosmion] Syncing ${events.length} growth events...`)
+    Logger.log('CosmionClient', `Syncing ${events.length} growth events...`)
     
     // Simulate API call with longer delay for bulk data
     await new Promise(resolve => setTimeout(resolve, 800))
@@ -91,10 +93,10 @@ export class CosmionClient {
     const success = Math.random() > 0.15 // 85% success rate
     
     if (success) {
-      console.log(`[Cosmion] ✅ Growth events sync successful`)
+      Logger.log('CosmionClient', `✅ Growth events sync successful`)
       return true
     } else {
-      console.log(`[Cosmion] ❌ Growth events sync failed`)
+      Logger.log('CosmionClient', `❌ Growth events sync failed`)
       return false
     }
   }
@@ -115,7 +117,7 @@ export class CosmionClient {
       return { identities_synced: 0, events_synced: 0, success: false }
     }
 
-    console.log(`[Cosmion] Starting full sync: ${identities.length} identities, ${events.length} events`)
+    Logger.log('CosmionClient', `Starting full sync: ${identities.length} identities, ${events.length} events`)
     
     let identitiesSynced = 0
     let eventsSynced = 0
@@ -140,7 +142,7 @@ export class CosmionClient {
     
     const success = identitiesSynced === identities.length && eventsSynced === events.length
     
-    console.log(`[Cosmion] Full sync completed: ${identitiesSynced}/${identities.length} identities, ${eventsSynced}/${events.length} events`)
+    Logger.log('CosmionClient', `Full sync completed: ${identitiesSynced}/${identities.length} identities, ${eventsSynced}/${events.length} events`)
     
     return { identities_synced: identitiesSynced, events_synced: eventsSynced, success }
   }
@@ -150,11 +152,11 @@ export class CosmionClient {
    */
 async verifyIdentity(identity: NebulaIdentity): Promise<boolean> {
     if (!this.isConnected) {
-        console.log('[Cosmion] Cannot verify identity - not connected to backend server')
+        Logger.log('CosmionClient', 'Cannot verify identity - not connected to backend server')
         return false
     }
 
-    console.log(`[Cosmion] Verifying identity: ${identity.nebula_id}`)
+    Logger.log('CosmionClient', `Verifying identity: ${identity.nebula_id}`)
     
     // Simulate verification call
     await new Promise(resolve => setTimeout(resolve, 300))
@@ -163,9 +165,9 @@ async verifyIdentity(identity: NebulaIdentity): Promise<boolean> {
     const success = identity.generation_seed.length > 10 // Simple validation
     
     if (success) {
-        console.log(`[Cosmion] ✅ Identity verification successful`)
+        Logger.log('CosmionClient', `✅ Identity verification successful`)
     } else {
-        console.log(`[Cosmion] ❌ Identity verification failed`)
+        Logger.log('CosmionClient', `❌ Identity verification failed`)
     }
     
     return success

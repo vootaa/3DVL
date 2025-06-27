@@ -2,6 +2,7 @@ import type { NebulaIdentity, IdentityType } from '../types'
 import type { StorageEngine } from './storage-engine'
 
 import { generateNebulaId, generateNebulaNickname, generateSeed } from '../utils/generators'
+import { Logger } from '../../utils/logger'
 
 export class IdentityManager {
   private readonly maxIdentities = 3
@@ -37,7 +38,7 @@ export class IdentityManager {
     }
 
     await this.saveToStorage()
-    console.log(`[Orbitron] Created new identity: ${identity.nebula_nickname} (${identity.nebula_id})`)
+    Logger.log('IdentityManager', `Created new identity: ${identity.nebula_nickname} (${identity.nebula_id})`)
     
     return identity
   }
@@ -65,7 +66,7 @@ export class IdentityManager {
     this.activeIdentityId = nebulaId
     
     await this.saveToStorage()
-    console.log(`[Orbitron] Activated identity: ${identity.nebula_nickname}`)
+    Logger.log('IdentityManager', `Activated identity: ${identity.nebula_nickname}`)
     
     return true
   }
@@ -94,7 +95,7 @@ export class IdentityManager {
     }
 
     await this.saveToStorage()
-    console.log(`[Orbitron] Deleted identity: ${nebulaId}`)
+    Logger.log('IdentityManager', `Deleted identity: ${nebulaId}`)
     
     return true
   }
@@ -124,7 +125,7 @@ export class IdentityManager {
       this.identities.push(identity)
       await this.saveToStorage()
       
-      console.log(`[Orbitron] Imported identity: ${identity.nebula_nickname}`)
+      Logger.log('IdentityManager', `Imported identity: ${identity.nebula_nickname}`)
       return identity
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -164,7 +165,7 @@ export class IdentityManager {
       this.identities = data.identities || []
       this.activeIdentityId = data.activeIdentityId || null
     } catch (error) {
-      console.warn('[Orbitron] Failed to load identities from storage:', error)
+      Logger.warn('IdentityManager', 'Failed to load identities from storage:', error)
       this.identities = []
       this.activeIdentityId = null
     }

@@ -2,6 +2,7 @@ import { ref, computed, readonly } from 'vue'
 import { NebulaGenerator, type NebulaData } from '../core/nebula-generator'
 import { useStorage } from './useStorage'
 import { useOrbitron } from './useOrbitron'
+import { Logger } from '../../utils/logger'
 
 export function useNebula(seed?: string) {
   const generator = new NebulaGenerator()
@@ -20,7 +21,7 @@ export function useNebula(seed?: string) {
     currentSeed.value = useSeed
     currentNebula.value = generator.generateNebula(useSeed)
     
-    console.log(`[Nebula] Generated for seed: ${useSeed}`)
+    Logger.log('useNebula', `Generated for seed: ${useSeed}`)
     return currentNebula.value
   }
   
@@ -29,20 +30,20 @@ export function useNebula(seed?: string) {
       const existing = savedNebulae.value.find(n => n.id === currentNebula.value!.id)
       if (!existing) {
         setSavedNebulae([...savedNebulae.value, currentNebula.value])
-        console.log(`[Nebula] Saved: ${currentNebula.value.id}`)
+        Logger.log('useNebula', `Saved: ${currentNebula.value.id}`)
       }
     }
   }
   
   const removeNebula = (id: string) => {
     setSavedNebulae(savedNebulae.value.filter(n => n.id !== id))
-    console.log(`[Nebula] Removed: ${id}`)
+    Logger.log('useNebula', `Removed: ${id}`)
   }
   
   const loadNebula = (nebula: NebulaData) => {
     currentNebula.value = nebula
     currentSeed.value = nebula.id
-    console.log(`[Nebula] Loaded: ${nebula.id}`)
+    Logger.log('useNebula', `Loaded: ${nebula.id}`)
   }
   
   const nebulaCSS = computed(() => {
