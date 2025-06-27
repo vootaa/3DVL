@@ -26,7 +26,7 @@ export function useOrbitron(config?: Partial<OrbitronConfig>) {
   })
 
   // Initialize Orbitron instance
-  const initialize = async (password?: string) => {
+  const initialize = async (_password?: string) => {
     try {
       isLoading.value = true
       error.value = null
@@ -163,6 +163,12 @@ export function useOrbitron(config?: Partial<OrbitronConfig>) {
     return result
   }
 
+  // Storage Health Check
+  const checkStorageHealth = async (): Promise<boolean> => {
+    if (!orbitronInstance) throw new Error('Orbitron not initialized')
+    return await orbitronInstance.checkStorageHealth()
+  }
+
   // Utility function to update system info
   const updateSystemInfo = () => {
     if (orbitronInstance) {
@@ -210,7 +216,8 @@ export function useOrbitron(config?: Partial<OrbitronConfig>) {
     syncToCosmion,
     
     // Utilities
-    updateSystemInfo
+    updateSystemInfo,
+    checkStorageHealth
   }
 }
 

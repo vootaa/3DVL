@@ -109,18 +109,18 @@ export class IdentityManager {
   }
 
   /**
-   * Import identity from JSON - 验证完整性
+   * Import identity from JSON - verify integrity
    */
   async importIdentity(identityJson: string, targetType: IdentityType): Promise<NebulaIdentity> {
     try {
       const exportedData: ExportedIdentityData = JSON.parse(identityJson)
       
-      // 1. 验证结构
+      // 1. Verify structure
       if (!exportedData.nebula_id || !exportedData.generation_seed || !exportedData.validation_hash) {
         throw new Error('Invalid identity format - missing required fields')
       }
 
-      // 2. 验证完整性
+      // 2. Verify integrity
       if (!verifyNebulaIdIntegrity(
         exportedData.nebula_id, 
         exportedData.created_at, 
@@ -130,7 +130,7 @@ export class IdentityManager {
         throw new Error('Identity verification failed - invalid or forged identity')
       }
 
-      // 3. 验证哈希
+      // 3. Verify hash
       const expectedHash = await generateValidationHash(
         exportedData.nebula_id, 
         exportedData.created_at, 
@@ -140,12 +140,12 @@ export class IdentityManager {
         throw new Error('Identity verification failed - hash mismatch')
       }
 
-      // 4. 检查重复
+      // 4. Check for duplicates
       if (this.identities.find(id => id.nebula_id === exportedData.nebula_id)) {
         throw new Error('Identity already exists')
       }
 
-      // 5. 检查类型位置是否已占用
+      // 5. Check if type slot is already occupied
       if (this.identities.find(id => id.identity_type === targetType)) {
         throw new Error(`${targetType} identity slot already occupied`)
       }
@@ -154,11 +154,11 @@ export class IdentityManager {
         throw new Error(`Maximum ${this.maxIdentities} identities allowed`)
       }
 
-      // 6. 创建身份（identity_type由导入位置决定）
+      // 6. Create identity (identity_type determined by import position)
       const identity: NebulaIdentity = {
         nebula_id: exportedData.nebula_id,
         created_at: exportedData.created_at,
-        identity_type: targetType, // 由导入按钮位置决定
+        identity_type: targetType, // Determined by import button position
         generation_seed: exportedData.generation_seed,
         is_active: false
       }
@@ -183,7 +183,7 @@ export class IdentityManager {
       throw new Error('Identity not found')
     }
 
-    // 生成验证哈希
+    // Generate validation hash
     const validationHash = await generateValidationHash(
       identity.nebula_id,
       identity.created_at,

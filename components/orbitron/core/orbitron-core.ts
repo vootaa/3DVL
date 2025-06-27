@@ -171,6 +171,11 @@ export class OrbitronCore {
         }
     }
 
+    // Storage health check
+    async checkStorageHealth(): Promise<boolean> {
+        return await this.storage.healthCheck()
+    }
+
     isReady(): boolean {
         return this.initialized
     }

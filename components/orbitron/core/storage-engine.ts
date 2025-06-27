@@ -12,17 +12,40 @@ export class StorageEngine {
     const fullKey = this.getKey(key)
 
     try {
+      // Check if localStorage is available
+      if (typeof localStorage === 'undefined') {
+        throw new Error('localStorage is not available')
+      }
+
+      const jsonData = JSON.stringify(value)
+      
+      // Check data size (localStorage has ~5-10MB limit)
+      if (jsonData.length > 1024 * 1024) { // 1MB warning
+        Logger.warn('StorageEngine', `Large data size: ${jsonData.length} bytes`)
+      }
+
       if (this.config.storage.encryption) {
         // Use simple encryption for demo
-        const jsonData = JSON.stringify(value)
         const encrypted = btoa(jsonData) // Simple base64 encoding
         localStorage.setItem(fullKey, encrypted)
       } else {
-        localStorage.setItem(fullKey, JSON.stringify(value))
+        localStorage.setItem(fullKey, jsonData)
       }
+      
+      Logger.log('StorageEngine', `Saved data to ${fullKey}`)
     } catch (error) {
-      Logger.error('StorageEngine', 'Failed to save data:', error)
-      throw new Error('Storage operation failed')
+      Logger.error('StorageEngine', `Failed to save data to ${fullKey}:`, error)
+      
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.name === 'QuotaExceededError') {
+          throw new Error('Storage quota exceeded. Please clear some data.')
+        } else if (error.message.includes('localStorage')) {
+          throw new Error('localStorage is not available. Please check browser settings.')
+        }
+      }
+      
+      throw new Error(`Storage operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -88,6 +111,26 @@ export class StorageEngine {
       total_keys: keys.length,
       total_size: totalSize,
       prefix: this.config.storage.prefix
+    }
+  }
+
+  // Storage health check
+  async healthCheck(): Promise<boolean> {
+    try {
+      const testKey = this.getKey('_health_check')
+      const testValue = { test: Date.now() }
+      
+      // Try to write and read back
+      await this.set('_health_check', testValue)
+      const readBack = await this.get<typeof testValue>('_health_check')
+      
+      // Clean up test data
+      this.remove('_health_check')
+      
+      return readBack !== null && readBack.test === testValue.test
+    } catch (error) {
+      Logger.error('StorageEngine', 'Health check failed:', error)
+      return false
     }
   }
 }

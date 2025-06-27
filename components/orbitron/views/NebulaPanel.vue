@@ -2,8 +2,9 @@
 import type { NebulaIdentity, IdentityType } from '../types'
 import { generateNebulaNickname } from '../utils/generators'
 import { formatTimestamp, formatSyncStatus } from '../utils/format-utils'
+import { Logger } from '../../utils/logger'
 
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useOrbitron } from '../composables/useOrbitron'
 
 interface Props {
@@ -29,7 +30,8 @@ const {
   verifyPin,
   lock,
   removePin,
-  syncToCosmion
+  syncToCosmion,
+  checkStorageHealth
 } = useOrbitron()
 
 const TABS = ['identities', 'pin', 'sync', 'about'] as const
@@ -50,12 +52,50 @@ const pendingActionId = ref('')
 const pinVerificationInput = ref('')
 const showPinVerification = ref(false)
 
+// Auto-create timer for empty identities
+let autoCreateTimer: NodeJS.Timeout | null = null
+
 watch(error, (newError) => {
   if (newError) {
     localError.value = newError
     setTimeout(() => localError.value = '', 4000)
   }
 })
+
+// Watch for empty identities and auto-create TEST identity after 1 minute
+watch(identities, (newIdentities) => {
+  // Clear existing timer if any
+  if (autoCreateTimer) {
+    clearTimeout(autoCreateTimer)
+    autoCreateTimer = null
+  }
+  
+  // If no identities exist, set timer to auto-create TEST identity
+  if (newIdentities.length === 0 && isInitialized.value) {
+    autoCreateTimer = setTimeout(async () => {
+      try {
+        // Double check that still no identities exist
+        await loadIdentities()
+        if (identities.value.length === 0) {
+          // Perform storage health check before attempting to create
+          const storageHealthy = await checkStorageHealth()
+          if (!storageHealthy) {
+            showError('Storage not available. Cannot auto-create identity.')
+            return
+          }
+          
+          await handleCreateIdentity('test')
+          showSuccess('Auto-created TEST identity after 1 minute of waiting')
+        }
+      } catch (err: any) {
+        Logger.error('Auto-create TEST identity failed:', err)
+        showError(`Auto-create failed: ${err.message || 'Storage error'}`)
+      } finally {
+        autoCreateTimer = null
+      }
+    }, 60000) // 1 minute = 60000ms
+  }
+}, { immediate: true })
 
 const clearMessages = () => {
   localError.value = ''
@@ -113,7 +153,7 @@ const handleActivateIdentity = async (nebulaId: string) => {
   }
 }
 
-const requiresPinVerification = (action: 'delete' | 'export' | 'import'): boolean => {
+const requiresPinVerification = (_action: 'delete' | 'export' | 'import'): boolean => {
   return systemInfo.pin_configured && !systemInfo.system_locked
 }
 
@@ -173,9 +213,20 @@ const openImportDialog = (targetType: IdentityType) => {
 const performDeleteIdentity = async (nebulaId: string) => {
   try {
     clearMessages()
+    const wasActiveIdentity = getActiveIdentity.value?.nebula_id === nebulaId
     await deleteIdentity(nebulaId)
     await loadIdentities()
-    showSuccess('Identity deleted.')
+    
+    if (wasActiveIdentity && identities.value.length > 0) {
+      const newActiveIdentity = getActiveIdentity.value
+      if (newActiveIdentity) {
+        showSuccess(`Identity deleted. Auto-activated: ${getDisplayNickname(newActiveIdentity)}`)
+      } else {
+        showSuccess('Identity deleted.')
+      }
+    } else {
+      showSuccess('Identity deleted.')
+    }
   } catch (err: any) {
     showError(err.message || 'Failed to delete identity')
   }
@@ -381,6 +432,14 @@ const buttonClasses = computed(() => [
 
 onMounted(() => {
   initializeSystem()
+})
+
+onUnmounted(() => {
+  // Clear auto-create timer on component unmount
+  if (autoCreateTimer) {
+    clearTimeout(autoCreateTimer)
+    autoCreateTimer = null
+  }
 })
 </script>
 
