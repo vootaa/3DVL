@@ -66,6 +66,22 @@ static log(category: string, message: string, data?: any): void {
 }
 
 /**
+ * Warning logging - always outputs (affected by development mode)
+ * @param category Log category
+ * @param message Warning message
+ * @param data Additional data
+ */
+static warn(category: string, message: string, data?: any): void {
+    if (!DEV_Config.LOG_ENABLED) return
+
+    if (data !== undefined) {
+        console.warn(`[${category}] ${message}`, data)
+    } else {
+        console.warn(`[${category}] ${message}`)
+    }
+}
+
+/**
  * Error logging - always outputs, typically not affected by development mode
  * @param category Log category
  * @param message Error message

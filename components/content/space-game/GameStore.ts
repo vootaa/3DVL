@@ -14,6 +14,8 @@ import {
   generateSpaceProbeData,
 } from './store/generators'
 
+import { Logger } from '../../utils/logger'
+
 import type {
   ExplosionData,
   ObjectData,
@@ -31,22 +33,22 @@ const guid = 0
 
 // Create empty default actions that will be replaced during initialization
 const createDefaultActions = (): GameActions => ({
-  init: () => { console.warn('Game actions not initialized yet') },
-  update: () => { console.warn('Game actions not initialized yet') },
-  startGame: () => { console.warn('Game actions not initialized yet') },
-  toggleSound: () => { console.warn('Game actions not initialized yet') },
-  toggleTrack: () => { console.warn('Game actions not initialized yet') },
-  toggleInfoText: () => { console.warn('Game actions not initialized yet') },
-  showModal: () => { console.warn('Game actions not initialized yet') },
-  hideModal: () => { console.warn('Game actions not initialized yet') },
-  shoot: () => { console.warn('Game actions not initialized yet') },
+  init: () => { Logger.warn('GameStore', 'Game actions not initialized yet') },
+  update: () => { Logger.warn('GameStore', 'Game actions not initialized yet') },
+  startGame: () => { Logger.warn('GameStore', 'Game actions not initialized yet') },
+  toggleSound: () => { Logger.warn('GameStore', 'Game actions not initialized yet') },
+  toggleTrack: () => { Logger.warn('GameStore', 'Game actions not initialized yet') },
+  toggleInfoText: () => { Logger.warn('GameStore', 'Game actions not initialized yet') },
+  showModal: () => { Logger.warn('GameStore', 'Game actions not initialized yet') },
+  hideModal: () => { Logger.warn('GameStore', 'Game actions not initialized yet') },
+  shoot: () => { Logger.warn('GameStore', 'Game actions not initialized yet') },
   test: () => false,
-  registerHit: () => { console.warn('Game actions not initialized yet') },
-  addScoreNotification: () => { console.warn('Game actions not initialized yet') },
-  addStardust: () => { console.warn('Game actions not initialized yet') },
-  switchGameMode: () => { console.warn('Game actions not initialized yet') },
-  switchSpeedMode: () => { console.warn('Game actions not initialized yet') },
-  setGameController() { console.warn('Game actions not initialized yet') },
+  registerHit: () => { Logger.warn('GameStore', 'Game actions not initialized yet') },
+  addScoreNotification: () => { Logger.warn('GameStore', 'Game actions not initialized yet') },
+  addStardust: () => { Logger.warn('GameStore', 'Game actions not initialized yet') },
+  switchGameMode: () => { Logger.warn('GameStore', 'Game actions not initialized yet') },
+  switchSpeedMode: () => { Logger.warn('GameStore', 'Game actions not initialized yet') },
+  setGameController() { Logger.warn('GameStore', 'Game actions not initialized yet') },
 })
 
 export const gameStore = reactive({

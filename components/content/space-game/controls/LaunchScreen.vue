@@ -1,8 +1,8 @@
-<!-- eslint-disable no-console -->
 <script setup lang="ts">
 import { ref, defineEmits, watch, onMounted, computed } from 'vue'
 import { ResourceLoader } from '../utils/ResourceLoader'
 import { ResourceType } from '../utils/constants'
+import { Logger } from '../../../utils/logger'
 
 // Receive loading status passed from parent component
 const props = defineProps({
@@ -102,13 +102,13 @@ watch(() => props.progress, (newVal) => {
 })
 
 const forceComplete = () => {
-  console.log('Force completing resource loading')
+  Logger.log('LaunchScreen', 'Force completing resource loading')
   ResourceLoader.forceComplete()
 }
 
 const diagnoseLoading = () => {
   const report = ResourceLoader.diagnose()
-  console.log('Diagnostic report:', report)
+  Logger.log('LaunchScreen', 'Diagnostic report:', report)
 }
 
 const launchMode = (mode: 'battle' | 'explore') => {
