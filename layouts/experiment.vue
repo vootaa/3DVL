@@ -23,19 +23,14 @@ const repoTitle = getRepoTitleFromPath(route.path)
 <template>
   <div>
     <!-- Orbitron UI Components - positioned on the right side -->
-    <div class="fixed right-5 top-1/2 transform -translate-y-1/2 z-20 flex flex-col items-end gap-4">
+    <div class="fixed right-5 top-1/2 transform -translate-y-1/2 z-20 flex flex-row items-center gap-4">
+      <!-- Code Access Button -->
+      <CodeButton :to="repoPath" :title="repoTitle" variant="floating" size="lg" />
+
       <!-- Nebula Identity Panel - using refactored components -->
       <NebulaPanel variant="compact" />
-      
-      <!-- Code Access Button -->
-      <CodeButton
-        :to="repoPath"
-        :title="repoTitle"
-        variant="floating"
-        size="lg"
-      />
     </div>
-    
+
     <slot />
   </div>
 </template>
