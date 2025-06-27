@@ -588,7 +588,7 @@ onMounted(() => {
     <!-- Import Dialog - positioned aligned with main panel -->
     <div v-if="showImportDialog" class="fixed inset-0 bg-black/80 z-60" @click="closeImportDialog">
       <div class="absolute bg-gray-900 border border-gray-700 rounded-lg p-6 w-96 orbitron-font" 
-           style="right: 40px; bottom: calc(20px + 40px);" @click.stop>
+           style="right: 60px; bottom: calc(20px + 40px);" @click.stop>
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg text-cyan-400">Import Identity to {{ pendingImportType.toUpperCase() }}</h3>
           <button @click="closeImportDialog" class="text-gray-400 hover:text-white text-xl">×</button>
@@ -608,8 +608,8 @@ onMounted(() => {
 
     <!-- PIN Verification Dialog - positioned aligned with main panel -->
     <div v-if="showPinVerification" class="fixed inset-0 bg-black/80 z-60" @click="cancelPinVerification">
-      <div class="absolute bg-gray-900 border border-gray-700 rounded-lg p-6 w-80 orbitron-font" 
-           style="right: 40px; bottom: calc(20px + 40px);" @click.stop>
+      <div class="absolute bg-gray-900 border border-gray-700 rounded-lg p-6 w-96 orbitron-font" 
+           style="right: 60px; bottom: calc(20px + 40px);" @click.stop>
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg text-cyan-400">🔒 Verify PIN</h3>
           <button @click="cancelPinVerification" class="text-gray-400 hover:text-white text-xl">×</button>
