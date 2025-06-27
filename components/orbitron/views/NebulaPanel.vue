@@ -355,19 +355,19 @@ onMounted(() => {
 
         <!-- Identities Tab -->
         <div v-if="selectedTab === 'identities'" class="space-y-3">
-          <!-- Three Identity Slots - 3 Column Grid Layout -->
+          <!-- Three Identity Slots - Adjusted Grid Layout with better proportions -->
           <div v-for="type in IDENTITY_TYPES" :key="type" class="border rounded p-3" :class="getIdentityByType(type)?.is_active ? 'border-cyan-500 bg-cyan-900/20' : 'border-gray-600 bg-gray-800'">
-            <div v-if="getIdentityByType(type)" class="grid grid-cols-3 gap-4 items-start">
-              <!-- Column 1: Identity Type -->
+            <div v-if="getIdentityByType(type)" class="grid grid-cols-[80px_1fr_140px] gap-3 items-start">
+              <!-- Column 1: Identity Type (Fixed width 80px) -->
               <div class="text-xs text-gray-500 uppercase font-medium">{{ type }}</div>
               
-              <!-- Column 2: Identity Info -->
-              <div class="flex flex-col">
-                <div class="text-white text-sm mb-1">{{ getIdentityByType(type)!.nebula_nickname }}</div>
-                <div class="text-xs text-gray-400">{{ getIdentityByType(type)!.nebula_id }}</div>
+              <!-- Column 2: Identity Info (Flexible width) -->
+              <div class="flex flex-col min-w-0">
+                <div class="text-white text-sm mb-1 truncate">{{ getIdentityByType(type)!.nebula_nickname }}</div>
+                <div class="text-xs text-gray-400 truncate">{{ getIdentityByType(type)!.nebula_id }}</div>
               </div>
               
-              <!-- Column 3: Action Buttons -->
+              <!-- Column 3: Action Buttons (Fixed width 140px) -->
               <div class="flex flex-col gap-1">
                 <!-- Top row: Activate button -->
                 <div class="flex justify-end">
@@ -380,14 +380,14 @@ onMounted(() => {
                 </div>
               </div>
             </div>
-            <div v-else class="grid grid-cols-3 gap-4 items-center">
-              <!-- Column 1: Identity Type -->
+            <div v-else class="grid grid-cols-[80px_1fr_140px] gap-3 items-center">
+              <!-- Column 1: Identity Type (Fixed width 80px) -->
               <div class="text-xs text-gray-500 uppercase font-medium">{{ type }}</div>
               
-              <!-- Column 2: No Identity Text -->
+              <!-- Column 2: No Identity Text (Flexible width) -->
               <div class="text-sm text-gray-400">No identity</div>
               
-              <!-- Column 3: Create/Import Buttons -->
+              <!-- Column 3: Create/Import Buttons (Fixed width 140px) -->
               <div class="flex gap-2 justify-end">
                 <button @click="handleCreateIdentity(type)" class="px-2 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded">Create</button>
                 <button @click="openImportDialog" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded">Import</button>
@@ -468,6 +468,9 @@ onMounted(() => {
             <button @click="handleImportIdentity" :disabled="!importData.trim()" class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded text-sm">Import</button>
             <button @click="closeImportDialog" class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm">Cancel</button>
           </div>
+          
+          <!-- Error message display within import dialog -->
+          <div v-if="localError" class="p-3 bg-red-900/20 border border-red-500/50 rounded text-red-400 text-sm">{{ localError }}</div>
         </div>
       </div>
     </div>
@@ -486,6 +489,9 @@ onMounted(() => {
             <button @click="handlePinVerification" :disabled="!pinVerificationInput.trim()" class="flex-1 px-3 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded text-sm">Verify</button>
             <button @click="cancelPinVerification" class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm">Cancel</button>
           </div>
+          
+          <!-- Error message display within PIN verification dialog -->
+          <div v-if="localError" class="p-3 bg-red-900/20 border border-red-500/50 rounded text-red-400 text-sm">{{ localError }}</div>
         </div>
       </div>
     </div>
