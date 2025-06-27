@@ -14,30 +14,31 @@ export function generateNebulaId(): string {
 }
 
 /**
- * Generate a user-friendly Nebula nickname
- * Human-readable rule: Emoji + 3 letters + 2 numbers
- * Format: 🚀ABC12
+ * Generate a user-friendly Nebula nickname from NebulaId
+ * Deterministic conversion rule: Emoji + space + 3 letters + '-' + 2 numbers
+ * Format: 🚀 ABC-12
  */
-export function generateNebulaNickname(): string {
+export function generateNebulaNickname(nebulaId: string): string {
   const emojis = ['🚀', '⭐', '🌟', '💫', '🌌', '🛸', '🔮', '✨', '🌠', '⚡']
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  const numbers = '0123456789'
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
   
-  const emoji = emojis[Math.floor(Math.random() * emojis.length)]
+  // Extract the hex part from NebulaId (after "NEB-")
+  const hexPart = nebulaId.replace('NEB-', '')
   
-  let nickname = emoji
+  // Use the hex digits to deterministically generate nickname components
+  const emojiIndex = parseInt(hexPart.charAt(0), 16) % emojis.length
+  const letter1Index = parseInt(hexPart.charAt(1), 16) % letters.length
+  const letter2Index = parseInt(hexPart.charAt(2), 16) % letters.length
+  const letter3Index = parseInt(hexPart.charAt(3), 16) % letters.length
   
-  // Add 3 letters
-  for (let i = 0; i < 3; i++) {
-    nickname += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
+  // Use remaining hex digits for the 2-digit number (00-99)
+  const numberPart = parseInt(hexPart.substring(4, 6), 16) % 100
   
-  // Add 2 numbers
-  for (let i = 0; i < 2; i++) {
-    nickname += numbers.charAt(Math.floor(Math.random() * numbers.length))
-  }
+  const emoji = emojis[emojiIndex]
+  const threeLetters = letters.charAt(letter1Index) + letters.charAt(letter2Index) + letters.charAt(letter3Index)
+  const twoNumbers = numberPart.toString().padStart(2, '0')
   
-  return nickname
+  return `${emoji} ${threeLetters}-${twoNumbers}`
 }
 
 /**

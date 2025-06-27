@@ -21,9 +21,10 @@ export class IdentityManager {
       throw new Error(`Maximum ${this.maxIdentities} identities allowed`)
     }
 
+    const nebulaId = generateNebulaId()
     const identity: NebulaIdentity = {
-      nebula_id: generateNebulaId(),
-      nebula_nickname: generateNebulaNickname(),
+      nebula_id: nebulaId,
+      nebula_nickname: generateNebulaNickname(nebulaId),
       created_at: Date.now(),
       identity_type: type,
       generation_seed: generateSeed(),
