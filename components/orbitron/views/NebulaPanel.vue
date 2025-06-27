@@ -45,7 +45,7 @@ const importData = ref('')
 const localError = ref('')
 const localSuccess = ref('')
 const showImportDialog = ref(false)
-const pendingActionType = ref<'delete' | 'export' | null>(null)
+const pendingActionType = ref<'delete' | 'export' | 'import' | null>(null)
 const pendingActionId = ref('')
 const pinVerificationInput = ref('')
 const showPinVerification = ref(false)
@@ -113,7 +113,7 @@ const handleActivateIdentity = async (nebulaId: string) => {
   }
 }
 
-const requiresPinVerification = (action: 'delete' | 'export'): boolean => {
+const requiresPinVerification = (action: 'delete' | 'export' | 'import'): boolean => {
   return systemInfo.pin_configured && !systemInfo.system_locked
 }
 
@@ -155,6 +155,13 @@ const pendingImportType = ref<IdentityType>('main')
 const openImportDialog = (targetType: IdentityType) => {
   if (systemInfo.system_locked) {
     showError('System is locked. Please unlock to import identities.')
+    return
+  }
+  
+  if (requiresPinVerification('import')) {
+    pendingActionType.value = 'import'
+    pendingActionId.value = targetType
+    showPinVerification.value = true
     return
   }
   
@@ -210,6 +217,11 @@ const handlePinVerification = async () => {
         await performDeleteIdentity(pendingActionId.value)
       } else if (pendingActionType.value === 'export') {
         await performExportIdentity(pendingActionId.value)
+      } else if (pendingActionType.value === 'import') {
+        // For import, pendingActionId contains the identity type
+        pendingImportType.value = pendingActionId.value as IdentityType
+        clearMessages()
+        showImportDialog.value = true
       }
       
       pendingActionType.value = null
@@ -573,9 +585,10 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Import Dialog - positioned right-aligned with slight left offset -->
-    <div v-if="showImportDialog" class="fixed inset-0 bg-black/80 flex items-center justify-end z-60" @click="closeImportDialog">
-      <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 max-w-md w-full mx-4 mr-16 orbitron-font" @click.stop>
+    <!-- Import Dialog - positioned aligned with main panel -->
+    <div v-if="showImportDialog" class="fixed inset-0 bg-black/80 z-60" @click="closeImportDialog">
+      <div class="absolute bg-gray-900 border border-gray-700 rounded-lg p-6 w-96 orbitron-font" 
+           style="right: 40px; bottom: calc(20px + 40px);" @click.stop>
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg text-cyan-400">Import Identity to {{ pendingImportType.toUpperCase() }}</h3>
           <button @click="closeImportDialog" class="text-gray-400 hover:text-white text-xl">×</button>
@@ -593,9 +606,10 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- PIN Verification Dialog - positioned right-aligned with slight left offset -->
-    <div v-if="showPinVerification" class="fixed inset-0 bg-black/80 flex items-center justify-end z-60" @click="cancelPinVerification">
-      <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 max-w-sm w-full mx-4 mr-16 orbitron-font" @click.stop>
+    <!-- PIN Verification Dialog - positioned aligned with main panel -->
+    <div v-if="showPinVerification" class="fixed inset-0 bg-black/80 z-60" @click="cancelPinVerification">
+      <div class="absolute bg-gray-900 border border-gray-700 rounded-lg p-6 w-80 orbitron-font" 
+           style="right: 40px; bottom: calc(20px + 40px);" @click.stop>
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg text-cyan-400">🔒 Verify PIN</h3>
           <button @click="cancelPinVerification" class="text-gray-400 hover:text-white text-xl">×</button>
