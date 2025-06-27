@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { NebulaIdentity, IdentityType } from '../types'
 import { generateNebulaNickname } from '../utils/generators'
+import { formatTimestamp, formatSyncStatus } from '../utils/format-utils'
 
 import { ref, computed, onMounted, watch } from 'vue'
 import { useOrbitron } from '../composables/useOrbitron'
@@ -423,8 +424,11 @@ onMounted(() => {
           <!-- Three Identity Slots - Adjusted Grid Layout with larger button column -->
           <div v-for="type in IDENTITY_TYPES" :key="type" class="border rounded p-3" :class="getIdentityByType(type)?.is_active ? 'border-cyan-500 bg-cyan-900/20' : 'border-gray-600 bg-gray-800'">
             <div v-if="getIdentityByType(type)" class="grid grid-cols-[80px_1fr_180px] gap-3 items-center">
-              <!-- Column 1: Identity Type (Fixed width 80px) -->
-              <div class="text-xs text-gray-500 uppercase font-medium">{{ type }}</div>
+              <!-- Column 1: Identity Type with Creation Time (Fixed width 80px) -->
+              <div class="flex flex-col items-start">
+                <div class="text-xs text-gray-500 uppercase font-medium">{{ type }}</div>
+                <div class="text-xs text-gray-400 mt-1">{{ formatTimestamp(getIdentityByType(type)!.created_at, false) }}</div>
+              </div>
               
               <!-- Column 2: Identity Info (Flexible width) -->
               <div class="flex flex-col min-w-0">
@@ -526,7 +530,7 @@ onMounted(() => {
         <div v-if="selectedTab === 'sync'" class="space-y-4">
           <h4 class="text-white mb-2">Cosmion Sync</h4>
           <div class="space-y-2">
-            <div class="text-sm text-gray-400">Last Sync: {{ systemInfo.last_sync ? new Date(systemInfo.last_sync).toLocaleString() : 'Never synced' }}</div>
+            <div class="text-sm text-gray-400">Last Sync: {{ formatSyncStatus(systemInfo.last_sync) }}</div>
             <div class="flex justify-end">
               <button @click="handleSync" :disabled="!systemInfo.cosmion_connected" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded">
                 {{ systemInfo.cosmion_connected ? 'Sync Now' : 'Offline' }}
