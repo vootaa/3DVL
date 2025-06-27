@@ -3,7 +3,7 @@ import { reactive } from 'vue'
 import { TextureLoader, AudioLoader } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
-import { Logger } from '../../logger'
+import { Logger } from '../../../utils/logger'
 import { ResourceType } from './constants'
 
 import type { Resource, LoadingStats, LoadingError } from './types'

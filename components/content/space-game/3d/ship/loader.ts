@@ -1,4 +1,4 @@
-import { Logger } from '../../../logger'
+import { Logger } from '../../../../utils/logger'
 import { ResourceLoader } from '../../utils/ResourceLoader'
 
 import type { Ref } from 'vue'

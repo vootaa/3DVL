@@ -4,7 +4,7 @@
  */
 import { ref, type Ref } from 'vue'
 
-import { Logger } from '../../logger'
+import { Logger } from '../../../utils/logger'
 import { GameState } from './constants'
 
 import type { StateTransition, StateChangeHandler } from './types'

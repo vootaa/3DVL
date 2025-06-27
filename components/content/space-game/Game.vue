@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useLoop } from '@tresjs/core'
 
-import { Logger } from '../logger'
+import { Logger } from '../../utils/logger'
 
 import Planets from './3d/Planets.vue'
 import Stars from './3d/Stars.vue'

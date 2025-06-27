@@ -3,7 +3,7 @@
  * Coordinates interactions between the state manager and other systems
  */
 
-import { Logger } from '../../logger'
+import { Logger } from '../../../utils/logger'
 import { POINTS_OF_INTEREST } from '../store/constants'
 import { initializeActions } from '../store/actions'
 import { GameState } from './constants'

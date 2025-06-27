@@ -4,7 +4,7 @@ import { SRGBColorSpace, NoToneMapping, PerspectiveCamera } from 'three'
 import { onMounted, onUnmounted, provide, shallowRef, ref, watch, nextTick } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
 
-import { Logger } from '../logger'
+import { Logger } from '../../utils/logger'
 import { ResourceLoader } from './utils/ResourceLoader'
 import { initializeAudio } from './utils/audio'
 import { GameController } from './core/GameController'

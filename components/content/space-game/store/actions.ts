@@ -1,6 +1,6 @@
 import { Vector3 } from 'three'
 
-import { Logger } from '../../logger'
+import { Logger } from '../../../utils/logger'
 import { GameState } from '../core/constants'
 import { gameStateManager } from '../core/GameStateManager'
 import {

@@ -2,7 +2,7 @@
 import { inject } from 'vue'
 import { Box3, Color, MeshPhongMaterial, Vector3 } from 'three'
 
-import { Logger } from '../../logger'
+import { Logger } from '../../../utils/logger'
 
 import { shaderToySrc } from '../fns/shaderToySrc'
 import { shaderToyLights } from '../fns/shaderToyLights'

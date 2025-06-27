@@ -3,7 +3,7 @@ import { useLoop } from '@tresjs/core'
 import { Group, MeshStandardMaterial, Color, Vector3 } from 'three'
 import { inject, shallowRef, ref, onMounted, computed, watch } from 'vue'
 
-import { Logger } from '../../logger'
+import { Logger } from '../../../utils/logger'
 import { ResourceLoader } from '../utils/ResourceLoader'
 import { GameState } from '../core/constants'
 import { gameStateManager } from '../core/GameStateManager'
