@@ -21,6 +21,11 @@ export class IdentityManager {
       throw new Error(`Maximum ${this.maxIdentities} identities allowed`)
     }
 
+    // Check if identity of this type already exists
+    if (this.identities.find(id => id.identity_type === type)) {
+      throw new Error(`${type} identity already exists`)
+    }
+
     const nebulaId = generateNebulaId()
     const identity: NebulaIdentity = {
       nebula_id: nebulaId,

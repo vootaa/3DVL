@@ -57,6 +57,7 @@ const iconClasses = computed(() => [
     rel="noopener noreferrer"
     :class="containerClasses"
     aria-label="View source code on GitHub"
+    style="font-family: 'Kode Mono', monospace;"
   >
     <span :class="iconClasses" />
   </a>
