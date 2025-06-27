@@ -321,24 +321,25 @@ onMounted(() => {
       {{ buttonText }}
     </button>
 
-    <!-- Panel Overlay - positioned to align bottom-right with button -->
+    <!-- Panel Overlay - positioned to align bottom with button bottom -->
     <div
       v-if="showPanel"
       class="fixed inset-0 z-50"
       @click="showPanel = false"
     >
       <div
-        class="absolute bottom-0 right-5 bg-gray-900 border border-gray-700 rounded-lg p-6 w-[480px] max-h-[70vh] overflow-y-auto shadow-2xl orbitron-font"
+        class="absolute bottom-5 right-5 bg-gray-900 border border-gray-700 rounded-lg p-6 w-[480px] max-h-[70vh] overflow-y-auto shadow-2xl orbitron-font"
         @click.stop
       >
+        <!-- Header -->
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl text-cyan-400 tracking-wider">⚡ Nebula Identity</h2>
           <button @click="showPanel = false" class="text-gray-400 hover:text-white text-xl"> × </button>
         </div>
 
-        <!-- System Info (without title) - Compact 2x2 Grid -->
-        <div class="mb-4 p-3 bg-gray-800 rounded-lg">
-          <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-300">
+        <!-- System Info (without title) - Single Row Layout -->
+        <div class="mb-4 p-2 bg-gray-800 rounded-lg">
+          <div class="flex items-center justify-between text-xs text-gray-300 gap-4">
             <div>Active: <span class="text-white">{{ getActiveIdentity ? getActiveIdentity.nebula_nickname : 'None' }}</span></div>
             <div>Identities: <span class="text-white">{{ identities.length }}/3</span></div>
             <div>PIN: <span :class="systemInfo.pin_configured ? 'text-green-400' : 'text-yellow-400'">{{ systemInfo.pin_configured ? 'Enable' : 'Disable' }}</span></div>
@@ -428,7 +429,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Sync Tab -->
+        <!-- Sync Tab with System Information -->
         <div v-if="selectedTab === 'sync'" class="space-y-4">
           <h4 class="text-white mb-2">Cosmion Sync</h4>
           <div class="space-y-2">
@@ -437,32 +438,30 @@ onMounted(() => {
               {{ systemInfo.cosmion_connected ? 'Sync Now' : 'Offline' }}
             </button>
           </div>
+          
+          <!-- System Information from About tab -->
+          <div class="flex items-center justify-between text-sm p-2 bg-gray-800 rounded">
+            <div><span class="text-gray-400">Growth Events:</span> <span class="text-cyan-300">{{ systemInfo.total_events }}</span></div>
+            <div><span class="text-gray-400">Status:</span> <span :class="systemInfo.initialized ? 'text-green-400' : 'text-red-400'">{{ systemInfo.initialized ? 'Ready' : 'Not Initialized' }}</span></div>
+          </div>
         </div>
 
-        <!-- About Tab with Identity Type Descriptions -->
+        <!-- About Tab with Identity Type Descriptions Only -->
         <div v-if="selectedTab === 'about'" class="space-y-4">
-          <!-- System Information -->
-          <div class="grid grid-cols-2 gap-3 text-sm mb-4">
-            <div><div class="text-gray-400">Version</div><div class="text-cyan-300">{{ systemInfo.version }}</div></div>
-            <div><div class="text-gray-400">Total Identities</div><div class="text-cyan-300">{{ systemInfo.total_identities }}</div></div>
-            <div><div class="text-gray-400">Growth Events</div><div class="text-cyan-300">{{ systemInfo.total_events }}</div></div>
-            <div><div class="text-gray-400">Initialization</div><div :class="systemInfo.initialized ? 'text-green-400' : 'text-red-400'">{{ systemInfo.initialized ? 'Ready' : 'Not Initialized' }}</div></div>
-          </div>
-
-          <!-- Identity Types Information -->
-          <div class="border-t border-gray-700 pt-4">
+          <!-- Identity Types Information - 3 rows, 2 columns -->
+          <div>
             <h4 class="text-white mb-3 text-sm font-medium">Identity Types</h4>
-            <div class="space-y-3 text-xs">
-              <div class="bg-gray-800 p-3 rounded">
-                <div class="text-cyan-300 font-medium mb-1">MAIN</div>
+            <div class="grid grid-cols-1 gap-2 text-xs">
+              <div class="grid grid-cols-[60px_1fr] gap-3 bg-gray-800 p-2 rounded items-start">
+                <div class="text-cyan-300 font-medium">MAIN</div>
                 <div class="text-gray-400">Primary identity for production use. Recommended for serious experiments and data collection.</div>
               </div>
-              <div class="bg-gray-800 p-3 rounded">
-                <div class="text-yellow-300 font-medium mb-1">TEST</div>
+              <div class="grid grid-cols-[60px_1fr] gap-3 bg-gray-800 p-2 rounded items-start">
+                <div class="text-yellow-300 font-medium">TEST</div>
                 <div class="text-gray-400">Testing identity for development and experimentation. Safe for trials and debugging.</div>
               </div>
-              <div class="bg-gray-800 p-3 rounded">
-                <div class="text-purple-300 font-medium mb-1">PRIVATE</div>
+              <div class="grid grid-cols-[60px_1fr] gap-3 bg-gray-800 p-2 rounded items-start">
+                <div class="text-purple-300 font-medium">PRIVATE</div>
                 <div class="text-gray-400">Private identity with enhanced privacy settings. For sensitive or personal experiments.</div>
               </div>
             </div>
