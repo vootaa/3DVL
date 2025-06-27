@@ -62,7 +62,7 @@ const handleSave = () => {
 </script>
 
 <template>
-  <div class="nebula-display-container">
+  <div class="nebula-display-container orbitron-font">
     <div 
       :class="containerClasses"
       :style="nebulaStyle"
@@ -78,8 +78,8 @@ const handleSave = () => {
         class="absolute inset-0 flex items-center justify-center bg-black/30"
       >
         <div class="text-center text-white text-shadow-glow">
-          <div class="text-xs font-mono tracking-wider">{{ formatNebulaId(currentNebula.id) }}</div>
-          <div class="text-[10px] opacity-75 font-mono">{{ currentNebula.pattern.toUpperCase() }}</div>
+          <div class="text-xs tracking-wider">{{ formatNebulaId(currentNebula.id) }}</div>
+          <div class="text-[10px] opacity-75">{{ currentNebula.pattern.toUpperCase() }}</div>
         </div>
       </div>
       
@@ -102,13 +102,13 @@ const handleSave = () => {
     
     <!-- Nebula details -->
     <div v-if="showInfo && currentNebula" class="mt-4 text-center">
-      <div class="text-sm text-cyan-300 font-mono tracking-wider">
+      <div class="text-sm text-cyan-300 tracking-wider">
         {{ formatNebulaId(currentNebula.id) }}
       </div>
-      <div class="text-xs text-gray-400 mt-1 font-mono">
+      <div class="text-xs text-gray-400 mt-1">
         {{ currentNebula.pattern }} • {{ Math.round(currentNebula.intensity * 100) }}% intensity
       </div>
-      <div class="text-xs text-gray-500 font-mono">
+      <div class="text-xs text-gray-500">
         {{ formatTimestamp(currentNebula.created) }}
       </div>
     </div>
@@ -116,6 +116,10 @@ const handleSave = () => {
 </template>
 
 <style scoped>
+.orbitron-font {
+  font-family: 'Kode Mono', monospace;
+}
+
 .text-shadow-glow {
   text-shadow: 0 0 10px currentColor;
 }
@@ -136,7 +140,6 @@ const handleSave = () => {
   100% { transform: translateX(-200px); }
 }
 
-/* Container styling */
 .nebula-display-container {
   display: flex;
   flex-direction: column;

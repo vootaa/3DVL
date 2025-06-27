@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-// Local type definition to resolve missing import from `core/types`
 interface BadgeVariant {
   name: string
   class: string
@@ -63,12 +62,16 @@ const badgeClasses = computed(() => {
 </script>
 
 <template>
-  <span :class="badgeClasses">
+  <span :class="badgeClasses" class="orbitron-font">
     <slot>{{ selectedVariant.description || selectedVariant.name }}</slot>
   </span>
 </template>
 
 <style scoped>
+.orbitron-font {
+  font-family: 'Kode Mono', monospace;
+}
+
 /* All styling is handled by Tailwind utility classes. */
 .inline-flex {
   transition-duration: 200ms;
