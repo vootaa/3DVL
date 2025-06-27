@@ -6,7 +6,7 @@ import NebulaPanel from '~/components/orbitron/views/NebulaPanel.vue'
 <template>
   <div>
     <!-- Orbitron UI Components - positioned on the right side -->
-    <div class="fixed right-5 top-1/2 transform -translate-y-1/2 z-20 flex flex-row items-center gap-4">
+    <div class="fixed right-5 bottom-5 z-20 flex flex-row items-center gap-4">
       <!-- Code Access Button -->
       <CodeButton variant="floating" size="lg" />
 
@@ -18,46 +18,4 @@ import NebulaPanel from '~/components/orbitron/views/NebulaPanel.vue'
   </div>
 </template>
 
-<style scoped>
-/* Utility classes for positioning */
-.fixed {
-  position: fixed;
-}
-
-.right-5 {
-  right: 1.25rem;
-}
-
-.top-1\/2 {
-  top: 50%;
-}
-
-.transform {
-  transform: var(--tw-transform);
-}
-
-.-translate-y-1\/2 {
-  --tw-translate-y: -50%;
-  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
-}
-
-.z-20 {
-  z-index: 20;
-}
-
-.flex {
-  display: flex;
-}
-
-.flex-col {
-  flex-direction: column;
-}
-
-.items-end {
-  align-items: flex-end;
-}
-
-.gap-4 {
-  gap: 1rem;
-}
-</style>
+<style scoped></style>
