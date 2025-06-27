@@ -193,6 +193,23 @@ const cancelPinVerification = () => {
 const handleImportIdentity = async () => {
   try {
     clearMessages()
+    
+    // Parse and validate the imported identity
+    let parsedIdentity
+    try {
+      parsedIdentity = JSON.parse(importData.value)
+    } catch (parseError) {
+      showError('Invalid JSON format')
+      return
+    }
+    
+    // Check if NebulaID already exists in any identity
+    const existingIdentity = identities.value.find(id => id.nebula_id === parsedIdentity.nebula_id)
+    if (existingIdentity) {
+      showError(`Identity with ID ${parsedIdentity.nebula_id} already exists as ${existingIdentity.identity_type} identity`)
+      return
+    }
+    
     await importIdentity(importData.value)
     importData.value = ''
     showImportDialog.value = false
@@ -311,13 +328,23 @@ onMounted(() => {
       @click="showPanel = false"
     >
       <div
-        class="absolute bottom-20 right-5 bg-gray-900 border border-gray-700 rounded-lg p-6 w-96 max-h-[70vh] overflow-y-auto shadow-2xl"
+        class="absolute bottom-20 right-5 bg-gray-900 border border-gray-700 rounded-lg p-6 w-[480px] max-h-[70vh] overflow-y-auto shadow-2xl"
         @click.stop
         style="font-family: 'Kode Mono', monospace;"
       >
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl text-cyan-400 tracking-wider" style="font-family: 'Kode Mono', monospace;">⚡ Nebula Identity</h2>
           <button @click="showPanel = false" class="text-gray-400 hover:text-white text-xl" style="font-family: 'Kode Mono', monospace;"> × </button>
+        </div>
+
+        <!-- System Info (without title) - Compact 2x2 Grid -->
+        <div class="mb-4 p-3 bg-gray-800 rounded-lg">
+          <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-300" style="font-family: 'Kode Mono', monospace;">
+            <div>Active: <span class="text-white">{{ getActiveIdentity ? getActiveIdentity.nebula_nickname : 'None' }}</span></div>
+            <div>Identities: <span class="text-white">{{ identities.length }}/3</span></div>
+            <div>PIN: <span :class="systemInfo.pin_configured ? 'text-green-400' : 'text-yellow-400'">{{ systemInfo.pin_configured ? '✅' : '❌' }}</span></div>
+            <div>Cosmion: <span :class="systemInfo.cosmion_connected ? 'text-green-400' : 'text-red-400'">{{ systemInfo.cosmion_connected ? '🟢' : '🔴' }}</span></div>
+          </div>
         </div>
 
         <!-- Navigation Tabs -->
@@ -341,10 +368,16 @@ onMounted(() => {
                   <span class="text-xs text-gray-500" style="font-family: 'Kode Mono', monospace;">{{ type }}</span>
                 </div>
               </div>
-              <div class="flex gap-2 ml-3">
-                <button v-if="!getIdentityByType(type)!.is_active" @click="handleActivateIdentity(getIdentityByType(type)!.nebula_id)" class="px-2 py-1 text-xs bg-cyan-600 hover:bg-cyan-700 text-white rounded" style="font-family: 'Kode Mono', monospace;">Activate</button>
-                <button @click="handleExportIdentity(getIdentityByType(type)!.nebula_id)" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded" style="font-family: 'Kode Mono', monospace;">Export</button>
-                <button @click="handleDeleteIdentity(getIdentityByType(type)!.nebula_id)" class="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded" style="font-family: 'Kode Mono', monospace;">Delete</button>
+              <div class="flex flex-col gap-1 ml-3">
+                <!-- Top row: Activate button -->
+                <div class="flex justify-end">
+                  <button v-if="!getIdentityByType(type)!.is_active" @click="handleActivateIdentity(getIdentityByType(type)!.nebula_id)" class="px-2 py-1 text-xs bg-cyan-600 hover:bg-cyan-700 text-white rounded" style="font-family: 'Kode Mono', monospace;">Activate</button>
+                </div>
+                <!-- Bottom row: Export and Delete buttons -->
+                <div class="flex gap-1">
+                  <button @click="handleExportIdentity(getIdentityByType(type)!.nebula_id)" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded" style="font-family: 'Kode Mono', monospace;">Export</button>
+                  <button @click="handleDeleteIdentity(getIdentityByType(type)!.nebula_id)" class="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded" style="font-family: 'Kode Mono', monospace;">Delete</button>
+                </div>
               </div>
             </div>
             <div v-else class="flex justify-between items-center">
