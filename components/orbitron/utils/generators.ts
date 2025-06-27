@@ -19,7 +19,12 @@ export function generateNebulaId(): string {
  * Format: 🚀 ABC-12
  */
 export function generateNebulaNickname(nebulaId: string): string {
-  const emojis = ['🚀', '⭐', '🌟', '💫', '🌌', '🛸', '🔮', '✨', '🌠', '⚡']
+  const emojis = [
+    '🚀', '⭐', '🌟', '💫', '🌌', '🛸', '🔮', '✨', '🌠', '⚡',
+    '🌙', '☄️', '🪐', '🌕', '🌖', '🌗', '🌘', '🌑', '🌒', '🌓',
+    '🌔', '🛰️', '👽', '🌍', '🌎', '🌏', '☀️', '🔥', '💎', '🎇',
+    '🎆', '💥', '⭐', '🌃', '🎭', '🎨', '🔬', '🧪', '⚛️', '🧬'
+  ]
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
   
   // Extract the hex part from NebulaId (after "NEB-")
