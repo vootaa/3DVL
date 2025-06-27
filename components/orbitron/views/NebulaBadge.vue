@@ -70,7 +70,7 @@ const badgeClasses = computed(() => {
 
 <style scoped>
 /* All styling is handled by Tailwind utility classes. */
-.duration-200 {
+.inline-flex {
   transition-duration: 200ms;
 }
 

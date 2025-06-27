@@ -3,7 +3,6 @@ import type { NebulaIdentity, IdentityType } from '../types'
 
 import { ref, computed, onMounted, watch } from 'vue'
 import { useOrbitron } from '../composables/useOrbitron'
-import NebulaBadge from './NebulaBadge.vue'
 
 interface Props {
   variant?: 'compact' | 'full'
@@ -15,7 +14,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 const { 
   isInitialized, 
-  isLoading, 
   error, 
   systemInfo, 
   initialize, 
@@ -32,9 +30,12 @@ const {
   syncToCosmion
 } = useOrbitron()
 
+const TABS = ['identities', 'pin', 'sync', 'system'] as const
+type Tab = typeof TABS[number]
+
 const identities = ref<NebulaIdentity[]>([])
 const showPanel = ref(false)
-const selectedTab = ref<'identities' | 'pin' | 'sync' | 'system'>('identities')
+const selectedTab = ref<Tab>('identities')
 const newIdentityType = ref<IdentityType>('main')
 const pinInput = ref('')
 const pinForRemovalInput = ref('')
@@ -73,7 +74,7 @@ const initializeSystem = async () => {
     }
     await loadIdentities()
   } catch (err: any) {
-    showError('System initialization failed')
+    showError(err.message || 'System initialization failed')
   }
 }
 
@@ -255,7 +256,7 @@ onMounted(() => {
 
         <!-- Navigation Tabs -->
         <div class="flex space-x-1 mb-4 bg-gray-800/30 rounded p-1">
-          <button v-for="tab in ['identities', 'pin', 'sync', 'system']" :key="tab" @click="selectedTab = tab as 'identities' | 'pin' | 'sync' | 'system'" :class="['px-3 py-2 text-sm rounded transition-all duration-200 font-mono tracking-widest flex-1', selectedTab === tab ? 'bg-cyan-500/20 text-cyan-300 shadow-glow' : 'text-gray-400 hover:text-cyan-300 hover:bg-cyan-500/10']">
+          <button v-for="tab in TABS" :key="tab" @click="selectedTab = tab" :class="['px-3 py-2 text-sm rounded transition-all duration-200 font-mono tracking-widest flex-1', selectedTab === tab ? 'bg-cyan-500/20 text-cyan-300 shadow-glow' : 'text-gray-400 hover:text-cyan-300 hover:bg-cyan-500/10']">
             {{ tab.toUpperCase() }}
           </button>
         </div>

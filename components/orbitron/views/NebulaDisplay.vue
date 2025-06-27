@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useNebula } from '../composables/useNebula'
 import { formatNebulaId, formatTimestamp } from '../utils/format-utils'
 
@@ -22,6 +22,8 @@ const {
   generateNebula, 
   saveNebula 
 } = useNebula(props.seed)
+
+const isSaved = ref(false)
 
 const sizeClasses = computed(() => {
   const sizes = {
@@ -53,13 +55,14 @@ const handleGenerate = () => {
 const handleSave = () => {
   if (currentNebula.value) {
     saveNebula()
-    // Optional: Add user feedback on save
+    isSaved.value = true
+    setTimeout(() => { isSaved.value = false }, 2000)
   }
 }
 </script>
 
 <template>
-  <div class="nebula-display-container flex flex-col items-center">
+  <div class="nebula-display-container">
     <div 
       :class="containerClasses"
       :style="nebulaStyle"
@@ -87,10 +90,12 @@ const handleSave = () => {
       >
         <button
           @click.stop="handleSave"
-          class="p-1.5 rounded-full bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-300"
-          title="Save Nebula"
+          class="p-1.5 rounded-full bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-300 disabled:opacity-50"
+          :title="isSaved ? 'Saved!' : 'Save Nebula'"
+          :disabled="isSaved"
         >
-          <span class="i-carbon-save block w-4 h-4"></span>
+          <span v-if="!isSaved" class="i-carbon-save block w-4 h-4"></span>
+          <span v-else class="i-carbon-checkmark block w-4 h-4"></span>
         </button>
       </div>
     </div>
