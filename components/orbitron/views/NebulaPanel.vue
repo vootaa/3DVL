@@ -173,7 +173,21 @@ const performExportIdentity = async (nebulaId: string) => {
   try {
     clearMessages()
     const data = await exportIdentity(nebulaId)
-    await navigator.clipboard.writeText(data)
+    
+    // Parse the exported data and remove nickname
+    let exportedIdentity
+    try {
+      exportedIdentity = JSON.parse(data)
+      if (exportedIdentity.nebula_nickname) {
+        delete exportedIdentity.nebula_nickname
+      }
+    } catch (parseError) {
+      // If parsing fails, use original data
+      exportedIdentity = data
+    }
+    
+    const cleanedData = typeof exportedIdentity === 'string' ? exportedIdentity : JSON.stringify(exportedIdentity)
+    await navigator.clipboard.writeText(cleanedData)
     showSuccess('Identity copied to clipboard!')
   } catch (err: any) {
     showError('Export failed')
@@ -219,8 +233,29 @@ const handleImportIdentity = async () => {
     try {
       parsedIdentity = JSON.parse(importData.value)
     } catch (parseError) {
-      showError('Invalid JSON format')
+      showError('Invalid JSON format. Please check the identity data.')
       return
+    }
+    
+    // Validate required fields
+    if (!parsedIdentity.nebula_id) {
+      showError('Missing required field: nebula_id')
+      return
+    }
+    
+    if (!parsedIdentity.identity_type) {
+      showError('Missing required field: identity_type')
+      return
+    }
+    
+    if (!['main', 'test', 'private'].includes(parsedIdentity.identity_type)) {
+      showError('Invalid identity_type. Must be: main, test, or private')
+      return
+    }
+    
+    // Remove nickname from imported data if present
+    if (parsedIdentity.nebula_nickname) {
+      delete parsedIdentity.nebula_nickname
     }
     
     // Check if NebulaID already exists in any identity
@@ -230,13 +265,23 @@ const handleImportIdentity = async () => {
       return
     }
     
-    await importIdentity(importData.value)
+    await importIdentity(JSON.stringify(parsedIdentity))
     importData.value = ''
     showImportDialog.value = false
     await loadIdentities()
     showSuccess('Identity imported successfully!')
   } catch (err: any) {
-    showError(err.message || 'Import failed')
+    // Provide more specific error messages
+    const errorMessage = err.message || 'Import failed'
+    if (errorMessage.includes('Invalid identity format')) {
+      showError('Identity format is invalid. Please check the JSON structure.')
+    } else if (errorMessage.includes('already exists')) {
+      showError('An identity with this ID already exists.')
+    } else if (errorMessage.includes('permission')) {
+      showError('Permission denied. System may be locked.')
+    } else {
+      showError(`Import failed: ${errorMessage}`)
+    }
   }
 }
 
