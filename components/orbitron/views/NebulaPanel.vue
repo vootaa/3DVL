@@ -116,6 +116,11 @@ const requiresPinVerification = (action: 'delete' | 'export'): boolean => {
 }
 
 const handleDeleteIdentity = async (nebulaId: string) => {
+  if (systemInfo.system_locked) {
+    showError('System is locked. Please unlock to delete identities.')
+    return
+  }
+  
   if (requiresPinVerification('delete')) {
     pendingActionType.value = 'delete'
     pendingActionId.value = nebulaId
@@ -128,6 +133,11 @@ const handleDeleteIdentity = async (nebulaId: string) => {
 }
 
 const handleExportIdentity = async (nebulaId: string) => {
+  if (systemInfo.system_locked) {
+    showError('System is locked. Please unlock to export identities.')
+    return
+  }
+  
   if (requiresPinVerification('export')) {
     pendingActionType.value = 'export'
     pendingActionId.value = nebulaId
@@ -136,6 +146,16 @@ const handleExportIdentity = async (nebulaId: string) => {
   }
   
   await performExportIdentity(nebulaId)
+}
+
+const openImportDialog = () => {
+  if (systemInfo.system_locked) {
+    showError('System is locked. Please unlock to import identities.')
+    return
+  }
+  
+  clearMessages()
+  showImportDialog.value = true
 }
 
 const performDeleteIdentity = async (nebulaId: string) => {
@@ -218,11 +238,6 @@ const handleImportIdentity = async () => {
   } catch (err: any) {
     showError(err.message || 'Import failed')
   }
-}
-
-const openImportDialog = () => {
-  clearMessages()
-  showImportDialog.value = true
 }
 
 const closeImportDialog = () => {
@@ -373,9 +388,28 @@ onMounted(() => {
               <!-- Column 3: Action Buttons (Fixed width 180px) - Single row -->
               <div class="flex gap-1 justify-end items-center">
                 <span v-if="getIdentityByType(type)!.is_active" class="text-green-400 text-lg mr-2">☑️</span>
-                <button v-if="!getIdentityByType(type)!.is_active" @click="handleActivateIdentity(getIdentityByType(type)!.nebula_id)" class="px-2 py-1 text-xs bg-cyan-600 hover:bg-cyan-700 text-white rounded">Activate</button>
-                <button @click="handleExportIdentity(getIdentityByType(type)!.nebula_id)" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded">Export</button>
-                <button @click="handleDeleteIdentity(getIdentityByType(type)!.nebula_id)" class="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded">Delete</button>
+                <button 
+                  v-if="!getIdentityByType(type)!.is_active" 
+                  @click="handleActivateIdentity(getIdentityByType(type)!.nebula_id)" 
+                  :disabled="systemInfo.system_locked"
+                  :class="systemInfo.system_locked ? 'px-2 py-1 text-xs bg-gray-600 text-gray-400 rounded cursor-not-allowed' : 'px-2 py-1 text-xs bg-cyan-600 hover:bg-cyan-700 text-white rounded'"
+                >
+                  Activate
+                </button>
+                <button 
+                  @click="handleExportIdentity(getIdentityByType(type)!.nebula_id)" 
+                  :disabled="systemInfo.system_locked"
+                  :class="systemInfo.system_locked ? 'px-2 py-1 text-xs bg-gray-600 text-gray-400 rounded cursor-not-allowed' : 'px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded'"
+                >
+                  Export
+                </button>
+                <button 
+                  @click="handleDeleteIdentity(getIdentityByType(type)!.nebula_id)" 
+                  :disabled="systemInfo.system_locked"
+                  :class="systemInfo.system_locked ? 'px-2 py-1 text-xs bg-gray-600 text-gray-400 rounded cursor-not-allowed' : 'px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded'"
+                >
+                  Delete
+                </button>
               </div>
             </div>
             <div v-else class="grid grid-cols-[80px_1fr_180px] gap-3 items-center">
@@ -387,8 +421,20 @@ onMounted(() => {
               
               <!-- Column 3: Create/Import Buttons (Fixed width 180px) -->
               <div class="flex gap-2 justify-end">
-                <button @click="handleCreateIdentity(type)" class="px-2 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded">Create</button>
-                <button @click="openImportDialog" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded">Import</button>
+                <button 
+                  @click="handleCreateIdentity(type)" 
+                  :disabled="systemInfo.system_locked"
+                  :class="systemInfo.system_locked ? 'px-2 py-1 text-xs bg-gray-600 text-gray-400 rounded cursor-not-allowed' : 'px-2 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded'"
+                >
+                  Create
+                </button>
+                <button 
+                  @click="openImportDialog" 
+                  :disabled="systemInfo.system_locked"
+                  :class="systemInfo.system_locked ? 'px-2 py-1 text-xs bg-gray-600 text-gray-400 rounded cursor-not-allowed' : 'px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded'"
+                >
+                  Import
+                </button>
               </div>
             </div>
           </div>
