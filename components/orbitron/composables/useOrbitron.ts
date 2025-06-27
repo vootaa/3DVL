@@ -82,9 +82,9 @@ export function useOrbitron(config?: Partial<OrbitronConfig>) {
     return success
   }
 
-  const importIdentity = async (identityJson: string): Promise<NebulaIdentity> => {
+  const importIdentity = async (identityJson: string, targetType: IdentityType): Promise<NebulaIdentity> => {
     if (!orbitronInstance) throw new Error('Orbitron not initialized')
-    const identity = await orbitronInstance.importIdentity(identityJson)
+    const identity = await orbitronInstance.importIdentity(identityJson, targetType)
     updateSystemInfo()
     return identity
   }

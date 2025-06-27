@@ -1,7 +1,7 @@
-import type { NebulaIdentity, IdentityType } from '../types'
+import type { NebulaIdentity, IdentityType, ExportedIdentityData } from '../types'
 import type { StorageEngine } from './storage-engine'
 
-import { generateNebulaId, generateNebulaNickname, generateSeed } from '../utils/generators'
+import { generateNebulaId, generateSeed, generateValidationHash, verifyNebulaIdIntegrity } from '../utils/generators'
 import { Logger } from '../../utils/logger'
 
 export class IdentityManager {
@@ -14,7 +14,7 @@ export class IdentityManager {
   }
 
   /**
-   * Create a new Nebula identity with new terminology
+   * Create a new Nebula identity
    */
   async createIdentity(type: IdentityType = 'main'): Promise<NebulaIdentity> {
     if (this.identities.length >= this.maxIdentities) {
@@ -27,12 +27,14 @@ export class IdentityManager {
     }
 
     const nebulaId = generateNebulaId()
+    const createdAt = Date.now()
+    const generationSeed = generateSeed()
+    
     const identity: NebulaIdentity = {
       nebula_id: nebulaId,
-      nebula_nickname: generateNebulaNickname(nebulaId),
-      created_at: Date.now(),
+      created_at: createdAt,
       identity_type: type,
-      generation_seed: generateSeed(),
+      generation_seed: generationSeed,
       is_active: false
     }
 
@@ -44,7 +46,7 @@ export class IdentityManager {
     }
 
     await this.saveToStorage()
-    Logger.log('IdentityManager', `Created new identity: ${identity.nebula_nickname} (${identity.nebula_id})`)
+    Logger.log('IdentityManager', `Created new identity: ${identity.nebula_id} (${type})`)
     
     return identity
   }
@@ -72,7 +74,7 @@ export class IdentityManager {
     this.activeIdentityId = nebulaId
     
     await this.saveToStorage()
-    Logger.log('IdentityManager', `Activated identity: ${identity.nebula_nickname}`)
+    Logger.log('IdentityManager', `Activated identity: ${identity.nebula_id}`)
     
     return true
   }
@@ -107,31 +109,64 @@ export class IdentityManager {
   }
 
   /**
-   * Import identity from JSON
+   * Import identity from JSON - 验证完整性
    */
-  async importIdentity(identityJson: string): Promise<NebulaIdentity> {
+  async importIdentity(identityJson: string, targetType: IdentityType): Promise<NebulaIdentity> {
     try {
-      const identity: NebulaIdentity = JSON.parse(identityJson)
+      const exportedData: ExportedIdentityData = JSON.parse(identityJson)
       
-      // Validate structure
-      if (!identity.nebula_id || !identity.nebula_nickname || !identity.generation_seed) {
-        throw new Error('Invalid identity format')
+      // 1. 验证结构
+      if (!exportedData.nebula_id || !exportedData.generation_seed || !exportedData.validation_hash) {
+        throw new Error('Invalid identity format - missing required fields')
       }
 
-      // Check for duplicates
-      if (this.identities.find(id => id.nebula_id === identity.nebula_id)) {
+      // 2. 验证完整性
+      if (!verifyNebulaIdIntegrity(
+        exportedData.nebula_id, 
+        exportedData.created_at, 
+        exportedData.generation_seed, 
+        exportedData.validation_hash
+      )) {
+        throw new Error('Identity verification failed - invalid or forged identity')
+      }
+
+      // 3. 验证哈希
+      const expectedHash = await generateValidationHash(
+        exportedData.nebula_id, 
+        exportedData.created_at, 
+        exportedData.generation_seed
+      )
+      if (expectedHash !== exportedData.validation_hash) {
+        throw new Error('Identity verification failed - hash mismatch')
+      }
+
+      // 4. 检查重复
+      if (this.identities.find(id => id.nebula_id === exportedData.nebula_id)) {
         throw new Error('Identity already exists')
+      }
+
+      // 5. 检查类型位置是否已占用
+      if (this.identities.find(id => id.identity_type === targetType)) {
+        throw new Error(`${targetType} identity slot already occupied`)
       }
 
       if (this.identities.length >= this.maxIdentities) {
         throw new Error(`Maximum ${this.maxIdentities} identities allowed`)
       }
 
-      identity.is_active = false
+      // 6. 创建身份（identity_type由导入位置决定）
+      const identity: NebulaIdentity = {
+        nebula_id: exportedData.nebula_id,
+        created_at: exportedData.created_at,
+        identity_type: targetType, // 由导入按钮位置决定
+        generation_seed: exportedData.generation_seed,
+        is_active: false
+      }
+
       this.identities.push(identity)
       await this.saveToStorage()
       
-      Logger.log('IdentityManager', `Imported identity: ${identity.nebula_nickname}`)
+      Logger.log('IdentityManager', `Imported identity: ${identity.nebula_id} as ${targetType}`)
       return identity
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -142,14 +177,26 @@ export class IdentityManager {
   /**
    * Export identity to JSON
    */
-  exportIdentity(nebulaId: string): string {
+  async exportIdentity(nebulaId: string): Promise<string> {
     const identity = this.identities.find(id => id.nebula_id === nebulaId)
     if (!identity) {
       throw new Error('Identity not found')
     }
 
-    // Create export copy without active status
-    const exportData = { ...identity, is_active: false }
+    // 生成验证哈希
+    const validationHash = await generateValidationHash(
+      identity.nebula_id,
+      identity.created_at,
+      identity.generation_seed
+    )
+
+    const exportData: ExportedIdentityData = {
+      nebula_id: identity.nebula_id,
+      created_at: identity.created_at,
+      generation_seed: identity.generation_seed,
+      validation_hash: validationHash
+    }
+
     return JSON.stringify(exportData, null, 2)
   }
 
@@ -157,7 +204,7 @@ export class IdentityManager {
     const data = {
       identities: this.identities,
       activeIdentityId: this.activeIdentityId,
-      version: '2.0.0'
+      version: '0.2.1'
     }
     
     await this.storage.set('orbitron_identities', data)

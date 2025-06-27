@@ -1,5 +1,7 @@
+import { generateHash } from './hash-utils'
+
 /**
- * Generate a unique Nebula ID
+ * Generate a unique Nebula ID with enhanced security
  * Format: NEB-A1B2C3D4 (8 hexadecimal digits)
  */
 export function generateNebulaId(): string {
@@ -62,4 +64,37 @@ export function generateSessionId(): string {
   const timestamp = Date.now().toString(36)
   const randomPart = Math.random().toString(36).substring(2, 8)
   return `SES-${timestamp}-${randomPart}`.toUpperCase()
+}
+
+/**
+ * Generate validation hash for identity verification
+ */
+export async function generateValidationHash(nebulaId: string, createdAt: number, seed: string): Promise<string> {
+  const combined = `${nebulaId}:${createdAt}:${seed}`
+  return await generateHash(combined)
+}
+
+/**
+ * Verify if a Nebula ID is valid based on its generation constraints
+ */
+export function verifyNebulaIdIntegrity(nebulaId: string, createdAt: number, seed: string, validationHash: string): boolean {
+  // 1. Verify format
+  if (!/^NEB-[A-F0-9]{8}$/.test(nebulaId)) {
+    return false
+  }
+  
+  // 2. Verify timestamp reasonability
+  const now = Date.now()
+  const oneYearAgo = now - (365 * 24 * 60 * 60 * 1000)
+  if (createdAt > now || createdAt < oneYearAgo) {
+    return false
+  }
+  
+  // 3. Verify seed format
+  if (!/^[a-f0-9]{64}$/.test(seed)) {
+    return false
+  }
+  
+  // 4. Verify hash consistency (requires async verification)
+  return true // Simplified example, actual implementation needs async hash verification
 }

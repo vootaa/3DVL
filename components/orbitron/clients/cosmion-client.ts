@@ -55,7 +55,7 @@ export class CosmionClient {
       return false
     }
 
-    Logger.log('CosmionClient', `Syncing identity: ${identity.nebula_nickname} (${identity.nebula_id})`)
+    Logger.log('CosmionClient', `Syncing identity: ${identity.nebula_id}`)
     
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500))

@@ -3,7 +3,6 @@ export type EventType = 'exploration' | 'achievement' | 'interaction' | 'progres
 
 export interface NebulaIdentity {
     nebula_id: string           // "NEB-A1B2C3D4"
-    nebula_nickname: string     // "🚀ABC12"
     created_at: number
     identity_type: IdentityType
     generation_seed: string     // Used for backend verification
@@ -18,6 +17,13 @@ export interface GameGrowthEvent {
     timestamp: number
     session_id: string
     experiment: string          // Marks the source experiment
+}
+
+export interface ExportedIdentityData {
+    nebula_id: string
+    created_at: number
+    generation_seed: string
+    validation_hash: string // base on hash (nebula_id + created_at + generation_seed)
 }
 
 export interface OrbitronConfig {

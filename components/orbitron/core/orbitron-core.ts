@@ -66,14 +66,14 @@ export class OrbitronCore {
         return await this.identityManager.deleteIdentity(nebulaId)
     }
 
-    async importIdentity(identityJson: string): Promise<NebulaIdentity> {
+    async importIdentity(identityJson: string, targetType: IdentityType): Promise<NebulaIdentity> {
         if (this.isSystemLocked()) {
             throw new Error('System is locked')
         }
-        return await this.identityManager.importIdentity(identityJson)
+        return await this.identityManager.importIdentity(identityJson, targetType)
     }
 
-    exportIdentity(nebulaId: string): string {
+    exportIdentity(nebulaId: string): Promise<string> {
         return this.identityManager.exportIdentity(nebulaId)
     }
 

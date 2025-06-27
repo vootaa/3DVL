@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NebulaIdentity, IdentityType } from '../types'
+import { generateNebulaNickname } from '../utils/generators'
 
 import { ref, computed, onMounted, watch } from 'vue'
 import { useOrbitron } from '../composables/useOrbitron'
@@ -348,10 +349,14 @@ const getActiveIdentity = computed(() => {
   return identities.value.find(id => id.is_active)
 })
 
+const getDisplayNickname = (identity: NebulaIdentity): string => {
+  return generateNebulaNickname(identity.nebula_id)
+}
+
 const buttonText = computed(() => {
   if (systemInfo.system_locked) return '🔒 Locked'
   if (!getActiveIdentity.value) return '👤 No Active Identity'
-  return getActiveIdentity.value.nebula_nickname
+  return getDisplayNickname(getActiveIdentity.value)
 })
 
 const buttonClasses = computed(() => [
@@ -395,7 +400,7 @@ onMounted(() => {
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl text-cyan-400 tracking-wider">
             ⚡ Nebula Identity
-            <span v-if="getActiveIdentity" class="text-base text-white ml-3">{{ getActiveIdentity.nebula_nickname }}</span>
+            <span v-if="getActiveIdentity" class="text-base text-white ml-3">{{ getDisplayNickname(getActiveIdentity) }}</span>
           </h2>
           <button @click="showPanel = false" class="text-gray-400 hover:text-white text-xl"> × </button>
         </div>
@@ -426,7 +431,7 @@ onMounted(() => {
               
               <!-- Column 2: Identity Info (Flexible width) -->
               <div class="flex flex-col min-w-0">
-                <div class="text-white text-sm mb-1 truncate">{{ getIdentityByType(type)!.nebula_nickname }}</div>
+                <div class="text-white text-sm mb-1 truncate">{{ getDisplayNickname(getIdentityByType(type)!) }}</div>
                 <div class="text-xs text-gray-400 truncate">{{ getIdentityByType(type)!.nebula_id }}</div>
               </div>
               
