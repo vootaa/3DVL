@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useNebula } from '../composables/useNebula'
 import { formatNebulaId, formatTimestamp } from '../utils/format-utils'
 
@@ -36,7 +37,7 @@ const containerClasses = computed(() => [
   'relative rounded-full overflow-hidden border border-cyan-500/30',
   'backdrop-blur-sm transition-all duration-500',
   sizeClasses.value,
-  'font-mono tracking-wider', // Use space-game font directly
+  'font-mono tracking-wider',
   {
     'hover:scale-105 cursor-pointer': props.interactive,
     'shadow-lg shadow-cyan-500/20': props.interactive
@@ -52,30 +53,30 @@ const handleGenerate = () => {
 const handleSave = () => {
   if (currentNebula.value) {
     saveNebula()
+    // Optional: Add user feedback on save
   }
 }
 </script>
 
 <template>
-  <div class="nebula-display-container">
+  <div class="nebula-display-container flex flex-col items-center">
     <div 
       :class="containerClasses"
       :style="nebulaStyle"
       @click="handleGenerate"
+      title="Click to generate a new Nebula"
     >
       <!-- Cosmic overlay pattern -->
-      <div class="absolute inset-0 opacity-30">
-        <div class="stars-pattern"></div>
-      </div>
+      <div class="absolute inset-0 opacity-30 stars-pattern"></div>
       
       <!-- Nebula info overlay -->
       <div 
         v-if="showInfo && currentNebula" 
-        class="absolute inset-0 flex items-center justify-center"
+        class="absolute inset-0 flex items-center justify-center bg-black/30"
       >
         <div class="text-center text-white text-shadow-glow">
           <div class="text-xs font-mono tracking-wider">{{ formatNebulaId(currentNebula.id) }}</div>
-          <div class="text-2xs opacity-75 font-mono">{{ currentNebula.pattern.toUpperCase() }}</div>
+          <div class="text-[10px] opacity-75 font-mono">{{ currentNebula.pattern.toUpperCase() }}</div>
         </div>
       </div>
       
@@ -86,10 +87,10 @@ const handleSave = () => {
       >
         <button
           @click.stop="handleSave"
-          class="p-1 rounded bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-300 text-xs"
+          class="p-1.5 rounded-full bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-300"
           title="Save Nebula"
         >
-          <span class="i-carbon-save w-3 h-3"></span>
+          <span class="i-carbon-save block w-4 h-4"></span>
         </button>
       </div>
     </div>
@@ -130,6 +131,7 @@ const handleSave = () => {
   100% { transform: translateX(-200px); }
 }
 
+/* Container styling */
 .nebula-display-container {
   display: flex;
   flex-direction: column;

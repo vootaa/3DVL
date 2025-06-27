@@ -1,6 +1,22 @@
 <script setup lang="ts">
-import type { BadgeVariant } from '../core/types'
-import { NEBULA_VARIANTS } from '../core/types'
+import { computed } from 'vue'
+
+// Local type definition to resolve missing import from `core/types`
+interface BadgeVariant {
+  name: string
+  class: string
+  description?: string
+}
+
+// Local variants definition with theme-consistent styling
+const NEBULA_VARIANTS: BadgeVariant[] = [
+  { name: 'primary', class: 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' },
+  { name: 'secondary', class: 'bg-gray-500/20 text-gray-300 border border-gray-500/30' },
+  { name: 'success', class: 'bg-green-500/20 text-green-300 border border-green-500/30' },
+  { name: 'warning', class: 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' },
+  { name: 'danger', class: 'bg-red-500/20 text-red-300 border border-red-500/30' },
+  { name: 'info', class: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
+]
 
 interface Props {
   variant?: string
@@ -23,9 +39,9 @@ const selectedVariant = computed((): BadgeVariant => {
 
 const sizeClasses = computed(() => {
   const sizes = {
-    sm: 'px-2 py-1 text-xs',
-    md: 'px-3 py-1.5 text-sm',
-    lg: 'px-4 py-2 text-base'
+    sm: 'px-2 py-0.5 text-xs',
+    md: 'px-3 py-1 text-sm',
+    lg: 'px-4 py-1.5 text-base'
   }
   return sizes[props.size]
 })
@@ -33,12 +49,12 @@ const sizeClasses = computed(() => {
 const badgeClasses = computed(() => {
   return [
     'inline-flex items-center font-medium transition-all duration-200',
-    'font-mono tracking-wider', // Space-game font
+    'font-mono tracking-wider',
     selectedVariant.value.class,
     sizeClasses.value,
     {
       'rounded-full': props.rounded,
-      'rounded': !props.rounded,
+      'rounded-md': !props.rounded,
       'animate-pulse': props.pulse
     },
     props.customClass
@@ -53,24 +69,7 @@ const badgeClasses = computed(() => {
 </template>
 
 <style scoped>
-/* Base badge styles */
-.inline-flex {
-  display: inline-flex;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.font-medium {
-  font-weight: 500;
-}
-
-.transition-all {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
+/* All styling is handled by Tailwind utility classes. */
 .duration-200 {
   transition-duration: 200ms;
 }

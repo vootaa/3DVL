@@ -1,23 +1,6 @@
 <script lang="ts" setup>
 import CodeButton from '~/components/orbitron/views/CodeButton.vue'
 import NebulaPanel from '~/components/orbitron/views/NebulaPanel.vue'
-
-const route = useRoute()
-
-function getSlugFromPath(path: string) {
-  return path.split('/').pop()
-}
-
-function getRepoPathFromPath(path: string) {
-  return `https://github.com/vootaa/3dvl/tree/main/components/content/${getSlugFromPath(path)}`
-}
-
-function getRepoTitleFromPath(path: string) {
-  return `${getSlugFromPath(path)} – code on Github`
-}
-
-const repoPath = getRepoPathFromPath(route.path)
-const repoTitle = getRepoTitleFromPath(route.path)
 </script>
 
 <template>
@@ -25,7 +8,7 @@ const repoTitle = getRepoTitleFromPath(route.path)
     <!-- Orbitron UI Components - positioned on the right side -->
     <div class="fixed right-5 top-1/2 transform -translate-y-1/2 z-20 flex flex-row items-center gap-4">
       <!-- Code Access Button -->
-      <CodeButton :to="repoPath" :title="repoTitle" variant="floating" size="lg" />
+      <CodeButton variant="floating" size="lg" />
 
       <!-- Nebula Identity Panel - using refactored components -->
       <NebulaPanel variant="compact" />
