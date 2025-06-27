@@ -331,16 +331,18 @@ onMounted(() => {
         class="absolute bottom-5 right-5 bg-gray-900 border border-gray-700 rounded-lg p-6 w-[480px] max-h-[70vh] overflow-y-auto shadow-2xl orbitron-font"
         @click.stop
       >
-        <!-- Header -->
+        <!-- Header with Active Identity -->
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl text-cyan-400 tracking-wider">⚡ Nebula Identity</h2>
+          <h2 class="text-xl text-cyan-400 tracking-wider">
+            ⚡ Nebula Identity
+            <span v-if="getActiveIdentity" class="text-base text-white ml-3">{{ getActiveIdentity.nebula_nickname }}</span>
+          </h2>
           <button @click="showPanel = false" class="text-gray-400 hover:text-white text-xl"> × </button>
         </div>
 
-        <!-- System Info (without title) - Single Row Layout -->
+        <!-- System Info (without Active) - Reduced to 3 columns -->
         <div class="mb-4 p-2 bg-gray-800 rounded-lg">
           <div class="flex items-center justify-between text-xs text-gray-300 gap-4">
-            <div>Active: <span class="text-white">{{ getActiveIdentity ? getActiveIdentity.nebula_nickname : 'None' }}</span></div>
             <div>Identities: <span class="text-white">{{ identities.length }}/3</span></div>
             <div>PIN: <span :class="systemInfo.pin_configured ? 'text-green-400' : 'text-yellow-400'">{{ systemInfo.pin_configured ? 'Enable' : 'Disable' }}</span></div>
             <div>Cosmion: <span :class="systemInfo.cosmion_connected ? 'text-green-400' : 'text-red-400'">{{ systemInfo.cosmion_connected ? 'Online' : 'Offline' }}</span></div>
@@ -356,9 +358,9 @@ onMounted(() => {
 
         <!-- Identities Tab -->
         <div v-if="selectedTab === 'identities'" class="space-y-3">
-          <!-- Three Identity Slots - Adjusted Grid Layout with better proportions -->
+          <!-- Three Identity Slots - Adjusted Grid Layout with larger button column -->
           <div v-for="type in IDENTITY_TYPES" :key="type" class="border rounded p-3" :class="getIdentityByType(type)?.is_active ? 'border-cyan-500 bg-cyan-900/20' : 'border-gray-600 bg-gray-800'">
-            <div v-if="getIdentityByType(type)" class="grid grid-cols-[80px_1fr_140px] gap-3 items-start">
+            <div v-if="getIdentityByType(type)" class="grid grid-cols-[80px_1fr_180px] gap-3 items-center">
               <!-- Column 1: Identity Type (Fixed width 80px) -->
               <div class="text-xs text-gray-500 uppercase font-medium">{{ type }}</div>
               
@@ -368,27 +370,22 @@ onMounted(() => {
                 <div class="text-xs text-gray-400 truncate">{{ getIdentityByType(type)!.nebula_id }}</div>
               </div>
               
-              <!-- Column 3: Action Buttons (Fixed width 140px) -->
-              <div class="flex flex-col gap-1">
-                <!-- Top row: Activate button -->
-                <div class="flex justify-end">
-                  <button v-if="!getIdentityByType(type)!.is_active" @click="handleActivateIdentity(getIdentityByType(type)!.nebula_id)" class="px-2 py-1 text-xs bg-cyan-600 hover:bg-cyan-700 text-white rounded">Activate</button>
-                </div>
-                <!-- Bottom row: Export and Delete buttons -->
-                <div class="flex gap-1 justify-end">
-                  <button @click="handleExportIdentity(getIdentityByType(type)!.nebula_id)" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded">Export</button>
-                  <button @click="handleDeleteIdentity(getIdentityByType(type)!.nebula_id)" class="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded">Delete</button>
-                </div>
+              <!-- Column 3: Action Buttons (Fixed width 180px) - Single row -->
+              <div class="flex gap-1 justify-end items-center">
+                <span v-if="getIdentityByType(type)!.is_active" class="text-green-400 text-lg mr-2">☑️</span>
+                <button v-if="!getIdentityByType(type)!.is_active" @click="handleActivateIdentity(getIdentityByType(type)!.nebula_id)" class="px-2 py-1 text-xs bg-cyan-600 hover:bg-cyan-700 text-white rounded">Activate</button>
+                <button @click="handleExportIdentity(getIdentityByType(type)!.nebula_id)" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded">Export</button>
+                <button @click="handleDeleteIdentity(getIdentityByType(type)!.nebula_id)" class="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded">Delete</button>
               </div>
             </div>
-            <div v-else class="grid grid-cols-[80px_1fr_140px] gap-3 items-center">
+            <div v-else class="grid grid-cols-[80px_1fr_180px] gap-3 items-center">
               <!-- Column 1: Identity Type (Fixed width 80px) -->
               <div class="text-xs text-gray-500 uppercase font-medium">{{ type }}</div>
               
               <!-- Column 2: No Identity Text (Flexible width) -->
               <div class="text-sm text-gray-400">No identity</div>
               
-              <!-- Column 3: Create/Import Buttons (Fixed width 140px) -->
+              <!-- Column 3: Create/Import Buttons (Fixed width 180px) -->
               <div class="flex gap-2 justify-end">
                 <button @click="handleCreateIdentity(type)" class="px-2 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded">Create</button>
                 <button @click="openImportDialog" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded">Import</button>
@@ -416,7 +413,9 @@ onMounted(() => {
               </div>
             </div>
             <div v-else class="space-y-4">
-              <div class="flex gap-2"><button @click="lock" class="px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded">Lock Now</button></div>
+              <div class="flex justify-end">
+                <button @click="lock" class="px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded">Lock Now</button>
+              </div>
               <div>
                 <h5 class="text-white mb-2">Remove PIN</h5>
                 <p class="text-sm text-gray-400 mb-2">Enter your current PIN to disable protection.</p>
@@ -434,9 +433,11 @@ onMounted(() => {
           <h4 class="text-white mb-2">Cosmion Sync</h4>
           <div class="space-y-2">
             <div class="text-sm text-gray-400">Last Sync: {{ systemInfo.last_sync ? new Date(systemInfo.last_sync).toLocaleString() : 'Never synced' }}</div>
-            <button @click="handleSync" :disabled="!systemInfo.cosmion_connected" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded">
-              {{ systemInfo.cosmion_connected ? 'Sync Now' : 'Offline' }}
-            </button>
+            <div class="flex justify-end">
+              <button @click="handleSync" :disabled="!systemInfo.cosmion_connected" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded">
+                {{ systemInfo.cosmion_connected ? 'Sync Now' : 'Offline' }}
+              </button>
+            </div>
           </div>
           
           <!-- System Information from About tab -->
@@ -448,21 +449,21 @@ onMounted(() => {
 
         <!-- About Tab with Identity Type Descriptions Only -->
         <div v-if="selectedTab === 'about'" class="space-y-4">
-          <!-- Identity Types Information - 3 rows, 2 columns -->
+          <!-- Identity Types Information - Simplified descriptions -->
           <div>
             <h4 class="text-white mb-3 text-sm font-medium">Identity Types</h4>
             <div class="grid grid-cols-1 gap-2 text-xs">
               <div class="grid grid-cols-[60px_1fr] gap-3 bg-gray-800 p-2 rounded items-start">
                 <div class="text-cyan-300 font-medium">MAIN</div>
-                <div class="text-gray-400">Primary identity for production use. Recommended for serious experiments and data collection.</div>
+                <div class="text-gray-400">Production identity for live experiments.</div>
               </div>
               <div class="grid grid-cols-[60px_1fr] gap-3 bg-gray-800 p-2 rounded items-start">
                 <div class="text-yellow-300 font-medium">TEST</div>
-                <div class="text-gray-400">Testing identity for development and experimentation. Safe for trials and debugging.</div>
+                <div class="text-gray-400">Development identity for testing.</div>
               </div>
               <div class="grid grid-cols-[60px_1fr] gap-3 bg-gray-800 p-2 rounded items-start">
                 <div class="text-purple-300 font-medium">PRIVATE</div>
-                <div class="text-gray-400">Private identity with enhanced privacy settings. For sensitive or personal experiments.</div>
+                <div class="text-gray-400">Privacy-enhanced identity for sensitive data.</div>
               </div>
             </div>
           </div>
