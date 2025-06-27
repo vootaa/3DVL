@@ -413,7 +413,8 @@ onMounted(() => {
               </div>
             </div>
             <div v-else class="space-y-4">
-              <div class="flex justify-end">
+              <div class="flex justify-between items-center">
+                <p class="text-sm text-gray-400">Lock system to require PIN for access</p>
                 <button @click="lock" class="px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded">Lock Now</button>
               </div>
               <div>
