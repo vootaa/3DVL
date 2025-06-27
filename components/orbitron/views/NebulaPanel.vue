@@ -72,6 +72,7 @@ watch(identities, (newIdentities) => {
   
   // If no identities exist, set timer to auto-create TEST identity
   if (newIdentities.length === 0 && isInitialized.value) {
+    Logger.log('Identity', 'No identities found, setting auto-create timer for TEST identity')
     autoCreateTimer = setTimeout(async () => {
       try {
         // Double check that still no identities exist
