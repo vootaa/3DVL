@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import ThemeSwitcher from '~/components/ui/ThemeSwitcher.vue';
 import SocialLinks from '~/components/ui/SocialLinks.vue';
+import NebulaPanel from '~/components/orbitron/views/NebulaPanel.vue';
+import ProjectSwitcher from '~/components/ui/ProjectSwitcher.vue';
 </script>
 
 <template>
@@ -12,9 +14,12 @@ import SocialLinks from '~/components/ui/SocialLinks.vue';
     <main>
       <slot />
     </main>
+    <!-- UI Components - positioned at bottom right -->
+    <div class="fixed right-5 bottom-5 z-20 flex items-end gap-3">
+      <ProjectSwitcher />
+      <NebulaPanel variant="compact" />
+    </div>
   </div>
 </template>
 
-<style scoped>
-/* Add any layout-specific styles here */
-</style>
+<style scoped></style>
