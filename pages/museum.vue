@@ -1,5 +1,5 @@
 <script setup>
-import ShadertoyMuseum from '~/components/projects/shadertoy-museum/index.vue';
+import Museum from '~/components/projects/museum/index.vue';
 
 definePageMeta({
   layout: 'experiment'
@@ -14,5 +14,5 @@ useHead({
 </script>
 
 <template>
-  <ShadertoyMuseum />
+  <Museum />
 </template>

@@ -1,5 +1,5 @@
 <script setup>
-import GalaxyGenerator from '~/components/projects/galaxy-generator/index.vue';
+import Galaxy from '~/components/projects/galaxy/index.vue';
 
 definePageMeta({
   layout: 'experiment'
@@ -14,5 +14,5 @@ useHead({
 </script>
 
 <template>
-  <GalaxyGenerator />
+  <Galaxy />
 </template>

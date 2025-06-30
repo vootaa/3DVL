@@ -11,14 +11,14 @@ export const projects: Project[] = [
     id: 'galaxy',
     name: 'Galaxy',
     description: 'Create stunning, unique galaxies with procedural noise and particle simulation.',
-    path: '/galaxy-generator',
+    path: '/galaxy',
     heroImage: '/galaxy-generator.png',
   },
   {
     id: 'museum',
     name: 'Museum',
     description: 'A curated collection of interactive and mesmerizing GLSL shader art.',
-    path: '/shadertoy-museum',
+    path: '/museum',
     heroImage: '/shadertoy-museum.png',
   },
   {
