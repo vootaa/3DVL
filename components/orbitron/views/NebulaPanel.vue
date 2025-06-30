@@ -433,7 +433,7 @@ const buttonText = computed(() => {
 
 const buttonClasses = computed(() => [
   'px-3 py-2 text-sm rounded-md border transition-all duration-200 cursor-pointer',
-  'tracking-wider font-medium whitespace-nowrap flex items-center gap-2',
+  'tracking-wider font-medium whitespace-nowrap',
   'bg-gray-800/50 backdrop-blur-sm text-white hover:bg-gray-700/70',
   {
     'border-red-500/50 text-red-400': systemInfo.system_locked,
@@ -464,9 +464,6 @@ onUnmounted(() => {
       :class="buttonClasses"
       :title="getActiveIdentity ? `Active: ${getActiveIdentity.nebula_id}` : 'Manage identities'"
     >
-      <i v-if="systemInfo.system_locked" class="i-carbon-locked w-4 h-4" />
-      <i v-else-if="!getActiveIdentity" class="i-carbon-user-avatar w-4 h-4" />
-      <i v-else class="i-carbon-rocket w-4 h-4" />
       <span>{{ buttonText }}</span>
     </button>
 
@@ -531,10 +528,10 @@ onUnmounted(() => {
                   v-if="!getIdentityByType(type)!.is_active" 
                   @click="handleActivateIdentity(getIdentityByType(type)!.nebula_id)" 
                   :disabled="systemInfo.system_locked"
-                  class="px-2.5 py-1.5 text-xs bg-cyan-600/80 hover:bg-cyan-600 text-white rounded disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed"
+                  class="p-2 text-xs bg-cyan-600/80 hover:bg-cyan-600 text-white rounded disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed"
                   title="Activate"
                 >
-                  Activate
+                  <i class="i-carbon-launch w-4 h-4" />
                 </button>
                 <button 
                   @click="handleExportIdentity(getIdentityByType(type)!.nebula_id)" 
@@ -566,16 +563,18 @@ onUnmounted(() => {
                 <button 
                   @click="handleCreateIdentity(type)" 
                   :disabled="systemInfo.system_locked"
-                  class="px-2.5 py-1.5 text-xs bg-green-600/80 hover:bg-green-600 text-white rounded disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed"
+                  class="p-2 text-xs bg-green-600/80 hover:bg-green-600 text-white rounded disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed"
+                  title="Create"
                 >
-                  Create
+                  <i class="i-carbon-add-alt w-4 h-4" />
                 </button>
                 <button 
                   @click="openImportDialog(type)" 
                   :disabled="systemInfo.system_locked"
-                  class="px-2.5 py-1.5 text-xs bg-blue-600/80 hover:bg-blue-600 text-white rounded disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed"
+                  class="p-2 text-xs bg-blue-600/80 hover:bg-blue-600 text-white rounded disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed"
+                  title="Import"
                 >
-                  Import
+                  <i class="i-carbon-upload w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -583,7 +582,7 @@ onUnmounted(() => {
         </div>
 
         <!-- PIN Tab -->
-        <div v-if="selectedTab === 'pin'" class="space-y-4 p-2">
+        <div v-if="selectedTab === 'pin'" class="space-y-4">
           <div v-if="systemInfo.system_locked">
             <h4 class="text-white mb-2">🔒 System Locked</h4>
             <div class="flex gap-2">
@@ -603,14 +602,18 @@ onUnmounted(() => {
             <div v-else class="space-y-4">
               <div class="flex justify-between items-center p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
                 <p class="text-sm text-gray-400">Lock system to require PIN for access.</p>
-                <button @click="lock" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded">Lock Now</button>
+                <button @click="lock" class="p-2 bg-orange-600 hover:bg-orange-700 text-white rounded" title="Lock Now">
+                  <i class="i-carbon-locked w-5 h-5" />
+                </button>
               </div>
               <div class="p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
                 <h5 class="text-white mb-2">Remove PIN</h5>
                 <p class="text-sm text-gray-400 mb-2">Enter your current PIN to disable protection.</p>
                 <div class="flex gap-2">
                   <input v-model="pinForRemovalInput" type="password" placeholder="Enter current PIN" class="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:border-cyan-500 focus:ring-cyan-500 outline-none" @keyup.enter="handleRemovePin" />
-                  <button @click="handleRemovePin" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded">Remove PIN</button>
+                  <button @click="handleRemovePin" class="p-2 bg-red-600 hover:bg-red-700 text-white rounded" title="Remove PIN">
+                    <i class="i-carbon-trash-can w-5 h-5" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -618,13 +621,14 @@ onUnmounted(() => {
         </div>
 
         <!-- Sync Tab -->
-        <div v-if="selectedTab === 'sync'" class="space-y-4 p-2">
+        <div v-if="selectedTab === 'sync'" class="space-y-4">
           <div class="p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
             <h4 class="text-white mb-2">Cosmion Sync</h4>
             <div class="flex justify-between items-center">
               <div class="text-sm text-gray-400">Last Sync: {{ formatSyncStatus(systemInfo.last_sync) }}</div>
-              <button @click="handleSync" :disabled="!systemInfo.cosmion_connected" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded">
-                {{ systemInfo.cosmion_connected ? 'Sync Now' : 'Offline' }}
+              <button @click="handleSync" :disabled="!systemInfo.cosmion_connected" class="p-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded" :title="systemInfo.cosmion_connected ? 'Sync Now' : 'Offline'">
+                <i v-if="systemInfo.cosmion_connected" class="i-carbon-sync w-5 h-5" />
+                <i v-else class="i-carbon-cloud-offline w-5 h-5" />
               </button>
             </div>
           </div>
@@ -639,24 +643,26 @@ onUnmounted(() => {
         </div>
 
         <!-- About Tab -->
-        <div v-if="selectedTab === 'about'" class="space-y-4 p-2">
+        <div v-if="selectedTab === 'about'" class="space-y-4">
           <div class="p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
-            <h4 class="text-white mb-2">Device ID</h4>
-            <div class="text-xs text-gray-400 break-all">{{ systemInfo.deviceId || 'Generating...' }}</div>
+            <div class="flex justify-between items-center">
+              <h4 class="text-white font-medium">Device ID</h4>
+              <div class="text-xs text-gray-400 truncate">{{ systemInfo.deviceId || 'Generating...' }}</div>
+            </div>
           </div>
 
           <div class="p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
             <h4 class="text-white mb-3 text-sm font-medium">Identity Types</h4>
-            <div class="grid grid-cols-1 gap-2 text-xs">
-              <div class="grid grid-cols-[60px_1fr] gap-3 p-2 rounded items-start">
+            <div class="space-y-2 text-xs">
+              <div class="grid grid-cols-[70px_1fr] gap-3 items-center">
                 <div class="text-cyan-300 font-medium">MAIN</div>
                 <div class="text-gray-400">Production identity for live experiments.</div>
               </div>
-              <div class="grid grid-cols-[60px_1fr] gap-3 p-2 rounded items-start">
+              <div class="grid grid-cols-[70px_1fr] gap-3 items-center">
                 <div class="text-yellow-300 font-medium">TEST</div>
                 <div class="text-gray-400">Development identity for testing.</div>
               </div>
-              <div class="grid grid-cols-[60px_1fr] gap-3 p-2 rounded items-start">
+              <div class="grid grid-cols-[70px_1fr] gap-3 items-center">
                 <div class="text-purple-300 font-medium">PRIVATE</div>
                 <div class="text-gray-400">Privacy-enhanced identity for sensitive data.</div>
               </div>

@@ -25,7 +25,7 @@ const projectsToList = computed(() => {
       class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-gray-800/50 backdrop-blur-sm rounded-md hover:bg-gray-700/70 transition-colors border border-gray-700 hover:border-gray-600"
     >
       <i class="i-carbon-grid w-4 h-4" />
-      <span>{{ currentProject ? currentProject.name : 'Switch Project' }}</span>
+      <span>{{ currentProject ? currentProject.name : 'Projects' }}</span>
     </button>
     <Transition
       enter-active-class="transition duration-100 ease-out"
