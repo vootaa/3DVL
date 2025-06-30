@@ -48,7 +48,7 @@ const importData = ref('')
 const localError = ref('')
 const localSuccess = ref('')
 const showImportDialog = ref(false)
-const pendingActionType = ref<'delete' | 'export' | 'import' | null>(null)
+const pendingActionType = ref<'delete' | 'export' | 'import' | 'lock' | null>(null)
 const pendingActionId = ref('')
 const pinVerificationInput = ref('')
 const showPinVerification = ref(false)
@@ -155,7 +155,7 @@ const handleActivateIdentity = async (nebulaId: string) => {
   }
 }
 
-const requiresPinVerification = (_action: 'delete' | 'export' | 'import'): boolean => {
+const requiresPinVerification = (_action: 'delete' | 'export' | 'import' | 'lock'): boolean => {
   return systemInfo.pin_configured && !systemInfo.system_locked
 }
 
@@ -174,6 +174,17 @@ const handleDeleteIdentity = async (nebulaId: string) => {
   
   if (!confirm('Are you sure you want to delete this identity? This action cannot be undone.')) return
   await performDeleteIdentity(nebulaId)
+}
+
+const handleLock = async () => {
+  if (requiresPinVerification('lock')) {
+    pendingActionType.value = 'lock'
+    pendingActionId.value = '' // No ID needed for lock action
+    showPinVerification.value = true
+    return
+  }
+  // If no PIN is configured, lock directly
+  await lock()
 }
 
 const handleExportIdentity = async (nebulaId: string) => {
@@ -275,6 +286,9 @@ const handlePinVerification = async () => {
         pendingImportType.value = pendingActionId.value as IdentityType
         clearMessages()
         showImportDialog.value = true
+      } else if (pendingActionType.value === 'lock') {
+        await lock()
+        showSuccess('Panel locked.')
       }
       
       pendingActionType.value = null
@@ -608,8 +622,8 @@ onUnmounted(() => {
                 </div>
               </div>
               <div class="flex justify-between items-center p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
-                <p class="text-sm text-gray-400">Lock to hide the identity button and disable identity actions.</p>
-                <button @click="lock" class="p-2 bg-orange-600 hover:bg-orange-700 text-white rounded" title="Lock Now">
+                <p class="text-sm text-gray-400">Lock to conceal active identity and disable panel actions.</p>
+                <button @click="handleLock" class="p-2 bg-orange-600 hover:bg-orange-700 text-white rounded" title="Lock Now">
                   <i class="i-carbon-locked w-5 h-5" />
                 </button>
               </div>
@@ -718,7 +732,8 @@ onUnmounted(() => {
               </button>
             </div>
             <div class="space-y-3">
-              <p class="text-sm text-gray-400">Enter your PIN to {{ pendingActionType }} this identity:</p>
+              <p v-if="pendingActionType !== 'lock'" class="text-sm text-gray-400">Enter your PIN to {{ pendingActionType }} this identity:</p>
+              <p v-else class="text-sm text-gray-400">Enter your PIN to lock the panel:</p>
               <input v-model="pinVerificationInput" type="password" placeholder="Enter PIN"
                 class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:border-cyan-500 focus:ring-cyan-500 outline-none"
                 @keyup.enter="handlePinVerification" />
