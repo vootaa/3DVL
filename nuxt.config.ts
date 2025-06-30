@@ -1,4 +1,4 @@
-import { presetUno, presetIcons, presetTypography, presetWebFonts, transformerDirectives } from 'unocss'
+import { presetUno, presetAttributify, presetIcons, presetTypography, presetWebFonts, transformerDirectives } from 'unocss'
 import svgLoader from 'vite-svg-loader'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -47,6 +47,7 @@ export default defineNuxtConfig({
     },
 
     presets: [
+      presetAttributify(),
       presetUno(),
 
       presetIcons({
@@ -73,7 +74,7 @@ export default defineNuxtConfig({
             'border-radius': '0.5rem',
           },
           code: {
-            'font-family': 'JetBrains Mono',
+            'font-family': 'Kode Mono',
             'font-size': '0.875rem',
           },
           ':not(pre)>code': {
@@ -91,7 +92,7 @@ export default defineNuxtConfig({
       presetWebFonts({
         fonts: {
           sans: 'Inter',
-          mono: 'JetBrains Mono',
+          mono: 'Kode Mono',
           title: 'Sacramento',
         },
       }),
