@@ -22,6 +22,7 @@ export default defineNuxtConfig({
     'nuxt-svgo',
     '@nuxt/image',
     '@nuxt/devtools',
+    '@nuxtjs/color-mode',
   ],
 
   css: ['./assets/css/fonts.css','./assets/css/main.css', '@unocss/reset/tailwind-compat.css', '@tresjs/leches/styles'],
@@ -115,4 +116,8 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: '2025-04-21',
+
+  colorMode: {
+    classSuffix: ''
+  },
 })

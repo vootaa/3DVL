@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { projects } from '~/utils/projects';
 
-definePageMeta({
-    layout: 'default',
-});
-
 useHead({
   title: '3DVL - A 3D Visualization Lab',
   meta: [
@@ -12,92 +8,113 @@ useHead({
   ],
 });
 
+definePageMeta({
+  layout: 'default',
+});
 </script>
 
 <template>
-  <div class="project-showcase">
-    <section v-for="(project, index) in projects" :key="project.id" class="project-hero">
-      <div class="hero-background">
-        <img :src="project.heroImage" :alt="`${project.name} background`" />
+  <div class="showcase-container">
+    <div class="carousel">
+      <div class="carousel-track">
+        <!-- Duplicate projects for seamless loop -->
+        <div v-for="project in [...projects, ...projects]" :key="project.id" class="project-card">
+          <div class="card-image">
+            <img :src="project.heroImage" :alt="`${project.name} preview`" />
+          </div>
+          <div class="card-content">
+            <h2 class="card-title">{{ project.name }}</h2>
+            <p class="card-description">{{ project.description }}</p>
+            <NuxtLink :to="project.path" class="card-button">
+              Launch
+            </NuxtLink>
+          </div>
+        </div>
       </div>
-      <div class="hero-content">
-        <h2 class="project-title">{{ project.name }}</h2>
-        <p class="project-description">{{ project.description }}</p>
-        <NuxtLink :to="project.path" class="visit-button">
-          Launch Experiment
-        </NuxtLink>
-      </div>
-    </section>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.project-showcase {
-  display: flex;
-  flex-direction: column;
-}
-
-.project-hero {
-  position: relative;
-  height: 100vh;
+.showcase-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
+  height: 100vh;
   overflow: hidden;
-  color: var(--color-secondary);
+  position: relative;
 }
 
-.hero-background {
-  position: absolute;
-  top: 0;
-  left: 0;
+.carousel {
   width: 100%;
-  height: 100%;
-  z-index: -1;
+  max-width: 100vw;
+  mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent);
 }
 
-.hero-background img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: brightness(0.6);
+.carousel-track {
+  display: flex;
+  width: calc(350px * 8); /* 350px card width * 8 cards (4 unique * 2) */
+  animation: scroll 40s linear infinite;
 }
 
-.hero-content {
-  padding: 2rem;
-  background-color: var(--color-hero-bg);
-  backdrop-filter: blur(10px);
+@keyframes scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-350px * 4)); /* -350px card width * 4 unique cards */
+  }
+}
+
+.project-card {
+  width: 350px;
+  flex-shrink: 0;
+  margin: 0 20px;
   border-radius: 1rem;
-  max-width: 600px;
+  overflow: hidden;
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
 
-.project-title {
-  font-size: 3rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  margin-bottom: 1rem;
+.project-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
 }
 
-.project-description {
-  font-size: 1.125rem;
-  margin-bottom: 2rem;
-  opacity: 0.9;
+.card-image img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
 }
 
-.visit-button {
+.card-content {
+  padding: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.card-description {
+  font-size: 1rem;
+  color: var(--text);
+  opacity: 0.8;
+  margin-bottom: 1.5rem;
+  height: 60px; /* Fixed height for description */
+}
+
+.card-button {
   display: inline-block;
-  padding: 0.75rem 1.5rem;
-  background-color: var(--color-accent);
-  color: var(--color-background);
+  padding: 0.5rem 1rem;
+  background-color: var(--accent);
+  color: var(--bg);
   text-decoration: none;
   font-weight: bold;
   border-radius: 0.5rem;
-  transition: transform 0.2s ease, background-color 0.2s ease;
-}
-
-.visit-button:hover {
-  transform: scale(1.05);
-  background-color: var(--color-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 </style>
