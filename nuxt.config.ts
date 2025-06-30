@@ -20,7 +20,6 @@ export default defineNuxtConfig({
     '@tresjs/nuxt',
     '@unocss/nuxt',
     'nuxt-svgo',
-    '@nuxt/content',
     '@nuxt/image',
     '@nuxt/devtools',
   ],
