@@ -8,22 +8,22 @@ export interface Project {
 
 export const projects: Project[] = [
   {
-    id: 'synthwave-landscape',
-    name: 'Synthwave Landscape',
+    id: 'landscape',
+    name: 'Landscape',
     description: 'An infinitely generating retro-futuristic landscape with vaporwave aesthetics.',
     path: '/synthwave-landscape',
     heroImage: '/synthwave-landscape.png',
   },
   {
-    id: 'galaxy-generator',
-    name: 'Galaxy Generator',
+    id: 'galaxy',
+    name: 'Galaxy',
     description: 'Create stunning, unique galaxies with procedural noise and particle simulation.',
     path: '/galaxy-generator',
     heroImage: '/galaxy-generator.png',
   },
   {
-    id: 'shadertoy-museum',
-    name: 'Shadertoy Museum',
+    id: 'museum',
+    name: 'Museum',
     description: 'A curated collection of interactive and mesmerizing GLSL shader art.',
     path: '/shadertoy-museum',
     heroImage: '/shadertoy-museum.png',
