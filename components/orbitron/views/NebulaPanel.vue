@@ -678,7 +678,7 @@ onUnmounted(() => {
 
       <!-- Import Dialog -->
       <div v-if="showImportDialog" class="absolute bottom-5 right-5" @click.stop>
-        <div class="absolute bottom-full right-0 mb-2 w-96">
+        <div class="absolute bottom-full right-4 mb-2 w-96">
           <div class="bg-gray-900/90 backdrop-blur-md border border-gray-700 rounded-lg p-6 kode-mono-font shadow-2xl">
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-lg text-cyan-400">Import to {{ pendingImportType.toUpperCase() }}</h3>
@@ -699,7 +699,7 @@ onUnmounted(() => {
 
       <!-- PIN Verification Dialog -->
       <div v-if="showPinVerification" class="absolute bottom-5 right-5" @click.stop>
-        <div class="absolute bottom-full right-0 mb-2 w-96">
+        <div class="absolute bottom-full right-4 mb-2 w-96">
           <div class="bg-gray-900/90 backdrop-blur-md border border-gray-700 rounded-lg p-6 kode-mono-font shadow-2xl">
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-lg text-cyan-400 flex items-center gap-2"><i class="i-carbon-locked w-5 h-5" /> Verify PIN</h3>
