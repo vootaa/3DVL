@@ -426,8 +426,8 @@ const getIdentityTypeColor = (type: IdentityType): string => {
 }
 
 const buttonText = computed(() => {
-  if (systemInfo.system_locked) return '🔒 Locked'
-  if (!getActiveIdentity.value) return '👤 No Active Identity'
+  if (systemInfo.system_locked) return 'Locked'
+  if (!getActiveIdentity.value) return 'No Active Identity'
   return getDisplayNickname(getActiveIdentity.value)
 })
 
@@ -464,6 +464,8 @@ onUnmounted(() => {
       :class="buttonClasses"
       :title="getActiveIdentity ? `Active: ${getActiveIdentity.nebula_id}` : 'Manage identities'"
     >
+      <i v-if="systemInfo.system_locked" class="i-carbon-locked w-4 h-4 mr-2" />
+      <i v-else-if="!getActiveIdentity" class="i-carbon-user-avatar w-4 h-4 mr-2" />
       <span>{{ buttonText }}</span>
     </button>
 
@@ -584,7 +586,7 @@ onUnmounted(() => {
         <!-- PIN Tab -->
         <div v-if="selectedTab === 'pin'" class="space-y-4">
           <div v-if="systemInfo.system_locked">
-            <h4 class="text-white mb-2">🔒 System Locked</h4>
+            <h4 class="text-white mb-2 flex items-center gap-2"><i class="i-carbon-locked w-5 h-5" /> System Locked</h4>
             <div class="flex gap-2">
               <input v-model="pinInput" type="password" placeholder="Enter PIN to unlock" class="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:border-cyan-500 focus:ring-cyan-500 outline-none" @keyup.enter="handleVerifyPin" />
               <button @click="handleVerifyPin" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded">Unlock</button>
@@ -626,9 +628,8 @@ onUnmounted(() => {
             <h4 class="text-white mb-2">Cosmion Sync</h4>
             <div class="flex justify-between items-center">
               <div class="text-sm text-gray-400">Last Sync: {{ formatSyncStatus(systemInfo.last_sync) }}</div>
-              <button @click="handleSync" :disabled="!systemInfo.cosmion_connected" class="p-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded" :title="systemInfo.cosmion_connected ? 'Sync Now' : 'Offline'">
-                <i v-if="systemInfo.cosmion_connected" class="i-carbon-sync w-5 h-5" />
-                <i v-else class="i-carbon-cloud-offline w-5 h-5" />
+              <button @click="handleSync" :disabled="!systemInfo.cosmion_connected" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded text-sm">
+                {{ systemInfo.cosmion_connected ? 'Sync Now' : 'Offline' }}
               </button>
             </div>
           </div>
@@ -674,43 +675,47 @@ onUnmounted(() => {
         <div v-if="localError" class="mt-4 p-3 bg-red-900/40 border border-red-500/50 rounded text-red-400 text-sm">{{ localError }}</div>
         <div v-if="localSuccess" class="mt-4 p-3 bg-green-900/40 border border-green-500/50 rounded text-green-400 text-sm">{{ localSuccess }}</div>
       </div>
-    </div>
 
-    <!-- Import Dialog -->
-    <div v-if="showImportDialog" class="fixed inset-0 bg-black/60 z-60 flex items-center justify-center" @click="closeImportDialog">
-      <div class="bg-gray-900/90 backdrop-blur-md border border-gray-700 rounded-lg p-6 w-96 kode-mono-font" @click.stop>
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg text-cyan-400">Import to {{ pendingImportType.toUpperCase() }}</h3>
-          <button @click="closeImportDialog" class="text-gray-400 hover:text-white text-xl">×</button>
-        </div>
-        <div class="space-y-3">
-          <textarea v-model="importData" placeholder="Paste identity JSON data..." class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm h-32 resize-none focus:border-cyan-500 focus:ring-cyan-500 outline-none" />
-          <div class="flex gap-2">
-            <button @click="handleImportIdentity" :disabled="!importData.trim()" class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded text-sm">Import</button>
-            <button @click="closeImportDialog" class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm">Cancel</button>
+      <!-- Import Dialog -->
+      <div v-if="showImportDialog" class="absolute bottom-5 right-5" @click.stop>
+        <div class="absolute bottom-full right-0 mb-2 w-96">
+          <div class="bg-gray-900/90 backdrop-blur-md border border-gray-700 rounded-lg p-6 kode-mono-font shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg text-cyan-400">Import to {{ pendingImportType.toUpperCase() }}</h3>
+              <button @click="closeImportDialog" class="text-gray-400 hover:text-white text-xl">×</button>
+            </div>
+            <div class="space-y-3">
+              <textarea v-model="importData" placeholder="Paste identity JSON data..." class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm h-32 resize-none focus:border-cyan-500 focus:ring-cyan-500 outline-none" />
+              <div class="flex gap-2">
+                <button @click="handleImportIdentity" :disabled="!importData.trim()" class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded text-sm">Import</button>
+                <button @click="closeImportDialog" class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm">Cancel</button>
+              </div>
+              
+              <div v-if="localError" class="mt-2 p-3 bg-red-900/40 border border-red-500/50 rounded text-red-400 text-sm">{{ localError }}</div>
+            </div>
           </div>
-          
-          <div v-if="localError" class="mt-2 p-3 bg-red-900/40 border border-red-500/50 rounded text-red-400 text-sm">{{ localError }}</div>
         </div>
       </div>
-    </div>
 
-    <!-- PIN Verification Dialog -->
-    <div v-if="showPinVerification" class="fixed inset-0 bg-black/60 z-60 flex items-center justify-center" @click="cancelPinVerification">
-      <div class="bg-gray-900/90 backdrop-blur-md border border-gray-700 rounded-lg p-6 w-96 kode-mono-font" @click.stop>
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg text-cyan-400">🔒 Verify PIN</h3>
-          <button @click="cancelPinVerification" class="text-gray-400 hover:text-white text-xl">×</button>
-        </div>
-        <div class="space-y-3">
-          <p class="text-sm text-gray-400">Enter your PIN to {{ pendingActionType }} this identity:</p>
-          <input v-model="pinVerificationInput" type="password" placeholder="Enter PIN" class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:border-cyan-500 focus:ring-cyan-500 outline-none" @keyup.enter="handlePinVerification" />
-          <div class="flex gap-2">
-            <button @click="handlePinVerification" :disabled="!pinVerificationInput.trim()" class="flex-1 px-3 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded text-sm">Verify</button>
-            <button @click="cancelPinVerification" class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm">Cancel</button>
+      <!-- PIN Verification Dialog -->
+      <div v-if="showPinVerification" class="absolute bottom-5 right-5" @click.stop>
+        <div class="absolute bottom-full right-0 mb-2 w-96">
+          <div class="bg-gray-900/90 backdrop-blur-md border border-gray-700 rounded-lg p-6 kode-mono-font shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg text-cyan-400 flex items-center gap-2"><i class="i-carbon-locked w-5 h-5" /> Verify PIN</h3>
+              <button @click="cancelPinVerification" class="text-gray-400 hover:text-white text-xl">×</button>
+            </div>
+            <div class="space-y-3">
+              <p class="text-sm text-gray-400">Enter your PIN to {{ pendingActionType }} this identity:</p>
+              <input v-model="pinVerificationInput" type="password" placeholder="Enter PIN" class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:border-cyan-500 focus:ring-cyan-500 outline-none" @keyup.enter="handlePinVerification" />
+              <div class="flex gap-2">
+                <button @click="handlePinVerification" :disabled="!pinVerificationInput.trim()" class="flex-1 px-3 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded text-sm">Verify</button>
+                <button @click="cancelPinVerification" class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm">Cancel</button>
+              </div>
+              
+              <div v-if="localError" class="mt-2 p-3 bg-red-900/40 border border-red-500/50 rounded text-red-400 text-sm">{{ localError }}</div>
+            </div>
           </div>
-          
-          <div v-if="localError" class="mt-2 p-3 bg-red-900/40 border border-red-500/50 rounded text-red-400 text-sm">{{ localError }}</div>
         </div>
       </div>
     </div>
