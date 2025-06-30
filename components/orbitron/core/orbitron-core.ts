@@ -8,6 +8,7 @@ import { CosmionClient } from '../clients/cosmion-client'
 
 import { createConfig, type OrbitronConfig } from './config'
 import { Logger } from '../../utils/logger'
+import { generateDeviceId } from '../utils/generators'
 
 export class OrbitronCore {
     private identityManager: IdentityManager
@@ -15,6 +16,7 @@ export class OrbitronCore {
     private pinManager: PinManager
     private storage: StorageEngine
     private cosmionClient: CosmionClient
+    private deviceId: string | null = null
 
     private initialized = false
 
@@ -27,9 +29,18 @@ export class OrbitronCore {
         this.growthRecorder = new GrowthRecorder(this.storage)
         this.pinManager = new PinManager(this.storage)
         this.cosmionClient = new CosmionClient()
+    }
 
+    async init(): Promise<void> {
+        if (this.initialized) return
+        await this.initializeDeviceId()
         this.initialized = true
         Logger.log('OrbitronCore', '✅ Core system initialization complete')
+    }
+
+    private async initializeDeviceId() {
+        this.deviceId = await generateDeviceId()
+        Logger.log('OrbitronCore', `Device ID generated: ${this.deviceId}`)
     }
 
     // Identity Management
@@ -110,7 +121,10 @@ export class OrbitronCore {
         action: string,
         growthData: Record<string, any> = {}
     ): Promise<GameGrowthEvent> {
-        return await this.growthRecorder.recordEvent(nebulaId, experiment, eventType, action, growthData)
+        if (!this.deviceId) {
+            throw new Error('Device ID not initialized')
+        }
+        return await this.growthRecorder.recordEvent(nebulaId, this.deviceId, experiment, eventType, action, growthData)
     }
 
     startNewSession(): string {
@@ -155,6 +169,7 @@ export class OrbitronCore {
         system_locked: boolean
         cosmion_connected: boolean
         last_sync: number
+        deviceId: string | null
     } {
         const activeIdentity = this.getActiveIdentity()
 
@@ -167,7 +182,8 @@ export class OrbitronCore {
             pin_configured: this.pinManager.hasPinConfigured(),
             system_locked: this.pinManager.isSystemLocked(),
             cosmion_connected: this.cosmionClient.isConnectionActive(),
-            last_sync: this.cosmionClient.getLastSyncTime()
+            last_sync: this.cosmionClient.getLastSyncTime(),
+            deviceId: this.deviceId
         }
     }
 

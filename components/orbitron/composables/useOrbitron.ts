@@ -22,7 +22,8 @@ export function useOrbitron(config?: Partial<OrbitronConfig>) {
     pin_configured: false,
     system_locked: false,
     cosmion_connected: false,
-    last_sync: 0
+    last_sync: 0,
+    deviceId: null as string | null
   })
 
   // Initialize Orbitron instance
@@ -33,6 +34,7 @@ export function useOrbitron(config?: Partial<OrbitronConfig>) {
       
       if (!orbitronInstance) {
         orbitronInstance = new OrbitronCore(config)
+        await orbitronInstance.init()
       }
       
       // Update system info

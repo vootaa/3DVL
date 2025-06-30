@@ -11,6 +11,7 @@ export interface NebulaIdentity {
 
 export interface GameGrowthEvent {
     nebula_id: string
+    device_id: string
     event_type: EventType
     action: string
     growth_data: Record<string, any>

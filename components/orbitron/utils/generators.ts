@@ -98,3 +98,20 @@ export function verifyNebulaIdIntegrity(nebulaId: string, createdAt: number, see
   // 4. Verify hash consistency (requires async verification)
   return true // Simplified example, actual implementation needs async hash verification
 }
+
+/**
+ * Generate a device ID from browser information
+ */
+export async function generateDeviceId(): Promise<string> {
+  const isBrowser = typeof window !== 'undefined';
+
+  const userAgent = isBrowser ? navigator.userAgent : 'unknown';
+  const platform = isBrowser ? navigator.platform : 'unknown';
+  const language = isBrowser ? navigator.language : 'unknown';
+  const screenWidth = isBrowser ? window.screen.width : 0;
+  const screenHeight = isBrowser ? window.screen.height : 0;
+
+  const combined = `${userAgent}:${platform}:${language}:${screenWidth}x${screenHeight}`;
+  const hash = await generateHash(combined);
+  return `DVID-${hash.substring(0, 12)}`;
+}

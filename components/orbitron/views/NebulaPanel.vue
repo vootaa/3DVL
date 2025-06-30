@@ -431,8 +431,8 @@ const buttonClasses = computed(() => [
   }
 ])
 
-onMounted(() => {
-  initializeSystem()
+onMounted(async () => {
+  await initializeSystem()
 })
 
 onUnmounted(() => {
@@ -619,6 +619,12 @@ onUnmounted(() => {
 
         <!-- About Tab with Identity Type Descriptions Only -->
         <div v-if="selectedTab === 'about'" class="space-y-4">
+          <!-- Device ID -->
+          <div class="flex items-center justify-between text-sm p-2 bg-gray-800 rounded">
+            <span class="text-gray-400 font-medium">Device ID:</span>
+            <span class="text-white text-xs break-all">{{ systemInfo.deviceId || 'Generating...' }}</span>
+          </div>
+
           <!-- Identity Types Information - Simplified descriptions -->
           <div>
             <h4 class="text-white mb-3 text-sm font-medium">Identity Types</h4>

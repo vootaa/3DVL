@@ -18,6 +18,7 @@ export class GrowthRecorder {
    */
   async recordEvent(
     nebulaId: string,
+    deviceId: string,
     experiment: string,
     eventType: EventType,
     action: string,
@@ -25,6 +26,7 @@ export class GrowthRecorder {
   ): Promise<GameGrowthEvent> {
     const event: GameGrowthEvent = {
       nebula_id: nebulaId,
+      device_id: deviceId,
       event_type: eventType,
       action,
       growth_data: growthData,
