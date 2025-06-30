@@ -102,7 +102,7 @@ export default defineNuxtConfig({
         mono: 'Kode Mono',
         title: 'Sacramento',
       },
-      server: false,
+      server: false, // This is the key change
     },
   },
 

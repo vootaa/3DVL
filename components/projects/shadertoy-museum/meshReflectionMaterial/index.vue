@@ -26,7 +26,7 @@ import type {
   WebGLRenderer,
 } from 'three'
 import { BlurPass } from './BlurPass'
-import { MeshReflectionMaterial } from './material'
+import { MeshReflectionMaterial } from './reflection-material'
 
 export interface MeshReflectionMaterialProps {
 

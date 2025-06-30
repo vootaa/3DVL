@@ -18,7 +18,7 @@ import InfoTextControl from './controls/InfoTextControl.vue'
 import HudControl from './controls/HudControl.vue'
 import ControlPanel from './controls/ControlPanel.vue'
 import ObservationControls from './controls/ObservationControls.vue'
-import Game from './Game.vue'
+import GameScene from './Game.vue'
 
 import { gameStore } from './GameStore'
 
@@ -214,7 +214,7 @@ const start = async (mode: 'battle' | 'explore') => {
         <TresPerspectiveCamera ref="cameraRef" :position="[0, 0, 2000]" :near="0.01" :far="10000"
           :fov="gameStore.mutation.fov" />
         <TresFog color="#121225" :near="150" :far="600" />
-        <Game />
+        <GameScene />
       </TresCanvas>
 
       <SoundControl />
