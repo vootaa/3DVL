@@ -415,6 +415,15 @@ const getDisplayNickname = (identity: NebulaIdentity): string => {
   return generateNebulaNickname(identity.nebula_id)
 }
 
+const getIdentityTypeColor = (type: IdentityType): string => {
+  switch (type) {
+    case 'main': return 'text-cyan-300'
+    case 'test': return 'text-yellow-300'
+    case 'private': return 'text-purple-300'
+    default: return 'text-gray-400'
+  }
+}
+
 const buttonText = computed(() => {
   if (systemInfo.system_locked) return '🔒 Locked'
   if (!getActiveIdentity.value) return '👤 No Active Identity'
@@ -498,7 +507,7 @@ onUnmounted(() => {
             <div v-if="getIdentityByType(type)" class="grid grid-cols-[80px_1fr_180px] gap-3 items-center">
               <!-- Column 1: Identity Type with Creation Time (Fixed width 80px) -->
               <div class="flex flex-col items-start">
-                <div class="text-xs text-gray-500 uppercase font-medium">{{ type }}</div>
+                <div class="text-xs uppercase font-medium" :class="getIdentityTypeColor(type)">{{ type }}</div>
                 <div class="text-xs text-gray-400 mt-1">{{ formatTimestamp(getIdentityByType(type)!.created_at, false) }}</div>
               </div>
               
@@ -537,7 +546,7 @@ onUnmounted(() => {
             </div>
             <div v-else class="grid grid-cols-[80px_1fr_180px] gap-3 items-center">
               <!-- Column 1: Identity Type (Fixed width 80px) -->
-              <div class="text-xs text-gray-500 uppercase font-medium">{{ type }}</div>
+              <div class="text-xs uppercase font-medium" :class="getIdentityTypeColor(type)">{{ type }}</div>
               
               <!-- Column 2: No Identity Text (Flexible width) -->
               <div class="text-sm text-gray-400">No identity</div>
