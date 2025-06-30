@@ -1,6 +1,6 @@
 import type { NebulaIdentity, GameGrowthEvent, EventType, IdentityType, OrbitronConfig } from '../types'
 
-import { ref, reactive, computed, readonly } from 'vue'
+import { ref, reactive, computed, readonly, onMounted } from 'vue'
 import { OrbitronCore } from '../core/orbitron-core'
 import { Logger } from '../../utils/logger'
 
@@ -179,10 +179,11 @@ export function useOrbitron(config?: Partial<OrbitronConfig>) {
     }
   }
 
-  // Auto-initialize if not already done
-  if (!isInitialized.value && !isLoading.value) {
-    initialize().catch(err => Logger.error('useOrbitron', 'Auto-initialization failed', err))
-  }
+  onMounted(() => {
+    if (!isInitialized.value && !isLoading.value) {
+      initialize().catch(err => Logger.error('useOrbitron', 'Auto-initialization failed', err))
+    }
+  })
 
   return {
     // State

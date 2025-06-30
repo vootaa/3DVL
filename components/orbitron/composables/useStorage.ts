@@ -5,19 +5,26 @@ export function useStorage<T>(
   defaultValue: T,
   storage: Storage = localStorage
 ): [Ref<T>, (value: T) => void] {
-  const storedValue = storage.getItem(key)
-  const initialValue = storedValue ? JSON.parse(storedValue) : defaultValue
+  let initialValue = defaultValue;
+  if (import.meta.client) {
+    const storedValue = storage.getItem(key)
+    initialValue = storedValue ? JSON.parse(storedValue) : defaultValue
+  }
   
   const state = ref<T>(initialValue) as Ref<T>
   
   const setValue = (value: T) => {
-    state.value = value
-    storage.setItem(key, JSON.stringify(value))
+    if (import.meta.client) {
+      state.value = value
+      storage.setItem(key, JSON.stringify(value))
+    }
   }
   
   // Watch for external changes
   watch(state, (newValue) => {
-    storage.setItem(key, JSON.stringify(newValue))
+    if (import.meta.client) {
+      storage.setItem(key, JSON.stringify(newValue))
+    }
   }, { deep: true })
   
   return [state, setValue]

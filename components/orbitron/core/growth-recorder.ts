@@ -10,7 +10,9 @@ export class GrowthRecorder {
   private readonly maxEvents = 1000 // Offline cache limit
 
   constructor(private storage: StorageEngine) {
-    this.loadFromStorage()
+    if (import.meta.client) {
+      this.loadFromStorage()
+    }
   }
 
   /**

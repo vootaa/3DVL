@@ -97,7 +97,7 @@ watch(identities, (newIdentities) => {
       }
     }, 60000) // 1 minute = 60000ms
   }
-}, { immediate: true })
+})
 
 const clearMessages = () => {
   localError.value = ''

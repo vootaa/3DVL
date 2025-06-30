@@ -32,7 +32,9 @@ export class OrbitronCore {
 
     async init(): Promise<void> {
         if (this.initialized) return
-        await this.initializeDeviceId()
+        if (import.meta.client) {
+            await this.initializeDeviceId()
+        }
         this.initialized = true
         Logger.log('OrbitronCore', '✅ Core system initialization complete')
     }

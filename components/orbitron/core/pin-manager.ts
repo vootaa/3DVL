@@ -11,7 +11,9 @@ export class PinManager {
     private lockoutUntil: number = 0
 
     constructor(private storage: StorageEngine) {
-        this.loadFromStorage()
+        if (import.meta.client) {
+            this.loadFromStorage()
+        }
     }
 
     /**

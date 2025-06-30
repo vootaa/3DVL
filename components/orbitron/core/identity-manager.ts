@@ -10,7 +10,9 @@ export class IdentityManager {
   private activeIdentityId: string | null = null
 
   constructor(private storage: StorageEngine) {
-    this.loadFromStorage()
+    if (import.meta.client) {
+      this.loadFromStorage()
+    }
   }
 
   /**

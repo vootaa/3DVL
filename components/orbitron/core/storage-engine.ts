@@ -9,6 +9,7 @@ export class StorageEngine {
   }
 
   async set<T>(key: string, value: T): Promise<void> {
+    if (!import.meta.client) return;
     const fullKey = this.getKey(key)
 
     try {
@@ -50,6 +51,7 @@ export class StorageEngine {
   }
 
   async get<T>(key: string): Promise<T | null> {
+    if (!import.meta.client) return null;
     const fullKey = this.getKey(key)
     const stored = localStorage.getItem(fullKey)
 
@@ -70,11 +72,13 @@ export class StorageEngine {
   }
 
   remove(key: string): void {
+    if (!import.meta.client) return;
     const fullKey = this.getKey(key)
     localStorage.removeItem(fullKey)
   }
 
   clear(): void {
+    if (!import.meta.client) return;
     const keys = Object.keys(localStorage)
     keys.forEach(key => {
       if (key.startsWith(this.config.storage.prefix)) {
@@ -84,6 +88,7 @@ export class StorageEngine {
   }
 
   list(): string[] {
+    if (!import.meta.client) return [];
     const keys = Object.keys(localStorage)
     return keys
       .filter(key => key.startsWith(this.config.storage.prefix))
@@ -96,6 +101,9 @@ export class StorageEngine {
     total_size: number
     prefix: string
   } {
+    if (!import.meta.client) {
+      return { total_keys: 0, total_size: 0, prefix: this.config.storage.prefix };
+    }
     const keys = this.list()
     let totalSize = 0
 
@@ -116,6 +124,7 @@ export class StorageEngine {
 
   // Storage health check
   async healthCheck(): Promise<boolean> {
+    if (!import.meta.client) return false;
     try {
       const testKey = this.getKey('_health_check')
       const testValue = { test: Date.now() }
