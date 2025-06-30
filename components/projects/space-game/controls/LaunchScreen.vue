@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineEmits, watch, onMounted, computed } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { ResourceLoader } from '../utils/ResourceLoader'
 import { ResourceType } from '../utils/constants'
 import { Logger } from '../../../utils/logger'
