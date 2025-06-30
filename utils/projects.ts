@@ -8,13 +8,6 @@ export interface Project {
 
 export const projects: Project[] = [
   {
-    id: 'landscape',
-    name: 'Landscape',
-    description: 'An infinitely generating retro-futuristic landscape with vaporwave aesthetics.',
-    path: '/synthwave-landscape',
-    heroImage: '/synthwave-landscape.png',
-  },
-  {
     id: 'galaxy',
     name: 'Galaxy',
     description: 'Create stunning, unique galaxies with procedural noise and particle simulation.',
