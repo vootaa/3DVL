@@ -15,22 +15,19 @@ useHead({
 </script>
 
 <template>
-  <div class="showcase-container">
-    <!-- 项目组名称和副标题 -->
-    <div class="flex flex-col items-center mb-6">
-      <h1 class="text-4xl font-bold mb-2" style="font-family: 'Kode Mono', monospace;">3D Vision Lab</h1>
-      <h2 class="text-lg text-gray-400" style="font-family: 'Kode Mono', monospace;">3D Vision Lab for Kadena ChainWeb</h2>
-    </div>
-    <div class="w-full flex justify-center mb-8">
-      <div class="border-t border-gray-300 w-2/3 opacity-40"></div>
+  <div class="showcase-container flex flex-col items-center w-full">
+    <!-- Title and Subtitle at the top -->
+    <div class="flex flex-col items-center mt-20 mb-8">
+      <h1 class="text-4xl font-bold mb-1 font-kode">3D Vision Lab</h1>
+      <h2 class="text-lg text-gray-400 font-kode mt-0">3D Vision Lab for Kadena ChainWeb</h2>
     </div>
     <div class="projects-grid">
       <div v-for="project in projects" :key="project.id" class="project-card">
         <div class="card-image">
           <img :src="project.heroImage" :alt="`${project.name} preview`" />
         </div>
-        <div class="card-content">
-          <h2 class="card-title">{{ project.name }}</h2>
+        <div class="card-content font-kode">
+          <h2 class="card-title font-kode">{{ project.name }}</h2>
           <p class="card-description">{{ project.description }}</p>
           <div class="card-footer">
             <NuxtLink :to="project.path" class="card-button">
@@ -45,6 +42,10 @@ useHead({
 </template>
 
 <style scoped>
+.font-kode {
+  font-family: 'Kode Mono', monospace;
+}
+
 .showcase-container {
   display: flex;
   align-items: center;
@@ -84,7 +85,6 @@ useHead({
 
 .card-content {
   padding: 1.5rem;
-  font-family: 'Kode Mono', monospace;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
