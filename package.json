@@ -7,7 +7,9 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.vue",
-    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.vue --fix"
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.vue --fix",
+    "clean": "npx nuxi cleanup",
+    "reset": "rm -rf .nuxt .output node_modules && pnpm install"
   },
   "dependencies": {
     "@tresjs/post-processing": "1.0.0-next.1",
