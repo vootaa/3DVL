@@ -227,4 +227,10 @@ export class GameStateManager {
   }
 }
 
-export const gameStateManager = new GameStateManager()
+// Create the instance only on the client-side
+let instance: GameStateManager | null = null
+if (process.client) {
+  instance = new GameStateManager()
+}
+
+export const gameStateManager = instance as GameStateManager
