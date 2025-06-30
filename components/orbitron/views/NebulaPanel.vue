@@ -654,15 +654,15 @@ onUnmounted(() => {
           <div class="p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
             <h4 class="text-white mb-3 text-sm font-medium">Identity Types</h4>
             <div class="space-y-2 text-xs">
-              <div class="grid grid-cols-[70px_1fr] gap-3 items-center">
+              <div class="grid grid-cols-[60px_1fr] gap-3 items-center">
                 <div class="text-cyan-300 font-medium">MAIN</div>
                 <div class="text-gray-400">Production identity for live experiments.</div>
               </div>
-              <div class="grid grid-cols-[70px_1fr] gap-3 items-center">
+              <div class="grid grid-cols-[60px_1fr] gap-3 items-center">
                 <div class="text-yellow-300 font-medium">TEST</div>
                 <div class="text-gray-400">Development identity for testing.</div>
               </div>
-              <div class="grid grid-cols-[70px_1fr] gap-3 items-center">
+              <div class="grid grid-cols-[60px_1fr] gap-3 items-center">
                 <div class="text-purple-300 font-medium">PRIVATE</div>
                 <div class="text-gray-400">Privacy-enhanced identity for sensitive data.</div>
               </div>
