@@ -216,6 +216,6 @@ timeManager.actions.removeUpdateCallback = (callback: (dt: number) => void) => {
 }
 
 // Auto-initialize
-timeManager.actions.init()
+// timeManager.actions.init() // This line should be removed or commented out
 
 export type TimeManager = typeof timeManager

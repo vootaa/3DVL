@@ -19,7 +19,7 @@ const projectsToList = computed(() => {
 </script>
 
 <template>
-  <div class="relative">
+  <div class="relative kode-mono-font">
     <button
       @click="showPanel = !showPanel"
       class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-gray-800/50 backdrop-blur-sm rounded-md hover:bg-gray-700/70 transition-colors"
@@ -47,3 +47,9 @@ const projectsToList = computed(() => {
     </Transition>
   </div>
 </template>
+
+<style scoped>
+.kode-mono-font {
+  font-family: 'Kode Mono', monospace;
+}
+</style>

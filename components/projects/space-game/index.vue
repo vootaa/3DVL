@@ -9,6 +9,7 @@ import { ResourceLoader } from './utils/ResourceLoader'
 import { initializeAudio } from './utils/audio'
 import { GameController } from './core/GameController'
 import { mouseEventManager } from './core/MouseEventManager'
+import { timeManager } from './store/TimeManager'
 
 import LaunchScreen from './controls/LaunchScreen.vue'
 import SoundControl from './controls/SoundControl.vue'
@@ -152,6 +153,7 @@ const initializeGame = async () => {
 
     // Start game clock
     gameStore.mutation.clock.start()
+    timeManager.actions.init()
     Logger.log('SPACE_GAME', 'Game clock started')
 
     if (isMounted.value) {

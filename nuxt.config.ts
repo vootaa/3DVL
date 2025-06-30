@@ -89,13 +89,6 @@ export default defineNuxtConfig({
           },
         },
       }),
-      presetWebFonts({
-        fonts: {
-          sans: 'Inter',
-          mono: 'Kode Mono',
-          title: 'Sacramento',
-        },
-      }),
     ],
     // core options
     shortcuts: [],
@@ -103,6 +96,14 @@ export default defineNuxtConfig({
     transformers: [
       transformerDirectives(),
     ],
+    webFonts: {
+      fonts: {
+        sans: 'Inter',
+        mono: 'Kode Mono',
+        title: 'Sacramento',
+      },
+      server: false,
+    },
   },
 
   vite: {
@@ -113,8 +114,7 @@ export default defineNuxtConfig({
   },
   
   build: {
-    transpile: ['fsevents', 'postprocessing'],
-  },
+    transpile: ['fsevents', 'postprocessing'],  },
 
   compatibilityDate: '2025-04-21',
 

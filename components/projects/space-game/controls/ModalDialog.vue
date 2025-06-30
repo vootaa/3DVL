@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { inject, type PropType } from 'vue'
 
-import { GameState } from '../core/constants'
 import { gameStateManager } from '../core/GameStateManager'
 import { timeManager } from '../store/TimeManager'
 import { ModalType } from '../store/constants'
