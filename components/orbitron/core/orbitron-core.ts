@@ -1,14 +1,13 @@
-import type { NebulaIdentity, GameGrowthEvent, EventType, IdentityType } from '../types'
+import type { NebulaIdentity, GameGrowthEvent, EventType, IdentityType, OrbitronConfig } from '../types'
 
+import { createConfig } from './config'
 import { IdentityManager } from './identity-manager'
 import { GrowthRecorder } from './growth-recorder'
 import { PinManager } from './pin-manager'
 import { StorageEngine } from './storage-engine'
 import { CosmionClient } from '../clients/cosmion-client'
-
-import { createConfig, type OrbitronConfig } from './config'
-import { Logger } from '../../utils/logger'
 import { generateDeviceId } from '../utils/generators'
+import { Logger } from '../../utils/logger'
 
 export class OrbitronCore {
     private identityManager: IdentityManager
