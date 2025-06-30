@@ -4,6 +4,8 @@ export interface Project {
   description: string;
   path: string;
   heroImage: string;
+  title: string;
+  metaDescription: string;
 }
 
 export const projects: Project[] = [
@@ -13,6 +15,8 @@ export const projects: Project[] = [
     description: 'Create stunning, unique galaxies with procedural noise and particle simulation.',
     path: '/galaxy',
     heroImage: '/galaxy-generator.png',
+    title: 'Galaxy Generator - 3DVL',
+    metaDescription: 'Create stunning, unique galaxies with procedural noise and particle simulation.',
   },
   {
     id: 'museum',
@@ -20,6 +24,8 @@ export const projects: Project[] = [
     description: 'A curated collection of interactive and mesmerizing GLSL shader art.',
     path: '/museum',
     heroImage: '/shadertoy-museum.png',
+    title: 'Shadertoy Museum - 3DVL',
+    metaDescription: 'A curated collection of interactive and mesmerizing GLSL shader art.',
   },
   {
     id: 'space-game',
@@ -27,5 +33,7 @@ export const projects: Project[] = [
     description: 'A minimalist prototype for a 3D space exploration and combat game.',
     path: '/space-game',
     heroImage: '/space-game.png',
+    title: 'Space Game - 3DVL',
+    metaDescription: 'A minimalist prototype for a 3D space exploration and combat game.',
   },
 ];

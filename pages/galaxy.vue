@@ -1,14 +1,17 @@
 <script setup>
 import Galaxy from '~/components/projects/galaxy/index.vue';
+import { projects } from '~/utils/projects';
+
+const project = projects.find(p => p.id === 'galaxy');
 
 definePageMeta({
   layout: 'experiment'
 });
 
 useHead({
-  title: 'Galaxy Generator - 3DVL',
+  title: project?.title,
   meta: [
-    { name: 'description', content: 'Create stunning, unique galaxies with procedural noise and particle simulation.' },
+    { name: 'description', content: project?.metaDescription },
   ],
 });
 </script>

@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { projects } from '~/utils/projects';
+import { siteConfig } from '~/utils/site-config';
 
 definePageMeta({
   layout: 'default',
 });
 
 useHead({
-  title: '3DVL - A 3D Visualization Lab',
+  title: siteConfig.title,
   meta: [
-    { name: 'description', content: 'An experimental platform for 3D web projects and interactive art.' },
+    { name: 'description', content: siteConfig.description },
   ],
 });
 
@@ -18,8 +19,8 @@ useHead({
   <div class="showcase-container flex flex-col items-center w-full">
     <!-- Title and Subtitle at the top -->
     <div class="flex flex-col items-center mt-20 mb-8">
-      <h1 class="text-4xl font-bold mb-1">3D Vision Lab</h1>
-      <h2 class="text-lg text-gray-400 mt-0">3D Vision Lab for Kadena ChainWeb</h2>
+      <h1 class="text-4xl font-bold mb-1">{{ siteConfig.hero.title }}</h1>
+      <h2 class="text-lg text-gray-400 mt-0">{{ siteConfig.hero.subtitle }}</h2>
     </div>
     <div class="projects-grid">
       <div v-for="project in projects" :key="project.id" class="project-card">

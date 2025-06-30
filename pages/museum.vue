@@ -1,14 +1,17 @@
 <script setup>
 import Museum from '~/components/projects/museum/index.vue';
+import { projects } from '~/utils/projects';
+
+const project = projects.find(p => p.id === 'museum');
 
 definePageMeta({
   layout: 'experiment'
 });
 
 useHead({
-  title: 'Shadertoy Museum - 3DVL',
+  title: project?.title,
   meta: [
-    { name: 'description', content: 'A curated collection of interactive and mesmerizing GLSL shader art.' },
+    { name: 'description', content: project?.metaDescription },
   ],
 });
 </script>

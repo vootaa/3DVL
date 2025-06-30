@@ -1,10 +1,10 @@
 <script lang="ts" setup>
+import LogoBrand from '~/components/ui/LogoBrand.vue';
 import ThemeSwitcher from '~/components/ui/ThemeSwitcher.vue';
 import SocialLinks from '~/components/ui/SocialLinks.vue';
-import NebulaPanel from '~/components/orbitron/views/NebulaPanel.vue';
-import ProjectSwitcher from '~/components/ui/ProjectSwitcher.vue';
-import LogoBrand from '~/components/ui/LogoBrand.vue';
 import CopyrightFooter from '~/components/ui/CopyrightFooter.vue';
+import ProjectSwitcher from '~/components/ui/ProjectSwitcher.vue';
+import NebulaPanel from '~/components/orbitron/views/NebulaPanel.vue';
 </script>
 
 <template>
