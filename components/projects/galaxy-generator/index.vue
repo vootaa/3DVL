@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Color, AdditiveBlending, BufferAttribute } from 'three'
 import gsap from 'gsap'
+import { TresLeches, useControls } from '@tresjs/leches'
 
 import vertexShader from './shaders/vertex.glsl'
 import fragmentShader from './shaders/fragment.glsl'
@@ -182,10 +183,16 @@ const { count, size, radius, branches, spin, randomness, randomnessPower, inside
   outsideColor: '#1b3984',
 })
 
-watch([count.value, size.value, radius.value, branches.value, spin.value, randomness.value, randomnessPower.value, insideColor.value, outsideColor.value], (state) => {
-  state.forEach((value, index) => {
-    parameters[Object.keys(parameters)[index] as string] = value.value
-  })
+watch([count, size, radius, branches, spin, randomness, randomnessPower, insideColor, outsideColor], () => {
+  parameters.count = count.value
+  parameters.size = size.value
+  parameters.radius = radius.value
+  parameters.branches = branches.value
+  parameters.spin = spin.value
+  parameters.randomness = randomness.value
+  parameters.randomnessPower = randomnessPower.value
+  parameters.insideColor = insideColor.value
+  parameters.outsideColor = outsideColor.value
   updateGalaxy()
 })
 

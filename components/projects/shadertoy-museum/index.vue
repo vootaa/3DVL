@@ -2,9 +2,11 @@
 import type { Camera, Light } from 'three'
 import { Mesh, Clock, PlaneGeometry, ACESFilmicToneMapping } from 'three'
 import { TresCanvas } from '@tresjs/core'
+
 import type { LightFn } from './fns/shaderToyLights'
 import { shaderToySrc } from './fns/shaderToySrc'
-import TheExperience from './TheExperience.vue'
+
+import Museum from './Museum.vue'
 
 interface ShaderToyTarget {
   shader: string
@@ -57,7 +59,7 @@ function click() {
     <div>
       <TresCanvas clear-color="#3A3A3A" :anti-alias="true" :alpha="true" :tone-mapping="ACESFilmicToneMapping"
         :tone-mapping-exposure="1.0" window-size @pointerup="click">
-        <TheExperience />
+        <Museum />
       </TresCanvas>
     </div>
   </Suspense>
