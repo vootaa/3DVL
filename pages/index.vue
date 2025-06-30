@@ -20,7 +20,7 @@ useHead({
     <!-- Title and Subtitle at the top -->
     <div class="flex flex-col items-center mt-20 mb-8">
       <h1 class="text-4xl font-bold mb-1">{{ siteConfig.hero.title }}</h1>
-      <h2 class="text-lg text-gray-400 mt-0">{{ siteConfig.hero.subtitle }}</h2>
+      <h2 class="text-lg subtitle mt-0">{{ siteConfig.hero.subtitle }}</h2>
     </div>
     <div class="projects-grid">
       <div v-for="project in projects" :key="project.id" class="project-card">
@@ -71,7 +71,11 @@ useHead({
 
 .project-card:hover {
   transform: translateY(-10px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.dark .project-card:hover {
+  box-shadow: 0 20px 25px -5px rgba(255, 255, 255, 0.1), 0 10px 10px -5px rgba(255, 255, 255, 0.04);
 }
 
 .card-image img {
@@ -120,5 +124,10 @@ useHead({
   font-weight: bold;
   border-radius: 0.5rem;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.subtitle {
+  color: var(--text);
+  opacity: 0.6;
 }
 </style>

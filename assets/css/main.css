@@ -7,6 +7,12 @@
   --border-dark: #343a40;
   --accent-light: #007bff;
   --accent-dark: #00ffff;
+  
+  /* Default to light mode */
+  --bg: var(--bg-light);
+  --text: var(--text-light);
+  --border: var(--border-light);
+  --accent: var(--accent-light);
 }
 
 .dark {
@@ -26,10 +32,6 @@
 html, body {
   font-family: 'Kode Mono', monospace;
   color: var(--text);
-}
-
-.font-kode {
-  font-family: 'Kode Mono', monospace;
 }
 
 body {

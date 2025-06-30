@@ -8,7 +8,7 @@ import NebulaPanel from '~/components/orbitron/views/NebulaPanel.vue';
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col bg-black">
+  <div class="min-h-screen flex flex-col" style="background-color: var(--bg)">
     <!-- Logo at top-left -->
     <div class="fixed top-5 left-5 z-50">
       <LogoBrand />
