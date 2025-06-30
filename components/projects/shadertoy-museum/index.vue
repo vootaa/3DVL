@@ -6,7 +6,7 @@ import { TresCanvas } from '@tresjs/core'
 import type { LightFn } from './fns/shaderToyLights'
 import { shaderToySrc } from './fns/shaderToySrc'
 
-import MuseumScene from './Museum.vue'
+import MuseumScene from './MuseumScene.vue'
 
 interface ShaderToyTarget {
   shader: string

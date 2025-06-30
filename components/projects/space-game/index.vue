@@ -18,7 +18,7 @@ import InfoTextControl from './controls/InfoTextControl.vue'
 import HudControl from './controls/HudControl.vue'
 import ControlPanel from './controls/ControlPanel.vue'
 import ObservationControls from './controls/ObservationControls.vue'
-import GameScene from './Game.vue'
+import GameScene from './GameScene.vue'
 
 import { gameStore } from './GameStore'
 

@@ -22,9 +22,9 @@ import { gameStore } from './GameStore'
 
 if (gameStore) {
   useLoop().onBeforeRender(gameStore.actions.update)
-  Logger.log('GAME', 'Game loop initialized with gameStore update handler')
+  Logger.log('GameScene', 'Game loop initialized with gameStore update handler')
 } else {
-  Logger.error('GAME', 'GameStore not injected in Game.vue', {
+  Logger.error('GameScene', 'GameStore not injected in GameScene.vue', {
     gameStoreType: typeof gameStore,
     gameStoreValue: gameStore
   })

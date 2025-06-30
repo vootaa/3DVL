@@ -36,6 +36,15 @@ export default defineNuxtConfig({
     '/': { prerender: true },
   },
 
+  components: [
+    {
+      path: '~/components',
+      extensions: ['.vue'], // Only scan .vue files for components
+      // Nuxt 3.8+ behavior
+      pathPrefix: false,
+    },
+  ],
+
   unocss: {
     // presets
     theme: {
@@ -97,12 +106,12 @@ export default defineNuxtConfig({
       transformerDirectives(),
     ],
     webFonts: {
+      provider: 'none', // This is the key change
       fonts: {
         sans: 'Inter',
         mono: 'Kode Mono',
         title: 'Sacramento',
       },
-      server: false, // This is the key change
     },
   },
 

@@ -303,7 +303,7 @@ export const ResourceLoader = reactive({
     this.loadingStats.startTime = Date.now()
     Logger.log('RESOURCE_LOADER', 'Starting resource loading process')
 
-    this.registerResource('Game', import('../Game.vue'))
+    this.registerResource('GameScene', import('../GameScene.vue'))
 
     this.registerResource('ChainLayer', import('../3d/ChainLayer.vue'))
     this.registerResource('Chainweb3D', import('../3d/Chainweb3D.vue'))
