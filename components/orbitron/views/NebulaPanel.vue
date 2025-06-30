@@ -485,7 +485,9 @@ onUnmounted(() => {
             <i class="i-carbon-rocket w-6 h-6" />
             <span>Nebula Identity</span>
           </h2>
-          <button @click="showPanel = false" class="text-gray-400 hover:text-white text-xl">×</button>
+          <button @click="showPanel = false" class="text-gray-400 hover:text-white">
+            <i class="i-carbon-close w-6 h-6" />
+          </button>
         </div>
 
         <!-- System Info -->
@@ -682,7 +684,9 @@ onUnmounted(() => {
           <div class="bg-gray-900/90 backdrop-blur-md border border-gray-700 rounded-lg p-6 kode-mono-font shadow-2xl">
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-lg text-cyan-400">Import to {{ pendingImportType.toUpperCase() }}</h3>
-              <button @click="closeImportDialog" class="text-gray-400 hover:text-white text-xl">×</button>
+              <button @click="closeImportDialog" class="text-gray-400 hover:text-white">
+                <i class="i-carbon-close w-6 h-6" />
+              </button>
             </div>
             <div class="space-y-3">
               <textarea v-model="importData" placeholder="Paste identity JSON data..." class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm h-32 resize-none focus:border-cyan-500 focus:ring-cyan-500 outline-none" />
@@ -703,7 +707,9 @@ onUnmounted(() => {
           <div class="bg-gray-900/90 backdrop-blur-md border border-gray-700 rounded-lg p-6 kode-mono-font shadow-2xl">
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-lg text-cyan-400 flex items-center gap-2"><i class="i-carbon-locked w-5 h-5" /> Verify PIN</h3>
-              <button @click="cancelPinVerification" class="text-gray-400 hover:text-white text-xl">×</button>
+              <button @click="cancelPinVerification" class="text-gray-400 hover:text-white">
+                <i class="i-carbon-close w-6 h-6" />
+              </button>
             </div>
             <div class="space-y-3">
               <p class="text-sm text-gray-400">Enter your PIN to {{ pendingActionType }} this identity:</p>
