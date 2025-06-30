@@ -103,18 +103,6 @@ export default defineNuxtConfig({
     ],
   },
 
-  content: {
-    highlight: {
-      theme: {
-        // Default theme (same as single string)
-        default: 'github-dark',
-        // Theme used if `html.sepia`
-        sepia: 'monokai',
-      },
-      preload: ['bash', 'css', 'javascript', 'json', 'markdown', 'scss', 'vue', 'glsl'],
-    },
-  },
-
   vite: {
     plugins: [svgLoader()],
     optimizeDeps: {
