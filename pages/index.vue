@@ -18,16 +18,16 @@ useHead({
   <div class="showcase-container flex flex-col items-center w-full">
     <!-- Title and Subtitle at the top -->
     <div class="flex flex-col items-center mt-20 mb-8">
-      <h1 class="text-4xl font-bold mb-1 font-kode">3D Vision Lab</h1>
-      <h2 class="text-lg text-gray-400 font-kode mt-0">3D Vision Lab for Kadena ChainWeb</h2>
+      <h1 class="text-4xl font-bold mb-1">3D Vision Lab</h1>
+      <h2 class="text-lg text-gray-400 mt-0">3D Vision Lab for Kadena ChainWeb</h2>
     </div>
     <div class="projects-grid">
       <div v-for="project in projects" :key="project.id" class="project-card">
         <div class="card-image">
           <img :src="project.heroImage" :alt="`${project.name} preview`" />
         </div>
-        <div class="card-content font-kode">
-          <h2 class="card-title font-kode">{{ project.name }}</h2>
+        <div class="card-content">
+          <h2 class="card-title">{{ project.name }}</h2>
           <p class="card-description">{{ project.description }}</p>
           <div class="card-footer">
             <NuxtLink :to="project.path" class="card-button">
@@ -42,10 +42,6 @@ useHead({
 </template>
 
 <style scoped>
-.font-kode {
-  font-family: 'Kode Mono', monospace;
-}
-
 .showcase-container {
   display: flex;
   align-items: center;

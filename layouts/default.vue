@@ -31,9 +31,3 @@ import CopyrightFooter from '~/components/ui/CopyrightFooter.vue';
     </div>
   </div>
 </template>
-
-<style scoped>
-.font-kode {
-  font-family: 'Kode Mono', monospace;
-}
-</style>

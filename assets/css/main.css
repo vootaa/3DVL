@@ -24,7 +24,12 @@
 }
 
 html, body {
-  @apply font-sans text-gray-600 dark:text-gray-300
+  font-family: 'Kode Mono', monospace;
+  color: var(--text);
+}
+
+.font-kode {
+  font-family: 'Kode Mono', monospace;
 }
 
 body {
