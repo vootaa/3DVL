@@ -8,6 +8,8 @@ import { ResourceType } from './constants'
 
 import type { Resource, LoadingStats, LoadingError } from './types'
 
+const TOTAL_RESOURCES_COUNT = 43 // 27 components + 2 fonts + 5 models + 2 textures + 7 audio
+
 export const ResourceLoader = reactive({
   resources: [] as Resource[],
   totalResources: 0,
@@ -71,6 +73,10 @@ export const ResourceLoader = reactive({
 
   registerResource(name: string, modulePromise: Promise<any>,
     type: ResourceType = ResourceType.Component) {
+    // Prevent duplicate registrations
+    if (this.resources.some(r => r.name === name && r.type === type)) {
+      return
+    }
     this.resources.push({
       name,
       module: modulePromise,
@@ -300,6 +306,18 @@ export const ResourceLoader = reactive({
   },
 
   async loadAllResources() {
+    // If loading is already complete, do nothing.
+    if (this.isLoaded && this.loadedResources === TOTAL_RESOURCES_COUNT) {
+      Logger.log('RESOURCE_LOADER', 'Loading already complete, skipping.')
+      return true
+    }
+
+    // If loading started but was interrupted, reset to ensure a clean state.
+    if (this.totalResources > 0 && !this.isLoaded) {
+      Logger.warn('RESOURCE_LOADER', 'Incomplete load detected. Resetting for a clean start.')
+      this.reset()
+    }
+
     this.loadingStats.startTime = Date.now()
     Logger.log('RESOURCE_LOADER', 'Starting resource loading process')
 
@@ -394,8 +412,7 @@ export const ResourceLoader = reactive({
     try {
       await Promise.all(loadPromises)
       this.updateLoadingStats()
-      this.isLoaded = this.loadedResources === this.totalResources
-        || (this.loadedResources > 0 && this.loadingProgress >= 95)
+      this.isLoaded = this.loadedResources >= TOTAL_RESOURCES_COUNT
 
       Logger.log('RESOURCE_LOADER', 'Loading process completed', {
         loadedResources: this.loadedResources,
@@ -451,5 +468,23 @@ export const ResourceLoader = reactive({
     this.isLoaded = true
     this.loadingProgress = 100
     return true
+  },
+
+  reset() {
+    this.resources = []
+    this.totalResources = 0
+    this.loadedResources = 0
+    this.isLoaded = false
+    this.loadingProgress = 0
+    this.loadingErrors = []
+
+    // Reset stats, but keep caches
+    Object.values(ResourceType).forEach(type => {
+      this.loadingStats[type] = { total: 0, loaded: 0, items: [], current: null }
+    })
+    this.loadingStats.startTime = 0
+    this.loadingStats.elapsedTime = 0
+
+    Logger.log('RESOURCE_LOADER', 'ResourceLoader has been reset.')
   },
 })

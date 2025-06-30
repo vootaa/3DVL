@@ -40,6 +40,14 @@ const gameActive = ref(false)
 onMounted(async () => {
   Logger.log('SPACE_GAME', 'Component mounted, starting initialization')
   isMounted.value = true
+
+  // If resources are already loaded from a previous visit, update state immediately.
+  if (ResourceLoader.isLoaded) {
+    Logger.log('SPACE_GAME', 'Resources already loaded, skipping loading screen wait.')
+    resourcesLoaded.value = true
+    loadingProgress.value = 100
+  }
+
   await ResourceLoader.loadAllResources()
 })
 
@@ -49,6 +57,7 @@ onUnmounted(() => {
   if (gameController.value) {
     gameController.value.cleanup()
   }
+  // No longer need to reset the loader here.
 })
 
 watch(() => gameActive.value, (isActive) => {
