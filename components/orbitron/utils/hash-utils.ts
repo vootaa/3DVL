@@ -11,15 +11,6 @@ export async function verifyHash(data: string, hash: string): Promise<boolean> {
   return generatedHash === hash
 }
 
-export function generateShortId(length: number = 8): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let result = ''
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return result
-}
-
 export function generateNebulaHash(seed: string): string {
   let hash = 0
   for (let i = 0; i < seed.length; i++) {

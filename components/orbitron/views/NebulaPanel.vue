@@ -8,6 +8,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useOrbitron } from '../composables/useOrbitron'
 
 interface Props {
+  // The 'full' variant is reserved for future expansion.
   variant?: 'compact' | 'full'
 }
 

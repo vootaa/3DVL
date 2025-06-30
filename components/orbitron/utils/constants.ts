@@ -1,8 +1,3 @@
-export const SPACE_GAME_FONTS = {
-  primary: 'Kode Mono',
-  secondary: 'Teko'
-} as const
-
 export const SPACE_THEME_COLORS = {
   orbitron: {
     dark: '#0a0a0f',
@@ -20,13 +15,13 @@ export const SPACE_THEME_COLORS = {
 } as const
 
 export const ANIMATION_DURATIONS = {
-    fast: 150,
-    normal: 300,
-    slow: 500
+  fast: 150,
+  normal: 300,
+  slow: 500
 } as const
 
 export const CRYPTO_CONSTANTS = {
-    SALT_ROUNDS: 12,
-    KEY_LENGTH: 32,
-    IV_LENGTH: 16
+  SALT_ROUNDS: 12,
+  KEY_LENGTH: 32,
+  IV_LENGTH: 16
 } as const

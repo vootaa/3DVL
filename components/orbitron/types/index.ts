@@ -20,6 +20,7 @@ export interface GameGrowthEvent {
     experiment: string          // Marks the source experiment
 }
 
+// Reserved for future, more complex identity export/import functionality.
 export interface ExportedIdentityData {
     nebula_id: string
     created_at: number

@@ -48,5 +48,3 @@ export function validateConfig(config: OrbitronConfig): boolean {
 
   return true
 }
-
-export { type OrbitronConfig }

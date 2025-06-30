@@ -82,19 +82,19 @@ export function verifyNebulaIdIntegrity(nebulaId: string, createdAt: number, see
   if (!/^NEB-[A-F0-9]{8}$/.test(nebulaId)) {
     return false
   }
-  
+
   // 2. Verify timestamp reasonability
   const now = Date.now()
   const oneYearAgo = now - (365 * 24 * 60 * 60 * 1000)
   if (createdAt > now || createdAt < oneYearAgo) {
     return false
   }
-  
+
   // 3. Verify seed format
   if (!/^[a-f0-9]{64}$/.test(seed)) {
     return false
   }
-  
+
   // 4. Verify hash consistency (requires async verification)
   return true // Simplified example, actual implementation needs async hash verification
 }

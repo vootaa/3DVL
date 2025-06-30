@@ -1,8 +1,3 @@
-import { SPACE_GAME_FONTS } from './constants'
-
-export function formatSpaceText(text: string, _variant: 'primary' | 'secondary' = 'primary'): string {
-  return text.toUpperCase()
-}
 
 /**
  * Format timestamp with concise relative time expressions
@@ -37,32 +32,6 @@ export function formatTimestamp(timestamp: number, fullDate: boolean = true): st
   return new Date(timestamp).toLocaleDateString()
 }
 
-/**
- * Format Nebula ID for display
- * @param id Full nebula ID
- * @returns Formatted ID string
- */
-export function formatNebulaId(id: string): string {
-  return id.replace('NEB-', '').substring(0, 8)
-}
-
-/**
- * Format Nebula Nickname for display
- */
-export function formatNebulaNickname(nickname: string): string {
-  return nickname.toUpperCase()
-}
-
-export function formatEventType(eventType: string): string {
-  const typeMap: Record<string, string> = {
-    'exploration': 'Exploration',
-    'achievement': 'Achievement',
-    'interaction': 'Interaction',
-    'progress': 'Progress'
-  }
-  
-  return typeMap[eventType] || eventType
-}
 
 /**
  * Format identity type for display
@@ -91,12 +60,4 @@ export function formatSyncStatus(lastSync: number): string {
   if (diff < 86400000) return `Synced ${Math.floor(diff / 3600000)} hours ago`
   
   return `Synced on ${new Date(lastSync).toLocaleDateString('en-US')}`
-}
-
-export function getSpaceFontClass(variant: keyof typeof SPACE_GAME_FONTS): string {
-  const fonts = {
-    primary: 'font-mono tracking-wider',
-    secondary: 'font-mono tracking-widest'
-  }
-  return fonts[variant]
 }

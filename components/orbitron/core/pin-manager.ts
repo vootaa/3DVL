@@ -112,6 +112,7 @@ export class PinManager {
 
     /**
      * Change existing PIN
+     * @future This method is reserved for future implementation.
      */
     async changePin(currentPin: string, newPin: string): Promise<void> {
         if (!(await this.verifyPin(currentPin))) {
@@ -124,6 +125,7 @@ export class PinManager {
 
     /**
      * Get failed attempts count
+     * @future This method is reserved for future implementation.
      */
     getFailedAttempts(): number {
         return this.failedAttempts
@@ -131,6 +133,7 @@ export class PinManager {
 
     /**
      * Get remaining lockout time in milliseconds
+     * @future This method is reserved for future implementation.
      */
     getRemainingLockoutTime(): number {
         if (!this.isLockedOut()) return 0

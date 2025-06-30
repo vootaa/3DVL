@@ -2,13 +2,11 @@
 import { computed } from 'vue'
 
 interface Props {
-  variant?: 'floating' | 'inline'
   size?: 'sm' | 'md' | 'lg'
   component?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  variant: 'inline',
   size: 'md',
   component: 'orbitron'
 })
@@ -56,6 +54,8 @@ const repoTitle = computed(() => `View ${props.component} component source code`
 <style scoped>
 a:hover span {
   filter: drop-shadow(0 0 5px currentColor);
+}
+</style>
 }
 </style>
 }

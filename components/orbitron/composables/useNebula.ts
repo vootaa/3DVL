@@ -25,6 +25,9 @@ export function useNebula(seed?: string) {
     return currentNebula.value
   }
   
+  /**
+   * @future This function is reserved for future implementation.
+   */
   const saveNebula = () => {
     if (currentNebula.value) {
       const existing = savedNebulae.value.find(n => n.id === currentNebula.value!.id)
@@ -35,11 +38,17 @@ export function useNebula(seed?: string) {
     }
   }
   
+  /**
+   * @future This function is reserved for future implementation.
+   */
   const removeNebula = (id: string) => {
     setSavedNebulae(savedNebulae.value.filter(n => n.id !== id))
     Logger.log('useNebula', `Removed: ${id}`)
   }
   
+  /**
+   * @future This function is reserved for future implementation.
+   */
   const loadNebula = (nebula: NebulaData) => {
     currentNebula.value = nebula
     currentSeed.value = nebula.id

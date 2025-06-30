@@ -67,6 +67,7 @@ export class GrowthRecorder {
 
   /**
    * Get events for a specific experiment
+   * @future This method is reserved for future implementation.
    */
   getEventsForExperiment(experiment: string): GameGrowthEvent[] {
     return this.events.filter(event => event.experiment === experiment)
@@ -74,6 +75,7 @@ export class GrowthRecorder {
 
   /**
    * Get recent events (last 24 hours)
+   * @future This method is reserved for future implementation.
    */
   getRecentEvents(hours: number = 24): GameGrowthEvent[] {
     const cutoff = Date.now() - (hours * 60 * 60 * 1000)
