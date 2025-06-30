@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import NebulaPanel from '~/components/orbitron/views/NebulaPanel.vue'
+import NebulaPanel from '~/components/orbitron/views/NebulaPanel.vue';
+import ProjectSwitcher from '~/components/ui/ProjectSwitcher.vue';
 </script>
 
 <template>
   <div>
-    <!-- Orbitron UI Component - positioned at bottom right -->
-    <div class="fixed right-5 bottom-5 z-20">
-      <!-- Nebula Identity Panel -->
+    <!-- UI Components - positioned at bottom right -->
+    <div class="fixed right-5 bottom-5 z-20 flex items-end gap-3">
+      <ProjectSwitcher />
       <NebulaPanel variant="compact" />
     </div>
 
