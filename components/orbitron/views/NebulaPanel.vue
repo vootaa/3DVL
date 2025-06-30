@@ -422,7 +422,7 @@ const buttonText = computed(() => {
 })
 
 const buttonClasses = computed(() => [
-  'px-4 py-2 font-mono text-sm rounded-lg border transition-all duration-200 cursor-pointer',
+  'px-4 py-2 text-sm rounded-lg border transition-all duration-200 cursor-pointer',
   'tracking-wider font-medium whitespace-nowrap',
   {
     'bg-red-900/20 border-red-500/50 text-red-400 hover:bg-red-900/30': systemInfo.system_locked,

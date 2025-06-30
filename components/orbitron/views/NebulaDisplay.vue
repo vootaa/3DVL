@@ -39,7 +39,7 @@ const containerClasses = computed(() => [
   'relative rounded-full overflow-hidden border border-cyan-500/30',
   'backdrop-blur-sm transition-all duration-500',
   sizeClasses.value,
-  'font-mono tracking-wider',
+  'tracking-wider',
   {
     'hover:scale-105 cursor-pointer': props.interactive,
     'shadow-lg shadow-cyan-500/20': props.interactive
