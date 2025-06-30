@@ -486,7 +486,7 @@ onUnmounted(() => {
             <span>Nebula Identity</span>
           </h2>
           <button @click="showPanel = false" class="text-gray-400 hover:text-white">
-            <i class="i-carbon-close w-6 h-6" />
+            <i class="i-carbon-close w-4 h-4" />
           </button>
         </div>
 
@@ -685,7 +685,7 @@ onUnmounted(() => {
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-lg text-cyan-400">Import to {{ pendingImportType.toUpperCase() }}</h3>
               <button @click="closeImportDialog" class="text-gray-400 hover:text-white">
-                <i class="i-carbon-close w-6 h-6" />
+                <i class="i-carbon-close w-4 h-4" />
               </button>
             </div>
             <div class="space-y-3">
@@ -708,7 +708,7 @@ onUnmounted(() => {
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-lg text-cyan-400 flex items-center gap-2"><i class="i-carbon-locked w-5 h-5" /> Verify PIN</h3>
               <button @click="cancelPinVerification" class="text-gray-400 hover:text-white">
-                <i class="i-carbon-close w-6 h-6" />
+                <i class="i-carbon-close w-4 h-4" />
               </button>
             </div>
             <div class="space-y-3">
