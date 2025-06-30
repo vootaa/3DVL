@@ -16,6 +16,14 @@ useHead({
 
 <template>
   <div class="showcase-container">
+    <!-- 项目组名称和副标题 -->
+    <div class="flex flex-col items-center mb-6">
+      <h1 class="text-4xl font-bold mb-2" style="font-family: 'Kode Mono', monospace;">3D Vision Lab</h1>
+      <h2 class="text-lg text-gray-400" style="font-family: 'Kode Mono', monospace;">3D Vision Lab for Kadena ChainWeb</h2>
+    </div>
+    <div class="w-full flex justify-center mb-8">
+      <div class="border-t border-gray-300 w-2/3 opacity-40"></div>
+    </div>
     <div class="projects-grid">
       <div v-for="project in projects" :key="project.id" class="project-card">
         <div class="card-image">
