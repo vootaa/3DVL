@@ -19,7 +19,19 @@ useHead({
     <div class="carousel">
       <div class="carousel-track">
         <!-- Duplicate projects for seamless loop -->
-        <div v-for="project in [...projects, ...projects]" :key="project.id" class="project-card">
+        <div v-for="project in projects" :key="project.id" class="project-card">
+          <div class="card-image">
+            <img :src="project.heroImage" :alt="`${project.name} preview`" />
+          </div>
+          <div class="card-content">
+            <h2 class="card-title">{{ project.name }}</h2>
+            <p class="card-description">{{ project.description }}</p>
+            <NuxtLink :to="project.path" class="card-button">
+              Launch
+            </NuxtLink>
+          </div>
+        </div>
+        <div v-for="project in projects" :key="`duplicate-${project.id}`" class="project-card">
           <div class="card-image">
             <img :src="project.heroImage" :alt="`${project.name} preview`" />
           </div>
@@ -54,21 +66,24 @@ useHead({
 
 .carousel-track {
   display: flex;
-  width: calc(350px * 8); /* 350px card width * 8 cards (4 unique * 2) */
-  animation: scroll 40s linear infinite;
+  width: calc(490px * 4); /* 490px card width * 4 cards */
+  animation: scroll-and-pause 30s ease-in-out infinite;
 }
 
-@keyframes scroll {
-  from {
+@keyframes scroll-and-pause {
+  0%, 10% {
     transform: translateX(0);
   }
-  to {
-    transform: translateX(calc(-350px * 4)); /* -350px card width * 4 unique cards */
+  45%, 55% {
+    transform: translateX(calc(-490px * 2));
+  }
+  90%, 100% {
+    transform: translateX(0);
   }
 }
 
 .project-card {
-  width: 350px;
+  width: 450px;
   flex-shrink: 0;
   margin: 0 20px;
   border-radius: 1rem;
@@ -85,7 +100,7 @@ useHead({
 
 .card-image img {
   width: 100%;
-  height: 200px;
+  height: 250px;
   object-fit: cover;
 }
 
@@ -105,7 +120,7 @@ useHead({
   color: var(--text);
   opacity: 0.8;
   margin-bottom: 1.5rem;
-  height: 60px; /* Fixed height for description */
+  height: 70px; /* Fixed height for description */
 }
 
 .card-button {
