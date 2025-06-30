@@ -106,6 +106,7 @@ useHead({
 
 .card-content {
   padding: 1.5rem;
+  font-family: 'Kode Mono', monospace;
 }
 
 .card-title {
