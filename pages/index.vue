@@ -24,9 +24,12 @@ useHead({
         <div class="card-content">
           <h2 class="card-title">{{ project.name }}</h2>
           <p class="card-description">{{ project.description }}</p>
-          <NuxtLink :to="project.path" class="card-button">
-            Launch
-          </NuxtLink>
+          <div class="card-footer">
+            <NuxtLink :to="project.path" class="card-button">
+              <span>Launch</span>
+              <i class="i-carbon-launch w-4 h-4" />
+            </NuxtLink>
+          </div>
         </div>
       </div>
     </div>
@@ -74,6 +77,9 @@ useHead({
 .card-content {
   padding: 1.5rem;
   font-family: 'Kode Mono', monospace;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
 .card-title {
@@ -89,41 +95,19 @@ useHead({
   opacity: 0.8;
   margin-bottom: 1.5rem;
   height: 70px; /* Fixed height for description */
+  flex-grow: 1;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
 }
 
 .card-button {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  background-color: var(--accent);
-  color: var(--bg);
-  text-decoration: none;
-  font-weight: bold;
-  border-radius: 0.5rem;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.card-content {
-  padding: 1.5rem;
-  font-family: 'Kode Mono', monospace;
-}
-
-.card-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--text);
-  margin-bottom: 0.5rem;
-}
-
-.card-description {
-  font-size: 1rem;
-  color: var(--text);
-  opacity: 0.8;
-  margin-bottom: 1.5rem;
-  height: 70px; /* Fixed height for description */
-}
-
-.card-button {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.5rem 1rem;
   background-color: var(--accent);
   color: var(--bg);
