@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { projects } from '~/utils/projects';
 
+definePageMeta({
+    layout: 'default',
+});
+
 useHead({
   title: '3DVL - A 3D Visualization Lab',
   meta: [
@@ -8,9 +12,6 @@ useHead({
   ],
 });
 
-definePageMeta({
-  layout: 'default',
-});
 </script>
 
 <template>
