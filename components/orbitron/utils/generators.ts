@@ -104,6 +104,16 @@ export function verifyNebulaIdIntegrity(nebulaId: string, createdAt: number, see
  */
 export async function generateDeviceId(): Promise<string> {
   const isBrowser = typeof window !== 'undefined';
+  const now = new Date();
+
+  let timeComponent: string;
+  if (isBrowser) {
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    timeComponent = `${year}-${month}`;
+  } else {
+    timeComponent = now.getTime().toString();
+  }
 
   const userAgent = isBrowser ? navigator.userAgent : 'unknown';
   const platform = isBrowser ? navigator.platform : 'unknown';
@@ -111,7 +121,7 @@ export async function generateDeviceId(): Promise<string> {
   const screenWidth = isBrowser ? window.screen.width : 0;
   const screenHeight = isBrowser ? window.screen.height : 0;
 
-  const combined = `${userAgent}:${platform}:${language}:${screenWidth}x${screenHeight}`;
+  const combined = `${userAgent}:${platform}:${language}:${screenWidth}x${screenHeight}:${timeComponent}`;
   const hash = await generateHash(combined);
   return `DVID-${hash.substring(0, 12)}`;
 }

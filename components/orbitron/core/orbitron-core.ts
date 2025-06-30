@@ -39,8 +39,15 @@ export class OrbitronCore {
     }
 
     private async initializeDeviceId() {
-        this.deviceId = await generateDeviceId()
-        Logger.log('OrbitronCore', `Device ID generated: ${this.deviceId}`)
+        let deviceId = await this.storage.get<string>('orbitron_device_id');
+        if (!deviceId) {
+            deviceId = await generateDeviceId();
+            await this.storage.set('orbitron_device_id', deviceId);
+            Logger.log('OrbitronCore', `New Device ID generated and stored: ${deviceId}`);
+        } else {
+            Logger.log('OrbitronCore', `Retrieved Device ID from storage: ${deviceId}`);
+        }
+        this.deviceId = deviceId;
     }
 
     // Identity Management
