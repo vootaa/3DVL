@@ -17,11 +17,11 @@ export const orbitalConfig = {
   // Particle properties
   particleSize: 8, // Smaller for thinner ring lines
   
-  // Rotation speeds (inner faster, outer slower)
+  // Rotation speeds (inner faster, outer slower) - reduced for better observation
   rotationSpeeds: {
-    inner: 0.8,
-    middle: 0.5,
-    outer: 0.3
+    inner: 0.4,   // Reduced from 0.8
+    middle: 0.25, // Reduced from 0.5
+    outer: 0.15   // Reduced from 0.3
   }
 }
 
@@ -42,6 +42,6 @@ export const orbitalColorConfig = {
     inner: 2.0,     // Very bright
     middle: 1.8,    // Bright
     outer: 1.5,     // Moderately bright
-    scattered: 0.6  // Dimmer for scattered particles
+    scattered: 0.8  // Increased from 0.6 for better visibility
   }
 }
