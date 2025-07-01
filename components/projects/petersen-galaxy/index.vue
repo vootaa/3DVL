@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Color, AdditiveBlending, BufferAttribute, Points, ShaderMaterial } from 'three'
+import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Color, AdditiveBlending, Points, ShaderMaterial } from 'three'
 import gsap from 'gsap'
 
 import vertexShader from './shaders/vertex.glsl'
