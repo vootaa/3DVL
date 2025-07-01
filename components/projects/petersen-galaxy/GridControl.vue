@@ -5,7 +5,6 @@ const toggleGrid = () => {
   showGrid.value = !showGrid.value
 }
 
-// 暴露给父组件
 defineExpose({
   showGrid
 })
@@ -23,7 +22,8 @@ defineExpose({
   position: absolute;
   top: 20px;
   left: 20px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 12, 20, 0.9);
+  border: 1px solid rgba(0, 204, 255, 0.2);
   border-radius: 8px;
   padding: 10px 15px;
   color: #00CCFF;
@@ -41,12 +41,15 @@ defineExpose({
   flex-direction: column;
   justify-content: center;
   box-sizing: border-box;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
   z-index: 100;
+  backdrop-filter: blur(4px);
 }
 
 .grid-control:hover {
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 20, 30, 0.95);
+  border-color: rgba(0, 204, 255, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 204, 255, 0.1);
 }
 
 .control-label {

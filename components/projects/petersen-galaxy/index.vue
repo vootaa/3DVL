@@ -22,15 +22,13 @@ const gridControlRef = ref()
       
       <!-- Subtle ambient lighting for better 3D perception -->
       <TresAmbientLight :intensity="0.05" color="#004488" />
-      
-      <!-- Conditionally rendered grid helper -->
+
       <TresGridHelper 
         v-if="gridControlRef?.showGrid"
         :size="20" 
-        :divisions="20" 
-        color1="#000611" 
-        color2="#000611"
-        :position="[0, -2, 0]"
+        color1="#002244" 
+        color2="#001122"
+        :position="[0, -3, 0]"
       />
       
       <OrbitalSystem />
