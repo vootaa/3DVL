@@ -60,11 +60,11 @@ const starColors = {
   'red-giant': new Color('#FF4500')      // Orange-red - M-type red giant
 }
 
-// Star size configuration with orbital amplitude variation
+// Star size configuration with orbital amplitude variation - reduced sizes
 const starSizes = {
-  'main-sequence': { base: 17, amplitude: 0.05 }, // Inner orbit: ±5%
-  'blue-giant': { base: 24, amplitude: 0.10 },     // Middle orbit: ±10%
-  'red-giant': { base: 30, amplitude: 0.15 }       // Outer orbit: ±15%
+  'main-sequence': { base: 14, amplitude: 0.05 }, // Inner orbit: ±5% (reduced from 17)
+  'blue-giant': { base: 18, amplitude: 0.10 },     // Middle orbit: ±10% (reduced from 24)
+  'red-giant': { base: 28, amplitude: 0.15 }       // Outer orbit: ±15% (slightly reduced from 30)
 }
 
 // Calculate star position

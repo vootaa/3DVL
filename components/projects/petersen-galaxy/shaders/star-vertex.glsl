@@ -26,7 +26,7 @@ void main() {
   
   // Enhanced distance-based size scaling for 3D depth effect
   float distance = length(mvPosition.xyz);
-  float distanceScale = 400.0 / distance; // Stronger distance effect
+  float distanceScale = 300.0 / distance; // Reduced from 400.0 for smaller halos
   
   // Camera distance scaling - inverse relationship for zoom
   // When camera distance = 2, scale = 1.0 (normal size)

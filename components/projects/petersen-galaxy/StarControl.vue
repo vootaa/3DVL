@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 
 // Star cluster control state
 const showStars = ref(true)
@@ -7,21 +7,21 @@ const starClusterRef = ref()
 
 // Star configuration by orbits
 const orbitConfig = {
-  inner: { 
-    count: 5, 
-    color: '#FFD700', 
+  inner: {
+    count: 5,
+    color: '#FFD700',
     name: 'Inner Orbit',
     stars: Array.from({ length: 5 }, (_, i) => ({ id: i + 5, active: false }))
   },
-  middle: { 
-    count: 5, 
-    color: '#87CEEB', 
+  middle: {
+    count: 5,
+    color: '#87CEEB',
     name: 'Middle Orbit',
     stars: Array.from({ length: 5 }, (_, i) => ({ id: i, active: false }))
   },
-  outer: { 
-    count: 10, 
-    color: '#FF4500', 
+  outer: {
+    count: 10,
+    color: '#FF4500',
     name: 'Outer Orbit',
     stars: Array.from({ length: 10 }, (_, i) => ({ id: i + 10, active: false }))
   }
@@ -58,76 +58,55 @@ defineExpose({
       <div class="control-label">STAR CLUSTER</div>
       <div class="control-value">{{ showStars ? 'ON' : 'OFF' }}</div>
     </div>
-    
+
     <!-- Orbital star buttons panel - shows when stars are ON -->
     <div v-show="showStars" class="orbital-panel">
       <h3>ORBITAL STARS</h3>
-      
+
       <!-- Inner Orbit -->
       <div class="orbit-section">
         <div class="orbit-label" :style="{ color: orbitConfig.inner.color }">
           INNER
         </div>
         <div class="star-buttons">
-          <button 
-            v-for="(star, index) in orbitConfig.inner.stars" 
-            :key="`inner-${index}`"
-            class="star-button inner"
-            :class="{ active: star.active }"
-            :style="{ 
+          <button v-for="(star, index) in orbitConfig.inner.stars" :key="`inner-${index}`" class="star-button inner"
+            :class="{ active: star.active }" :style="{
               borderColor: orbitConfig.inner.color,
               backgroundColor: star.active ? orbitConfig.inner.color : 'transparent'
-            }"
-            :title="`Inner Star ${star.id + 1}`"
-            @click="handleStarClick('inner', index)"
-          >
-            <span class="star-number">{{ index + 1 }}</span>
+            }" :title="`Inner Star ${star.id}`" @click="handleStarClick('inner', index)">
+            <span class="star-number">{{ star.id }}</span>
           </button>
         </div>
       </div>
-      
+
       <!-- Middle Orbit -->
       <div class="orbit-section">
         <div class="orbit-label" :style="{ color: orbitConfig.middle.color }">
           MIDDLE
         </div>
         <div class="star-buttons">
-          <button 
-            v-for="(star, index) in orbitConfig.middle.stars" 
-            :key="`middle-${index}`"
-            class="star-button middle"
-            :class="{ active: star.active }"
-            :style="{ 
+          <button v-for="(star, index) in orbitConfig.middle.stars" :key="`middle-${index}`" class="star-button middle"
+            :class="{ active: star.active }" :style="{
               borderColor: orbitConfig.middle.color,
               backgroundColor: star.active ? orbitConfig.middle.color : 'transparent'
-            }"
-            :title="`Middle Star ${star.id + 1}`"
-            @click="handleStarClick('middle', index)"
-          >
-            <span class="star-number">{{ index + 1 }}</span>
+            }" :title="`Middle Star ${star.id}`" @click="handleStarClick('middle', index)">
+            <span class="star-number">{{ star.id }}</span>
           </button>
         </div>
       </div>
-      
+
       <!-- Outer Orbit - Split into two rows -->
       <div class="orbit-section">
         <div class="orbit-label" :style="{ color: orbitConfig.outer.color }">
           OUTER
         </div>
         <div class="star-buttons">
-          <button 
-            v-for="(star, index) in orbitConfig.outer.stars" 
-            :key="`outer-${index}`"
-            class="star-button outer"
-            :class="{ active: star.active }"
-            :style="{ 
+          <button v-for="(star, index) in orbitConfig.outer.stars" :key="`outer-${index}`" class="star-button outer"
+            :class="{ active: star.active }" :style="{
               borderColor: orbitConfig.outer.color,
               backgroundColor: star.active ? orbitConfig.outer.color : 'transparent'
-            }"
-            :title="`Outer Star ${star.id + 1}`"
-            @click="handleStarClick('outer', index)"
-          >
-            <span class="star-number">{{ index + 1 }}</span>
+            }" :title="`Outer Star ${star.id}`" @click="handleStarClick('outer', index)">
+            <span class="star-number">{{ star.id }}</span>
           </button>
         </div>
       </div>
@@ -159,7 +138,8 @@ defineExpose({
   font-variant-numeric: slashed-zero tabular-nums;
   text-transform: uppercase;
   line-height: 1em;
-  transform: skew(0.5deg, -1.5deg) rotate(-1deg); /* Mirror of GridControl transform */
+  transform: skew(0.5deg, -1.5deg) rotate(-1deg);
+  /* Mirror of GridControl transform */
   transform-origin: center center;
   pointer-events: all;
   cursor: pointer;
@@ -172,7 +152,7 @@ defineExpose({
   transition: all 0.2s ease;
   box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
   /* Helmet concave/convex effect - opposite direction from GridControl */
-  background-image: 
+  background-image:
     linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.2) 100%),
     radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.05) 0%, transparent 70%);
 }
@@ -183,7 +163,7 @@ defineExpose({
   box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
   transform: skew(0.5deg, -1.5deg) rotate(-1deg) scale(1.02);
   /* Enhanced helmet effect on hover */
-  background-image: 
+  background-image:
     linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, transparent 50%, rgba(0, 0, 0, 0.3) 100%),
     radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.08) 0%, transparent 70%);
 }
@@ -209,11 +189,14 @@ defineExpose({
   backdrop-filter: blur(10px);
   color: #ffffff;
   font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
-  width: 200px; /* Fixed width for 5 circles */
-  margin-top: 20px; /* Add distance from main button */
+  width: 200px;
+  /* Fixed width for 5 circles */
+  margin-top: 20px;
+  /* Add distance from main button */
   animation: fadeInDown 0.3s ease;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  transform: skew(0.25deg, -0.75deg) rotate(-0.5deg); /* Subtle helmet angle */
+  transform: skew(0.25deg, -0.75deg) rotate(-0.5deg);
+  /* Subtle helmet angle */
 }
 
 .orbital-panel h3 {
@@ -247,7 +230,8 @@ defineExpose({
 
 .star-buttons {
   display: grid;
-  grid-template-columns: repeat(5, 1fr); /* Exactly 5 columns */
+  grid-template-columns: repeat(5, 1fr);
+  /* Exactly 5 columns */
   gap: 6px;
   justify-items: center;
 }
@@ -291,7 +275,8 @@ defineExpose({
 }
 
 .star-button.active .star-number {
-  color: rgba(0, 0, 0, 0.8); /* Dark text on active background */
+  color: rgba(0, 0, 0, 0.8);
+  /* Dark text on active background */
   opacity: 1;
 }
 
@@ -300,6 +285,7 @@ defineExpose({
     opacity: 0;
     transform: translateY(-10px) skew(0.25deg, -0.75deg) rotate(-0.5deg);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) skew(0.25deg, -0.75deg) rotate(-0.5deg);
@@ -311,24 +297,26 @@ defineExpose({
     padding: 8px 12px;
     width: 140px;
     min-height: 50px;
-    transform: skew(0.25deg, -1deg) rotate(-0.75deg); /* Mirror responsive transform */
+    transform: skew(0.25deg, -1deg) rotate(-0.75deg);
+    /* Mirror responsive transform */
   }
 
   .control-value {
     font-size: 1.4em;
   }
-  
+
   .orbital-panel {
-    width: 180px; /* Smaller width on mobile */
+    width: 180px;
+    /* Smaller width on mobile */
     padding: 12px;
     margin-top: 15px;
   }
-  
+
   .star-button {
     width: 20px;
     height: 20px;
   }
-  
+
   .star-number {
     font-size: 8px;
   }
