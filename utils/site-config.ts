@@ -1,8 +1,8 @@
 export const siteConfig = {
-  title: '3DVL - A 3D Visualization Lab',
-  description: 'An experimental platform for 3D web projects and interactive art.',
+  title: 'Vootaa.com - 3D Vision Lab',
+  description: 'A cutting-edge 3D visualization platform exploring Kadena’s ChainWeb and Peterson Graph topology.',
   hero: {
     title: '3D Vision Lab',
-    subtitle: '3D Vision Lab for Kadena ChainWeb'
+    subtitle: 'Visualizing Kadena’s ChainWeb and its graph structure through immersive, gamified 3D experiences'
   }
 }

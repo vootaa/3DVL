@@ -30,10 +30,10 @@ export const projects: Project[] = [
   {
     id: 'space-game',
     name: 'Space Game',
-    description: 'A minimalist prototype for a 3D space exploration and combat game.',
+    description: 'A Web3D gaming & visualization of the Kadena Chainweb braided structure.',
     path: '/space-game',
     heroImage: '/space-game.png',
     title: 'Space Game - 3DVL',
-    metaDescription: 'A minimalist prototype for a 3D space exploration and combat game.',
+    metaDescription: 'A Web3D gaming & visualization of the Kadena Chainweb braided structure.',
   },
 ];

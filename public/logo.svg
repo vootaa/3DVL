@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="500px" height="500px" viewBox="0 0 500 500" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Vootaa Logo</title>
-    <g id="vootaa" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <g id="vootaa" stroke="none" stroke-width="2" fill="none" fill-rule="evenodd">
         <g id="logo" stroke="#979797">
             <g id="bg-group">
-               <circle id="cicle" cx="250" cy="250" r="249.5"></circle>
+               <circle id="cicle" cx="250" cy="250" r="248"></circle>
             </g>
             <g id="logo-group" transform="translate(80, 42)" stroke-width="10">
                 <path d="M179.096098,238.800919 C189.526707,233.94026 201.812819,233.056151 213.482106,237.300618 C225.023732,241.49865 233.800692,249.92764 238.696589,260.197381 C243.597095,270.476788 244.609786,282.600334 240.613702,294.169629 L240.313496,295.012583 C236.064601,306.664866 227.493267,315.494813 217.068709,320.352652 C206.6381,325.21331 194.351989,326.097419 182.682701,321.852953 C171.141075,317.65492 162.364116,309.225931 157.468218,298.95619 C152.567713,288.676783 151.555021,276.553237 155.551106,264.983941 L155.851311,264.140987 C160.100207,252.488705 168.67154,243.658758 179.096098,238.800919 Z" id="circle" transform="translate(198.0824, 279.5768) rotate(20) translate(-198.0824, -279.5768)"></path>
