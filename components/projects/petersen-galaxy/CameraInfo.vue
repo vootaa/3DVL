@@ -131,7 +131,7 @@ onUnmounted(() => {
   font-variant-numeric: slashed-zero tabular-nums;
   text-transform: uppercase;
   line-height: 1em;
-  transform: skew(1deg, -3deg) rotate(-2deg);
+  transform: skew(0.5deg, -1.5deg) rotate(-1deg);
   transform-origin: center center;
   pointer-events: none;
   width: 180px;
@@ -219,7 +219,7 @@ onUnmounted(() => {
     padding: 8px 12px;
     width: 160px;
     min-height: 70px;
-    transform: skew(0.5deg, -2deg) rotate(-1.5deg);
+    transform: skew(0.25deg, -1deg) rotate(-0.75deg);
   }
 
   .info-value {
