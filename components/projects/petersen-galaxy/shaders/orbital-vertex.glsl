@@ -26,8 +26,13 @@ void main() {
         float radiusProgress = smoothstep(0.0, 1.0, orbitInfluence);
         float currentRadius = mix(distanceToCenter, aTargetRadius, radiusProgress);
         
-        // Different rotation speeds for different orbits
-        float angleOffset = aRotationSpeed * uTime * orbitInfluence;
+        // Uniform base rotation speed with random oscillations (±2.5%)
+        float baseSpeed = aRotationSpeed;
+        float randomSeed = aTargetRadius * 123.456 + angle * 789.012; // Unique seed per particle
+        float oscillation = sin(uTime * 0.8 + randomSeed) * 0.025; // ±2.5% oscillation
+        float finalSpeed = baseSpeed * (1.0 + oscillation);
+        
+        float angleOffset = finalSpeed * uTime * orbitInfluence;
         angle += angleOffset;
         
         // Calculate orbital position
@@ -45,12 +50,17 @@ void main() {
         float angle = atan(modelPosition.x, modelPosition.z);
         
         // Determine which orbit this particle is near and sync rotation with delay
-        float nearestOrbitSpeed = 0.3; // Default to outer orbit speed
+        float nearestOrbitSpeed = 0.240; // Same base speed for all orbits
         if (distanceToCenter < 2.25) { // Between inner and middle
-            nearestOrbitSpeed = mix(0.8, 0.5, (distanceToCenter - 1.5) / 0.75);
+            nearestOrbitSpeed = 0.240; // Same base speed
         } else if (distanceToCenter < 3.9) { // Between middle and outer
-            nearestOrbitSpeed = mix(0.5, 0.3, (distanceToCenter - 3.0) / 0.9);
+            nearestOrbitSpeed = 0.240; // Same base speed
         }
+        
+        // Add same random oscillations as orbital particles
+        float randomSeed = distanceToCenter * 456.789 + angle * 321.654;
+        float oscillation = sin(uTime * 0.8 + randomSeed) * 0.025; // ±2.5% oscillation
+        nearestOrbitSpeed *= (1.0 + oscillation);
         
         // Synchronized rotation with delay (gravitational attraction effect)
         float delayFactor = 0.7; // 70% of orbital speed

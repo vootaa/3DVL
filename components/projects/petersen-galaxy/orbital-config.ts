@@ -24,11 +24,12 @@ export const orbitalConfig = {
   // Particle properties
   particleSize: 8, // Smaller for thinner ring lines
   
-  // Rotation speeds (inner faster, outer slower) - reduced for better observation
+  // Rotation speeds - synchronized base speed with random oscillations for stable relative structure
   rotationSpeeds: {
-    inner: 0.4,   // Reduced from 0.8
-    middle: 0.25, // Reduced from 0.5
-    outer: 0.15   // Reduced from 0.3
+    inner: 0.240,  // Same base speed for all orbits
+    middle: 0.240, // Same base speed for all orbits
+    outer: 0.240   // Same base speed for all orbits
+    // Random ±2.5% oscillation applied in shader for natural variation
   }
 }
 
