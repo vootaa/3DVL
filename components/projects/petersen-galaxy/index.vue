@@ -35,26 +35,29 @@ for (let i = 0; i < totalCount; i++) {
   orbitFactors[i] = isOrbital ? 1.0 : 0.0
   
   if (isOrbital) {
-    // Assign to one of three orbits - equal distribution for clear ring visibility
+    // Assign to one of three orbits with galaxy-like distribution:
+    // Inner ring: 50% of orbital particles (most dense)
+    // Middle ring: 35% of orbital particles 
+    // Outer ring: 15% of orbital particles (least dense)
     const orbitChoice = Math.random()
     let targetRadius
     let particleColor
     let rotationSpeed
     
-    if (orbitChoice < 0.33) {
-      // Inner orbit
+    if (orbitChoice < 0.50) {
+      // Inner orbit - most particles (50% of orbital particles)
       targetRadius = innerRadius
       particleColor = colorConfig.innerRing.clone()
       particleColor.multiplyScalar(colorConfig.brightness.inner)
       rotationSpeed = rotationSpeeds.inner
-    } else if (orbitChoice < 0.66) {
-      // Middle orbit
+    } else if (orbitChoice < 0.85) {
+      // Middle orbit - medium particles (35% of orbital particles)
       targetRadius = middleRadius
       particleColor = colorConfig.middleRing.clone()
       particleColor.multiplyScalar(colorConfig.brightness.middle)
       rotationSpeed = rotationSpeeds.middle
     } else {
-      // Outer orbit
+      // Outer orbit - least particles (15% of orbital particles)
       targetRadius = outerRadius
       particleColor = colorConfig.outerRing.clone()
       particleColor.multiplyScalar(colorConfig.brightness.outer)
@@ -77,29 +80,66 @@ for (let i = 0; i < totalCount; i++) {
     colors[i3 + 1] = particleColor.g
     colors[i3 + 2] = particleColor.b
     
-    // Larger scale for brighter ring appearance with some variation
-    scales[i] = 1.0 + Math.random() * 0.5
+    // Larger scale for brighter ring appearance with variation based on ring
+    if (targetRadius === innerRadius) {
+      scales[i] = 1.0 + Math.random() * 0.6 // Inner ring - brightest and largest
+    } else if (targetRadius === middleRadius) {
+      scales[i] = 0.8 + Math.random() * 0.5 // Middle ring - medium
+    } else {
+      scales[i] = 0.6 + Math.random() * 0.4 // Outer ring - smallest/dimmest
+    }
   } else {
-    // Scattered particles - distributed throughout the 3D space
-    const radius = Math.random() * maxSpaceRadius
-    const angle = Math.random() * Math.PI * 2
-    const height = (Math.random() - 0.5) * (maxSpaceRadius * 0.8) // Slightly flattened distribution
+    // Scattered particles - distributed around and between the rings
+    // Create a more natural distribution around the orbital rings
+    const distributionChoice = Math.random()
     
-    positions[i3] = Math.cos(angle) * radius
-    positions[i3 + 1] = height
-    positions[i3 + 2] = Math.sin(angle) * radius
+    if (distributionChoice < 0.4) {
+      // Around inner ring area
+      const baseRadius = innerRadius
+      const radiusVariation = (Math.random() - 0.5) * 1.0 // ±0.5 variation
+      const radius = Math.max(0.5, baseRadius + radiusVariation)
+      const angle = Math.random() * Math.PI * 2
+      const height = (Math.random() - 0.5) * 3
+      
+      positions[i3] = Math.cos(angle) * radius
+      positions[i3 + 1] = height
+      positions[i3 + 2] = Math.sin(angle) * radius
+    } else if (distributionChoice < 0.7) {
+      // Around middle ring area
+      const baseRadius = middleRadius
+      const radiusVariation = (Math.random() - 0.5) * 1.5 // ±0.75 variation
+      const radius = Math.max(0.5, baseRadius + radiusVariation)
+      const angle = Math.random() * Math.PI * 2
+      const height = (Math.random() - 0.5) * 4
+      
+      positions[i3] = Math.cos(angle) * radius
+      positions[i3 + 1] = height
+      positions[i3 + 2] = Math.sin(angle) * radius
+    } else {
+      // Around outer ring and beyond
+      const baseRadius = outerRadius
+      const radiusVariation = Math.random() * 2.0 // 0 to +2.0 variation (extending outward)
+      const radius = baseRadius + radiusVariation
+      const angle = Math.random() * Math.PI * 2
+      const height = (Math.random() - 0.5) * 5
+      
+      positions[i3] = Math.cos(angle) * radius
+      positions[i3 + 1] = height
+      positions[i3 + 2] = Math.sin(angle) * radius
+    }
     
     targetRadii[i] = 0.0 // No target radius for scattered particles
     rotationSpeedsArray[i] = 0.0 // No rotation for scattered particles
     
-    // Use dimmer color from same family
+    // Use dimmer color from same family with some randomness
     const scatteredColor = colorConfig.scattered.clone()
-    scatteredColor.multiplyScalar(colorConfig.brightness.scattered)
+    const brightnessVariation = 0.8 + Math.random() * 0.4 // Slight variation in brightness
+    scatteredColor.multiplyScalar(colorConfig.brightness.scattered * brightnessVariation)
     colors[i3] = scatteredColor.r
     colors[i3 + 1] = scatteredColor.g
     colors[i3 + 2] = scatteredColor.b
     
-    scales[i] = 0.3 + Math.random() * 0.3
+    scales[i] = 0.4 + Math.random() * 0.4
   }
   
   // Add initial randomness for chaotic start (reduced for clearer evolution)

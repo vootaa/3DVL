@@ -39,6 +39,25 @@ void main() {
         
         // Smooth transition from chaos to order
         modelPosition.xyz = mix(modelPosition.xyz, orbitalPosition, radiusProgress);
+    } else {
+        // For scattered particles - add subtle movement without forming orbits
+        float distanceToCenter = length(modelPosition.xz);
+        float angle = atan(modelPosition.x, modelPosition.z);
+        
+        // Very slow, random-like rotation
+        float scatteredRotation = sin(uTime * 0.1 + distanceToCenter * 0.5) * 0.02;
+        angle += scatteredRotation;
+        
+        // Slight radial breathing effect
+        float breathing = sin(uTime * 0.3 + angle * 2.0) * 0.05;
+        distanceToCenter *= (1.0 + breathing);
+        
+        // Apply subtle movement
+        modelPosition.x = distanceToCenter * cos(angle);
+        modelPosition.z = distanceToCenter * sin(angle);
+        
+        // Gentle vertical oscillation
+        modelPosition.y += sin(uTime * 0.2 + distanceToCenter) * 0.1;
     }
     
     // Reduced randomness for cleaner ring appearance

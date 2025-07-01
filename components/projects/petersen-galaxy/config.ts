@@ -3,7 +3,7 @@ import { Color } from 'three'
 // Orbital parameters
 export const orbitalConfig = {
   // Particle counts
-  totalCount: 3000,
+  totalCount: 3500, // Balanced for clear rings and performance
   orbitParticleRatio: 0.7, // 70% orbital, 30% scattered
   
   // Orbital radii
@@ -15,7 +15,7 @@ export const orbitalConfig = {
   maxSpaceRadius: 6.24, // outerRadius * 1.3
   
   // Particle properties
-  particleSize: 12, // Increased for better visibility
+  particleSize: 10, // Slightly reduced for better balance
   
   // Rotation speeds (inner faster, outer slower)
   rotationSpeeds: {
