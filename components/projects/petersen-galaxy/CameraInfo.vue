@@ -21,23 +21,23 @@ const updateCameraInfo = () => {
         const camera = scene.camera
         const controls = scene.controls
         
-        // Get actual distance from camera to target
-        const target = controls.target || { x: 0, y: 0, z: 0 }
-        const distance = camera.position.distanceTo(target)
+        // Use grid center (0, 0, 0) as reference point instead of controls.target
+        const gridCenter = { x: 0, y: 0, z: 0 }
+        const distance = camera.position.distanceTo(gridCenter)
         cameraDistance.value = distance
 
-        // Calculate spherical coordinates for azimuth and elevation
+        // Calculate spherical coordinates relative to grid center
         const position = camera.position
         
-        // Calculate relative position
-        const dx = position.x - target.x
-        const dy = position.y - target.y
-        const dz = position.z - target.z
+        // Calculate relative position to grid center
+        const dx = position.x - gridCenter.x
+        const dy = position.y - gridCenter.y
+        const dz = position.z - gridCenter.z
         
-        // Calculate azimuth (horizontal angle) in degrees
+        // Calculate azimuth (horizontal angle) in degrees relative to grid
         azimuthAngle.value = (Math.atan2(dx, dz) * 180 / Math.PI)
         
-        // Calculate elevation (vertical angle) in degrees
+        // Calculate elevation (vertical angle) in degrees relative to grid
         const horizontalDistance = Math.sqrt(dx * dx + dz * dz)
         elevationAngle.value = (Math.atan2(dy, horizontalDistance) * 180 / Math.PI)
         
@@ -48,11 +48,11 @@ const updateCameraInfo = () => {
     // Silently fall through to simulation mode
   }
   
-  // Fallback to simulated values for demonstration
-  const time = Date.now() * 0.001
-  cameraDistance.value = 15 + Math.sin(time * 0.5) * 5
-  azimuthAngle.value = Math.sin(time * 0.3) * 45
-  elevationAngle.value = Math.cos(time * 0.4) * 30
+  // Fallback: use stable values instead of constantly changing simulation
+  // These values represent a typical camera position
+  cameraDistance.value = 17.3  // Fixed typical distance
+  azimuthAngle.value = 45      // Fixed angle for demonstration
+  elevationAngle.value = 25    // Fixed angle for demonstration
 }
 
 const startTracking = () => {
@@ -137,7 +137,7 @@ onUnmounted(() => {
   transform: skew(1deg, -3deg) rotate(-2deg);
   transform-origin: center center;
   pointer-events: none;
-  width: 160px;
+  width: 180px;
   min-height: 80px;
   display: flex;
   flex-direction: column;
@@ -220,7 +220,7 @@ onUnmounted(() => {
 @media only screen and (max-width: 900px) {
   .camera-info {
     padding: 8px 12px;
-    width: 140px;
+    width: 160px;
     min-height: 70px;
     transform: skew(0.5deg, -2deg) rotate(-1.5deg);
   }

@@ -12,7 +12,7 @@ defineExpose({
 
 <template>
   <div class="grid-control" @click="toggleGrid">
-    <div class="control-label">GRID</div>
+    <div class="control-label">GRID HELPER</div>
     <div class="control-value">{{ showGrid ? 'ON' : 'OFF' }}</div>
   </div>
 </template>
@@ -36,7 +36,7 @@ defineExpose({
   transform-origin: center center;
   pointer-events: all;
   cursor: pointer;
-  width: 160px;
+  width: 180px;
   min-height: 60px;
   display: flex;
   flex-direction: column;
@@ -69,7 +69,7 @@ defineExpose({
 @media only screen and (max-width: 900px) {
   .grid-control {
     padding: 8px 12px;
-    width: 140px;
+    width: 160px;
     min-height: 50px;
     transform: skew(-0.5deg, 2deg) rotate(1.5deg);
   }
