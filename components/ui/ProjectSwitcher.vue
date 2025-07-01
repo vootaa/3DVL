@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { projects } from '~/utils/projects';
 
 const route = useRoute();
 const showPanel = ref(false);
+const containerRef = ref<HTMLElement>();
 
 const currentProject = computed(() => {
   return projects.find(p => p.path === route.path) || null;
@@ -16,10 +17,25 @@ const projectsToList = computed(() => {
     ? projects.filter(p => p.path !== route.path)
     : projects;
 });
+
+// Close panel when clicking outside
+const handleClickOutside = (event: MouseEvent) => {
+  if (containerRef.value && !containerRef.value.contains(event.target as Node)) {
+    showPanel.value = false;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <template>
-  <div class="relative kode-mono-font">
+  <div ref="containerRef" class="relative kode-mono-font">
     <button
       @click="showPanel = !showPanel"
       class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-gray-800/50 backdrop-blur-sm rounded-md hover:bg-gray-700/70 transition-colors border border-gray-700 hover:border-gray-600"
