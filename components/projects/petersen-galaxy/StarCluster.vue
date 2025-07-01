@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, inject } from 'vue'
 import { 
   Color,
   AdditiveBlending, 
@@ -7,10 +7,14 @@ import {
   BufferGeometry,
   Float32BufferAttribute,
 } from 'three'
+import { orbitalConfig } from './orbital-config'
 
 // Import shaders
 import starVertexShader from './shaders/star-vertex.glsl'
 import starFragmentShader from './shaders/star-fragment.glsl'
+
+// Get orbital configuration for synchronization
+const { innerRadius, middleRadius, outerRadius, rotationSpeeds } = orbitalConfig
 
 // Star data configuration
 interface StarData {
@@ -21,31 +25,31 @@ interface StarData {
 }
 
 const stars: StarData[] = [
-  // Middle orbit (r=0.300) - Blue Giants
-  { id: 0, r: 3.0, theta: 288.0, type: 'blue-giant' },
-  { id: 1, r: 3.0, theta: 0.0, type: 'blue-giant' },
-  { id: 2, r: 3.0, theta: 72.0, type: 'blue-giant' },
-  { id: 3, r: 3.0, theta: 144.0, type: 'blue-giant' },
-  { id: 4, r: 3.0, theta: 216.0, type: 'blue-giant' },
+  // Middle orbit (r=3.0) - Blue Giants  
+  { id: 0, r: middleRadius, theta: 288.0, type: 'blue-giant' },
+  { id: 1, r: middleRadius, theta: 0.0, type: 'blue-giant' },
+  { id: 2, r: middleRadius, theta: 72.0, type: 'blue-giant' },
+  { id: 3, r: middleRadius, theta: 144.0, type: 'blue-giant' },
+  { id: 4, r: middleRadius, theta: 216.0, type: 'blue-giant' },
   
-  // Inner orbit (r=0.150) - Main Sequence
-  { id: 5, r: 1.5, theta: 288.0, type: 'main-sequence' },
-  { id: 6, r: 1.5, theta: 0.0, type: 'main-sequence' },
-  { id: 7, r: 1.5, theta: 72.0, type: 'main-sequence' },
-  { id: 8, r: 1.5, theta: 144.0, type: 'main-sequence' },
-  { id: 9, r: 1.5, theta: 216.0, type: 'main-sequence' },
+  // Inner orbit (r=1.5) - Main Sequence
+  { id: 5, r: innerRadius, theta: 288.0, type: 'main-sequence' },
+  { id: 6, r: innerRadius, theta: 0.0, type: 'main-sequence' },
+  { id: 7, r: innerRadius, theta: 72.0, type: 'main-sequence' },
+  { id: 8, r: innerRadius, theta: 144.0, type: 'main-sequence' },
+  { id: 9, r: innerRadius, theta: 216.0, type: 'main-sequence' },
   
-  // Outer orbit (r=0.480) - Red Giants
-  { id: 10, r: 4.8, theta: 278.0, type: 'red-giant' },
-  { id: 11, r: 4.8, theta: 10.0, type: 'red-giant' },
-  { id: 12, r: 4.8, theta: 62.0, type: 'red-giant' },
-  { id: 13, r: 4.8, theta: 154.0, type: 'red-giant' },
-  { id: 14, r: 4.8, theta: 206.0, type: 'red-giant' },
-  { id: 15, r: 4.8, theta: 298.0, type: 'red-giant' },
-  { id: 16, r: 4.8, theta: 350.0, type: 'red-giant' },
-  { id: 17, r: 4.8, theta: 82.0, type: 'red-giant' },
-  { id: 18, r: 4.8, theta: 134.0, type: 'red-giant' },
-  { id: 19, r: 4.8, theta: 226.0, type: 'red-giant' }
+  // Outer orbit (r=4.8) - Red Giants
+  { id: 10, r: outerRadius, theta: 278.0, type: 'red-giant' },
+  { id: 11, r: outerRadius, theta: 10.0, type: 'red-giant' },
+  { id: 12, r: outerRadius, theta: 62.0, type: 'red-giant' },
+  { id: 13, r: outerRadius, theta: 154.0, type: 'red-giant' },
+  { id: 14, r: outerRadius, theta: 206.0, type: 'red-giant' },
+  { id: 15, r: outerRadius, theta: 298.0, type: 'red-giant' },
+  { id: 16, r: outerRadius, theta: 350.0, type: 'red-giant' },
+  { id: 17, r: outerRadius, theta: 82.0, type: 'red-giant' },
+  { id: 18, r: outerRadius, theta: 134.0, type: 'red-giant' },
+  { id: 19, r: outerRadius, theta: 226.0, type: 'red-giant' }
 ]
 
 // Star color configuration
@@ -55,11 +59,11 @@ const starColors = {
   'red-giant': new Color('#FF4500')      // Orange-red - M-type red giant
 }
 
-// Star size configuration
+// Star size configuration - minimal heartbeat amplitude
 const starSizes = {
-  'main-sequence': { min: 18, max: 28 },
-  'blue-giant': { min: 25, max: 40 },
-  'red-giant': { min: 35, max: 55 }
+  'main-sequence': { min: 16, max: 18 },
+  'blue-giant': { min: 22, max: 26 },
+  'red-giant': { min: 28, max: 32 }
 }
 
 // Calculate star position
@@ -78,11 +82,11 @@ const starGeometry = ref()
 const starMaterial = ref()
 const starPoints = ref()
 
-// Animation time
+// Animation time and evolution state
 let animationTime = 0
 let animationId: number
 
-// Initialize star system
+// Initialize star system with evolution data
 const initStars = () => {
   const geometry = new BufferGeometry()
   
@@ -92,15 +96,35 @@ const initStars = () => {
   const alphas = new Float32Array(stars.length)
   const times = new Float32Array(stars.length)
   const pulseOffsets = new Float32Array(stars.length)
+  const targetRadii = new Float32Array(stars.length)
+  const rotationSpeeds = new Float32Array(stars.length)
+  const initialAngles = new Float32Array(stars.length)
   
   stars.forEach((star, index) => {
-    const position = calculateStarPosition(star.r, star.theta)
+    // Start from chaotic position (like orbital system)
+    const initialRadius = Math.random() * 6.24 // maxSpaceRadius
+    const initialAngle = Math.random() * Math.PI * 2
+    const initialHeight = (Math.random() - 0.5) * 1.5
+    
     const i3 = index * 3
     
-    // Position
-    positions[i3] = position.x
-    positions[i3 + 1] = position.y
-    positions[i3 + 2] = position.z
+    // Initial chaotic position
+    positions[i3] = Math.cos(initialAngle) * initialRadius
+    positions[i3 + 1] = initialHeight
+    positions[i3 + 2] = Math.sin(initialAngle) * initialRadius
+    
+    // Target orbital data
+    targetRadii[index] = star.r
+    initialAngles[index] = star.theta * Math.PI / 180
+    
+    // Set rotation speed based on orbit
+    if (star.r === innerRadius) {
+      rotationSpeeds[index] = orbitalConfig.rotationSpeeds.inner
+    } else if (star.r === middleRadius) {
+      rotationSpeeds[index] = orbitalConfig.rotationSpeeds.middle
+    } else {
+      rotationSpeeds[index] = orbitalConfig.rotationSpeeds.outer
+    }
     
     // Color
     const color = starColors[star.type]
@@ -108,17 +132,17 @@ const initStars = () => {
     colors[i3 + 1] = color.g
     colors[i3 + 2] = color.b
     
-    // Size - based on star type
+    // Start with small size (will grow during evolution)
     const sizeRange = starSizes[star.type]
-    sizes[index] = sizeRange.min + Math.random() * (sizeRange.max - sizeRange.min)
+    sizes[index] = sizeRange.min * 0.3 // Start small
     
-    // Brightness
-    alphas[index] = 0.8 + Math.random() * 0.2
+    // Start dim (will brighten during evolution)
+    alphas[index] = 0.1 + Math.random() * 0.1
     
-    // Time offset (for twinkling effect)
+    // Time offset (for twinkling effect - reduced amplitude)
     times[index] = Math.random() * Math.PI * 2
     
-    // Pulse offset
+    // Pulse offset (reduced amplitude)
     pulseOffsets[index] = Math.random() * Math.PI * 2
   })
   
@@ -128,10 +152,14 @@ const initStars = () => {
   geometry.setAttribute('alpha', new Float32BufferAttribute(alphas, 1))
   geometry.setAttribute('time', new Float32BufferAttribute(times, 1))
   geometry.setAttribute('pulseOffset', new Float32BufferAttribute(pulseOffsets, 1))
+  geometry.setAttribute('targetRadius', new Float32BufferAttribute(targetRadii, 1))
+  geometry.setAttribute('rotationSpeed', new Float32BufferAttribute(rotationSpeeds, 1))
+  geometry.setAttribute('initialAngle', new Float32BufferAttribute(initialAngles, 1))
   
   const material = new ShaderMaterial({
     uniforms: {
       time: { value: 0 },
+      evolutionTime: { value: 0 },
       resolution: { value: [window.innerWidth, window.innerHeight, 1.0] }
     },
     vertexShader: starVertexShader,
@@ -145,18 +173,82 @@ const initStars = () => {
   starMaterial.value = material
 }
 
-// Animation loop
+// Animation loop with evolution and orbital rotation
 const animate = () => {
   animationTime += 0.016 // ~60fps
   
-  if (starMaterial.value) {
+  if (starMaterial.value && starGeometry.value) {
     starMaterial.value.uniforms.time.value = animationTime
+    starMaterial.value.uniforms.evolutionTime.value = animationTime * 0.1 // Slower evolution
     
-    // Update time attribute for twinkling effect
+    // Update positions to follow orbital rotation
+    const positions = starGeometry.value.getAttribute('position')
+    const targetRadii = starGeometry.value.getAttribute('targetRadius')
+    const rotationSpeeds = starGeometry.value.getAttribute('rotationSpeed')
+    const initialAngles = starGeometry.value.getAttribute('initialAngle')
+    const sizes = starGeometry.value.getAttribute('size')
+    const alphas = starGeometry.value.getAttribute('alpha')
+    
+    if (positions && targetRadii && rotationSpeeds && initialAngles) {
+      for (let i = 0; i < stars.length; i++) {
+        const i3 = i * 3
+        const star = stars[i]
+        
+        // Evolution progress (0 to 1 over time) with smooth easing
+        const rawProgress = Math.min(1.0, animationTime * 0.04) // 25 seconds to fully evolve
+        // Apply easeInOutCubic for smoother evolution
+        const evolutionProgress = rawProgress < 0.5 
+          ? 4 * rawProgress * rawProgress * rawProgress 
+          : 1 - Math.pow(-2 * rawProgress + 2, 3) / 2;
+        
+        // Current orbital angle (rotating with time) - ensure exact orbit positioning
+        const currentAngle = initialAngles.array[i] + animationTime * rotationSpeeds.array[i]
+        
+        // Target position - stars must be exactly on orbit
+        const targetRadius = targetRadii.array[i]
+        const targetX = targetRadius * Math.cos(currentAngle)
+        const targetZ = targetRadius * Math.sin(currentAngle)
+        const targetY = 0
+        
+        // Smooth interpolation from initial chaotic position to exact orbital position
+        if (evolutionProgress < 1.0) {
+          // During evolution: interpolate from chaos to orbit
+          const startX = positions.array[i3]
+          const startY = positions.array[i3 + 1] 
+          const startZ = positions.array[i3 + 2]
+          
+          positions.array[i3] = startX + (targetX - startX) * evolutionProgress
+          positions.array[i3 + 1] = startY + (targetY - startY) * evolutionProgress
+          positions.array[i3 + 2] = startZ + (targetZ - startZ) * evolutionProgress
+        } else {
+          // After evolution: stay exactly on orbit
+          positions.array[i3] = targetX
+          positions.array[i3 + 1] = targetY
+          positions.array[i3 + 2] = targetZ
+        }
+        
+        // Evolve size from small to normal (minimal variation for stable centers)
+        const sizeRange = starSizes[star.type]
+        const baseSize = (sizeRange.min + sizeRange.max) * 0.5 // Use average for stable positioning
+        const currentSize = baseSize * 0.3 + (baseSize - baseSize * 0.3) * evolutionProgress
+        sizes.array[i] = currentSize
+        
+        // Evolve brightness from dim to bright (stable final brightness)
+        const targetAlpha = 0.85 // Fixed brightness for stable appearance
+        const currentAlpha = 0.1 + (targetAlpha - 0.1) * evolutionProgress
+        alphas.array[i] = currentAlpha
+      }
+      
+      positions.needsUpdate = true
+      sizes.needsUpdate = true
+      alphas.needsUpdate = true
+    }
+    
+    // Update time attribute for minimal twinkling effect
     const times = starGeometry.value.getAttribute('time')
     if (times) {
       for (let i = 0; i < times.count; i++) {
-        times.array[i] += 0.02 + Math.random() * 0.01
+        times.array[i] += 0.005 + Math.random() * 0.002 // Much reduced twinkling
       }
       times.needsUpdate = true
     }

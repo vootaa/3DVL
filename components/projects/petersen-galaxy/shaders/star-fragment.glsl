@@ -22,14 +22,14 @@ void main() {
   float outerHalo = 1.0 - smoothstep(0.3, 0.5, dist);
   outerHalo = pow(outerHalo, 0.8) * 0.3;
   
-  // Dynamic pulse effect
-  float pulse = 0.9 + 0.1 * sin(vTime * 4.0);
+  // Minimal dynamic pulse effect
+  float pulse = 0.98 + 0.02 * sin(vTime * 4.0);
   
-  // Color temperature variation
+  // Very subtle color temperature variation
   vec3 colorShift = vColor;
-  colorShift.r *= 1.0 + 0.1 * sin(vTime * 2.0);
-  colorShift.g *= 1.0 + 0.1 * cos(vTime * 2.5);
-  colorShift.b *= 1.0 + 0.1 * sin(vTime * 1.8);
+  colorShift.r *= 1.0 + 0.01 * sin(vTime * 2.0);
+  colorShift.g *= 1.0 + 0.01 * cos(vTime * 2.5);
+  colorShift.b *= 1.0 + 0.01 * sin(vTime * 1.8);
   
   // Combine all effects
   float totalIntensity = (core + innerHalo + outerHalo) * pulse;

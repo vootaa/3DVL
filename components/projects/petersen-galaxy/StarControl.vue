@@ -32,126 +32,190 @@ defineExpose({
 </script>
 
 <template>
-  <div class="star-control-panel">
-    <!-- Control buttons -->
-    <div class="control-buttons">
-      <button 
-        @click="toggleStars"
-        :class="{ active: showStars }"
-        class="control-btn star-toggle"
-      >
-        {{ showStars ? 'Hide Stars' : 'Show Stars' }}
-      </button>
-      
-      <button 
-        @click="toggleInfo"
-        :class="{ active: showStarInfo }"
-        class="control-btn info-toggle"
-      >
-        {{ showStarInfo ? 'Hide Info' : 'Star Info' }}
-      </button>
+  <div class="star-control-container">
+    <!-- Main control panel -->
+    <div class="star-control" @click="toggleStars">
+      <div class="control-label">STAR CLUSTER</div>
+      <div class="control-value">{{ showStars ? 'ON' : 'OFF' }}</div>
+    </div>
+    
+    <!-- Info toggle button -->
+    <div class="info-control" @click="toggleInfo">
+      <div class="info-symbol">{{ showStarInfo ? '−' : '+' }}</div>
     </div>
     
     <!-- Star information panel -->
     <div v-show="showStarInfo" class="star-info-panel">
-      <h3>Star Cluster Info</h3>
+      <h3>CLUSTER DATA</h3>
       <div class="info-grid">
         <div class="info-item">
-          <span class="label">Total Stars:</span>
-          <span class="value">{{ starStats.total }}</span>
+          <span class="info-label">TOTAL</span>
+          <span class="info-value">{{ starStats.total }}</span>
         </div>
         <div class="info-item">
-          <span class="label">Orbits:</span>
-          <span class="value">{{ starStats.orbits }}</span>
+          <span class="info-label">ORBITS</span>
+          <span class="info-value">{{ starStats.orbits }}</span>
         </div>
         <div class="info-item inner">
-          <span class="label">Inner Orbit (Main Sequence):</span>
-          <span class="value">{{ starStats.mainSequence }}</span>
+          <span class="info-label">INNER</span>
+          <span class="info-value">{{ starStats.mainSequence }}</span>
         </div>
         <div class="info-item middle">
-          <span class="label">Middle Orbit (Blue Giants):</span>
-          <span class="value">{{ starStats.blueGiants }}</span>
+          <span class="info-label">MIDDLE</span>
+          <span class="info-value">{{ starStats.blueGiants }}</span>
         </div>
         <div class="info-item outer">
-          <span class="label">Outer Orbit (Red Giants):</span>
-          <span class="value">{{ starStats.redGiants }}</span>
+          <span class="info-label">OUTER</span>
+          <span class="info-value">{{ starStats.redGiants }}</span>
         </div>
       </div>
       
       <div class="legend">
-        <h4>Star Type Description</h4>
         <div class="legend-item">
           <div class="color-box main-sequence"></div>
-          <span>Main Sequence - Stable hydrogen burning phase</span>
+          <span>Main Sequence</span>
         </div>
         <div class="legend-item">
           <div class="color-box blue-giant"></div>
-          <span>Blue Giant - High mass, high temperature stars</span>
+          <span>Blue Giant</span>
         </div>
         <div class="legend-item">
           <div class="color-box red-giant"></div>
-          <span>Red Giant - Late evolutionary stage massive stars</span>
+          <span>Red Giant</span>
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<style scoped>
-.star-control-panel {
+<style lang="css" scoped>
+.star-control-container {
   position: absolute;
   top: 20px;
   right: 20px;
   z-index: 100;
-  background: rgba(0, 8, 17, 0.9);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* Main star control panel (mirroring GridControl) */
+.star-control {
+  background: rgba(0, 12, 20, 0.85);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 8px;
+  padding: 10px 15px;
+  color: #FFD700;
+  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  font-weight: 500;
+  font-variant-numeric: slashed-zero tabular-nums;
+  text-transform: uppercase;
+  line-height: 1em;
+  transform: skew(0.5deg, -1.5deg) rotate(-1deg); /* Mirror of GridControl transform */
+  transform-origin: center center;
+  pointer-events: all;
+  cursor: pointer;
+  width: 160px;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+  /* Helmet concave/convex effect - opposite direction from GridControl */
+  background-image: 
+    linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.2) 100%),
+    radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.05) 0%, transparent 70%);
+}
+
+.star-control:hover {
+  background: rgba(20, 12, 0, 0.9);
+  border-color: rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+  transform: skew(0.5deg, -1.5deg) rotate(-1deg) scale(1.02);
+  /* Enhanced helmet effect on hover */
+  background-image: 
+    linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, transparent 50%, rgba(0, 0, 0, 0.3) 100%),
+    radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.08) 0%, transparent 70%);
+}
+
+.control-label {
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+
+.control-value {
+  font-size: 1.6em;
+  line-height: 1em;
+  margin: 2px 0;
+  text-align: right;
+}
+
+/* Info toggle button */
+.info-control {
+  background: rgba(0, 12, 20, 0.85);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transform: skew(0.5deg, -1.5deg) rotate(-1deg); /* Mirror GridControl transform */
+  transition: all 0.2s ease;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+  /* Helmet concave effect for button */
+  background-image: 
+    linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, transparent 50%, rgba(0, 0, 0, 0.15) 100%),
+    radial-gradient(circle at center, rgba(255, 215, 0, 0.03) 0%, transparent 70%);
+}
+
+.info-control:hover {
+  background: rgba(20, 12, 0, 0.9);
+  border-color: rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+  transform: skew(0.5deg, -1.5deg) rotate(-1deg) scale(1.05);
+  /* Enhanced helmet effect on hover */
+  background-image: 
+    linear-gradient(135deg, rgba(255, 215, 0, 0.12) 0%, transparent 50%, rgba(0, 0, 0, 0.2) 100%),
+    radial-gradient(circle at center, rgba(255, 215, 0, 0.05) 0%, transparent 70%);
+}
+
+.info-symbol {
+  color: #FFD700;
+  font-family: 'Kode Mono', monospace;
+  font-size: 1.5em;
+  font-weight: bold;
+  line-height: 1;
+}
+
+/* Info panel */
+.star-info-panel {
+  position: absolute;
+  top: 70px;
+  right: 0;
+  background: rgba(0, 8, 17, 0.95);
+  border: 1px solid rgba(255, 215, 0, 0.3);
   border-radius: 12px;
   padding: 16px;
-  border: 1px solid rgba(0, 120, 255, 0.3);
   backdrop-filter: blur(10px);
   color: #ffffff;
-  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-  min-width: 250px;
-}
-
-.control-buttons {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.control-btn {
-  padding: 8px 16px;
-  border: 1px solid rgba(135, 206, 235, 0.5);
-  background: rgba(135, 206, 235, 0.1);
-  color: #87ceeb;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.control-btn:hover {
-  background: rgba(135, 206, 235, 0.2);
-  border-color: rgba(135, 206, 235, 0.8);
-}
-
-.control-btn.active {
-  background: rgba(135, 206, 235, 0.3);
-  border-color: #87ceeb;
-  color: #ffffff;
-}
-
-.star-info-panel {
-  animation: fadeIn 0.3s ease;
+  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  min-width: 220px;
+  animation: fadeInDown 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .star-info-panel h3 {
   margin: 0 0 12px 0;
-  font-size: 16px;
-  color: #87ceeb;
-  border-bottom: 1px solid rgba(135, 206, 235, 0.3);
+  font-size: 14px;
+  color: #FFD700;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.3);
   padding-bottom: 6px;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .info-grid {
@@ -181,21 +245,22 @@ defineExpose({
   border-left: 3px solid #ff4500;
 }
 
-.label {
+.info-label {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  font-weight: 500;
 }
 
-.value {
-  font-size: 12px;
-  font-weight: 600;
+.info-value {
+  font-size: 14px;
+  font-weight: 700;
   color: #ffffff;
 }
 
-.legend h4 {
-  margin: 0 0 8px 0;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.9);
+.legend {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 12px;
 }
 
 .legend-item {
@@ -205,6 +270,8 @@ defineExpose({
   margin-bottom: 4px;
   font-size: 10px;
   color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  font-weight: 500;
 }
 
 .color-box {
@@ -229,7 +296,7 @@ defineExpose({
   box-shadow: 0 0 4px rgba(255, 69, 0, 0.5);
 }
 
-@keyframes fadeIn {
+@keyframes fadeInDown {
   from {
     opacity: 0;
     transform: translateY(-10px);
@@ -237,6 +304,29 @@ defineExpose({
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media only screen and (max-width: 900px) {
+  .star-control {
+    padding: 8px 12px;
+    width: 140px;
+    min-height: 50px;
+    transform: skew(0.25deg, -1deg) rotate(-0.75deg); /* Mirror responsive transform */
+  }
+
+  .control-value {
+    font-size: 1.4em;
+  }
+  
+  .info-control {
+    width: 35px;
+    height: 35px;
+    transform: skew(0.25deg, -1deg) rotate(-0.75deg); /* Mirror responsive transform */
+  }
+  
+  .info-symbol {
+    font-size: 1.3em;
   }
 }
 </style>

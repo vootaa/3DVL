@@ -45,6 +45,10 @@ defineExpose({
   transition: all 0.2s ease;
   z-index: 100;
   box-shadow: 0 0 15px rgba(0, 204, 255, 0.2);
+  /* Helmet concave/convex effect */
+  background-image: 
+    linear-gradient(45deg, rgba(0, 204, 255, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.2) 100%),
+    radial-gradient(circle at 70% 30%, rgba(0, 204, 255, 0.05) 0%, transparent 70%);
 }
 
 .grid-control:hover {
@@ -52,6 +56,10 @@ defineExpose({
   border-color: rgba(0, 204, 255, 0.6);
   box-shadow: 0 0 25px rgba(0, 204, 255, 0.4);
   transform: skew(-0.5deg, 1.5deg) rotate(1deg) scale(1.02);
+  /* Enhanced helmet effect on hover */
+  background-image: 
+    linear-gradient(45deg, rgba(0, 204, 255, 0.15) 0%, transparent 50%, rgba(0, 0, 0, 0.3) 100%),
+    radial-gradient(circle at 70% 30%, rgba(0, 204, 255, 0.08) 0%, transparent 70%);
 }
 
 .control-label {

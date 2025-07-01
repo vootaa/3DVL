@@ -15,12 +15,12 @@ void main() {
   
   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
   
-  // Complex twinkling effect: combining multiple frequency sine waves
-  float twinkle1 = sin(vTime * 2.0 + position.x * 5.0) * 0.3;
-  float twinkle2 = sin(vTime * 3.5 + position.z * 7.0) * 0.2;
-  float twinkle3 = sin(vTime * 1.2 + position.y * 3.0) * 0.1;
+  // Minimal twinkling effect: very subtle variation
+  float twinkle1 = sin(vTime * 2.0 + position.x * 5.0) * 0.03;
+  float twinkle2 = sin(vTime * 3.5 + position.z * 7.0) * 0.02;
+  float twinkle3 = sin(vTime * 1.2 + position.y * 3.0) * 0.015;
   
-  float totalTwinkle = 0.8 + twinkle1 + twinkle2 + twinkle3;
+  float totalTwinkle = 0.96 + twinkle1 + twinkle2 + twinkle3;
   
   // Distance-based size scaling
   float distanceScale = 300.0 / -mvPosition.z;
