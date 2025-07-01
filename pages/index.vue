@@ -17,7 +17,7 @@ useHead({
 <template>
   <div class="showcase-container flex flex-col items-center w-full">
     <!-- Title and Subtitle at the top -->
-    <div class="flex flex-col items-center mt-20 mb-8">
+    <div class="flex flex-col items-center mt-2 mb-2">
       <h1 class="text-4xl font-bold mb-1">{{ siteConfig.hero.title }}</h1>
       <h2 class="text-lg subtitle mt-0">{{ siteConfig.hero.subtitle }}</h2>
     </div>
