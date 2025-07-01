@@ -60,6 +60,7 @@ function click() {
       <TresCanvas clear-color="#3A3A3A" :anti-alias="true" :alpha="true" :tone-mapping="ACESFilmicToneMapping"
         :tone-mapping-exposure="1.0" window-size @pointerup="click">
         <MuseumScene />
+        <OrbitControls />
       </TresCanvas>
     </div>
   </Suspense>
