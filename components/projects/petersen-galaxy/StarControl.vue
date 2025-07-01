@@ -66,7 +66,7 @@ defineExpose({
       <!-- Inner Orbit -->
       <div class="orbit-section">
         <div class="orbit-label" :style="{ color: orbitConfig.inner.color }">
-          INNER ({{ orbitConfig.inner.count }})
+          INNER
         </div>
         <div class="star-buttons">
           <button 
@@ -78,8 +78,10 @@ defineExpose({
               borderColor: orbitConfig.inner.color,
               backgroundColor: star.active ? orbitConfig.inner.color : 'transparent'
             }"
+            :title="`Inner Star ${star.id + 1}`"
             @click="handleStarClick('inner', index)"
           >
+            <span class="star-number">{{ index + 1 }}</span>
           </button>
         </div>
       </div>
@@ -87,7 +89,7 @@ defineExpose({
       <!-- Middle Orbit -->
       <div class="orbit-section">
         <div class="orbit-label" :style="{ color: orbitConfig.middle.color }">
-          MIDDLE ({{ orbitConfig.middle.count }})
+          MIDDLE
         </div>
         <div class="star-buttons">
           <button 
@@ -99,16 +101,18 @@ defineExpose({
               borderColor: orbitConfig.middle.color,
               backgroundColor: star.active ? orbitConfig.middle.color : 'transparent'
             }"
+            :title="`Middle Star ${star.id + 1}`"
             @click="handleStarClick('middle', index)"
           >
+            <span class="star-number">{{ index + 1 }}</span>
           </button>
         </div>
       </div>
       
-      <!-- Outer Orbit -->
+      <!-- Outer Orbit - Split into two rows -->
       <div class="orbit-section">
         <div class="orbit-label" :style="{ color: orbitConfig.outer.color }">
-          OUTER ({{ orbitConfig.outer.count }})
+          OUTER
         </div>
         <div class="star-buttons">
           <button 
@@ -120,8 +124,10 @@ defineExpose({
               borderColor: orbitConfig.outer.color,
               backgroundColor: star.active ? orbitConfig.outer.color : 'transparent'
             }"
+            :title="`Outer Star ${star.id + 1}`"
             @click="handleStarClick('outer', index)"
           >
+            <span class="star-number">{{ index + 1 }}</span>
           </button>
         </div>
       </div>
@@ -203,7 +209,8 @@ defineExpose({
   backdrop-filter: blur(10px);
   color: #ffffff;
   font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
-  min-width: 260px;
+  width: 200px; /* Fixed width for 5 circles */
+  margin-top: 20px; /* Add distance from main button */
   animation: fadeInDown 0.3s ease;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   transform: skew(0.25deg, -0.75deg) rotate(-0.5deg); /* Subtle helmet angle */
@@ -221,7 +228,7 @@ defineExpose({
 }
 
 .orbit-section {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .orbit-section:last-child {
@@ -229,24 +236,25 @@ defineExpose({
 }
 
 .orbit-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   opacity: 0.9;
   letter-spacing: 0.5px;
+  text-align: center;
 }
 
 .star-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* Exactly 5 columns */
+  gap: 6px;
+  justify-items: center;
 }
 
 .star-button {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border: 2px solid;
   border-radius: 50%;
   background: transparent;
@@ -255,6 +263,9 @@ defineExpose({
   position: relative;
   padding: 0;
   margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .star-button:hover {
@@ -267,17 +278,21 @@ defineExpose({
   transform: scale(1.05);
 }
 
-.star-button.active::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 6px;
-  height: 6px;
-  background: currentColor;
-  border-radius: 50%;
+.star-number {
+  font-size: 9px;
+  font-weight: bold;
+  color: currentColor;
+  line-height: 1;
   opacity: 0.8;
+}
+
+.star-button:hover .star-number {
+  opacity: 1;
+}
+
+.star-button.active .star-number {
+  color: rgba(0, 0, 0, 0.8); /* Dark text on active background */
+  opacity: 1;
 }
 
 @keyframes fadeInDown {
@@ -304,18 +319,18 @@ defineExpose({
   }
   
   .orbital-panel {
-    min-width: 220px;
+    width: 180px; /* Smaller width on mobile */
     padding: 12px;
+    margin-top: 15px;
   }
   
   .star-button {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
   }
   
-  .star-button.active::after {
-    width: 4px;
-    height: 4px;
+  .star-number {
+    font-size: 8px;
   }
 }
 </style>

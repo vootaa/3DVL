@@ -28,8 +28,10 @@ void main() {
   float distance = length(mvPosition.xyz);
   float distanceScale = 400.0 / distance; // Stronger distance effect
   
-  // Camera distance scaling for zoom interaction
-  float cameraScale = 1.0 + (cameraDistance - 10.0) * 0.05; // Scale with camera distance
+  // Camera distance scaling - inverse relationship for zoom
+  // When camera distance = 2, scale = 1.0 (normal size)
+  // When camera distance = 10, scale = 0.2 (1/5 size)
+  float cameraScale = 2.0 / cameraDistance; // Inverse scaling
   
   gl_PointSize = size * totalTwinkle * distanceScale * cameraScale;
   gl_Position = projectionMatrix * mvPosition;
