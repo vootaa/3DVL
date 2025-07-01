@@ -6,7 +6,7 @@ import vertexShader from './shaders/orbital-vertex.glsl'
 import fragmentShader from './shaders/orbital-fragment.glsl'
 
 // Use imported configuration
-const { totalCount, orbitParticleRatio, innerRadius, middleRadius, outerRadius, maxSpaceRadius, particleSize, rotationSpeeds } = orbitalConfig
+const { totalCount, orbitParticleRatio, orbitDistribution, innerRadius, middleRadius, outerRadius, maxSpaceRadius, particleSize, rotationSpeeds } = orbitalConfig
 
 const positions = new Float32Array(totalCount * 3)
 const colors = new Float32Array(totalCount * 3)
@@ -25,29 +25,29 @@ for (let i = 0; i < totalCount; i++) {
   orbitFactors[i] = isOrbital ? 1.0 : 0.0
 
   if (isOrbital) {
-    // Assign to one of three orbits with galaxy-like distribution:
-    // Inner ring: 50% of orbital particles (most dense)
-    // Middle ring: 35% of orbital particles 
-    // Outer ring: 15% of orbital particles (least dense)
+    // Assign to one of three orbits with optimized distribution:
+    // Inner ring: 17.5% of orbital particles (reduced for better middle/outer density)
+    // Middle ring: 52.5% of orbital particles (increased by 50%)
+    // Outer ring: 30.0% of orbital particles (increased by 100%)
     const orbitChoice = Math.random()
     let targetRadius
     let particleColor
     let rotationSpeed
 
-    if (orbitChoice < 0.50) {
-      // Inner orbit - most particles (50% of orbital particles)
+    if (orbitChoice < orbitDistribution.inner) {
+      // Inner orbit - reduced particles (17.5% of orbital particles)
       targetRadius = innerRadius
       particleColor = orbitalColorConfig.innerRing.clone()
       particleColor.multiplyScalar(orbitalColorConfig.brightness.inner)
       rotationSpeed = rotationSpeeds.inner
-    } else if (orbitChoice < 0.85) {
-      // Middle orbit - medium particles (35% of orbital particles)
+    } else if (orbitChoice < orbitDistribution.inner + orbitDistribution.middle) {
+      // Middle orbit - enhanced particles (52.5% of orbital particles, +50% increase)
       targetRadius = middleRadius
       particleColor = orbitalColorConfig.middleRing.clone()
       particleColor.multiplyScalar(orbitalColorConfig.brightness.middle)
       rotationSpeed = rotationSpeeds.middle
     } else {
-      // Outer orbit - least particles (15% of orbital particles)
+      // Outer orbit - doubled particles (30.0% of orbital particles, +100% increase)
       targetRadius = outerRadius
       particleColor = orbitalColorConfig.outerRing.clone()
       particleColor.multiplyScalar(orbitalColorConfig.brightness.outer)
