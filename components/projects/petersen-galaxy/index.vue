@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from 'three'
-import { ref, provide, onMounted } from 'vue'
+import { ref, provide} from 'vue'
 import OrbitalSystem from './OrbitalSystem.vue'
+import StarCluster from './StarCluster.vue'
+import StarControl from './StarControl.vue'
 import GridControl from './GridControl.vue'
 import CameraInfo from './CameraInfo.vue'
 
@@ -15,6 +17,7 @@ const gl = {
 }
 
 const gridControlRef = ref()
+const starControlRef = ref()
 const cameraRef = ref()
 
 // Provide camera reference to child components
@@ -25,7 +28,7 @@ const orbitControlsConfig = {
   enableDamping: true,
   dampingFactor: 0.05,
   minDistance: 2,    // Minimum zoom distance
-  maxDistance: 30,   // Maximum zoom distance
+  maxDistance: 10,   // Maximum zoom distance
   minPolarAngle: Math.PI * 0.1,  // Minimum vertical angle (prevent going below)
   maxPolarAngle: Math.PI * 0.9,  // Maximum vertical angle (prevent going above)
   enablePan: false,  // Disable panning to focus on orbital movement
@@ -50,11 +53,17 @@ const orbitControlsConfig = {
       
       <OrbitalSystem />
       
+      <!-- Star cluster component - conditional display -->
+      <StarCluster v-if="starControlRef?.showStars" />
+      
       <!-- OrbitControls with zoom and angle limits -->
       <OrbitControls 
         v-bind="orbitControlsConfig"
       />
     </TresCanvas>
+    
+    <!-- Star cluster control panel (top-right) -->
+    <StarControl ref="starControlRef" />
     
     <!-- Grid control HUD (top-left) -->
     <GridControl ref="gridControlRef" />
