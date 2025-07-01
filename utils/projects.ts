@@ -36,4 +36,13 @@ export const projects: Project[] = [
     title: 'Space Game - 3DVL',
     metaDescription: 'A Web3D gaming & visualization of the Kadena Chainweb braided structure.',
   },
+  {
+    id: 'petersen-galaxy',
+    name: 'Petersen Galaxy',
+    description: 'An evolutionary galaxy simulation showing the transition from chaos to orbital structure.',
+    path: '/petersen-galaxy',
+    heroImage: '/petersen-galaxy.png',
+    title: 'Petersen Galaxy Evolution - 3DVL',
+    metaDescription: 'An evolutionary galaxy simulation showing the transition from chaos to orbital structure.',
+  },
 ];
