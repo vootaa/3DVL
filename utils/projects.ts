@@ -12,11 +12,11 @@ export const projects: Project[] = [
   {
     id: 'galaxy',
     name: 'Galaxy',
-    description: 'Create stunning, unique galaxies with procedural noise and particle simulation.',
-    path: '/galaxy',
-    heroImage: '/galaxy-generator.png',
-    title: 'Galaxy Generator - 3DVL',
-    metaDescription: 'Create stunning, unique galaxies with procedural noise and particle simulation.',
+    description: 'An evolutionary galaxy simulation showing the transition from chaos to orbital structure.',
+    path: '/petersen-galaxy',
+    heroImage: '/petersen-galaxy.png',
+    title: 'Petersen Galaxy Evolution - 3DVL',
+    metaDescription: 'An evolutionary galaxy simulation showing the transition from chaos to orbital structure.',
   },
   {
     id: 'museum',
@@ -35,14 +35,5 @@ export const projects: Project[] = [
     heroImage: '/space-game.png',
     title: 'Space Game - 3DVL',
     metaDescription: 'A Web3D gaming & visualization of the Kadena Chainweb braided structure.',
-  },
-  {
-    id: 'petersen-galaxy',
-    name: 'Petersen Galaxy',
-    description: 'An evolutionary galaxy simulation showing the transition from chaos to orbital structure.',
-    path: '/petersen-galaxy',
-    heroImage: '/petersen-galaxy.png',
-    title: 'Petersen Galaxy Evolution - 3DVL',
-    metaDescription: 'An evolutionary galaxy simulation showing the transition from chaos to orbital structure.',
   },
 ];
