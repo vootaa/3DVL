@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Color, AdditiveBlending, BufferAttribute } from 'three'
+import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Color, AdditiveBlending, BufferAttribute, Points, ShaderMaterial } from 'three'
 import gsap from 'gsap'
 import { TresLeches, useControls } from '@tresjs/leches'
 
@@ -40,7 +40,6 @@ for (let i = 0; i < parameters.count; i++) {
 
   const radius = Math.random() * parameters.radius
   /*  const spinAngle = radius * parameters.spin */
-  const spinAngle = 0
   const branchAngle = ((i % parameters.branches) * Math.PI * 2) / parameters.branches
 
   positions[i3] = Math.cos(branchAngle) * radius // x
@@ -94,7 +93,6 @@ function updateGalaxy() {
 
       const radius = Math.random() * parameters.radius
       /*  const spinAngle = radius * parameters.spin */
-      const spinAngle = 0
       const branchAngle = ((i % parameters.branches) * Math.PI * 2) / parameters.branches
 
       positions[i3] = Math.cos(branchAngle) * radius // x
@@ -125,13 +123,14 @@ function updateGalaxy() {
   }
 }
 
-const bufferRef = ref(null)
+const bufferRef = ref<InstanceType<typeof Points> | null>(null)
 
 const { onLoop } = useRenderLoop()
 
 onLoop(({ elapsed }) => {
   if (bufferRef.value) {
-    bufferRef.value.material.uniforms.uTime.value = elapsed
+    const material = bufferRef.value.material as ShaderMaterial
+    material.uniforms.uTime.value = elapsed
   }
 })
 useControls('fpsgraph')
