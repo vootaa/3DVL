@@ -36,7 +36,7 @@ defineExpose({
   transform-origin: center center;
   pointer-events: all;
   cursor: pointer;
-  width: 180px;
+  width: 160px;
   min-height: 60px;
   display: flex;
   flex-direction: column;
@@ -69,7 +69,7 @@ defineExpose({
 @media only screen and (max-width: 900px) {
   .grid-control {
     padding: 8px 12px;
-    width: 160px;
+    width: 140px;
     min-height: 50px;
     transform: skew(-0.25deg, 1deg) rotate(0.75deg);
   }
