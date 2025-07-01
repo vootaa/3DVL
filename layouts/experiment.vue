@@ -5,13 +5,16 @@ import ProjectSwitcher from '~/components/ui/ProjectSwitcher.vue';
 
 <template>
   <div>
+    <main class="w-full h-100vh relative">
+      <ClientOnly>
+        <slot />
+      </ClientOnly>
+    </main>
     <!-- UI Components - positioned at bottom right -->
     <div class="fixed right-5 bottom-5 z-20 flex items-end gap-3">
       <ProjectSwitcher />
       <NebulaPanel variant="compact" />
     </div>
-
-    <slot />
   </div>
 </template>
 
