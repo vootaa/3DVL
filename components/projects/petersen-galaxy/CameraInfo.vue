@@ -15,6 +15,14 @@ let animationFrameId: number | null = null
 // Get camera reference from parent component
 const cameraRef = inject<Ref<PerspectiveCamera | null>>('camera')
 
+// Get galaxy drift data from parent component
+const galaxyDriftData = inject('galaxyDriftData', {
+  position: ref({ x: '0.000', y: '0.000', z: '0.000' }),
+  velocity: ref('0.0000'),
+  distance: ref('0.00'),
+  duration: ref(0)
+})
+
 // Grid center reference point
 const gridCenter = new Vector3(0, 0, 0)
 
@@ -113,6 +121,31 @@ onUnmounted(() => {
         <span class="info-value elevation-value">{{ displayElevation }}°</span>
       </div>
     </div>
+    
+    <!-- Galaxy Drift Section -->
+    <div class="info-header drift-header">GALAXY DRIFT</div>
+    <div class="info-content">
+      <div class="info-row">
+        <span class="info-label">
+          <i class="info-icon drift-icon">⚬</i> Position
+        </span>
+        <span class="info-value position-value">
+          {{ galaxyDriftData.position.value.x }}, {{ galaxyDriftData.position.value.y }}, {{ galaxyDriftData.position.value.z }}
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">
+          <i class="info-icon velocity-icon">→</i> Velocity
+        </span>
+        <span class="info-value velocity-value">{{ galaxyDriftData.velocity.value }} u/s</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">
+          <i class="info-icon distance-icon">⤷</i> Total Drift
+        </span>
+        <span class="info-value drift-distance-value">{{ galaxyDriftData.distance.value }} u</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -134,8 +167,8 @@ onUnmounted(() => {
   transform: skew(0.5deg, -1.5deg) rotate(-1deg);
   transform-origin: center center;
   pointer-events: none;
-  width: 180px;
-  min-height: 65px;
+  width: 220px;
+  min-height: 120px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -211,6 +244,31 @@ onUnmounted(() => {
 
 .elevation-value {
   color: #77ffaa;
+}
+
+/* Galaxy drift section styles */
+.drift-header {
+  margin-top: 8px;
+  color: #ff6b6b;
+  border-bottom-color: rgba(255, 107, 107, 0.3);
+}
+
+.drift-icon {
+  color: #ff6b6b;
+}
+
+.position-value {
+  color: #ff9999;
+  font-size: 0.7em;
+  word-break: break-all;
+}
+
+.velocity-value {
+  color: #ffaa77;
+}
+
+.drift-distance-value {
+  color: #ffcc99;
 }
 
 /* Responsive design */

@@ -1,0 +1,135 @@
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted, provide } from 'vue'
+import { Vector3 } from 'three'
+import { useRenderLoop } from '@tresjs/core'
+import { galaxyDriftConfig, createInitialDriftState, type GalaxyDriftState } from './galaxy-drift-config'
+
+// Galaxy drift state
+const driftState = ref<GalaxyDriftState>(createInitialDriftState())
+
+// Internal time tracking for smooth motion
+let lastTime = 0
+let noiseOffset = Math.random() * 1000
+
+// Simple noise function for realistic perturbations
+function noise(x: number): number {
+  return Math.sin(x * 6.283) * 0.5 + Math.sin(x * 12.566) * 0.25 + Math.sin(x * 25.132) * 0.125
+}
+
+// Update galaxy center position
+const updateGalaxyDrift = (deltaTime: number, totalTime: number) => {
+  if (!galaxyDriftConfig.enabled) return
+
+  const state = driftState.value
+  const config = galaxyDriftConfig.motionPattern
+  
+  // Primary drift motion
+  const primaryDrift = config.primaryVelocity.clone().multiplyScalar(deltaTime)
+  
+  // Oscillatory motion for natural variation
+  const oscillation = new Vector3(
+    Math.sin(totalTime * config.oscillation.frequency.x + config.oscillation.phase.x) * config.oscillation.amplitude.x,
+    Math.sin(totalTime * config.oscillation.frequency.y + config.oscillation.phase.y) * config.oscillation.amplitude.y,
+    Math.sin(totalTime * config.oscillation.frequency.z + config.oscillation.phase.z) * config.oscillation.amplitude.z
+  ).multiplyScalar(deltaTime * 0.1) // Scale down oscillation velocity
+  
+  // Random perturbations
+  const perturbation = new Vector3(
+    noise(totalTime * config.perturbation.frequency + noiseOffset),
+    noise(totalTime * config.perturbation.frequency + noiseOffset + 100),
+    noise(totalTime * config.perturbation.frequency + noiseOffset + 200)
+  ).multiplyScalar(config.perturbation.strength * deltaTime)
+  
+  // Boundary return force
+  const distanceFromOrigin = state.currentPosition.length()
+  const boundaryForce = new Vector3()
+  if (distanceFromOrigin > galaxyDriftConfig.boundaries.maxDistance) {
+    const returnDirection = state.currentPosition.clone().normalize().multiplyScalar(-1)
+    const forceStrength = (distanceFromOrigin - galaxyDriftConfig.boundaries.maxDistance) * galaxyDriftConfig.boundaries.returnForce
+    boundaryForce.copy(returnDirection).multiplyScalar(forceStrength * deltaTime)
+  }
+  
+  // Apply all forces to velocity
+  state.velocity.add(primaryDrift).add(oscillation).add(perturbation).add(boundaryForce)
+  
+  // Apply damping to prevent runaway velocity
+  state.velocity.multiplyScalar(0.98)
+  
+  // Update position
+  const previousPosition = state.currentPosition.clone()
+  state.currentPosition.add(state.velocity.clone().multiplyScalar(deltaTime))
+  
+  // Update statistics
+  const frameDistance = state.currentPosition.distanceTo(previousPosition)
+  state.totalDistance += frameDistance
+  state.driftTime = totalTime
+  
+  // Update trail
+  if (galaxyDriftConfig.showTrail) {
+    state.trailPoints.push(state.currentPosition.clone())
+    if (state.trailPoints.length > galaxyDriftConfig.trailLength) {
+      state.trailPoints.shift()
+    }
+  }
+}
+
+// Render loop integration
+const { onLoop } = useRenderLoop()
+
+onLoop(({ delta, elapsed }) => {
+  const currentTime = elapsed
+  const deltaTime = Math.min(delta, 0.1) // Cap delta time to prevent large jumps
+  
+  updateGalaxyDrift(deltaTime, currentTime)
+  lastTime = currentTime
+})
+
+// Computed values for external consumption
+const galaxyCenter = computed(() => driftState.value.currentPosition.clone())
+const driftVelocity = computed(() => driftState.value.velocity.clone())
+const driftDistance = computed(() => driftState.value.totalDistance)
+const driftDuration = computed(() => driftState.value.driftTime)
+
+// Computed values for display
+const displayDriftPosition = computed(() => ({
+  x: driftState.value.currentPosition.x.toFixed(3),
+  y: driftState.value.currentPosition.y.toFixed(3),
+  z: driftState.value.currentPosition.z.toFixed(3)
+}))
+
+const displayDriftVelocity = computed(() => {
+  const speed = driftState.value.velocity.length()
+  return speed.toFixed(4)
+})
+
+const displayDriftDistance = computed(() => {
+  return driftState.value.totalDistance.toFixed(2)
+})
+
+// Provide galaxy center to child components
+provide('galaxyCenter', galaxyCenter)
+provide('galaxyDriftData', {
+  position: displayDriftPosition,
+  velocity: displayDriftVelocity,
+  distance: displayDriftDistance,
+  duration: driftDuration
+})
+
+// Reset function for debugging
+const resetDrift = () => {
+  driftState.value = createInitialDriftState()
+  noiseOffset = Math.random() * 1000
+}
+
+// Expose functions for parent component
+defineExpose({
+  resetDrift,
+  driftState: computed(() => driftState.value),
+  galaxyCenter
+})
+</script>
+
+<template>
+  <!-- This component is invisible - it only manages drift state -->
+  <div style="display: none;"></div>
+</template>

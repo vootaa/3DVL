@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { AdditiveBlending, Points, ShaderMaterial } from 'three'
+import { AdditiveBlending, Points, ShaderMaterial, Vector3 } from 'three'
+import { ref, inject, computed } from 'vue'
+import { useRenderLoop } from '@tresjs/core'
 import { orbitalConfig, orbitalColorConfig } from './orbital-config'
 
 import vertexShader from './shaders/orbital-vertex.glsl'
 import fragmentShader from './shaders/orbital-fragment.glsl'
+
+// Inject galaxy center position
+const galaxyCenter = inject('galaxyCenter', ref(new Vector3(0, 0, 0)))
 
 // Use imported configuration
 const { totalCount, orbitParticleRatio, orbitDistribution, innerRadius, middleRadius, outerRadius, maxSpaceRadius, particleSize, rotationSpeeds } = orbitalConfig
@@ -172,6 +177,10 @@ onLoop(({ elapsed }) => {
   if (bufferRef.value) {
     const material = bufferRef.value.material as ShaderMaterial
     material.uniforms.uTime.value = elapsed
+    
+    // Apply galaxy center drift
+    const center = galaxyCenter.value
+    bufferRef.value.position.set(center.x, center.y, center.z)
   }
 })
 </script>

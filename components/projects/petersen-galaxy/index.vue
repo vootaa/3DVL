@@ -6,6 +6,7 @@ import StarCluster from './StarCluster.vue'
 import StarControl from './StarControl.vue'
 import GridControl from './GridControl.vue'
 import CameraInfo from './CameraInfo.vue'
+import GalaxyDriftController from './GalaxyDriftController.vue'
 
 const gl = {
   clearColor: '#000811', // Very dark blue instead of pure black for better depth perception
@@ -37,6 +38,9 @@ const orbitControlsConfig = {
 
 <template>
   <div class="galaxy-container">
+    <!-- Galaxy drift controller (invisible but manages galaxy center) -->
+    <GalaxyDriftController />
+    
     <TresCanvas v-bind="gl">
       <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
       

@@ -14,6 +14,9 @@ import { orbitalConfig } from './orbital-config'
 import starVertexShader from './shaders/star-vertex.glsl'
 import starFragmentShader from './shaders/star-fragment.glsl'
 
+// Inject galaxy center position
+const galaxyCenter = inject('galaxyCenter', ref(new Vector3(0, 0, 0)))
+
 // Get orbital configuration for synchronization
 const { innerRadius, middleRadius, outerRadius, rotationSpeeds } = orbitalConfig
 
@@ -82,6 +85,7 @@ const calculateStarPosition = (r: number, theta: number) => {
 const starGeometry = ref()
 const starMaterial = ref()
 const starPoints = ref()
+const starClusterRef = ref()
 
 // Animation time and evolution state
 let animationTime = 0
@@ -200,6 +204,12 @@ const animate = () => {
     // Update camera distance for shader scaling
     const cameraDistance = cameraPosition.value.length()
     starMaterial.value.uniforms.cameraDistance.value = cameraDistance
+    
+    // Apply galaxy center drift to star cluster
+    if (starClusterRef.value) {
+      const center = galaxyCenter.value
+      starClusterRef.value.position.set(center.x, center.y, center.z)
+    }
     
     // Update positions to follow orbital rotation
     const positions = starGeometry.value.getAttribute('position')
@@ -350,7 +360,7 @@ defineExpose({
 </script>
 
 <template>
-  <TresGroup>
+  <TresGroup ref="starClusterRef">
     <!-- Star point cloud system -->
     <TresPoints 
       v-if="starGeometry && starMaterial"
