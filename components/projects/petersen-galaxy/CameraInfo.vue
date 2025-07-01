@@ -101,7 +101,7 @@ onUnmounted(() => {
         <span class="info-label">
           <i class="info-icon distance-icon">↕</i> Distance
         </span>
-        <span class="info-value distance-value">{{ displayDistance }}m</span>
+        <span class="info-value distance-value">{{ displayDistance }} AU</span>
       </div>
       <div class="info-row">
         <span class="info-label">
@@ -124,8 +124,8 @@ onUnmounted(() => {
   position: absolute;
   bottom: 20px;
   left: 20px;
-  background: rgba(0, 12, 20, 0.9);
-  border: 1px solid rgba(0, 204, 255, 0.2);
+  background: rgba(0, 12, 20, 0.85);
+  border: 1px solid rgba(0, 204, 255, 0.4);
   border-radius: 8px;
   padding: 10px 15px;
   color: #00CCFF;
@@ -134,16 +134,17 @@ onUnmounted(() => {
   font-variant-numeric: slashed-zero tabular-nums;
   text-transform: uppercase;
   line-height: 1em;
-  transform: skew(3deg, 3deg);
+  transform: skew(1deg, -3deg) rotate(-2deg);
+  transform-origin: center center;
   pointer-events: none;
-  width: 140px;
+  width: 160px;
   min-height: 80px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   transition: all 0.2s ease;
   z-index: 100;
-  backdrop-filter: blur(4px);
+  box-shadow: 0 0 15px rgba(0, 204, 255, 0.2);
 }
 
 .info-header {
@@ -151,7 +152,7 @@ onUnmounted(() => {
   opacity: 0.8;
   margin-bottom: 8px;
   text-align: center;
-  border-bottom: 1px solid rgba(0, 204, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 204, 255, 0.2);
   padding-bottom: 4px;
 }
 
@@ -219,8 +220,9 @@ onUnmounted(() => {
 @media only screen and (max-width: 900px) {
   .camera-info {
     padding: 8px 12px;
-    width: 120px;
+    width: 140px;
     min-height: 70px;
+    transform: skew(0.5deg, -2deg) rotate(-1.5deg);
   }
 
   .info-value {
