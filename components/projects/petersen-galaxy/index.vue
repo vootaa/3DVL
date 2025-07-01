@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from 'three'
+import { ref, provide, onMounted } from 'vue'
 import OrbitalSystem from './OrbitalSystem.vue'
 import GridControl from './GridControl.vue'
 import CameraInfo from './CameraInfo.vue'
@@ -14,13 +15,17 @@ const gl = {
 }
 
 const gridControlRef = ref()
+const cameraRef = ref()
+
+// Provide camera reference to child components
+provide('camera', cameraRef)
 
 // OrbitControls configuration with zoom limits
 const orbitControlsConfig = {
   enableDamping: true,
   dampingFactor: 0.05,
-  minDistance: 5,    // Minimum zoom distance
-  maxDistance: 50,   // Maximum zoom distance
+  minDistance: 2,    // Minimum zoom distance
+  maxDistance: 30,   // Maximum zoom distance
   minPolarAngle: Math.PI * 0.1,  // Minimum vertical angle (prevent going below)
   maxPolarAngle: Math.PI * 0.9,  // Maximum vertical angle (prevent going above)
   enablePan: false,  // Disable panning to focus on orbital movement
@@ -30,7 +35,7 @@ const orbitControlsConfig = {
 <template>
   <div class="galaxy-container">
     <TresCanvas v-bind="gl">
-      <TresPerspectiveCamera :position="[10, 8, 10]" :fov="60" />
+      <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
       
       <!-- Subtle ambient lighting for better 3D perception -->
       <TresAmbientLight :intensity="0.05" color="#004488" />

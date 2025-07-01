@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, inject } from 'vue'
+import { Vector3 } from 'three'
+import type { PerspectiveCamera } from 'three'
+import type { Ref } from 'vue'
 
 // Camera control state tracking
 const cameraDistance = ref(20)
@@ -9,47 +12,41 @@ const elevationAngle = ref(0)
 // Animation frame for updating camera info
 let animationFrameId: number | null = null
 
-// Update camera information by accessing TresJS scene elements
+// Get camera reference from parent component
+const cameraRef = inject<Ref<PerspectiveCamera | null>>('camera')
+
+// Grid center reference point
+const gridCenter = new Vector3(0, 0, 0)
+
+// Update camera information using injected camera reference
 const updateCameraInfo = () => {
   try {
-    // Try to access the TresJS camera and orbit controls through the DOM
-    const canvas = document.querySelector('canvas')
-    if (canvas && (canvas as any).__tres) {
-      const scene = (canvas as any).__tres
+    if (cameraRef?.value) {
+      const cameraPosition = cameraRef.value.position
       
-      if (scene.camera && scene.controls) {
-        const camera = scene.camera
-        const controls = scene.controls
-        
-        // Use grid center (0, 0, 0) as reference point instead of controls.target
-        const gridCenter = { x: 0, y: 0, z: 0 }
-        const distance = camera.position.distanceTo(gridCenter)
-        cameraDistance.value = distance
+      // Calculate distance from camera to grid center
+      const distance = cameraPosition.distanceTo(gridCenter)
+      cameraDistance.value = distance
 
-        // Calculate spherical coordinates relative to grid center
-        const position = camera.position
-        
-        // Calculate relative position to grid center
-        const dx = position.x - gridCenter.x
-        const dy = position.y - gridCenter.y
-        const dz = position.z - gridCenter.z
-        
-        // Calculate azimuth (horizontal angle) in degrees relative to grid
-        azimuthAngle.value = (Math.atan2(dx, dz) * 180 / Math.PI)
-        
-        // Calculate elevation (vertical angle) in degrees relative to grid
-        const horizontalDistance = Math.sqrt(dx * dx + dz * dz)
-        elevationAngle.value = (Math.atan2(dy, horizontalDistance) * 180 / Math.PI)
-        
-        return
-      }
+      // Calculate relative position to grid center
+      const dx = cameraPosition.x - gridCenter.x
+      const dy = cameraPosition.y - gridCenter.y
+      const dz = cameraPosition.z - gridCenter.z
+      
+      // Calculate azimuth (horizontal angle) in degrees relative to grid
+      azimuthAngle.value = (Math.atan2(dx, dz) * 180 / Math.PI)
+      
+      // Calculate elevation (vertical angle) in degrees relative to grid
+      const horizontalDistance = Math.sqrt(dx * dx + dz * dz)
+      elevationAngle.value = (Math.atan2(dy, horizontalDistance) * 180 / Math.PI)
+      
+      return
     }
   } catch (error) {
-    // Silently fall through to simulation mode
+    console.error('Error accessing camera:', error)
   }
   
-  // Fallback: use stable values instead of constantly changing simulation
-  // These values represent a typical camera position
+  // Fallback: use stable values if camera is not available
   cameraDistance.value = 17.3  // Fixed typical distance
   azimuthAngle.value = 45      // Fixed angle for demonstration
   elevationAngle.value = 25    // Fixed angle for demonstration
@@ -84,8 +81,8 @@ const displayElevation = computed(() => {
 })
 
 onMounted(() => {
-  // Delay start to ensure TresJS is fully initialized
-  setTimeout(startTracking, 100)
+  // Start tracking immediately since TresJS camera should be available
+  startTracking()
 })
 
 onUnmounted(() => {
