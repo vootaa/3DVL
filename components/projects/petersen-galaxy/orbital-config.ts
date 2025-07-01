@@ -25,31 +25,23 @@ export const orbitalConfig = {
   }
 }
 
-// Color scheme - same color family (cyan/blue tones)
-export const colorConfig = {
+// Orbital color scheme - consistent blue/cyan tones
+export const orbitalColorConfig = {
   // Orbital ring colors (same color family, different intensities)
   innerRing: new Color('#00ffff'),    // Bright cyan
   middleRing: new Color('#00ccff'),   // Bright blue-cyan
   outerRing: new Color('#0099ff'),    // Bright blue
   
-  // Scattered particles near orbits (stable color)
-  scatteredNear: new Color('#ff6b35'), // Orange-red for contrast (stable)
-  
-  // Scattered particles far from orbits (multiple colors for visual aid)
-  scatteredFar: [
-    new Color('#ff6b35'),  // Orange-red
-    new Color('#ffa500'),  // Orange
-    new Color('#ff1744'),  // Red
-    new Color('#e91e63'),  // Pink
-    new Color('#9c27b0'),  // Purple
-    new Color('#673ab7'),  // Deep purple
-  ],
+  // Scattered particles (same color family but dimmer)
+  scatteredInner: new Color('#0099cc'), // Dimmer cyan for inner area
+  scatteredMiddle: new Color('#0088bb'), // Dimmer blue-cyan for middle area
+  scatteredOuter: new Color('#0077aa'),  // Dimmer blue for outer area
   
   // Brightness multipliers
   brightness: {
-    inner: 2.0,   // Very bright
-    middle: 1.8,  // Bright
-    outer: 1.5,   // Moderately bright
-    scattered: 1.0 // Brighter scattered particles
+    inner: 2.0,     // Very bright
+    middle: 1.8,    // Bright
+    outer: 1.5,     // Moderately bright
+    scattered: 0.6  // Dimmer for scattered particles
   }
 }

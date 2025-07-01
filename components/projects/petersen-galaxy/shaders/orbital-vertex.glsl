@@ -40,24 +40,35 @@ void main() {
         // Smooth transition from chaos to order
         modelPosition.xyz = mix(modelPosition.xyz, orbitalPosition, radiusProgress);
     } else {
-        // For scattered particles - add subtle movement without forming orbits
+        // For scattered particles - synchronized rotation with slight delay and disturbances
         float distanceToCenter = length(modelPosition.xz);
         float angle = atan(modelPosition.x, modelPosition.z);
         
-        // Very slow, random-like rotation
-        float scatteredRotation = sin(uTime * 0.1 + distanceToCenter * 0.5) * 0.02;
-        angle += scatteredRotation;
+        // Determine which orbit this particle is near and sync rotation with delay
+        float nearestOrbitSpeed = 0.3; // Default to outer orbit speed
+        if (distanceToCenter < 2.25) { // Between inner and middle
+            nearestOrbitSpeed = mix(0.8, 0.5, (distanceToCenter - 1.5) / 0.75);
+        } else if (distanceToCenter < 3.9) { // Between middle and outer
+            nearestOrbitSpeed = mix(0.5, 0.3, (distanceToCenter - 3.0) / 0.9);
+        }
         
-        // Slight radial breathing effect
-        float breathing = sin(uTime * 0.3 + angle * 2.0) * 0.05;
-        distanceToCenter *= (1.0 + breathing);
+        // Synchronized rotation with delay (gravitational attraction effect)
+        float delayFactor = 0.7; // 70% of orbital speed
+        float syncedRotation = nearestOrbitSpeed * uTime * delayFactor;
         
-        // Apply subtle movement
-        modelPosition.x = distanceToCenter * cos(angle);
-        modelPosition.z = distanceToCenter * sin(angle);
+        // Add random disturbances in all directions
+        float timeVariation = uTime * 0.3;
+        float xDisturbance = sin(timeVariation + distanceToCenter * 2.0) * 0.15;
+        float zDisturbance = cos(timeVariation + angle * 3.0) * 0.15;
+        float yDisturbance = sin(timeVariation * 1.5 + distanceToCenter) * 0.08;
         
-        // Gentle vertical oscillation (reduced for thin disk)
-        modelPosition.y += sin(uTime * 0.2 + distanceToCenter) * 0.05;
+        // Apply synchronized rotation
+        angle += syncedRotation;
+        
+        // Apply movement with disturbances
+        modelPosition.x = distanceToCenter * cos(angle) + xDisturbance;
+        modelPosition.z = distanceToCenter * sin(angle) + zDisturbance;
+        modelPosition.y += yDisturbance;
     }
     
     // Very reduced randomness for precise ring formation
