@@ -33,7 +33,7 @@ void main() {
         // Calculate orbital position
         vec3 orbitalPosition = vec3(
             currentRadius * cos(angle),
-            modelPosition.y * (1.0 - orbitInfluence * 0.98), // Almost completely flatten
+            modelPosition.y * (1.0 - orbitInfluence * 0.99), // Almost completely flatten to thin disk
             currentRadius * sin(angle)
         );
         
@@ -56,8 +56,8 @@ void main() {
         modelPosition.x = distanceToCenter * cos(angle);
         modelPosition.z = distanceToCenter * sin(angle);
         
-        // Gentle vertical oscillation
-        modelPosition.y += sin(uTime * 0.2 + distanceToCenter) * 0.1;
+        // Gentle vertical oscillation (reduced for thin disk)
+        modelPosition.y += sin(uTime * 0.2 + distanceToCenter) * 0.05;
     }
     
     // Very reduced randomness for precise ring formation

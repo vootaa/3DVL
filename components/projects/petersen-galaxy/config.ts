@@ -32,11 +32,20 @@ export const colorConfig = {
   middleRing: new Color('#00ccff'),   // Bright blue-cyan
   outerRing: new Color('#0099ff'),    // Bright blue
   
-  // Scattered particles (contrasting warm colors for visibility)
-  scattered: new Color('#ff6b35'),    // Orange-red for contrast
-  scatteredSecondary: new Color('#ffa500'), // Orange variation
+  // Scattered particles near orbits (stable color)
+  scatteredNear: new Color('#ff6b35'), // Orange-red for contrast (stable)
   
-  // Brightness multipliers - increased for better visibility
+  // Scattered particles far from orbits (multiple colors for visual aid)
+  scatteredFar: [
+    new Color('#ff6b35'),  // Orange-red
+    new Color('#ffa500'),  // Orange
+    new Color('#ff1744'),  // Red
+    new Color('#e91e63'),  // Pink
+    new Color('#9c27b0'),  // Purple
+    new Color('#673ab7'),  // Deep purple
+  ],
+  
+  // Brightness multipliers
   brightness: {
     inner: 2.0,   // Very bright
     middle: 1.8,  // Bright

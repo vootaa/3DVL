@@ -70,7 +70,7 @@ for (let i = 0; i < totalCount; i++) {
     // Start from completely random chaotic positions within the space
     const initialRadius = Math.random() * maxSpaceRadius
     const initialAngle = Math.random() * Math.PI * 2
-    const initialHeight = (Math.random() - 0.5) * 6
+    const initialHeight = (Math.random() - 0.5) * 1.5 // Much thinner disk distribution
     
     positions[i3] = Math.cos(initialAngle) * initialRadius
     positions[i3 + 1] = initialHeight
@@ -91,6 +91,7 @@ for (let i = 0; i < totalCount; i++) {
   } else {
     // Scattered particles - positioned close to ring areas for contrast
     const distributionChoice = Math.random()
+    let isNearOrbit = false
     
     if (distributionChoice < 0.4) {
       // Close to inner ring area
@@ -98,43 +99,52 @@ for (let i = 0; i < totalCount; i++) {
       const radiusVariation = (Math.random() - 0.5) * 0.6 // ±0.3 variation (closer to ring)
       const radius = Math.max(0.3, baseRadius + radiusVariation)
       const angle = Math.random() * Math.PI * 2
-      const height = (Math.random() - 0.5) * 2.5 // Closer to disk plane
+      const height = (Math.random() - 0.5) * 0.8 // Very thin disk
       
       positions[i3] = Math.cos(angle) * radius
       positions[i3 + 1] = height
       positions[i3 + 2] = Math.sin(angle) * radius
+      isNearOrbit = Math.abs(radiusVariation) < 0.3 // Near if within ±0.3 of orbit
     } else if (distributionChoice < 0.7) {
       // Close to middle ring area
       const baseRadius = middleRadius
       const radiusVariation = (Math.random() - 0.5) * 0.8 // ±0.4 variation
       const radius = Math.max(0.5, baseRadius + radiusVariation)
       const angle = Math.random() * Math.PI * 2
-      const height = (Math.random() - 0.5) * 3
+      const height = (Math.random() - 0.5) * 1.0 // Thin disk
       
       positions[i3] = Math.cos(angle) * radius
       positions[i3 + 1] = height
       positions[i3 + 2] = Math.sin(angle) * radius
+      isNearOrbit = Math.abs(radiusVariation) < 0.4 // Near if within ±0.4 of orbit
     } else {
       // Close to outer ring area
       const baseRadius = outerRadius
       const radiusVariation = (Math.random() - 0.5) * 1.0 // ±0.5 variation
       const radius = Math.max(1.0, baseRadius + radiusVariation)
       const angle = Math.random() * Math.PI * 2
-      const height = (Math.random() - 0.5) * 3.5
+      const height = (Math.random() - 0.5) * 1.2 // Thin disk
       
       positions[i3] = Math.cos(angle) * radius
       positions[i3 + 1] = height
       positions[i3 + 2] = Math.sin(angle) * radius
+      isNearOrbit = Math.abs(radiusVariation) < 0.5 // Near if within ±0.5 of orbit
     }
     
     targetRadii[i] = 0.0 // No target radius for scattered particles
     rotationSpeedsArray[i] = 0.0 // No rotation for scattered particles
     
-    // Use contrasting warm colors for better visibility
-    const useSecondaryColor = Math.random() < 0.5
-    const scatteredColor = useSecondaryColor 
-      ? colorConfig.scatteredSecondary.clone() 
-      : colorConfig.scattered.clone()
+    // Color strategy: stable near orbits, varied far from orbits
+    let scatteredColor
+    if (isNearOrbit) {
+      // Near orbit particles: stable orange-red color (no flicker)
+      scatteredColor = colorConfig.scatteredNear.clone()
+    } else {
+      // Far from orbit particles: random color for visual variety
+      const colorIndex = Math.floor(Math.random() * colorConfig.scatteredFar.length)
+      scatteredColor = colorConfig.scatteredFar[colorIndex].clone()
+    }
+    
     const brightnessVariation = 0.8 + Math.random() * 0.4
     scatteredColor.multiplyScalar(colorConfig.brightness.scattered * brightnessVariation)
     colors[i3] = scatteredColor.r
@@ -145,10 +155,10 @@ for (let i = 0; i < totalCount; i++) {
     scales[i] = 0.8 + Math.random() * 0.6
   }
   
-  // Reduced initial randomness for more precise ring formation
+  // Reduced initial randomness for more precise ring formation and thin disk
   const randomStrength = 1.2
   const randomX = (Math.random() - 0.5) * randomStrength
-  const randomY = (Math.random() - 0.5) * randomStrength
+  const randomY = (Math.random() - 0.5) * (randomStrength * 0.3) // Much less Y variation for thin disk
   const randomZ = (Math.random() - 0.5) * randomStrength
   
   randomnessArray[i3] = randomX
