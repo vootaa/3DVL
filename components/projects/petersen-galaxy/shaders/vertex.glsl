@@ -60,8 +60,8 @@ void main() {
         modelPosition.y += sin(uTime * 0.2 + distanceToCenter) * 0.1;
     }
     
-    // Reduced randomness for cleaner ring appearance
-    float randomnessStrength = mix(1.0, 0.05, smoothstep(0.0, 1.0, orbitInfluence));
+    // Very reduced randomness for precise ring formation
+    float randomnessStrength = mix(1.0, 0.02, smoothstep(0.0, 1.0, orbitInfluence));
     modelPosition.xyz += aRandomness * randomnessStrength;
 
     vec4 viewPosition = viewMatrix * modelPosition;

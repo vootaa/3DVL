@@ -15,7 +15,7 @@ export const orbitalConfig = {
   maxSpaceRadius: 6.24, // outerRadius * 1.3
   
   // Particle properties
-  particleSize: 10, // Slightly reduced for better balance
+  particleSize: 8, // Smaller for thinner ring lines
   
   // Rotation speeds (inner faster, outer slower)
   rotationSpeeds: {
@@ -32,14 +32,15 @@ export const colorConfig = {
   middleRing: new Color('#00ccff'),   // Bright blue-cyan
   outerRing: new Color('#0099ff'),    // Bright blue
   
-  // Scattered particles (dimmer version of the same color family)
-  scattered: new Color('#004488'),    // Dark blue
+  // Scattered particles (contrasting warm colors for visibility)
+  scattered: new Color('#ff6b35'),    // Orange-red for contrast
+  scatteredSecondary: new Color('#ffa500'), // Orange variation
   
   // Brightness multipliers - increased for better visibility
   brightness: {
     inner: 2.0,   // Very bright
     middle: 1.8,  // Bright
     outer: 1.5,   // Moderately bright
-    scattered: 0.6
+    scattered: 1.0 // Brighter scattered particles
   }
 }
