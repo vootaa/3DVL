@@ -77,15 +77,15 @@ const stopTracking = () => {
 
 // Computed values for display
 const displayDistance = computed(() => {
-  return cameraDistance.value.toFixed(1)
+  return cameraDistance.value.toFixed(2)
 })
 
 const displayAzimuth = computed(() => {
-  return Math.round(azimuthAngle.value)
+  return azimuthAngle.value.toFixed(1)
 })
 
 const displayElevation = computed(() => {
-  return Math.round(elevationAngle.value)
+  return elevationAngle.value.toFixed(1)
 })
 
 onMounted(() => {
@@ -108,17 +108,15 @@ onUnmounted(() => {
         </span>
         <span class="info-value distance-value">{{ displayDistance }} AU</span>
       </div>
-      <div class="info-row">
-        <span class="info-label">
-          <i class="info-icon azimuth-icon">↻</i> Azimuth
-        </span>
-        <span class="info-value azimuth-value">{{ displayAzimuth }}°</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">
-          <i class="info-icon elevation-icon">⇅</i> Elevation
-        </span>
-        <span class="info-value elevation-value">{{ displayElevation }}°</span>
+      <div class="info-row angle-grid-row">
+        <div class="angle-grid">
+          <div class="angle-item">
+            <i class="info-icon azimuth-icon">↻</i> Azimuth: <span class="angle-value">{{ displayAzimuth }}°</span>
+          </div>
+          <div class="angle-item">
+            <i class="info-icon elevation-icon">⇅</i> Elevation: <span class="angle-value">{{ displayElevation }}°</span>
+          </div>
+        </div>
       </div>
     </div>
     
@@ -130,20 +128,20 @@ onUnmounted(() => {
           <i class="info-icon drift-icon">⚬</i> Position
         </span>
         <span class="info-value position-value">
-          {{ galaxyDriftData.position.value.x }}, {{ galaxyDriftData.position.value.y }}, {{ galaxyDriftData.position.value.z }}
+          ({{ galaxyDriftData.position.value.x }}, {{ galaxyDriftData.position.value.y }}, {{ galaxyDriftData.position.value.z }}) mGU
         </span>
       </div>
       <div class="info-row">
         <span class="info-label">
           <i class="info-icon velocity-icon">→</i> Velocity
         </span>
-        <span class="info-value velocity-value">{{ galaxyDriftData.velocity.value }} u/s</span>
+        <span class="info-value velocity-value">{{ galaxyDriftData.velocity.value }} nGU/ms</span>
       </div>
       <div class="info-row">
         <span class="info-label">
           <i class="info-icon distance-icon">⤷</i> Total Drift
         </span>
-        <span class="info-value drift-distance-value">{{ galaxyDriftData.distance.value }} u</span>
+        <span class="info-value drift-distance-value">{{ galaxyDriftData.distance.value }} nGU</span>
       </div>
     </div>
   </div>
@@ -167,8 +165,8 @@ onUnmounted(() => {
   transform: skew(0.5deg, -1.5deg) rotate(-1deg);
   transform-origin: center center;
   pointer-events: none;
-  width: 220px;
-  min-height: 120px;
+  width: 320px;
+  min-height: 110px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -226,24 +224,44 @@ onUnmounted(() => {
 }
 
 .azimuth-icon {
-  font-size: 1.3em;
+  font-size: 1.2em;
+  margin-right: 4px;
+  color: #00CCFF;
 }
 
 .elevation-icon {
   font-weight: bold;
+  margin-right: 4px;
+  color: #00CCFF;
 }
 
 /* Color coding similar to space-game observation controls */
 .distance-value {
-  color: #a0e0ff;
+  color: #66ff99;
 }
 
-.azimuth-value {
+/* Angle grid layout */
+.angle-grid-row {
+  display: block;
+}
+
+.angle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.angle-item {
+  display: flex;
+  align-items: center;
+  font-size: 0.85em;
+  color: #00CCFF;
+}
+
+.angle-value {
   color: #ffcc77;
-}
-
-.elevation-value {
-  color: #77ffaa;
+  margin-left: 4px;
 }
 
 /* Galaxy drift section styles */
@@ -259,8 +277,9 @@ onUnmounted(() => {
 
 .position-value {
   color: #ff9999;
-  font-size: 0.7em;
-  word-break: break-all;
+  font-size: 0.72em;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.3px;
 }
 
 .velocity-value {

@@ -90,20 +90,28 @@ const driftVelocity = computed(() => driftState.value.velocity.clone())
 const driftDistance = computed(() => driftState.value.totalDistance)
 const driftDuration = computed(() => driftState.value.driftTime)
 
-// Computed values for display
-const displayDriftPosition = computed(() => ({
-  x: driftState.value.currentPosition.x.toFixed(3),
-  y: driftState.value.currentPosition.y.toFixed(3),
-  z: driftState.value.currentPosition.z.toFixed(3)
-}))
+// Computed values for display with enhanced precision and scaling
+const displayDriftPosition = computed(() => {
+  // Scale up by 1000x for milli Galaxy Units (mGU)
+  const scale = 1000
+  return {
+    x: (driftState.value.currentPosition.x * scale).toFixed(3),
+    y: (driftState.value.currentPosition.y * scale).toFixed(3),
+    z: (driftState.value.currentPosition.z * scale).toFixed(3)
+  }
+})
 
 const displayDriftVelocity = computed(() => {
-  const speed = driftState.value.velocity.length()
-  return speed.toFixed(4)
+  // Scale up and convert to milliseconds: 1,000,000,000,000x for better visibility
+  const scale = 1000000000000
+  const speed = driftState.value.velocity.length() * scale
+  return speed.toFixed(6)
 })
 
 const displayDriftDistance = computed(() => {
-  return driftState.value.totalDistance.toFixed(2)
+  // Scale up by 10,000,000,000,000x for nano Galaxy Units (nGU)
+  const scale = 10000000000000
+  return (driftState.value.totalDistance * scale).toFixed(10)
 })
 
 // Provide galaxy center to child components
