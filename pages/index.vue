@@ -12,7 +12,6 @@ useHead({
     { name: 'description', content: siteConfig.description },
   ],
 });
-
 </script>
 
 <template>
@@ -24,8 +23,13 @@ useHead({
     </div>
     <div class="projects-grid">
       <div v-for="project in projects" :key="project.id" class="project-card">
-        <div class="card-image">
-          <img :src="project.heroImage" :alt="`${project.name} preview`" />
+        <div class="card-image-container">
+          <img 
+            :src="project.heroImage" 
+            :alt="`${project.name} preview`" 
+            class="card-image"
+            loading="lazy"
+          />
         </div>
         <div class="card-content">
           <h2 class="card-title">{{ project.name }}</h2>
@@ -78,12 +82,6 @@ useHead({
   box-shadow: 0 20px 25px -5px rgba(255, 255, 255, 0.1), 0 10px 10px -5px rgba(255, 255, 255, 0.04);
 }
 
-.card-image img {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-}
-
 .card-content {
   padding: 1.5rem;
   display: flex;
@@ -103,7 +101,7 @@ useHead({
   color: var(--text);
   opacity: 0.8;
   margin-bottom: 1.5rem;
-  height: 70px; /* Fixed height for description */
+  height: 70px;
   flex-grow: 1;
 }
 
@@ -129,5 +127,19 @@ useHead({
 .subtitle {
   color: var(--text);
   opacity: 0.6;
+  font-size: 1rem;
+}
+
+.card-image-container {
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 </style>
