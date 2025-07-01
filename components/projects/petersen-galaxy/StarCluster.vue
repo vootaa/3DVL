@@ -6,6 +6,7 @@ import {
   ShaderMaterial,
   BufferGeometry,
   Float32BufferAttribute,
+  Vector3,
 } from 'three'
 import { orbitalConfig } from './orbital-config'
 
@@ -59,11 +60,11 @@ const starColors = {
   'red-giant': new Color('#FF4500')      // Orange-red - M-type red giant
 }
 
-// Star size configuration - minimal heartbeat amplitude
+// Star size configuration with orbital amplitude variation
 const starSizes = {
-  'main-sequence': { min: 16, max: 18 },
-  'blue-giant': { min: 22, max: 26 },
-  'red-giant': { min: 28, max: 32 }
+  'main-sequence': { base: 17, amplitude: 0.05 }, // Inner orbit: ±5%
+  'blue-giant': { base: 24, amplitude: 0.10 },     // Middle orbit: ±10%
+  'red-giant': { base: 30, amplitude: 0.15 }       // Outer orbit: ±15%
 }
 
 // Calculate star position
@@ -85,6 +86,14 @@ const starPoints = ref()
 // Animation time and evolution state
 let animationTime = 0
 let animationId: number
+let isInitialized = false
+let evolutionComplete = false
+
+// Store initial chaotic positions for reset
+const initialChaoticPositions = new Float32Array(stars.length * 3)
+
+// Camera distance tracking
+const cameraPosition = inject('cameraPosition', ref(new Vector3(0, 0, 10)))
 
 // Initialize star system with evolution data
 const initStars = () => {
@@ -113,6 +122,11 @@ const initStars = () => {
     positions[i3 + 1] = initialHeight
     positions[i3 + 2] = Math.sin(initialAngle) * initialRadius
     
+    // Store initial chaotic positions for state management
+    initialChaoticPositions[i3] = positions[i3]
+    initialChaoticPositions[i3 + 1] = positions[i3 + 1]
+    initialChaoticPositions[i3 + 2] = positions[i3 + 2]
+    
     // Target orbital data
     targetRadii[index] = star.r
     initialAngles[index] = star.theta * Math.PI / 180
@@ -133,8 +147,8 @@ const initStars = () => {
     colors[i3 + 2] = color.b
     
     // Start with small size (will grow during evolution)
-    const sizeRange = starSizes[star.type]
-    sizes[index] = sizeRange.min * 0.3 // Start small
+    const sizeConfig = starSizes[star.type]
+    sizes[index] = sizeConfig.base * 0.3 // Start small
     
     // Start dim (will brighten during evolution)
     alphas[index] = 0.1 + Math.random() * 0.1
@@ -160,7 +174,8 @@ const initStars = () => {
     uniforms: {
       time: { value: 0 },
       evolutionTime: { value: 0 },
-      resolution: { value: [window.innerWidth, window.innerHeight, 1.0] }
+      resolution: { value: [window.innerWidth, window.innerHeight, 1.0] },
+      cameraDistance: { value: 10.0 } // Add camera distance for size scaling
     },
     vertexShader: starVertexShader,
     fragmentShader: starFragmentShader,
@@ -171,6 +186,7 @@ const initStars = () => {
   
   starGeometry.value = geometry
   starMaterial.value = material
+  isInitialized = true
 }
 
 // Animation loop with evolution and orbital rotation
@@ -180,6 +196,10 @@ const animate = () => {
   if (starMaterial.value && starGeometry.value) {
     starMaterial.value.uniforms.time.value = animationTime
     starMaterial.value.uniforms.evolutionTime.value = animationTime * 0.1 // Slower evolution
+    
+    // Update camera distance for shader scaling
+    const cameraDistance = cameraPosition.value.length()
+    starMaterial.value.uniforms.cameraDistance.value = cameraDistance
     
     // Update positions to follow orbital rotation
     const positions = starGeometry.value.getAttribute('position')
@@ -200,6 +220,10 @@ const animate = () => {
         const evolutionProgress = rawProgress < 0.5 
           ? 4 * rawProgress * rawProgress * rawProgress 
           : 1 - Math.pow(-2 * rawProgress + 2, 3) / 2;
+        
+        if (rawProgress >= 1.0) {
+          evolutionComplete = true
+        }
         
         // Current orbital angle (rotating with time) - ensure exact orbit positioning
         const currentAngle = initialAngles.array[i] + animationTime * rotationSpeeds.array[i]
@@ -227,10 +251,17 @@ const animate = () => {
           positions.array[i3 + 2] = targetZ
         }
         
-        // Evolve size from small to normal (minimal variation for stable centers)
-        const sizeRange = starSizes[star.type]
-        const baseSize = (sizeRange.min + sizeRange.max) * 0.5 // Use average for stable positioning
-        const currentSize = baseSize * 0.3 + (baseSize - baseSize * 0.3) * evolutionProgress
+        // Evolve size with orbital amplitude variation and distance scaling
+        const sizeConfig = starSizes[star.type]
+        const baseSize = sizeConfig.base
+        const amplitude = sizeConfig.amplitude
+        
+        // Apply orbital amplitude variation based on star type
+        const timeOffset = animationTime + i * 0.5 // Stagger animations using loop index
+        const amplitudeVariation = 1.0 + amplitude * Math.sin(timeOffset * 2.0)
+        
+        const currentSize = (baseSize * amplitudeVariation * 0.3) + 
+                           (baseSize * amplitudeVariation - baseSize * amplitudeVariation * 0.3) * evolutionProgress
         sizes.array[i] = currentSize
         
         // Evolve brightness from dim to bright (stable final brightness)
@@ -266,6 +297,55 @@ onUnmounted(() => {
   if (animationId) {
     cancelAnimationFrame(animationId)
   }
+})
+
+// Reset stars to current state without re-evolution
+const resetStarsPosition = () => {
+  if (!isInitialized || !starGeometry.value) return
+  
+  const positions = starGeometry.value.getAttribute('position')
+  const sizes = starGeometry.value.getAttribute('size')
+  const alphas = starGeometry.value.getAttribute('alpha')
+  
+  if (evolutionComplete) {
+    // If evolution is complete, position stars on their current orbital positions
+    for (let i = 0; i < stars.length; i++) {
+      const i3 = i * 3
+      const star = stars[i]
+      const targetRadii = starGeometry.value.getAttribute('targetRadius')
+      const initialAngles = starGeometry.value.getAttribute('initialAngle')
+      const rotationSpeeds = starGeometry.value.getAttribute('rotationSpeed')
+      
+      const currentAngle = initialAngles.array[i] + animationTime * rotationSpeeds.array[i]
+      const targetRadius = targetRadii.array[i]
+      
+      positions.array[i3] = targetRadius * Math.cos(currentAngle)
+      positions.array[i3 + 1] = 0
+      positions.array[i3 + 2] = targetRadius * Math.sin(currentAngle)
+      
+      // Set final evolved sizes and brightness
+      const sizeConfig = starSizes[star.type]
+      sizes.array[i] = sizeConfig.base
+      alphas.array[i] = 0.85
+    }
+  } else {
+    // If evolution not complete, use original chaotic positions
+    for (let i = 0; i < stars.length; i++) {
+      const i3 = i * 3
+      positions.array[i3] = initialChaoticPositions[i3]
+      positions.array[i3 + 1] = initialChaoticPositions[i3 + 1]
+      positions.array[i3 + 2] = initialChaoticPositions[i3 + 2]
+    }
+  }
+  
+  positions.needsUpdate = true
+  sizes.needsUpdate = true
+  alphas.needsUpdate = true
+}
+
+// Expose reset function for external control
+defineExpose({
+  resetStarsPosition
 })
 </script>
 

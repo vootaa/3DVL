@@ -1,33 +1,53 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 // Star cluster control state
 const showStars = ref(true)
-const showStarInfo = ref(false)
+const starClusterRef = ref()
 
-// Star cluster statistics
-const starStats = {
-  total: 20,
-  mainSequence: 5,
-  blueGiants: 5,
-  redGiants: 10,
-  orbits: 3
+// Star configuration by orbits
+const orbitConfig = {
+  inner: { 
+    count: 5, 
+    color: '#FFD700', 
+    name: 'Inner Orbit',
+    stars: Array.from({ length: 5 }, (_, i) => ({ id: i + 5, active: false }))
+  },
+  middle: { 
+    count: 5, 
+    color: '#87CEEB', 
+    name: 'Middle Orbit',
+    stars: Array.from({ length: 5 }, (_, i) => ({ id: i, active: false }))
+  },
+  outer: { 
+    count: 10, 
+    color: '#FF4500', 
+    name: 'Outer Orbit',
+    stars: Array.from({ length: 10 }, (_, i) => ({ id: i + 10, active: false }))
+  }
 }
 
 // Toggle star cluster display
 const toggleStars = () => {
   showStars.value = !showStars.value
+  // Reset stars position when toggling to avoid re-evolution
+  if (showStars.value && starClusterRef.value?.resetStarsPosition) {
+    starClusterRef.value.resetStarsPosition()
+  }
 }
 
-// Toggle info display
-const toggleInfo = () => {
-  showStarInfo.value = !showStarInfo.value
+// Handle star button click (for future interaction)
+const handleStarClick = (orbitKey: string, starIndex: number) => {
+  const orbit = orbitConfig[orbitKey as keyof typeof orbitConfig]
+  orbit.stars[starIndex].active = !orbit.stars[starIndex].active
+  // Future: Add star-specific effects or interactions
+  console.log(`Star ${orbit.stars[starIndex].id} in ${orbit.name} ${orbit.stars[starIndex].active ? 'activated' : 'deactivated'}`)
 }
 
 // Expose state to parent component
 defineExpose({
   showStars,
-  showStarInfo
+  starClusterRef
 })
 </script>
 
@@ -39,49 +59,70 @@ defineExpose({
       <div class="control-value">{{ showStars ? 'ON' : 'OFF' }}</div>
     </div>
     
-    <!-- Info toggle button -->
-    <div class="info-control" @click="toggleInfo">
-      <div class="info-symbol">{{ showStarInfo ? '−' : '+' }}</div>
-    </div>
-    
-    <!-- Star information panel -->
-    <div v-show="showStarInfo" class="star-info-panel">
-      <h3>CLUSTER DATA</h3>
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="info-label">TOTAL</span>
-          <span class="info-value">{{ starStats.total }}</span>
+    <!-- Orbital star buttons panel - shows when stars are ON -->
+    <div v-show="showStars" class="orbital-panel">
+      <h3>ORBITAL STARS</h3>
+      
+      <!-- Inner Orbit -->
+      <div class="orbit-section">
+        <div class="orbit-label" :style="{ color: orbitConfig.inner.color }">
+          INNER ({{ orbitConfig.inner.count }})
         </div>
-        <div class="info-item">
-          <span class="info-label">ORBITS</span>
-          <span class="info-value">{{ starStats.orbits }}</span>
-        </div>
-        <div class="info-item inner">
-          <span class="info-label">INNER</span>
-          <span class="info-value">{{ starStats.mainSequence }}</span>
-        </div>
-        <div class="info-item middle">
-          <span class="info-label">MIDDLE</span>
-          <span class="info-value">{{ starStats.blueGiants }}</span>
-        </div>
-        <div class="info-item outer">
-          <span class="info-label">OUTER</span>
-          <span class="info-value">{{ starStats.redGiants }}</span>
+        <div class="star-buttons">
+          <button 
+            v-for="(star, index) in orbitConfig.inner.stars" 
+            :key="`inner-${index}`"
+            class="star-button inner"
+            :class="{ active: star.active }"
+            :style="{ 
+              borderColor: orbitConfig.inner.color,
+              backgroundColor: star.active ? orbitConfig.inner.color : 'transparent'
+            }"
+            @click="handleStarClick('inner', index)"
+          >
+          </button>
         </div>
       </div>
       
-      <div class="legend">
-        <div class="legend-item">
-          <div class="color-box main-sequence"></div>
-          <span>Main Sequence</span>
+      <!-- Middle Orbit -->
+      <div class="orbit-section">
+        <div class="orbit-label" :style="{ color: orbitConfig.middle.color }">
+          MIDDLE ({{ orbitConfig.middle.count }})
         </div>
-        <div class="legend-item">
-          <div class="color-box blue-giant"></div>
-          <span>Blue Giant</span>
+        <div class="star-buttons">
+          <button 
+            v-for="(star, index) in orbitConfig.middle.stars" 
+            :key="`middle-${index}`"
+            class="star-button middle"
+            :class="{ active: star.active }"
+            :style="{ 
+              borderColor: orbitConfig.middle.color,
+              backgroundColor: star.active ? orbitConfig.middle.color : 'transparent'
+            }"
+            @click="handleStarClick('middle', index)"
+          >
+          </button>
         </div>
-        <div class="legend-item">
-          <div class="color-box red-giant"></div>
-          <span>Red Giant</span>
+      </div>
+      
+      <!-- Outer Orbit -->
+      <div class="orbit-section">
+        <div class="orbit-label" :style="{ color: orbitConfig.outer.color }">
+          OUTER ({{ orbitConfig.outer.count }})
+        </div>
+        <div class="star-buttons">
+          <button 
+            v-for="(star, index) in orbitConfig.outer.stars" 
+            :key="`outer-${index}`"
+            class="star-button outer"
+            :class="{ active: star.active }"
+            :style="{ 
+              borderColor: orbitConfig.outer.color,
+              backgroundColor: star.active ? orbitConfig.outer.color : 'transparent'
+            }"
+            @click="handleStarClick('outer', index)"
+          >
+          </button>
         </div>
       </div>
     </div>
@@ -95,8 +136,9 @@ defineExpose({
   right: 20px;
   z-index: 100;
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
 }
 
 /* Main star control panel (mirroring GridControl) */
@@ -152,50 +194,8 @@ defineExpose({
   text-align: right;
 }
 
-/* Info toggle button */
-.info-control {
-  background: rgba(0, 12, 20, 0.85);
-  border: 1px solid rgba(255, 215, 0, 0.4);
-  border-radius: 8px;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transform: skew(0.5deg, -1.5deg) rotate(-1deg); /* Mirror GridControl transform */
-  transition: all 0.2s ease;
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
-  /* Helmet concave effect for button */
-  background-image: 
-    linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, transparent 50%, rgba(0, 0, 0, 0.15) 100%),
-    radial-gradient(circle at center, rgba(255, 215, 0, 0.03) 0%, transparent 70%);
-}
-
-.info-control:hover {
-  background: rgba(20, 12, 0, 0.9);
-  border-color: rgba(255, 215, 0, 0.6);
-  box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
-  transform: skew(0.5deg, -1.5deg) rotate(-1deg) scale(1.05);
-  /* Enhanced helmet effect on hover */
-  background-image: 
-    linear-gradient(135deg, rgba(255, 215, 0, 0.12) 0%, transparent 50%, rgba(0, 0, 0, 0.2) 100%),
-    radial-gradient(circle at center, rgba(255, 215, 0, 0.05) 0%, transparent 70%);
-}
-
-.info-symbol {
-  color: #FFD700;
-  font-family: 'Kode Mono', monospace;
-  font-size: 1.5em;
-  font-weight: bold;
-  line-height: 1;
-}
-
-/* Info panel */
-.star-info-panel {
-  position: absolute;
-  top: 70px;
-  right: 0;
+/* Orbital stars panel */
+.orbital-panel {
   background: rgba(0, 8, 17, 0.95);
   border: 1px solid rgba(255, 215, 0, 0.3);
   border-radius: 12px;
@@ -203,107 +203,91 @@ defineExpose({
   backdrop-filter: blur(10px);
   color: #ffffff;
   font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
-  min-width: 220px;
+  min-width: 260px;
   animation: fadeInDown 0.3s ease;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transform: skew(0.25deg, -0.75deg) rotate(-0.5deg); /* Subtle helmet angle */
 }
 
-.star-info-panel h3 {
-  margin: 0 0 12px 0;
+.orbital-panel h3 {
+  margin: 0 0 16px 0;
   font-size: 14px;
   color: #FFD700;
   border-bottom: 1px solid rgba(255, 215, 0, 0.3);
-  padding-bottom: 6px;
+  padding-bottom: 8px;
   text-transform: uppercase;
   font-weight: 600;
+  text-align: center;
 }
 
-.info-grid {
-  display: grid;
-  gap: 6px;
+.orbit-section {
   margin-bottom: 16px;
 }
 
-.info-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.05);
+.orbit-section:last-child {
+  margin-bottom: 0;
 }
 
-.info-item.inner {
-  border-left: 3px solid #ffd700;
-}
-
-.info-item.middle {
-  border-left: 3px solid #87ceeb;
-}
-
-.info-item.outer {
-  border-left: 3px solid #ff4500;
-}
-
-.info-label {
+.orbit-label {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
   text-transform: uppercase;
-  font-weight: 500;
+  margin-bottom: 8px;
+  opacity: 0.9;
+  letter-spacing: 0.5px;
 }
 
-.info-value {
-  font-size: 14px;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-.legend {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 12px;
-}
-
-.legend-item {
+.star-buttons {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.7);
-  text-transform: uppercase;
-  font-weight: 500;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-start;
 }
 
-.color-box {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
-  flex-shrink: 0;
+.star-button {
+  width: 20px;
+  height: 20px;
+  border: 2px solid;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  padding: 0;
+  margin: 0;
 }
 
-.color-box.main-sequence {
-  background: #ffd700;
-  box-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
+.star-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 8px currentColor;
 }
 
-.color-box.blue-giant {
-  background: #87ceeb;
-  box-shadow: 0 0 4px rgba(135, 206, 235, 0.5);
+.star-button.active {
+  box-shadow: 0 0 12px currentColor;
+  transform: scale(1.05);
 }
 
-.color-box.red-giant {
-  background: #ff4500;
-  box-shadow: 0 0 4px rgba(255, 69, 0, 0.5);
+.star-button.active::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  border-radius: 50%;
+  opacity: 0.8;
 }
 
 @keyframes fadeInDown {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-10px) skew(0.25deg, -0.75deg) rotate(-0.5deg);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) skew(0.25deg, -0.75deg) rotate(-0.5deg);
   }
 }
 
@@ -319,14 +303,19 @@ defineExpose({
     font-size: 1.4em;
   }
   
-  .info-control {
-    width: 35px;
-    height: 35px;
-    transform: skew(0.25deg, -1deg) rotate(-0.75deg); /* Mirror responsive transform */
+  .orbital-panel {
+    min-width: 220px;
+    padding: 12px;
   }
   
-  .info-symbol {
-    font-size: 1.3em;
+  .star-button {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .star-button.active::after {
+    width: 4px;
+    height: 4px;
   }
 }
 </style>

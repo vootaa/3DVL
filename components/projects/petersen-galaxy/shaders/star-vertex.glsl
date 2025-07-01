@@ -4,6 +4,8 @@ attribute float alpha;
 attribute float time;
 attribute float pulseOffset;
 
+uniform float cameraDistance;
+
 varying vec3 vColor;
 varying float vAlpha;
 varying float vTime;
@@ -22,9 +24,13 @@ void main() {
   
   float totalTwinkle = 0.96 + twinkle1 + twinkle2 + twinkle3;
   
-  // Distance-based size scaling
-  float distanceScale = 300.0 / -mvPosition.z;
+  // Enhanced distance-based size scaling for 3D depth effect
+  float distance = length(mvPosition.xyz);
+  float distanceScale = 400.0 / distance; // Stronger distance effect
   
-  gl_PointSize = size * totalTwinkle * distanceScale;
+  // Camera distance scaling for zoom interaction
+  float cameraScale = 1.0 + (cameraDistance - 10.0) * 0.05; // Scale with camera distance
+  
+  gl_PointSize = size * totalTwinkle * distanceScale * cameraScale;
   gl_Position = projectionMatrix * mvPosition;
 }

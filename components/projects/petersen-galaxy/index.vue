@@ -53,8 +53,11 @@ const orbitControlsConfig = {
       
       <OrbitalSystem />
       
-      <!-- Star cluster component - conditional display -->
-      <StarCluster v-if="starControlRef?.showStars" />
+      <!-- Star cluster component - conditional display with ref -->
+      <StarCluster 
+        v-if="starControlRef?.showStars" 
+        :ref="(el) => starControlRef && (starControlRef.starClusterRef = el)"
+      />
       
       <!-- OrbitControls with zoom and angle limits -->
       <OrbitControls 
