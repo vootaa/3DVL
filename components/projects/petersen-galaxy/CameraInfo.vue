@@ -135,7 +135,7 @@ onUnmounted(() => {
   transform-origin: center center;
   pointer-events: none;
   width: 180px;
-  min-height: 80px;
+  min-height: 65px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -147,45 +147,45 @@ onUnmounted(() => {
 .info-header {
   font-size: 0.9em;
   opacity: 0.8;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   text-align: center;
   border-bottom: 1px solid rgba(0, 204, 255, 0.2);
-  padding-bottom: 4px;
+  padding-bottom: 3px;
 }
 
 .info-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .info-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.8em;
-  line-height: 1.2;
+  font-size: 0.9em;
+  line-height: 1.1;
 }
 
 .info-label {
   display: flex;
   align-items: center;
   opacity: 0.9;
-  font-size: 0.75em;
+  font-size: 1em;
 }
 
 .info-value {
-  font-size: 1em;
+  font-size: 0.85em;
   font-weight: 600;
   text-align: right;
-  min-width: 45px;
+  min-width: 50px;
 }
 
 .info-icon {
   display: inline-block;
-  margin-right: 3px;
+  margin-right: 5px;
   font-style: normal;
-  font-size: 0.9em;
+  font-size: 1.2em;
 }
 
 .distance-icon {
@@ -193,7 +193,7 @@ onUnmounted(() => {
 }
 
 .azimuth-icon {
-  font-size: 1.1em;
+  font-size: 1.3em;
 }
 
 .elevation-icon {
@@ -218,16 +218,16 @@ onUnmounted(() => {
   .camera-info {
     padding: 8px 12px;
     width: 160px;
-    min-height: 70px;
+    min-height: 55px;
     transform: skew(0.25deg, -1deg) rotate(-0.75deg);
   }
 
   .info-value {
-    font-size: 0.9em;
+    font-size: 0.8em;
   }
 
   .info-label {
-    font-size: 0.7em;
+    font-size: 0.9em;
   }
 }
 </style>
