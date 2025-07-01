@@ -10,7 +10,7 @@ export interface Project {
 
 export const projects: Project[] = [
   {
-    id: 'galaxy',
+    id: 'petersen-galaxy',
     name: 'Galaxy',
     description: 'An evolutionary galaxy simulation showing the transition from chaos to orbital structure.',
     path: '/petersen-galaxy',
