@@ -507,7 +507,6 @@ onUnmounted(() => {
   width: 400px;
   max-height: 85vh;
   background: rgba(0, 8, 16, 0.97);
-  /* Darker background */
   border: 1px solid rgba(0, 204, 255, 0.6);
   border-radius: 10px;
   overflow-y: auto;
@@ -588,16 +587,17 @@ onUnmounted(() => {
   text-transform: uppercase;
   letter-spacing: 1px;
   text-shadow: 0 0 6px rgba(0, 204, 255, 0.4);
-.section-title {
-  color: #00ccff;
-  font-weight: 700;
-  font-size: 13px;
-  margin-bottom: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  text-shadow: 0 0 6px rgba(0, 204, 255, 0.4);
   border-left: 3px solid #00ccff;
+  padding-left: 8px;
 }
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+  padding: 4px 0;
   transition: all 0.2s ease;
 }
 
