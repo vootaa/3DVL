@@ -3,6 +3,7 @@ import { ref, inject, computed, onMounted, onUnmounted } from 'vue'
 import { Logger } from '../../../utils/logger'
 import { LoggingConfig } from '../configs/logging-config'
 import DriftDebugger from '../utils/drift-debug'
+import { formatWithUnit, getBestUnit, getUnitInfo, ASTRONOMICAL_UNITS } from '../configs/astronomical-units'
 
 // Type definitions for injected data
 interface GalaxyDriftData {
@@ -40,6 +41,47 @@ const debugInfo = ref({
 
 const showDebugPanel = ref(false)
 let updateInterval: NodeJS.Timeout | null = null
+
+// Unit preferences
+const preferredDistanceUnit = ref('GU')
+const preferredVelocityUnit = ref('GU')
+
+// Formatted display values
+const formattedVelocity = computed(() => {
+  const unit = getBestUnit(debugInfo.value.velocityMagnitude, 'distance') // Using distance units for simulation
+  return formatWithUnit(debugInfo.value.velocityMagnitude, unit, 'distance', 8)
+})
+
+const formattedPositionChange = computed(() => {
+  const unit = getBestUnit(debugInfo.value.positionChange, 'distance')
+  return formatWithUnit(debugInfo.value.positionChange, unit, 'distance', 8)
+})
+
+const formattedPosition = computed(() => {
+  const pos = debugInfo.value.statistics.currentPosition
+  const unit = getBestUnit(Math.max(Math.abs(pos.x), Math.abs(pos.y), Math.abs(pos.z)), 'distance')
+  return {
+    x: formatWithUnit(pos.x, unit, 'distance', 3),
+    y: formatWithUnit(pos.y, unit, 'distance', 3),
+    z: formatWithUnit(pos.z, unit, 'distance', 3),
+    unit: unit
+  }
+})
+
+const formattedTotalDistance = computed(() => {
+  const unit = getBestUnit(debugInfo.value.statistics.totalDistance, 'distance')
+  return formatWithUnit(debugInfo.value.statistics.totalDistance, unit, 'distance', 6)
+})
+
+const formattedAvgVelocity = computed(() => {
+  const unit = getBestUnit(debugInfo.value.statistics.averageVelocity, 'distance')
+  return formatWithUnit(debugInfo.value.statistics.averageVelocity, unit, 'distance', 8)
+})
+
+const formattedMaxVelocity = computed(() => {
+  const unit = getBestUnit(debugInfo.value.statistics.maxVelocity, 'distance')
+  return formatWithUnit(debugInfo.value.statistics.maxVelocity, unit, 'distance', 8)
+})
 
 // Toggle debug panel visibility
 const toggleDebugPanel = () => {
@@ -273,18 +315,16 @@ onUnmounted(() => {
           <div class="section-title">Current Metrics</div>
           <div class="status-item">
             <span class="label">Velocity:</span>
-            <span class="value">{{ debugInfo.velocityMagnitude.toFixed(8) }}</span>
+            <span class="value">{{ formattedVelocity }}</span>
           </div>
           <div class="status-item">
             <span class="label">Position Change:</span>
-            <span class="value">{{ debugInfo.positionChange.toFixed(8) }}</span>
+            <span class="value">{{ formattedPositionChange }}</span>
           </div>
           <div class="status-item">
             <span class="label">Position:</span>
             <span class="value position-value">
-              ({{ debugInfo.statistics.currentPosition.x.toFixed(3) }},
-              {{ debugInfo.statistics.currentPosition.y.toFixed(3) }},
-              {{ debugInfo.statistics.currentPosition.z.toFixed(3) }})
+              ({{ formattedPosition.x }}, {{ formattedPosition.y }}, {{ formattedPosition.z }})
             </span>
           </div>
         </div>
@@ -294,15 +334,15 @@ onUnmounted(() => {
           <div class="section-title">Statistics</div>
           <div class="status-item">
             <span class="label">Avg Velocity:</span>
-            <span class="value">{{ debugInfo.statistics.averageVelocity.toFixed(8) }}</span>
+            <span class="value">{{ formattedAvgVelocity }}</span>
           </div>
           <div class="status-item">
             <span class="label">Max Velocity:</span>
-            <span class="value">{{ debugInfo.statistics.maxVelocity.toFixed(8) }}</span>
+            <span class="value">{{ formattedMaxVelocity }}</span>
           </div>
           <div class="status-item">
             <span class="label">Total Distance:</span>
-            <span class="value">{{ debugInfo.statistics.totalDistance.toFixed(10) }}</span>
+            <span class="value">{{ formattedTotalDistance }}</span>
           </div>
           <div class="status-item">
             <span class="label">Duration:</span>
@@ -332,6 +372,37 @@ onUnmounted(() => {
           <div class="status-item">
             <span class="label">Distance (nGU):</span>
             <span class="value">{{ galaxyDriftData.distance.value }}</span>
+          </div>
+        </div>
+
+        <!-- Astronomical Unit Reference -->
+        <div class="debug-section">
+          <div class="section-title">Unit Reference</div>
+          <div class="unit-reference">
+            <div class="unit-item">
+              <span class="unit-symbol">GU</span>
+              <span class="unit-name">Galaxy Unit (base scale)</span>
+            </div>
+            <div class="unit-item">
+              <span class="unit-symbol">mGU</span>
+              <span class="unit-name">Milli Galaxy Unit (10⁻³ GU)</span>
+            </div>
+            <div class="unit-item">
+              <span class="unit-symbol">nGU</span>
+              <span class="unit-name">Nano Galaxy Unit (10⁻⁹ GU)</span>
+            </div>
+            <div class="unit-item">
+              <span class="unit-symbol">AU</span>
+              <span class="unit-name">Astronomical Unit (~150M km)</span>
+            </div>
+            <div class="unit-item">
+              <span class="unit-symbol">ly</span>
+              <span class="unit-name">Light Year (~9.46 trillion km)</span>
+            </div>
+            <div class="unit-item">
+              <span class="unit-symbol">pc</span>
+              <span class="unit-name">Parsec (~3.26 light years)</span>
+            </div>
           </div>
         </div>
 
@@ -380,7 +451,7 @@ onUnmounted(() => {
   position: absolute;
   top: 50px;
   right: 0;
-  width: 400px;
+  width: 480px; /* Increased from 400px */
   max-height: 80vh;
   background: rgba(0, 12, 20, 0.95);
   border: 2px solid #00ccff;
@@ -490,6 +561,37 @@ onUnmounted(() => {
 .position-value {
   font-size: 10px;
   line-height: 1.2;
+}
+
+/* Unit reference styles */
+.unit-reference {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.unit-item {
+  display: flex;
+  align-items: center;
+  font-size: 10px;
+  padding: 2px 0;
+}
+
+.unit-symbol {
+  color: #ffaa00;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  min-width: 40px;
+  margin-right: 8px;
+  text-align: left;
+}
+
+.unit-name {
+  color: #99ccff;
+  font-size: 9px;
+  opacity: 0.8;
+  flex-grow: 1;
 }
 
 .debug-footer {

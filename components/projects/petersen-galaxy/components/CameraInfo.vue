@@ -4,6 +4,7 @@ import { Vector3 } from 'three'
 import type { PerspectiveCamera } from 'three'
 import type { Ref } from 'vue'
 import { Logger } from '../../../utils/logger'
+import { formatWithUnit, getBestUnit } from '../configs/astronomical-units'
 
 // Camera control state tracking
 const cameraDistance = ref(20)
@@ -75,17 +76,18 @@ const stopTracking = () => {
   }
 }
 
-// Computed values for display
+// Computed values for display with astronomical units
 const displayDistance = computed(() => {
-  return cameraDistance.value.toFixed(2)
+  const unit = getBestUnit(cameraDistance.value, 'distance')
+  return formatWithUnit(cameraDistance.value, unit, 'distance', 2)
 })
 
 const displayAzimuth = computed(() => {
-  return azimuthAngle.value.toFixed(1)
+  return azimuthAngle.value.toFixed(1) + '°'
 })
 
 const displayElevation = computed(() => {
-  return elevationAngle.value.toFixed(1)
+  return elevationAngle.value.toFixed(1) + '°'
 })
 
 onMounted(() => {
@@ -106,7 +108,7 @@ onUnmounted(() => {
       <!-- Distance row - centered -->
       <div class="info-row distance-row">
         <div class="distance-display">
-          <i class="info-icon distance-icon">↕</i> Distance: <span class="distance-value">{{ displayDistance }} AU</span>
+          <i class="info-icon distance-icon">↕</i> Distance: <span class="distance-value">{{ displayDistance }}</span>
         </div>
       </div>
       <!-- Angles row - grid layout -->
@@ -125,6 +127,11 @@ onUnmounted(() => {
     <!-- Camera Controls Instructions - after camera info -->
     <div class="controls-instructions">
       <span class="control-hint">Drag to orbit • Scroll to zoom</span>
+    </div>
+    
+    <!-- Unit Information -->
+    <div class="unit-info">
+      <span class="unit-hint">Units: Galaxy Units (GU) • 1 GU = simulation scale</span>
     </div>
 
   </div>
@@ -276,6 +283,25 @@ onUnmounted(() => {
   text-align: center;
   font-weight: 400;
   letter-spacing: 0.5px;
+}
+
+/* Unit information section */
+.unit-info {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 2px 0;
+  font-size: 0.65em;
+  opacity: 0.6;
+  border-top: 1px solid rgba(255, 170, 0, 0.2);
+  padding-top: 4px;
+}
+
+.unit-hint {
+  color: #ffaa77;
+  text-align: center;
+  font-weight: 300;
+  letter-spacing: 0.3px;
+  font-style: italic;
 }
 
 /* Responsive design */
