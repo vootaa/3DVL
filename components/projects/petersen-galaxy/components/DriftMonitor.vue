@@ -58,24 +58,27 @@ const distanceUnitOptions = computed(() => [
 const velocityUnitOptions = computed(() => [
   { value: 'GU', label: 'GU/s (Galaxy Units per second)' },
   { value: 'mGU', label: 'mGU/s (Milli Galaxy Units per second)' },
-  { value: 'km/s', label: 'km/s (Kilometers per second)' },
-  { value: 'AU/yr', label: 'AU/yr (Astronomical Units per year)' }
+  { value: 'nGU', label: 'nGU/s (Nano Galaxy Units per second)' },
+  { value: 'AU', label: 'AU/s (Astronomical Units per second)' },
+  { value: 'km', label: 'km/s (Kilometers per second)' }
 ])
 
-// Formatted display values
+// Formatted display values with user-selected units
 const formattedVelocity = computed(() => {
-  const unit = getBestUnit(debugInfo.value.velocityMagnitude, 'distance') // Using distance units for simulation
-  return formatWithUnit(debugInfo.value.velocityMagnitude, unit, 'distance', 8)
+  const unit = preferredVelocityUnit.value
+  const value = debugInfo.value.velocityMagnitude
+  return formatWithUnit(value, unit, 'distance', 8) + '/s'
 })
 
 const formattedPositionChange = computed(() => {
-  const unit = getBestUnit(debugInfo.value.positionChange, 'distance')
-  return formatWithUnit(debugInfo.value.positionChange, unit, 'distance', 8)
+  const unit = preferredDistanceUnit.value
+  const value = debugInfo.value.positionChange
+  return formatWithUnit(value, unit, 'distance', 8)
 })
 
 const formattedPosition = computed(() => {
   const pos = debugInfo.value.statistics.currentPosition
-  const unit = getBestUnit(Math.max(Math.abs(pos.x), Math.abs(pos.y), Math.abs(pos.z)), 'distance')
+  const unit = preferredDistanceUnit.value
   return {
     x: formatWithUnit(pos.x, unit, 'distance', 3),
     y: formatWithUnit(pos.y, unit, 'distance', 3),
@@ -85,18 +88,21 @@ const formattedPosition = computed(() => {
 })
 
 const formattedTotalDistance = computed(() => {
-  const unit = getBestUnit(debugInfo.value.statistics.totalDistance, 'distance')
-  return formatWithUnit(debugInfo.value.statistics.totalDistance, unit, 'distance', 6)
+  const unit = preferredDistanceUnit.value
+  const value = debugInfo.value.statistics.totalDistance
+  return formatWithUnit(value, unit, 'distance', 6)
 })
 
 const formattedAvgVelocity = computed(() => {
-  const unit = getBestUnit(debugInfo.value.statistics.averageVelocity, 'distance')
-  return formatWithUnit(debugInfo.value.statistics.averageVelocity, unit, 'distance', 8)
+  const unit = preferredVelocityUnit.value
+  const value = debugInfo.value.statistics.averageVelocity
+  return formatWithUnit(value, unit, 'distance', 8) + '/s'
 })
 
 const formattedMaxVelocity = computed(() => {
-  const unit = getBestUnit(debugInfo.value.statistics.maxVelocity, 'distance')
-  return formatWithUnit(debugInfo.value.statistics.maxVelocity, unit, 'distance', 8)
+  const unit = preferredVelocityUnit.value
+  const value = debugInfo.value.statistics.maxVelocity
+  return formatWithUnit(value, unit, 'distance', 8) + '/s'
 })
 
 // Toggle debug panel visibility
@@ -687,30 +693,30 @@ onUnmounted(() => {
   padding: 4px;
 }
 
-/* Unit reference styles */
+/* Unit reference styles - 采用与 Performance Tips 一致的样式 */
 .unit-reference {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   margin-top: 6px;
-  background: rgba(255, 170, 0, 0.05);
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 170, 0, 0.2);
 }
 
 .unit-item {
   display: flex;
   align-items: center;
-  font-size: 11px;
-  padding: 3px 0;
-  transition: all 0.2s ease;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  opacity: 0.7;
+  background: rgba(255, 170, 0, 0.05);
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
 }
 
 .unit-item:hover {
+  opacity: 1;
   background: rgba(255, 170, 0, 0.1);
-  border-radius: 4px;
-  padding: 3px 6px;
+  border-color: rgba(255, 170, 0, 0.2);
 }
 
 .unit-symbol {
@@ -718,14 +724,14 @@ onUnmounted(() => {
   font-weight: 700;
   font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
   min-width: 45px;
-  margin-right: 10px;
+  margin-right: 8px;
   text-align: left;
-  font-size: 11px;
+  font-size: 10px;
   text-shadow: 0 0 4px rgba(255, 204, 68, 0.3);
 }
 
 .unit-name {
-  color: #aaccff;
+  color: #ffdd88;
   font-size: 10px;
   opacity: 0.9;
   flex-grow: 1;
