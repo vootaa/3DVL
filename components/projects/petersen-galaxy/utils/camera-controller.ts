@@ -41,7 +41,7 @@ export class CameraController {
       if (camera) {
         const currentPos = camera.position.clone()
         
-        // Target: 10.00AU distance, 2-degree elevation
+        // Target: 10.00AU distance, 10-degree elevation
         const targetDistance = 10.0 // Maximum distance
         
         // Preserve current azimuth angle (left-right direction)
@@ -71,25 +71,32 @@ export class CameraController {
    * Checks if camera is already at the target position within tolerance
    */
   private isAtTargetPosition(currentPos: Vector3, targetPos: Vector3): boolean {
-    // Check distance from origin (should be ~10.0 AU)
+    // Calculate actual distances and angles from both positions
     const currentDistance = currentPos.length()
-    const targetDistance = 10.0
+    const targetDistance = targetPos.length()
     const distanceTolerance = 0.3 // 0.3 AU tolerance
     
-    // Check elevation angle (should be ~2 degrees)
+    // Calculate elevation angles for both positions
     const currentElevation = Math.asin(currentPos.y / currentDistance) * (180 / Math.PI)
-    const targetElevation = 10 // 10 degrees (matching the calculation in calculateTargetPosition)
+    const targetElevation = Math.asin(targetPos.y / targetDistance) * (180 / Math.PI)
     const angleTolerance = 2 // 2 degrees tolerance
+    
+    // Also check direct 3D distance between positions as an additional check
+    const directDistance = currentPos.distanceTo(targetPos)
+    const directDistanceTolerance = 0.5 // 0.5 AU tolerance for direct 3D distance
     
     const distanceMatch = Math.abs(currentDistance - targetDistance) <= distanceTolerance
     const elevationMatch = Math.abs(currentElevation - targetElevation) <= angleTolerance
+    const directDistanceMatch = directDistance <= directDistanceTolerance
     
     console.log(`Camera position check:
-      Current distance: ${currentDistance.toFixed(2)} AU (target: ${targetDistance} AU)
-      Current elevation: ${currentElevation.toFixed(1)}° (target: ${targetElevation}°)
-      Distance match: ${distanceMatch}, Elevation match: ${elevationMatch}`)
+      Current distance: ${currentDistance.toFixed(2)} AU (target: ${targetDistance.toFixed(2)} AU)
+      Current elevation: ${currentElevation.toFixed(1)}° (target: ${targetElevation.toFixed(1)}°)
+      Direct 3D distance: ${directDistance.toFixed(2)} AU
+      Distance match: ${distanceMatch}, Elevation match: ${elevationMatch}, Direct match: ${directDistanceMatch}`)
     
-    return distanceMatch && elevationMatch
+    // Camera is considered at target if it meets distance/elevation criteria OR is very close in 3D space
+    return (distanceMatch && elevationMatch) || directDistanceMatch
   }
 
   /**
