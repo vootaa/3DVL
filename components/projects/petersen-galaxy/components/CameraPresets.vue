@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, inject, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, inject, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
 import type { PerspectiveCamera } from 'three'
 import type { Ref } from 'vue'
 import { Logger } from '../../../utils/logger'
@@ -20,288 +20,156 @@ const cameraPresets: CameraPreset[] = [
     id: 'overview',
     name: 'Overview',
     description: 'Full galaxy view from above',
-    position: { x: 0, y: 15, z: 0 },
+    position: { x: 0, y: 20, z: 0 },
     target: { x: 0, y: 0, z: 0 },
     icon: '🌌',
-    transition: 2000
+    transition: 1800
+  },
+  {
+    id: 'spiral-arm',
+    name: 'Spiral Arm', 
+    description: 'View from spiral arm perspective',
+    position: { x: 16, y: 2, z: 16 },
+    target: { x: -3, y: 0, z: -3 },
+    icon: '🌀',
+    transition: 1600
   },
   {
     id: 'oblique',
     name: 'Oblique',
-    description: 'Angled view of the galaxy',
-    position: { x: 10, y: 8, z: 10 },
+    description: 'Balanced angled perspective',
+    position: { x: 15, y: 12, z: 15 },
     target: { x: 0, y: 0, z: 0 },
-    icon: '📐',
-    transition: 1500
+    icon: '�',
+    transition: 1600
   },
   {
-    id: 'edge',
-    name: 'Edge View',
-    description: 'Galaxy from the side',
-    position: { x: 0, y: 0, z: 15 },
+    id: 'side-view',
+    name: 'Side View',
+    description: 'Galaxy profile from the side',
+    position: { x: 22, y: 0, z: 0 },
     target: { x: 0, y: 0, z: 0 },
     icon: '📏',
-    transition: 1800
+    transition: 2000
   },
   {
-    id: 'close',
-    name: 'Close Up',
-    description: 'Detailed view of galaxy center',
-    position: { x: 3, y: 2, z: 3 },
+    id: 'close-inspect',
+    name: 'Close Inspect',
+    description: 'Detailed core inspection',  
+    position: { x: 5, y: 4, z: 5 },
     target: { x: 0, y: 0, z: 0 },
     icon: '🔍',
     transition: 1200
   },
   {
-    id: 'drift-track',
-    name: 'Drift Track',
-    description: 'Follow galaxy drift movement',
-    position: { x: 5, y: 5, z: 5 },
-    target: { x: 0, y: 0, z: 0 },
+    id: 'drift-follow',
+    name: 'Drift Follow',
+    description: 'Follow the galaxy drift motion',
+    position: { x: 8, y: 8, z: 8 },
+    target: { x: 0, y: 2, z: 0 },
     icon: '🛸',
-    transition: 1000
-  },
-  {
-    id: 'cinematic',
-    name: 'Cinematic',
-    description: 'Dramatic low angle view',
-    position: { x: -8, y: 3, z: 12 },
-    target: { x: 0, y: 0, z: 0 },
-    icon: '🎬',
-    transition: 2500
+    transition: 1400
   }
 ]
 
 // Component state
 const showPresetsPanel = ref(false)
-const isTransitioning = ref(false)
 const currentPreset = ref<string | null>(null)
-const transitionProgress = ref(0)
 
 // Inject camera and controls references
 const cameraRef = inject<Ref<PerspectiveCamera | null>>('camera')
 const orbitControlsRef = inject<Ref<any>>('orbitControls')
 
-// Debug: Log injected refs
-Logger.log('CAMERA_PRESETS', 'Initialized with refs:', { 
-  cameraRef: !!cameraRef, 
-  orbitControlsRef: !!orbitControlsRef
-})
-
 // Computed properties
 const availablePresets = computed(() => cameraPresets)
 
 const canUsePresets = computed(() => {
-  const canUse = !!(cameraRef?.value && orbitControlsRef?.value)
-  return canUse
+  // Enable for testing - simple check
+  return true
 })
 
-// Create a more reactive status for debugging
+// Debug status for template
 const debugStatus = computed(() => ({
-  hasCamera: !!cameraRef?.value,
-  hasControls: !!orbitControlsRef?.value,
-  canUse: canUsePresets.value,
-  cameraType: cameraRef?.value?.constructor?.name || 'none',
-  controlsType: orbitControlsRef?.value?.constructor?.name || 'none'
+  cameraReady: !!cameraRef?.value,
+  controlsReady: !!orbitControlsRef?.value
 }))
 
-// Watch for ref changes with better debugging
-watch([() => cameraRef?.value, () => orbitControlsRef?.value], ([camera, controls]) => {
-  if (camera && controls) {
-    Logger.log('CAMERA_PRESETS', '✅ Both refs ready!')
+// Keyboard shortcuts support
+const handleKeyPress = (event: KeyboardEvent) => {
+  // Only handle shortcuts when panel is open
+  if (!showPresetsPanel.value || !canUsePresets.value) return
+  
+  const key = event.key.toLowerCase()
+  const numKey = parseInt(key)
+  
+  // Support number keys 1-6 for quick preset selection
+  if (numKey >= 1 && numKey <= availablePresets.value.length) {
+    event.preventDefault()
+    const preset = availablePresets.value[numKey - 1]
+    applyPreset(preset)
   }
-}, { immediate: true })
+  
+  // Support 'r' for reset
+  if (key === 'r') {
+    event.preventDefault()
+    resetCamera()
+  }
+  
+  // Support escape to close panel
+  if (key === 'escape') {
+    event.preventDefault()
+    showPresetsPanel.value = false
+  }
+}
 
-onMounted(async () => {
-  Logger.log('CAMERA_PRESETS', '🚀 Component mounted')
-  
-  // Wait for next tick to allow TresJS to initialize
-  await nextTick()
-  Logger.log('CAMERA_PRESETS', '⏳ After nextTick:', debugStatus.value)
-  
-  // Check periodically for a few seconds to catch async initialization
-  for (let i = 0; i < 10; i++) {
-    setTimeout(() => {
-      Logger.log('CAMERA_PRESETS', `🔍 Check ${i + 1}/10:`, debugStatus.value)
-    }, i * 500)
-  }
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyPress)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyPress)
 })
 
 // Toggle presets panel
 const togglePresetsPanel = () => {
   showPresetsPanel.value = !showPresetsPanel.value
-  Logger.log('CAMERA_PRESETS', `📂 Camera presets panel ${showPresetsPanel.value ? 'opened' : 'closed'}`)
+  Logger.log('CAMERA_PRESETS', `Camera presets panel ${showPresetsPanel.value ? 'opened' : 'closed'}`)
 }
 
-// Test function to verify click events work
-const testClick = () => {
-  Logger.log('CAMERA_PRESETS', '🧪 TEST CLICK WORKS!', debugStatus.value)
-  alert('Click test successful! Check console for details.')
-}
-
-// Animation helper for smooth camera transitions
-const animateCamera = (preset: CameraPreset): Promise<void> => {
-  return new Promise((resolve) => {
-    if (!cameraRef?.value || !orbitControlsRef?.value) {
-      Logger.error('CAMERA_PRESETS', 'Camera or controls not available')
-      resolve()
-      return
-    }
-
-    // Try to access the actual Three.js objects
-    // TresJS may wrap components, so try different access patterns
-    let camera: any = cameraRef.value
-    let controls: any = orbitControlsRef.value
-    
-    // For TresJS, the actual Three.js object might be in different properties
-    if (camera.$el) camera = camera.$el
-    if (camera.value) camera = camera.value
-    if (controls.$el) controls = controls.$el  
-    if (controls.value) controls = controls.value
-    
-    Logger.log('CAMERA_PRESETS', 'Using objects:', {
-      camera: camera?.constructor?.name,
-      controls: controls?.constructor?.name,
-      hasPosition: !!camera?.position,
-      hasTarget: !!controls?.target
-    })
-    
-    if (!camera?.position || !controls?.target) {
-      Logger.error('CAMERA_PRESETS', 'Cannot access camera position or controls target')
-      resolve()
-      return
-    }
-    
-    // Store initial positions
-    const startPosition = {
-      x: camera.position.x,
-      y: camera.position.y,
-      z: camera.position.z
-    }
-    
-    const startTarget = {
-      x: controls.target.x,
-      y: controls.target.y,
-      z: controls.target.z
-    }
-    
-    const duration = preset.transition
-    const startTime = performance.now()
-    
-    isTransitioning.value = true
-    transitionProgress.value = 0
-    
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime
-      const progress = Math.min(elapsed / duration, 1)
-      
-      // Use easeInOutCubic for smooth animation
-      const easeProgress = progress < 0.5 
-        ? 4 * progress * progress * progress 
-        : 1 - Math.pow(-2 * progress + 2, 3) / 2
-      
-      // Interpolate camera position
-      camera.position.x = startPosition.x + (preset.position.x - startPosition.x) * easeProgress
-      camera.position.y = startPosition.y + (preset.position.y - startPosition.y) * easeProgress
-      camera.position.z = startPosition.z + (preset.position.z - startPosition.z) * easeProgress
-      
-      // Interpolate target position
-      controls.target.x = startTarget.x + (preset.target.x - startTarget.x) * easeProgress
-      controls.target.y = startTarget.y + (preset.target.y - startTarget.y) * easeProgress
-      controls.target.z = startTarget.z + (preset.target.z - startTarget.z) * easeProgress
-      
-      // Update controls
-      if (controls.update) {
-        controls.update()
-      }
-      
-      transitionProgress.value = progress * 100
-      
-      if (progress < 1) {
-        requestAnimationFrame(animate)
-      } else {
-        isTransitioning.value = false
-        transitionProgress.value = 0
-        currentPreset.value = preset.id
-        resolve()
-      }
-    }
-    
-    requestAnimationFrame(animate)
-  })
-}
-
-// Apply camera preset
-const applyPreset = async (preset: CameraPreset) => {
-  Logger.log('CAMERA_PRESETS', `🎯 PRESET CLICKED: ${preset.name}`)
+// Apply camera preset - DIRECT SWITCH ONLY
+const applyPreset = (preset: CameraPreset) => {
+  console.log('🎯 Applying preset:', preset.name)
   
-  // Simple test - just move camera directly without animation first
-  if (!cameraRef?.value || !orbitControlsRef?.value) {
-    Logger.error('CAMERA_PRESETS', 'Camera or controls not available', {
-      camera: !!cameraRef?.value,
-      controls: !!orbitControlsRef?.value,
-      cameraRef: !!cameraRef,
-      orbitControlsRef: !!orbitControlsRef
-    })
+  const camera = cameraRef?.value
+  const controls = orbitControlsRef?.value
+  
+  if (!camera || !controls) {
+    console.error('❌ Missing camera or controls')
     return
   }
-
-  // Direct assignment test (without animation)
-  try {
-    const camera = cameraRef.value
-    const controls = orbitControlsRef.value
-    
-    Logger.log('CAMERA_PRESETS', 'Camera object info:', {
-      type: camera.constructor.name,
-      hasPosition: !!camera.position,
-      currentPos: {
-        x: camera.position.x,
-        y: camera.position.y,
-        z: camera.position.z
-      }
-    })
-    
-    Logger.log('CAMERA_PRESETS', 'Controls object info:', {
-      type: controls.constructor.name,
-      hasTarget: !!controls.target,
-      hasUpdate: typeof controls.update === 'function',
-      currentTarget: controls.target ? {
-        x: controls.target.x,
-        y: controls.target.y,
-        z: controls.target.z
-      } : null
-    })
-    
-    // Direct assignment for testing
-    camera.position.set(preset.position.x, preset.position.y, preset.position.z)
-    if (controls.target) {
-      controls.target.set(preset.target.x, preset.target.y, preset.target.z)
-    }
-    if (controls.update) {
-      controls.update()
-    }
-    
-    currentPreset.value = preset.id
-    Logger.log('CAMERA_PRESETS', `✅ Direct preset applied: ${preset.name}`)
-    
-  } catch (error) {
-    Logger.error('CAMERA_PRESETS', `❌ Error applying preset ${preset.name}`, error)
-  }
+  
+  // Direct assignment - instant switch
+  camera.position.set(preset.position.x, preset.position.y, preset.position.z)
+  controls.target.set(preset.target.x, preset.target.y, preset.target.z)
+  controls.update()
+  
+  currentPreset.value = preset.id
+  console.log('✅ Camera preset applied:', preset.name)
 }
 
 // Reset to default view
-const resetCamera = async () => {
+const resetCamera = () => {
   const defaultPreset: CameraPreset = {
     id: 'default',
     name: 'Default',
     description: 'Default camera position',
-    position: { x: 5, y: 5, z: 5 },
+    position: { x: 10, y: 8, z: 10 }, // Match initial position from parent component
     target: { x: 0, y: 0, z: 0 },
     icon: '🏠',
-    transition: 1500
+    transition: 1800
   }
   
-  await applyPreset(defaultPreset)
+  applyPreset(defaultPreset)
   currentPreset.value = null
 }
 </script>
@@ -326,19 +194,6 @@ const resetCamera = async () => {
       </div>
 
       <div class="presets-content">
-        <!-- Transition Status -->
-        <div v-if="isTransitioning" class="transition-status">
-          <div class="transition-info">
-            <span class="transition-text">Animating Camera...</span>
-            <div class="progress-bar">
-              <div 
-                class="progress-fill" 
-                :style="{ width: `${transitionProgress}%` }"
-              ></div>
-            </div>
-          </div>
-        </div>
-
         <!-- Current Status -->
         <div class="current-status">
           <div class="status-item">
@@ -353,16 +208,8 @@ const resetCamera = async () => {
           </div>
           <div class="status-item">
             <span class="label">Debug:</span>
-            <span class="value">{{ debugStatus.hasCamera ? '📷' : '❌' }} {{ debugStatus.hasControls ? '🎮' : '❌' }}</span>
+            <span class="value">Cam: {{ debugStatus.cameraReady ? '✅' : '❌' }} | Ctrl: {{ debugStatus.controlsReady ? '✅' : '❌' }}</span>
           </div>
-        </div>
-
-        <!-- Test Section -->
-        <div class="test-section">
-          <div class="section-title">Debug Test</div>
-          <button class="test-btn" @click="testClick">
-            🧪 Test Click Event
-          </button>
         </div>
 
         <!-- Preset Buttons -->
@@ -370,20 +217,23 @@ const resetCamera = async () => {
           <div class="section-title">Quick Presets</div>
           <div class="presets-grid">
             <button 
-              v-for="preset in availablePresets" 
+              v-for="(preset, index) in availablePresets" 
               :key="preset.id"
               class="preset-btn"
               :class="{ 
-                active: currentPreset === preset.id,
-                disabled: !canUsePresets || isTransitioning
+                active: currentPreset === preset.id
               }"
-              :disabled="!canUsePresets || isTransitioning"
+              :disabled="!canUsePresets"
               @click="applyPreset(preset)"
             >
-              <div class="preset-icon">{{ preset.icon }}</div>
+              <div class="preset-header">
+                <div class="preset-icon">{{ preset.icon }}</div>
+                <div class="preset-shortcut">{{ index + 1 }}</div>
+              </div>
               <div class="preset-info">
                 <div class="preset-name">{{ preset.name }}</div>
                 <div class="preset-description">{{ preset.description }}</div>
+                <div class="preset-duration">{{ preset.transition }}ms</div>
               </div>
             </button>
           </div>
@@ -393,7 +243,7 @@ const resetCamera = async () => {
         <div class="reset-section">
           <button 
             class="reset-btn"
-            :disabled="!canUsePresets || isTransitioning"
+            :disabled="!canUsePresets"
             @click="resetCamera"
           >
             🏠 Reset to Default
@@ -402,19 +252,23 @@ const resetCamera = async () => {
 
         <!-- Usage Instructions -->
         <div class="instructions-section">
-          <div class="section-title">Instructions</div>
+          <div class="section-title">Controls & Shortcuts</div>
           <div class="instructions">
             <div class="instruction-item">
               <span class="instruction-icon">🖱️</span>
-              <span class="instruction-text">Click any preset to animate the camera</span>
+              <span class="instruction-text">Click any preset to switch camera view</span>
             </div>
             <div class="instruction-item">
-              <span class="instruction-icon">⏱️</span>
-              <span class="instruction-text">Each preset has its own transition duration</span>
+              <span class="instruction-icon">⌨️</span>
+              <span class="instruction-text">Press 1-6 for quick preset selection</span>
             </div>
             <div class="instruction-item">
               <span class="instruction-icon">🔄</span>
-              <span class="instruction-text">Use Reset to return to default view</span>
+              <span class="instruction-text">Press R to reset to default view</span>
+            </div>
+            <div class="instruction-item">
+              <span class="instruction-icon">⏭️</span>
+              <span class="instruction-text">ESC to close this panel</span>
             </div>
           </div>
         </div>
@@ -465,7 +319,7 @@ const resetCamera = async () => {
   position: absolute;
   top: 50px;
   right: 0;
-  width: 400px;
+  width: 480px;
   max-height: 75vh;
   background: rgba(0, 8, 16, 0.97);
   border: 2px solid rgba(255, 102, 0, 0.6);
@@ -528,41 +382,6 @@ const resetCamera = async () => {
   padding: 18px;
 }
 
-/* Transition Status */
-.transition-status {
-  margin-bottom: 16px;
-  padding: 12px;
-  background: rgba(255, 102, 0, 0.1);
-  border: 1px solid rgba(255, 102, 0, 0.3);
-  border-radius: 6px;
-}
-
-.transition-info {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.transition-text {
-  color: #ff8800;
-  font-size: 12px;
-  font-weight: 600;
-  text-align: center;
-}
-
-.progress-bar {
-  height: 4px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #ff6600, #ff8800);
-  transition: width 0.1s ease;
-}
-
 /* Current Status */
 .current-status {
   margin-bottom: 18px;
@@ -613,33 +432,35 @@ const resetCamera = async () => {
 
 .presets-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
 }
 
 .preset-btn {
   display: flex;
-  align-items: center;
-  padding: 12px;
+  flex-direction: column;
+  padding: 14px;
   background: rgba(255, 102, 0, 0.05);
   border: 1px solid rgba(255, 102, 0, 0.2);
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: inherit;
   text-align: left;
+  min-height: 100px;
 }
 
 .preset-btn:hover:not(:disabled) {
   background: rgba(255, 102, 0, 0.15);
   border-color: rgba(255, 102, 0, 0.4);
-  transform: translateX(2px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 102, 0, 0.2);
 }
 
 .preset-btn.active {
   background: rgba(255, 102, 0, 0.25);
   border-color: rgba(255, 102, 0, 0.6);
-  box-shadow: 0 0 10px rgba(255, 102, 0, 0.3);
+  box-shadow: 0 0 15px rgba(255, 102, 0, 0.4);
 }
 
 .preset-btn:disabled {
@@ -647,10 +468,25 @@ const resetCamera = async () => {
   cursor: not-allowed;
 }
 
+.preset-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
 .preset-icon {
-  font-size: 20px;
-  margin-right: 12px;
-  min-width: 30px;
+  font-size: 22px;
+}
+
+.preset-shortcut {
+  background: rgba(255, 102, 0, 0.2);
+  color: #ff8800;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  min-width: 16px;
   text-align: center;
 }
 
@@ -662,41 +498,22 @@ const resetCamera = async () => {
   color: #ff8800;
   font-weight: 600;
   font-size: 13px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .preset-description {
   color: #cc9966;
   font-size: 11px;
   opacity: 0.9;
+  margin-bottom: 4px;
+  line-height: 1.3;
 }
 
-/* Test Section */
-.test-section {
-  margin-bottom: 18px;
-  text-align: center;
-  padding: 12px;
-  background: rgba(0, 255, 255, 0.05);
-  border: 1px solid rgba(0, 255, 255, 0.2);
-  border-radius: 6px;
-}
-
-.test-btn {
-  background: rgba(0, 255, 255, 0.1);
-  border: 1px solid rgba(0, 255, 255, 0.4);
-  color: #00ffff;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.test-btn:hover {
-  background: rgba(0, 255, 255, 0.2);
-  border-color: rgba(0, 255, 255, 0.6);
+.preset-duration {
+  color: #ff9966;
+  font-size: 10px;
+  opacity: 0.7;
+  font-style: italic;
 }
 
 /* Reset Section */
