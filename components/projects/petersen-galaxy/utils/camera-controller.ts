@@ -9,6 +9,7 @@ export class CameraController {
   private cameraRef: Ref
   private controlsRef: Ref
   private onComplete?: () => void
+  private isAnimating: boolean = false
 
   constructor(cameraRef: Ref, controlsRef: Ref) {
     this.cameraRef = cameraRef
@@ -18,10 +19,18 @@ export class CameraController {
   /**
    * Adjusts camera to optimal viewing position for grid display:
    * - Distance: 10.00AU (maximum distance)
-   * - Elevation: 2 degrees (slight overhead view)
+   * - Elevation: 10 degrees (slight overhead view)
    * - Maintains current azimuth angle
+   * 
+   * If camera is already at target position, skips animation for immediate response
    */
   adjustForGrid(onComplete?: () => void): void {
+    // Prevent overlapping animations
+    if (this.isAnimating) {
+      console.log('Animation already in progress, skipping...')
+      return
+    }
+
     this.onComplete = onComplete
     
     // Small delay to ensure components are ready
@@ -41,18 +50,56 @@ export class CameraController {
         // Calculate target position
         const targetPos = this.calculateTargetPosition(targetDistance, currentAzimuth)
         
+        // Check if camera is already at target position (within tolerance)
+        if (this.isAtTargetPosition(currentPos, targetPos)) {
+          // Camera is already in position, no animation needed
+          console.log('Camera already at target position - showing grid immediately')
+          if (this.onComplete) {
+            this.onComplete()
+          }
+          return
+        }
+        
         // Start smooth animation
+        this.isAnimating = true
         this.animateToPosition(camera, controls, currentPos, targetPos)
       }
     }, 100)
   }
 
   /**
+   * Checks if camera is already at the target position within tolerance
+   */
+  private isAtTargetPosition(currentPos: Vector3, targetPos: Vector3): boolean {
+    // Check distance from origin (should be ~10.0 AU)
+    const currentDistance = currentPos.length()
+    const targetDistance = 10.0
+    const distanceTolerance = 0.3 // 0.3 AU tolerance
+    
+    // Check elevation angle (should be ~2 degrees)
+    const currentElevation = Math.asin(currentPos.y / currentDistance) * (180 / Math.PI)
+    const targetElevation = 10 // 10 degrees (matching the calculation in calculateTargetPosition)
+    const angleTolerance = 2 // 2 degrees tolerance
+    
+    const distanceMatch = Math.abs(currentDistance - targetDistance) <= distanceTolerance
+    const elevationMatch = Math.abs(currentElevation - targetElevation) <= angleTolerance
+    
+    console.log(`Camera position check:
+      Current distance: ${currentDistance.toFixed(2)} AU (target: ${targetDistance} AU)
+      Current elevation: ${currentElevation.toFixed(1)}° (target: ${targetElevation}°)
+      Distance match: ${distanceMatch}, Elevation match: ${elevationMatch}`)
+    
+    return distanceMatch && elevationMatch
+  }
+
+  /**
    * Calculates target camera position based on distance and azimuth
    */
   private calculateTargetPosition(distance: number, azimuth: number): Vector3 {
-    // For 2-degree elevation: tan(10°) ≈ 0.176
-    const targetY = distance * 0.176 // Y coordinate for 10-degree elevation
+    // For 10-degree elevation: tan(10°) ≈ 0.176
+    const targetElevationDegrees = 10
+    const targetElevationRadians = targetElevationDegrees * (Math.PI / 180)
+    const targetY = distance * Math.tan(targetElevationRadians) // Y coordinate for target elevation
     
     // Calculate horizontal distance in XZ plane
     const horizontalDistance = Math.sqrt(distance * distance - targetY * targetY)
@@ -99,6 +146,7 @@ export class CameraController {
         requestAnimationFrame(animate)
       } else {
         // Animation completed
+        this.isAnimating = false
         if (this.onComplete) {
           this.onComplete()
         }
@@ -106,5 +154,12 @@ export class CameraController {
     }
     
     animate()
+  }
+  
+  /**
+   * Returns whether camera is currently animating
+   */
+  isCurrentlyAnimating(): boolean {
+    return this.isAnimating
   }
 }
