@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, inject, watch, onMounted, onUnmounted } from 'vue'
 import { useRenderLoop } from '@tresjs/core'
-import { Vector3, AdditiveBlending } from 'three'
+import { Vector3, AdditiveBlending, Float32BufferAttribute } from 'three'
 import { Logger } from '../../../utils/logger'
 
 // Inject drift controller and data
@@ -78,24 +78,18 @@ const updateTrailGeometry = () => {
 const { onLoop } = useRenderLoop()
 
 onLoop(() => {
-  if (!isTrailVisible.value) return
+  if (!isTrailVisible.value || !galaxyDriftData?.position) return
   
-  // Get current drift position from global window state
-  if (typeof window !== 'undefined') {
-    const driftState = (window as any).__CURRENT_DRIFT_STATE__
-    if (driftState && driftState.position) {
-      const currentPos = new Vector3(
-        driftState.position.x,
-        driftState.position.y,
-        driftState.position.z
-      )
-      
-      // Add point to trail if it's different enough from the last one
-      const lastPoint = trailPoints.value[trailPoints.value.length - 1]
-      if (!lastPoint || currentPos.distanceTo(lastPoint) > 0.001) {
-        addTrailPoint(currentPos)
-        updateTrailGeometry()
-      }
+  // Get current drift position from injected data
+  const position = galaxyDriftData.position.value
+  if (position && (position.x !== undefined && position.y !== undefined && position.z !== undefined)) {
+    const currentPos = new Vector3(position.x, position.y, position.z)
+    
+    // Add point to trail if it's different enough from the last one
+    const lastPoint = trailPoints.value[trailPoints.value.length - 1]
+    if (!lastPoint || currentPos.distanceTo(lastPoint) > 0.001) {
+      addTrailPoint(currentPos)
+      updateTrailGeometry()
     }
   }
 })
@@ -144,6 +138,8 @@ const uniforms = ref({
 
 onMounted(() => {
   Logger.log('DRIFT_TRAIL_RENDERER', 'Trail renderer component mounted')
+  Logger.log('DRIFT_TRAIL_RENDERER', `galaxyDriftData available: ${!!galaxyDriftData}`)
+  Logger.log('DRIFT_TRAIL_RENDERER', `driftController available: ${!!driftController}`)
 })
 
 onUnmounted(() => {
