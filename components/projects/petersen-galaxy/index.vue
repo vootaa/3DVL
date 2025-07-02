@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from 'three'
-import { ref, provide} from 'vue'
+import { ref, provide, watch, onMounted } from 'vue'
 import OrbitalSystem from './OrbitalSystem.vue'
 import StarCluster from './StarCluster.vue'
 import StarControl from './StarControl.vue'
 import GridControl from './GridControl.vue'
 import CameraInfo from './CameraInfo.vue'
 import GalaxyDriftController from './GalaxyDriftController.vue'
+import { CameraController } from './utils/camera-controller'
 
 const gl = {
-  clearColor: '#000811', // Very dark blue instead of pure black for better depth perception
+  clearColor: '#000811',
   shadows: true,
   alpha: false,
   shadowMapType: BasicShadowMap,
@@ -20,20 +21,46 @@ const gl = {
 const gridControlRef = ref()
 const starControlRef = ref()
 const cameraRef = ref()
+const orbitControlsRef = ref()
+const showGridAfterCameraMove = ref(false)
 
-// Provide camera reference to child components
+// Camera controller instance
+let cameraController: CameraController
+
 provide('camera', cameraRef)
 
-// OrbitControls configuration with zoom limits
 const orbitControlsConfig = {
   enableDamping: true,
   dampingFactor: 0.05,
-  minDistance: 2,    // Minimum zoom distance
-  maxDistance: 10,   // Maximum zoom distance
-  minPolarAngle: Math.PI * 0.1,  // Minimum vertical angle (prevent going below)
-  maxPolarAngle: Math.PI * 0.9,  // Maximum vertical angle (prevent going above)
-  enablePan: false,  // Disable panning to focus on orbital movement
+  minDistance: 2,
+  maxDistance: 10,
+  minPolarAngle: Math.PI * 0.05,
+  maxPolarAngle: Math.PI * 0.9,
+  enablePan: false,
 }
+
+onMounted(() => {
+  // Initialize camera controller
+  cameraController = new CameraController(cameraRef, orbitControlsRef)
+})
+
+// Handle grid visibility changes
+watch(
+  () => gridControlRef.value?.showGrid,
+  async (showGrid) => {
+    if (showGrid) {
+      // Hide grid first, move camera, then show grid
+      showGridAfterCameraMove.value = false
+      cameraController?.adjustForGrid(() => {
+        showGridAfterCameraMove.value = true
+      })
+    } else {
+      // Hide grid when disabled
+      showGridAfterCameraMove.value = false
+    }
+  },
+  { flush: 'post' }
+)
 </script>
 
 <template>
@@ -47,8 +74,9 @@ const orbitControlsConfig = {
       <!-- Subtle ambient lighting for better 3D perception -->
       <TresAmbientLight :intensity="0.05" color="#004488" />
 
+      <!-- Grid Helper - shown only after camera adjustment -->
       <TresGridHelper 
-        v-if="gridControlRef?.showGrid"
+        v-if="gridControlRef?.showGrid && showGridAfterCameraMove"
         :size="20" 
         color1="#002244" 
         color2="#001122"
@@ -65,17 +93,14 @@ const orbitControlsConfig = {
       
       <!-- OrbitControls with zoom and angle limits -->
       <OrbitControls 
+        ref="orbitControlsRef"
         v-bind="orbitControlsConfig"
       />
     </TresCanvas>
     
-    <!-- Star cluster control panel (top-right) -->
+    <!-- Control panels -->
     <StarControl ref="starControlRef" />
-    
-    <!-- Grid control HUD (top-left) -->
     <GridControl ref="gridControlRef" />
-    
-    <!-- Camera info HUD (bottom-left) -->
     <CameraInfo />
   </div>
 </template>
