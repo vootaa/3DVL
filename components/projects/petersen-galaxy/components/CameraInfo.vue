@@ -105,33 +105,36 @@ onUnmounted(() => {
     <div class="info-header">Camera Control Info</div>
     
     <div class="info-content">
-      <!-- Distance & Zoom Control -->
-      <div class="control-group">
-        <div class="control-row">
-          <span class="control-label">
-            <i class="control-icon">📏</i> Distance
-          </span>
-          <span class="control-value">{{ displayDistance }}</span>
-        </div>
-        <div class="control-hint">Scroll to zoom • GU = Galaxy Unit</div>
+      <!-- Zoom control hint - top -->
+      <div class="control-hint top-hint">Scroll to zoom</div>
+      
+      <!-- Distance row -->
+      <div class="control-row">
+        <span class="control-label">
+          <i class="control-icon">📏</i> Distance
+        </span>
+        <span class="control-value">{{ displayDistance }}</span>
       </div>
-
-      <!-- Angles & Orbit Control -->
-      <div class="control-group">
-        <div class="control-hint">Drag to orbit</div>
-        <div class="angle-row">
-          <span class="angle-label">
-            <i class="control-icon">🧭</i> Azimuth
-          </span>
-          <span class="angle-value">{{ displayAzimuth }}</span>
-        </div>
-        <div class="angle-row">
-          <span class="angle-label">
-            <i class="control-icon">📐</i> Elevation
-          </span>
-          <span class="angle-value">{{ displayElevation }}</span>
-        </div>
+      
+      <!-- Unit hint - separate line -->
+      <div class="unit-hint">GU = Galaxy Unit</div>
+      
+      <!-- Angles - two separate rows -->
+      <div class="angle-row">
+        <span class="angle-label">
+          <i class="control-icon">🧭</i> Azimuth
+        </span>
+        <span class="angle-value">{{ displayAzimuth }}</span>
       </div>
+      <div class="angle-row">
+        <span class="angle-label">
+          <i class="control-icon">📐</i> Elevation
+        </span>
+        <span class="angle-value">{{ displayElevation }}</span>
+      </div>
+      
+      <!-- Orbit control hint - bottom -->
+      <div class="control-hint bottom-hint">Drag to orbit</div>
     </div>
   </div>
 </template>
@@ -149,7 +152,7 @@ onUnmounted(() => {
   font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
   font-weight: 500;
   font-size: 12px;
-  width: 240px;
+  width: 200px;
   backdrop-filter: blur(8px);
   box-shadow: 
     0 4px 20px rgba(0, 180, 255, 0.15),
@@ -180,7 +183,7 @@ onUnmounted(() => {
 .info-content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .control-group {
@@ -191,7 +194,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .control-label, .angle-label {
@@ -232,13 +235,21 @@ onUnmounted(() => {
   text-align: center;
   margin: 2px 0;
   padding: 2px 0;
-  border-top: 1px solid rgba(0, 180, 255, 0.15);
 }
 
-.control-group:first-child .control-hint {
-  border-top: none;
+.top-hint {
   border-bottom: 1px solid rgba(0, 180, 255, 0.15);
   margin-bottom: 6px;
+}
+
+.unit-hint {
+  font-size: 8px;
+  color: #66aacc;
+  opacity: 0.7;
+  text-align: center;
+  margin: 2px 0 6px 0;
+  border-bottom: 1px solid rgba(0, 180, 255, 0.15);
+  padding-bottom: 4px;
 }
 
 /* Responsive design */
