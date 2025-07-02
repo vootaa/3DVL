@@ -136,8 +136,39 @@ const displayDriftDistance = computed(() => {
   return (driftState.value.totalDistance * scale).toFixed(10)
 })
 
-// Provide galaxy center to child components
+// Drift visualization control functions
+const trailsEnabled = ref(false)
+const velocityVectorsVisible = ref(false)
+const trailIntensity = ref(0.5)
+
+const enableTrails = (enabled: boolean) => {
+  trailsEnabled.value = enabled
+  Logger.log('DRIFT_CONTROLLER', `Trails ${enabled ? 'enabled' : 'disabled'}`)
+}
+
+const showVelocityVectors = (visible: boolean) => {
+  velocityVectorsVisible.value = visible
+  Logger.log('DRIFT_CONTROLLER', `Velocity vectors ${visible ? 'shown' : 'hidden'}`)
+}
+
+const setTrailIntensity = (intensity: number) => {
+  trailIntensity.value = Math.max(0, Math.min(1, intensity))
+  Logger.log('DRIFT_CONTROLLER', `Trail intensity set to ${trailIntensity.value}`)
+}
+
+// Drift controller interface for child components
+const driftController = {
+  enableTrails,
+  showVelocityVectors,
+  setTrailIntensity,
+  trailsEnabled: computed(() => trailsEnabled.value),
+  velocityVectorsVisible: computed(() => velocityVectorsVisible.value),
+  trailIntensity: computed(() => trailIntensity.value)
+}
+
+// Provide galaxy center and drift controller to child components
 provide('galaxyCenter', galaxyCenter)
+provide('driftController', ref(driftController))
 provide('galaxyDriftData', {
   position: displayDriftPosition,
   velocity: displayDriftVelocity,

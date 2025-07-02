@@ -10,6 +10,8 @@ import GalaxyDriftController from './components/GalaxyDriftController.vue'
 import DriftMonitor from './components/DriftMonitor.vue'
 import PerformanceMonitor from './components/PerformanceMonitor.vue'
 import CameraPresets from './components/CameraPresets.vue'
+import EvolutionTimeline from './components/EvolutionTimeline.vue'
+import DriftVisualization from './components/DriftVisualization.vue'
 import RendererStatsCollector from './components/RendererStatsCollector.vue'
 import { CameraController } from './utils/camera-controller'
 import './utils/drift-validator' // Import to trigger auto-diagnostic
@@ -123,6 +125,9 @@ watch(
     <GridControl ref="gridControlRef" />
     <CameraInfo />
     
+    <!-- Evolution timeline (top center) -->
+    <EvolutionTimeline />
+    
     <!-- Drift debugging monitor -->
     <DriftMonitor />
     
@@ -131,6 +136,11 @@ watch(
     
     <!-- Camera presets component -->
     <CameraPresets />
+    
+    <!-- Drift visualization control (top left) -->
+    <div class="drift-visualization-container">
+      <DriftVisualization />
+    </div>
   </div>
 </template>
 
@@ -139,5 +149,12 @@ watch(
   position: relative;
   width: 100%;
   height: 100%;
+}
+
+.drift-visualization-container {
+  position: absolute;
+  top: 180px; /* Position below StarControl (100px + 60px + 20px margin) */
+  left: 20px;
+  z-index: 100;
 }
 </style>
