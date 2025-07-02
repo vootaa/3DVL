@@ -37,6 +37,9 @@ const toggleDriftVisualization = () => {
   if (canUseDriftGlobal.value) {
     const trailsEnabled = toggleTrails()
     Logger.log('DRIFT_VISUALIZATION', `Global trails ${trailsEnabled ? 'enabled' : 'disabled'}`)
+    
+    // Update our visual state to match
+    isDriftVisible.value = trailsEnabled
   }
   // Fallback to injected controller
   else if (driftController && driftController.enableTrails) {
@@ -47,6 +50,8 @@ const toggleDriftVisualization = () => {
     }
   } else {
     Logger.warn('DRIFT_VISUALIZATION', 'No drift control method available, using basic toggle')
+    // Just toggle the visual state
+    isDriftVisible.value = !isDriftVisible.value
   }
   
   Logger.log('DRIFT_VISUALIZATION', `Drift visualization ${isDriftVisible.value ? 'enabled' : 'disabled'}`)
@@ -136,35 +141,24 @@ const driftButtonText = computed(() => {
 })
 
 onMounted(() => {
-  // 立即检查注入状态
-  console.log('=== DRIFT VISUALIZATION IMMEDIATE CHECK ===')
+  // 立即检查注入状态 - 只记录一次
+  console.log('=== DRIFT VISUALIZATION CHECK ===')
   console.log('driftController:', driftController)
   console.log('galaxyDriftData:', galaxyDriftData)
   console.log('canUseDrift:', canUseDrift.value)
   console.log('canUseDriftGlobal:', canUseDriftGlobal.value)
   console.log('driftState:', driftState)
-  console.log('=== END IMMEDIATE CHECK ===')
+  console.log('=== END CHECK ===')
   
   // Check if drift controller is available
   setTimeout(() => {
     isInitialized.value = true
-    
-    // 延迟检查注入状态
-    console.log('=== DRIFT VISUALIZATION DELAYED CHECK ===')
-    console.log('driftController:', driftController)
-    console.log('galaxyDriftData:', galaxyDriftData)
-    console.log('canUseDrift:', canUseDrift.value)
-    console.log('canUseDriftGlobal:', canUseDriftGlobal.value)
-    console.log('driftState:', driftState)
-    console.log('window.__CURRENT_DRIFT_STATE__:', typeof window !== 'undefined' ? (window as any).__CURRENT_DRIFT_STATE__ : 'not available')
-    console.log('=== END DELAYED CHECK ===')
     
     Logger.log('DRIFT_VISUALIZATION', 'Component initialized', {
       hasDriftController: !!driftController,
       hasGalaxyDriftData: !!galaxyDriftData,
       canUseDrift: canUseDrift.value,
       canUseDriftGlobal: canUseDriftGlobal.value,
-      driftState: driftState
     })
     
     if (canUseDrift.value) {

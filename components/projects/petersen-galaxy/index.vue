@@ -8,6 +8,7 @@ import GridControl from './components/GridControl.vue'
 import CameraInfo from './components/CameraInfo.vue'
 import GalaxyDriftController from './components/GalaxyDriftController.vue'
 import DriftTrailRenderer from './components/DriftTrailRenderer.vue'
+import SimpleTrailRenderer from './components/SimpleTrailRenderer.vue'
 import DriftMonitor from './components/DriftMonitor.vue'
 import PerformanceMonitor from './components/PerformanceMonitor.vue'
 import CameraPresets from './components/CameraPresets.vue'
@@ -110,6 +111,9 @@ watch(
       
       <!-- Drift trail renderer (visualizes drift trajectory) -->
       <DriftTrailRenderer />
+      
+      <!-- Simple trail renderer for testing -->
+      <SimpleTrailRenderer />
       
       <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
 
