@@ -2,8 +2,7 @@
 import { ref, inject, computed, onMounted, onUnmounted } from 'vue'
 import { Logger } from '../../../utils/logger'
 import { LoggingConfig } from '../configs/logging-config'
-import DriftDebugger from '../utils/drift-debug'
-import { formatWithUnit, getBestUnit, getUnitInfo, ASTRONOMICAL_UNITS } from '../configs/astronomical-units'
+import { formatWithUnit, getBestUnit } from '../configs/astronomical-units'
 
 // Type definitions for injected data
 interface GalaxyDriftData {
@@ -120,33 +119,33 @@ const updateDebugInfo = () => {
       windowState: typeof window !== 'undefined' ? (window as any).__CURRENT_DRIFT_STATE__ : null,
       galaxyCenter: galaxyCenter?.value
     })
-    
+
     // Primary method: Use window.__CURRENT_DRIFT_STATE__ for real-time data
     if (typeof window !== 'undefined' && (window as any).__CURRENT_DRIFT_STATE__) {
       const currentDriftState = (window as any).__CURRENT_DRIFT_STATE__
       const currentTime = Date.now()
       const deltaTime = (currentTime - lastUpdateTime) / 1000 // seconds
-      
+
       const currentPosition = {
         x: parseFloat(currentDriftState.position.x.toFixed(8)),
         y: parseFloat(currentDriftState.position.y.toFixed(8)),
         z: parseFloat(currentDriftState.position.z.toFixed(8))
       }
-      
+
       let currentVelocity = currentDriftState.velocity || 0
       let positionChange = 0
-      
+
       // Calculate position change from last update
       if (lastPosition.value && deltaTime > 0) {
         const dx = currentPosition.x - lastPosition.value.x
         const dy = currentPosition.y - lastPosition.value.y
         const dz = currentPosition.z - lastPosition.value.z
-        positionChange = Math.sqrt(dx*dx + dy*dy + dz*dz)
+        positionChange = Math.sqrt(dx * dx + dy * dy + dz * dz)
       }
-      
+
       // Update statistics
       const isDrifting = currentVelocity > 0.0001 // Lower threshold for better detection
-      
+
       debugInfo.value = {
         isDrifting,
         velocityMagnitude: currentVelocity,
@@ -156,55 +155,55 @@ const updateDebugInfo = () => {
           averageVelocity: currentVelocity,
           maxVelocity: Math.max(debugInfo.value.statistics.maxVelocity, currentVelocity),
           totalDistance: currentDriftState.totalDistance || 0,
-          duration: currentDriftState.driftTime || 0,  
+          duration: currentDriftState.driftTime || 0,
           samplesCollected: debugInfo.value.statistics.samplesCollected + 1,
           currentPosition
         },
         injectionStatus: 'SUCCESS',
         lastUpdate: new Date().toLocaleTimeString()
       }
-      
+
       // Store for next calculation
       lastPosition.value = { ...currentPosition }
       lastUpdateTime = currentTime
-      
+
       Logger.throttle('DRIFT_MONITOR_UPDATE', 'Monitor updated from window state', {
         position: currentPosition,
         velocity: currentVelocity,
         isDrifting,
         diagnosis: debugInfo.value.diagnosis
       }, LoggingConfig.DRIFT_MONITOR_UPDATE)
-      
+
       return
     }
-    
+
     // Secondary method: Use direct injection if available
     if (galaxyCenter?.value) {
       const center = galaxyCenter.value
       const currentTime = Date.now()
       const deltaTime = (currentTime - lastUpdateTime) / 1000 // seconds
-      
+
       const currentPosition = {
         x: parseFloat(center.x.toFixed(8)),
         y: parseFloat(center.y.toFixed(8)),
         z: parseFloat(center.z.toFixed(8))
       }
-      
+
       let currentVelocity = 0
       let positionChange = 0
-      
+
       // Calculate velocity from position changes
       if (lastPosition.value && deltaTime > 0) {
         const dx = center.x - lastPosition.value.x
         const dy = center.y - lastPosition.value.y
         const dz = center.z - lastPosition.value.z
-        positionChange = Math.sqrt(dx*dx + dy*dy + dz*dz)
+        positionChange = Math.sqrt(dx * dx + dy * dy + dz * dz)
         currentVelocity = positionChange / deltaTime
       }
-      
+
       // Update statistics
       const isDrifting = currentVelocity > 0.0001 // Lower threshold for better detection
-      
+
       debugInfo.value = {
         isDrifting,
         velocityMagnitude: currentVelocity,
@@ -214,28 +213,28 @@ const updateDebugInfo = () => {
           averageVelocity: currentVelocity,
           maxVelocity: Math.max(debugInfo.value.statistics.maxVelocity, currentVelocity),
           totalDistance: debugInfo.value.statistics.totalDistance + positionChange,
-          duration: debugInfo.value.statistics.duration + deltaTime,  
+          duration: debugInfo.value.statistics.duration + deltaTime,
           samplesCollected: debugInfo.value.statistics.samplesCollected + 1,
           currentPosition
         },
         injectionStatus: 'SUCCESS',
         lastUpdate: new Date().toLocaleTimeString()
       }
-      
+
       // Store for next calculation
       lastPosition.value = { ...currentPosition }
       lastUpdateTime = currentTime
-      
+
       Logger.throttle('DRIFT_MONITOR_UPDATE', 'Monitor updated from injection', {
         position: currentPosition,
         velocity: currentVelocity,
         isDrifting,
         diagnosis: debugInfo.value.diagnosis
       }, LoggingConfig.DRIFT_MONITOR_UPDATE)
-      
+
       return
     }
-    
+
     // Fallback: try to get from window config
     if (typeof window !== 'undefined' && (window as any).__DRIFT_CONFIG__) {
       debugInfo.value.diagnosis = 'CONFIG_ONLY'
@@ -245,7 +244,7 @@ const updateDebugInfo = () => {
       debugInfo.value.diagnosis = 'INJECTION_FAILED'
       debugInfo.value.injectionStatus = 'FAILED'
     }
-    
+
   } catch (error) {
     Logger.error('DRIFT_MONITOR', 'Error updating debug info', error)
     debugInfo.value.diagnosis = 'UPDATE_ERROR'
@@ -283,7 +282,7 @@ onMounted(() => {
   // Update debug info every 2 seconds for more responsive display
   updateInterval = setInterval(updateDebugInfo, 2000)
   updateDebugInfo() // Initial update
-  
+
   Logger.log('DRIFT_MONITOR', 'Drift monitor component mounted')
 })
 
@@ -291,7 +290,7 @@ onUnmounted(() => {
   if (updateInterval) {
     clearInterval(updateInterval)
   }
-  
+
   Logger.log('DRIFT_MONITOR', 'Drift monitor component unmounted')
 })
 </script>
@@ -299,18 +298,14 @@ onUnmounted(() => {
 <template>
   <div class="drift-monitor">
     <!-- Toggle Button -->
-    <button 
-      class="debug-toggle" 
-      @click="toggleDebugPanel"
-      :class="{ active: showDebugPanel }"
-    >
-      🔍 DRIFT DEBUG
+    <button class="debug-toggle" @click="toggleDebugPanel" :class="{ active: showDebugPanel }">
+      🔍 DRIFT TOOL
     </button>
 
     <!-- Debug Panel -->
     <div v-if="showDebugPanel" class="debug-panel">
       <div class="debug-header">
-        <h3>🌌 Galaxy Drift Monitor</h3>
+        <h3>Petersen Galaxy Drift Monitor</h3>
         <button class="close-btn" @click="showDebugPanel = false">×</button>
       </div>
 
@@ -409,34 +404,18 @@ onUnmounted(() => {
           <div class="unit-settings">
             <div class="unit-setting">
               <label for="distance-unit">Distance:</label>
-              <select 
-                id="distance-unit"
-                v-model="preferredDistanceUnit"
-                @change="changeDistanceUnit(preferredDistanceUnit)"
-                class="unit-selector"
-              >
-                <option 
-                  v-for="option in distanceUnitOptions" 
-                  :key="option.value"
-                  :value="option.value"
-                >
+              <select id="distance-unit" v-model="preferredDistanceUnit"
+                @change="changeDistanceUnit(preferredDistanceUnit)" class="unit-selector">
+                <option v-for="option in distanceUnitOptions" :key="option.value" :value="option.value">
                   {{ option.label }}
                 </option>
               </select>
             </div>
             <div class="unit-setting">
               <label for="velocity-unit">Velocity:</label>
-              <select 
-                id="velocity-unit"
-                v-model="preferredVelocityUnit"
-                @change="changeVelocityUnit(preferredVelocityUnit)"
-                class="unit-selector"
-              >
-                <option 
-                  v-for="option in velocityUnitOptions" 
-                  :key="option.value"
-                  :value="option.value"
-                >
+              <select id="velocity-unit" v-model="preferredVelocityUnit"
+                @change="changeVelocityUnit(preferredVelocityUnit)" class="unit-selector">
+                <option v-for="option in velocityUnitOptions" :key="option.value" :value="option.value">
                   {{ option.label }}
                 </option>
               </select>
@@ -471,29 +450,6 @@ onUnmounted(() => {
             <div class="unit-item">
               <span class="unit-symbol">pc</span>
               <span class="unit-name">Parsec (~3.26 light years)</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Unit Switcher -->
-        <div class="debug-section">
-          <div class="section-title">Unit Switcher</div>
-          <div class="unit-switcher">
-            <div class="switcher-item">
-              <span class="label">Distance Unit:</span>
-              <select v-model="preferredDistanceUnit" @change="changeDistanceUnit(preferredDistanceUnit)">
-                <option v-for="option in distanceUnitOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-            </div>
-            <div class="switcher-item">
-              <span class="label">Velocity Unit:</span>
-              <select v-model="preferredVelocityUnit" @change="changeVelocityUnit(preferredVelocityUnit)">
-                <option v-for="option in velocityUnitOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
             </div>
           </div>
         </div>
@@ -543,9 +499,10 @@ onUnmounted(() => {
   position: absolute;
   top: 50px;
   right: 0;
-  width: 520px; /* Increased for better readability */
+  width: 360px;
   max-height: 85vh;
-  background: rgba(0, 8, 16, 0.97); /* Darker background */
+  background: rgba(0, 8, 16, 0.97);
+  /* Darker background */
   border: 2px solid rgba(0, 204, 255, 0.6);
   border-radius: 10px;
   overflow-y: auto;
@@ -559,6 +516,7 @@ onUnmounted(() => {
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
