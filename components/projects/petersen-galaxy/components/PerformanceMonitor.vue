@@ -27,6 +27,11 @@ let frameCount = 0
 let lastFrameTime = performance.now()
 let fpsUpdateTime = performance.now()
 
+// Frame time smoothing
+const frameTimeHistory: number[] = []
+const FRAME_TIME_HISTORY_SIZE = 30 // 保存最近30帧的数据用于平滑
+let frameTimeSum = 0
+
 // Performance status colors
 const performanceStatusColor = computed(() => {
   const fps = performanceData.value.fps
@@ -54,9 +59,39 @@ const formattedMemory = computed(() => {
 
 const formattedTriangles = computed(() => {
   const triangles = performanceData.value.triangles
+  if (triangles === 0) return 'N/A (Point Cloud)'
   if (triangles > 1000000) return `${(triangles / 1000000).toFixed(2)}M`
   if (triangles > 1000) return `${(triangles / 1000).toFixed(1)}K`
   return triangles.toString()
+})
+
+const formattedTextures = computed(() => {
+  const textures = performanceData.value.textures
+  if (textures === 0) return 'N/A (Procedural)'
+  return textures.toString()
+})
+
+const formattedPoints = computed(() => {
+  const points = performanceData.value.points || 0
+  if (points === 0) return '0'
+  if (points > 1000000) return `${(points / 1000000).toFixed(2)}M`
+  if (points > 1000) return `${(points / 1000).toFixed(1)}K`
+  return points.toString()
+})
+
+const formattedLines = computed(() => {
+  const lines = performanceData.value.lines || 0
+  if (lines === 0) return '0'
+  if (lines > 1000000) return `${(lines / 1000000).toFixed(2)}M`
+  if (lines > 1000) return `${(lines / 1000).toFixed(1)}K`
+  return lines.toString()
+})
+
+// Formatted frame time with stability
+const formattedFrameTime = computed(() => {
+  const frameTime = performanceData.value.frameTime
+  if (frameTime < 0.1) return '0.0ms'
+  return frameTime.toFixed(1) + 'ms'
 })
 
 // Performance categories
@@ -80,16 +115,32 @@ const updateFPS = () => {
   const now = performance.now()
   frameCount++
   
+  // Calculate current frame time
+  const currentFrameTime = now - lastFrameTime
+  lastFrameTime = now
+  
+  // Add to frame time history for smoothing
+  frameTimeHistory.push(currentFrameTime)
+  frameTimeSum += currentFrameTime
+  
+  // Keep history size limited
+  if (frameTimeHistory.length > FRAME_TIME_HISTORY_SIZE) {
+    const removed = frameTimeHistory.shift()!
+    frameTimeSum -= removed
+  }
+  
+  // Update smoothed frame time (only update every few frames to reduce flicker)
+  if (frameCount % 10 === 0) { // 每10帧更新一次，约每167ms更新
+    const smoothedFrameTime = frameTimeSum / frameTimeHistory.length
+    performanceData.value.frameTime = smoothedFrameTime
+  }
+  
   // Update FPS every second
   if (now - fpsUpdateTime >= 1000) {
     performanceData.value.fps = Math.round((frameCount * 1000) / (now - fpsUpdateTime))
     frameCount = 0
     fpsUpdateTime = now
   }
-  
-  // Frame time calculation
-  performanceData.value.frameTime = now - lastFrameTime
-  lastFrameTime = now
   
   requestAnimationFrame(updateFPS)
 }
@@ -136,8 +187,8 @@ onMounted(() => {
   // Start FPS monitoring
   updateFPS()
   
-  // Update performance data every 2 seconds
-  updateInterval = setInterval(updatePerformanceData, 2000)
+  // Update performance data every 3 seconds (reduced frequency to minimize flicker)
+  updateInterval = setInterval(updatePerformanceData, 3000)
   updatePerformanceData() // Initial update
   
   Logger.log('PERFORMANCE_MONITOR', 'Performance monitor component mounted')
@@ -182,7 +233,7 @@ onUnmounted(() => {
           </div>
           <div class="status-item">
             <span class="label">Frame Time:</span>
-            <span class="value">{{ performanceData.frameTime.toFixed(2) }}ms</span>
+            <span class="value">{{ formattedFrameTime }}</span>
           </div>
           <div class="status-item">
             <span class="label">Status:</span>
@@ -216,17 +267,32 @@ onUnmounted(() => {
             <span class="label">Draw Calls:</span>
             <span class="value">{{ performanceData.renderCalls }}</span>
           </div>
-          <div class="status-item">
-            <span class="label">Triangles:</span>
-            <span class="value">{{ formattedTriangles }}</span>
+          
+          <!-- 重点显示点云数据 - 这是项目的主要渲染内容 -->
+          <div class="status-item highlight" v-if="performanceData.points > 0">
+            <span class="label">Points:</span>
+            <span class="value">{{ formattedPoints }}</span>
           </div>
-          <div class="status-item">
-            <span class="label">Textures:</span>
-            <span class="value">{{ performanceData.textures }}</span>
+          
+          <!-- 显示线条数据 (如果有的话) -->
+          <div class="status-item" v-if="performanceData.lines > 0">
+            <span class="label">Lines:</span>
+            <span class="value">{{ formattedLines }}</span>
           </div>
+          
           <div class="status-item">
             <span class="label">Geometries:</span>
             <span class="value">{{ performanceData.geometries }}</span>
+          </div>
+          
+          <!-- 三角形和纹理显示为次要信息，说明不适用 -->
+          <div class="status-item secondary">
+            <span class="label">Triangles:</span>
+            <span class="value">{{ formattedTriangles }}</span>
+          </div>
+          <div class="status-item secondary">
+            <span class="label">Textures:</span>
+            <span class="value">{{ formattedTextures }}</span>
           </div>
         </div>
 
@@ -394,6 +460,43 @@ onUnmounted(() => {
   background: rgba(255, 170, 0, 0.05);
   border-radius: 4px;
   padding: 4px 8px;
+}
+
+.status-item.highlight {
+  background: rgba(0, 255, 255, 0.1);
+  border-left: 3px solid #00ffff;
+  padding: 6px 12px;
+  margin: 4px 0;
+  border-radius: 4px;
+  animation: highlightPulse 3s infinite;
+}
+
+@keyframes highlightPulse {
+  0%, 100% { 
+    background: rgba(0, 255, 255, 0.1);
+    border-color: #00ffff;
+  }
+  50% { 
+    background: rgba(0, 255, 255, 0.15);
+    border-color: #44ffff;
+  }
+}
+
+.status-item.secondary {
+  opacity: 0.6;
+  font-size: 11px;
+  padding: 2px 0;
+}
+
+.status-item.secondary .label {
+  color: #cc9966;
+  font-size: 10px;
+}
+
+.status-item.secondary .value {
+  color: #998866;
+  font-style: italic;
+  font-size: 10px;
 }
 
 .status-item:last-child {
