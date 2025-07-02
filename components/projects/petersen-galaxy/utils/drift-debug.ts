@@ -47,15 +47,15 @@ export class DriftDebugger {
       this.velocityHistory.shift()
     }
     
-    // Analyze drift activity with improved thresholds
+    // Analyze drift activity with much lower thresholds for better detection
     let diagnosis = ''
     let isDrifting = false
     
-    if (velocityMagnitude < 0.000001) { // Reduced threshold
+    if (velocityMagnitude < 0.0000001) { // Much lower threshold
       diagnosis = 'NO_VELOCITY - Drift velocity is essentially zero'
-    } else if (positionChange < 0.000001) { // Reduced threshold
+    } else if (positionChange < 0.0000001) { // Much lower threshold
       diagnosis = 'NO_MOVEMENT - Velocity exists but position not changing'
-    } else if (velocityMagnitude > 0.000001 && positionChange > 0.000001) {
+    } else if (velocityMagnitude > 0.0000001 && positionChange > 0.0000001) {
       isDrifting = true
       diagnosis = 'ACTIVE_DRIFT - System is functioning normally'
     } else {

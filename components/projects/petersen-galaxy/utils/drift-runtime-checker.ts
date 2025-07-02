@@ -3,6 +3,9 @@
  * Provides utilities to verify drift system is working correctly
  */
 
+import { Logger } from '../../../utils/logger'
+import { LoggingConfig } from '../configs/logging-config'
+
 export class DriftRuntimeChecker {
   private static checkInterval: NodeJS.Timeout | null = null
   private static isRunning = false
@@ -128,21 +131,45 @@ export class DriftRuntimeChecker {
   }
 
   /**
-   * Check for recent console activity indicating drift is working
+   * Check for recent console activity indicating drift is working - improved detection
    */
   private static checkRecentConsoleActivity(): boolean {
-    // This is a simplified check - in a real implementation,
-    // you might hook into the Logger class to track recent activity
-    try {
-      // Check if there are any elements that suggest drift is working
-      const cameraInfo = document.querySelector('.camera-info')
-      const driftData = cameraInfo?.textContent?.includes('mGU') || 
-                      cameraInfo?.textContent?.includes('nGU')
+    // Look for recent drift activity in the last 2 minutes
+    const recentTime = Date.now() - (2 * 60 * 1000) // 2 minutes
+    
+    // Check if we can see drift activity in current state
+    if (typeof window !== 'undefined') {
+      const currentDriftState = (window as any).__CURRENT_DRIFT_STATE__
+      if (currentDriftState && currentDriftState.lastUpdate > recentTime) {
+        Logger.throttle('DRIFT_CHECKER_ACTIVITY', 'Active drift detected from current state', {
+          lastUpdate: currentDriftState.lastUpdate,
+          velocity: currentDriftState.velocity,
+          isActive: currentDriftState.isActive
+        }, LoggingConfig.DRIFT_RUNTIME_CHECK)
+        return true
+      }
       
-      return !!driftData
-    } catch {
-      return false
+      // Also check if config is enabled as fallback
+      const config = (window as any).__DRIFT_CONFIG__
+      if (config && config.enabled) {
+        Logger.throttle('DRIFT_CHECKER_CONFIG', 'Assuming drift activity based on enabled config', {
+          configEnabled: config.enabled
+        }, LoggingConfig.DRIFT_RUNTIME_CHECK)
+        return true
+      }
     }
+    
+    // Legacy check for DOM elements
+    try {
+      const driftMonitor = document.querySelector('.drift-monitor')
+      if (driftMonitor) {
+        return true
+      }
+    } catch {
+      // DOM check failed
+    }
+    
+    return false
   }
 
   /**

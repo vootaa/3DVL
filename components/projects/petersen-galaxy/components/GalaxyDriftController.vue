@@ -89,6 +89,22 @@ onLoop(({ delta, elapsed }) => {
   updateGalaxyDrift(deltaTime, currentTime)
   lastTime = currentTime
   
+  // Expose current state to window for debugging
+  if (typeof window !== 'undefined') {
+    (window as any).__CURRENT_DRIFT_STATE__ = {
+      position: {
+        x: driftState.value.currentPosition.x,
+        y: driftState.value.currentPosition.y,
+        z: driftState.value.currentPosition.z
+      },
+      velocity: driftState.value.velocity.length(),
+      lastUpdate: Date.now(),
+      isActive: true,
+      totalDistance: driftState.value.totalDistance,
+      driftTime: driftState.value.driftTime
+    }
+  }
+  
   // Use Logger.throttle for drift debugging instead of manual time checking
   Logger.throttle('DRIFT_DEBUG', 'Drift system status check', {
     position: driftState.value.currentPosition,

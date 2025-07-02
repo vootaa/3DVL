@@ -47,43 +47,146 @@ const toggleDebugPanel = () => {
   Logger.log('DRIFT_MONITOR', `Debug panel ${showDebugPanel.value ? 'opened' : 'closed'}`)
 }
 
+// Track previous position for velocity calculation
+let lastPosition = ref<{ x: number; y: number; z: number } | null>(null)
+let lastUpdateTime = Date.now()
+
 // Update debug information
 const updateDebugInfo = () => {
-  if (!galaxyCenter?.value || !galaxyDriftData) {
-    debugInfo.value.diagnosis = 'INJECTION_FAILED'
-    debugInfo.value.injectionStatus = 'FAILED'
-    return
-  }
-
   try {
-    // Create a mock drift state for analysis
-    const mockDriftState = {
-      currentPosition: galaxyCenter.value,
-      velocity: { length: () => parseFloat(galaxyDriftData.velocity.value) },
-      totalDistance: parseFloat(galaxyDriftData.distance.value) / 10000000000000, // Convert back from nGU
-      driftTime: galaxyDriftData.duration.value
+    // Debug: log what's available
+    Logger.log('DRIFT_MONITOR_DEBUG', 'Checking data sources', {
+      hasWindowState: typeof window !== 'undefined' && !!(window as any).__CURRENT_DRIFT_STATE__,
+      hasGalaxyCenter: !!galaxyCenter?.value,
+      windowState: typeof window !== 'undefined' ? (window as any).__CURRENT_DRIFT_STATE__ : null,
+      galaxyCenter: galaxyCenter?.value
+    })
+    
+    // Primary method: Use window.__CURRENT_DRIFT_STATE__ for real-time data
+    if (typeof window !== 'undefined' && (window as any).__CURRENT_DRIFT_STATE__) {
+      const currentDriftState = (window as any).__CURRENT_DRIFT_STATE__
+      const currentTime = Date.now()
+      const deltaTime = (currentTime - lastUpdateTime) / 1000 // seconds
+      
+      const currentPosition = {
+        x: parseFloat(currentDriftState.position.x.toFixed(8)),
+        y: parseFloat(currentDriftState.position.y.toFixed(8)),
+        z: parseFloat(currentDriftState.position.z.toFixed(8))
+      }
+      
+      let currentVelocity = currentDriftState.velocity || 0
+      let positionChange = 0
+      
+      // Calculate position change from last update
+      if (lastPosition.value && deltaTime > 0) {
+        const dx = currentPosition.x - lastPosition.value.x
+        const dy = currentPosition.y - lastPosition.value.y
+        const dz = currentPosition.z - lastPosition.value.z
+        positionChange = Math.sqrt(dx*dx + dy*dy + dz*dz)
+      }
+      
+      // Update statistics
+      const isDrifting = currentVelocity > 0.0001 // Lower threshold for better detection
+      
+      debugInfo.value = {
+        isDrifting,
+        velocityMagnitude: currentVelocity,
+        positionChange,
+        diagnosis: isDrifting ? 'ACTIVE_DRIFT' : (currentVelocity > 0 ? 'MINIMAL_DRIFT' : 'NO_MOVEMENT'),
+        statistics: {
+          averageVelocity: currentVelocity,
+          maxVelocity: Math.max(debugInfo.value.statistics.maxVelocity, currentVelocity),
+          totalDistance: currentDriftState.totalDistance || 0,
+          duration: currentDriftState.driftTime || 0,  
+          samplesCollected: debugInfo.value.statistics.samplesCollected + 1,
+          currentPosition
+        },
+        injectionStatus: 'SUCCESS',
+        lastUpdate: new Date().toLocaleTimeString()
+      }
+      
+      // Store for next calculation
+      lastPosition.value = { ...currentPosition }
+      lastUpdateTime = currentTime
+      
+      Logger.throttle('DRIFT_MONITOR_UPDATE', 'Monitor updated from window state', {
+        position: currentPosition,
+        velocity: currentVelocity,
+        isDrifting,
+        diagnosis: debugInfo.value.diagnosis
+      }, LoggingConfig.DRIFT_MONITOR_UPDATE)
+      
+      return
     }
-
-    const driftDebugger = DriftDebugger.getInstance()
-    const activity = driftDebugger.checkDriftActivity(mockDriftState as any)
-    const stats = driftDebugger.getDriftStatistics(mockDriftState as any)
-
-    debugInfo.value = {
-      isDrifting: activity.isDrifting,
-      velocityMagnitude: activity.velocityMagnitude,
-      positionChange: activity.positionChange,
-      diagnosis: activity.diagnosis,
-      statistics: stats,
-      injectionStatus: 'SUCCESS',
-      lastUpdate: new Date().toLocaleTimeString()
+    
+    // Secondary method: Use direct injection if available
+    if (galaxyCenter?.value) {
+      const center = galaxyCenter.value
+      const currentTime = Date.now()
+      const deltaTime = (currentTime - lastUpdateTime) / 1000 // seconds
+      
+      const currentPosition = {
+        x: parseFloat(center.x.toFixed(8)),
+        y: parseFloat(center.y.toFixed(8)),
+        z: parseFloat(center.z.toFixed(8))
+      }
+      
+      let currentVelocity = 0
+      let positionChange = 0
+      
+      // Calculate velocity from position changes
+      if (lastPosition.value && deltaTime > 0) {
+        const dx = center.x - lastPosition.value.x
+        const dy = center.y - lastPosition.value.y
+        const dz = center.z - lastPosition.value.z
+        positionChange = Math.sqrt(dx*dx + dy*dy + dz*dz)
+        currentVelocity = positionChange / deltaTime
+      }
+      
+      // Update statistics
+      const isDrifting = currentVelocity > 0.0001 // Lower threshold for better detection
+      
+      debugInfo.value = {
+        isDrifting,
+        velocityMagnitude: currentVelocity,
+        positionChange,
+        diagnosis: isDrifting ? 'ACTIVE_DRIFT' : (currentVelocity > 0 ? 'MINIMAL_DRIFT' : 'NO_MOVEMENT'),
+        statistics: {
+          averageVelocity: currentVelocity,
+          maxVelocity: Math.max(debugInfo.value.statistics.maxVelocity, currentVelocity),
+          totalDistance: debugInfo.value.statistics.totalDistance + positionChange,
+          duration: debugInfo.value.statistics.duration + deltaTime,  
+          samplesCollected: debugInfo.value.statistics.samplesCollected + 1,
+          currentPosition
+        },
+        injectionStatus: 'SUCCESS',
+        lastUpdate: new Date().toLocaleTimeString()
+      }
+      
+      // Store for next calculation
+      lastPosition.value = { ...currentPosition }
+      lastUpdateTime = currentTime
+      
+      Logger.throttle('DRIFT_MONITOR_UPDATE', 'Monitor updated from injection', {
+        position: currentPosition,
+        velocity: currentVelocity,
+        isDrifting,
+        diagnosis: debugInfo.value.diagnosis
+      }, LoggingConfig.DRIFT_MONITOR_UPDATE)
+      
+      return
     }
-
-    // Use Logger.throttle for debug panel updates
-    Logger.throttle('DRIFT_MONITOR_UPDATE', 'Debug panel updated', {
-      isDrifting: activity.isDrifting,
-      diagnosis: activity.diagnosis,
-      injectionStatus: 'SUCCESS'
-    }, LoggingConfig.DRIFT_MONITOR_UPDATE) // Use centralized config
+    
+    // Fallback: try to get from window config
+    if (typeof window !== 'undefined' && (window as any).__DRIFT_CONFIG__) {
+      debugInfo.value.diagnosis = 'CONFIG_ONLY'
+      debugInfo.value.injectionStatus = 'PARTIAL'
+      Logger.throttle('DRIFT_MONITOR_FALLBACK', 'Using config fallback', {}, LoggingConfig.DRIFT_MONITOR_UPDATE)
+    } else {
+      debugInfo.value.diagnosis = 'INJECTION_FAILED'
+      debugInfo.value.injectionStatus = 'FAILED'
+    }
+    
   } catch (error) {
     Logger.error('DRIFT_MONITOR', 'Error updating debug info', error)
     debugInfo.value.diagnosis = 'UPDATE_ERROR'
@@ -107,8 +210,8 @@ const injectionStatusColor = computed(() => {
 })
 
 onMounted(() => {
-  // Update debug info every 10 seconds instead of 5 to reduce frequency
-  updateInterval = setInterval(updateDebugInfo, 10000)
+  // Update debug info every 2 seconds for more responsive display
+  updateInterval = setInterval(updateDebugInfo, 2000)
   updateDebugInfo() // Initial update
   
   Logger.log('DRIFT_MONITOR', 'Drift monitor component mounted')
