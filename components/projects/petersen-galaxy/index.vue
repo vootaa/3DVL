@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from 'three'
-import { ref, provide, watch, onMounted } from 'vue'
+import { ref, provide, watch, onMounted, nextTick } from 'vue'
 import OrbitalSystem from './components/OrbitalSystem.vue'
 import StarCluster from './components/StarCluster.vue'
 import StarControl from './components/StarControl.vue'
@@ -36,6 +36,7 @@ const hasEvolutionOccurred = ref(false)
 // Camera controller instance
 let cameraController: CameraController
 
+// Provide refs immediately (they will be reactive)
 provide('camera', cameraRef)
 provide('orbitControls', orbitControlsRef)
 
@@ -50,15 +51,23 @@ const orbitControlsConfig = {
 }
 
 onMounted(() => {
-  // Initialize camera controller
-  cameraController = new CameraController(cameraRef, orbitControlsRef)
+  console.log('🚀 Galaxy component mounted')
   
-  // Initialize drift runtime checker in development
-  if (process.env.NODE_ENV === 'development') {
-    setTimeout(() => {
-      DriftRuntimeChecker.startMonitoring()
-    }, 2000)
-  }
+  // Use nextTick to ensure TresCanvas components are ready
+  nextTick(() => {
+    console.log('📸 After nextTick - Camera ref:', !!cameraRef.value)
+    console.log('🎮 After nextTick - Controls ref:', !!orbitControlsRef.value)
+    
+    // Initialize camera controller
+    cameraController = new CameraController(cameraRef, orbitControlsRef)
+    
+    // Initialize drift runtime checker in development
+    if (process.env.NODE_ENV === 'development') {
+      setTimeout(() => {
+        DriftRuntimeChecker.startMonitoring()
+      }, 2000)
+    }
+  })
 })
 
 // Handle grid visibility changes

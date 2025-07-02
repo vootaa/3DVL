@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, inject, computed } from 'vue'
+import { ref, inject, computed, onMounted, watch, nextTick } from 'vue'
 import type { PerspectiveCamera } from 'three'
 import type { Ref } from 'vue'
 import { Logger } from '../../../utils/logger'
@@ -82,17 +82,61 @@ const transitionProgress = ref(0)
 const cameraRef = inject<Ref<PerspectiveCamera | null>>('camera')
 const orbitControlsRef = inject<Ref<any>>('orbitControls')
 
+// Debug: Log injected refs
+Logger.log('CAMERA_PRESETS', 'Initialized with refs:', { 
+  cameraRef: !!cameraRef, 
+  orbitControlsRef: !!orbitControlsRef
+})
+
 // Computed properties
 const availablePresets = computed(() => cameraPresets)
 
 const canUsePresets = computed(() => {
-  return cameraRef?.value && orbitControlsRef?.value
+  const canUse = !!(cameraRef?.value && orbitControlsRef?.value)
+  return canUse
+})
+
+// Create a more reactive status for debugging
+const debugStatus = computed(() => ({
+  hasCamera: !!cameraRef?.value,
+  hasControls: !!orbitControlsRef?.value,
+  canUse: canUsePresets.value,
+  cameraType: cameraRef?.value?.constructor?.name || 'none',
+  controlsType: orbitControlsRef?.value?.constructor?.name || 'none'
+}))
+
+// Watch for ref changes with better debugging
+watch([() => cameraRef?.value, () => orbitControlsRef?.value], ([camera, controls]) => {
+  if (camera && controls) {
+    Logger.log('CAMERA_PRESETS', '✅ Both refs ready!')
+  }
+}, { immediate: true })
+
+onMounted(async () => {
+  Logger.log('CAMERA_PRESETS', '🚀 Component mounted')
+  
+  // Wait for next tick to allow TresJS to initialize
+  await nextTick()
+  Logger.log('CAMERA_PRESETS', '⏳ After nextTick:', debugStatus.value)
+  
+  // Check periodically for a few seconds to catch async initialization
+  for (let i = 0; i < 10; i++) {
+    setTimeout(() => {
+      Logger.log('CAMERA_PRESETS', `🔍 Check ${i + 1}/10:`, debugStatus.value)
+    }, i * 500)
+  }
 })
 
 // Toggle presets panel
 const togglePresetsPanel = () => {
   showPresetsPanel.value = !showPresetsPanel.value
-  Logger.log('CAMERA_PRESETS', `Camera presets panel ${showPresetsPanel.value ? 'opened' : 'closed'}`)
+  Logger.log('CAMERA_PRESETS', `📂 Camera presets panel ${showPresetsPanel.value ? 'opened' : 'closed'}`)
+}
+
+// Test function to verify click events work
+const testClick = () => {
+  Logger.log('CAMERA_PRESETS', '🧪 TEST CLICK WORKS!', debugStatus.value)
+  alert('Click test successful! Check console for details.')
 }
 
 // Animation helper for smooth camera transitions
@@ -104,8 +148,29 @@ const animateCamera = (preset: CameraPreset): Promise<void> => {
       return
     }
 
-    const camera = cameraRef.value
-    const controls = orbitControlsRef.value
+    // Try to access the actual Three.js objects
+    // TresJS may wrap components, so try different access patterns
+    let camera: any = cameraRef.value
+    let controls: any = orbitControlsRef.value
+    
+    // For TresJS, the actual Three.js object might be in different properties
+    if (camera.$el) camera = camera.$el
+    if (camera.value) camera = camera.value
+    if (controls.$el) controls = controls.$el  
+    if (controls.value) controls = controls.value
+    
+    Logger.log('CAMERA_PRESETS', 'Using objects:', {
+      camera: camera?.constructor?.name,
+      controls: controls?.constructor?.name,
+      hasPosition: !!camera?.position,
+      hasTarget: !!controls?.target
+    })
+    
+    if (!camera?.position || !controls?.target) {
+      Logger.error('CAMERA_PRESETS', 'Cannot access camera position or controls target')
+      resolve()
+      return
+    }
     
     // Store initial positions
     const startPosition = {
@@ -146,7 +211,9 @@ const animateCamera = (preset: CameraPreset): Promise<void> => {
       controls.target.z = startTarget.z + (preset.target.z - startTarget.z) * easeProgress
       
       // Update controls
-      controls.update()
+      if (controls.update) {
+        controls.update()
+      }
       
       transitionProgress.value = progress * 100
       
@@ -166,23 +233,59 @@ const animateCamera = (preset: CameraPreset): Promise<void> => {
 
 // Apply camera preset
 const applyPreset = async (preset: CameraPreset) => {
-  if (isTransitioning.value) {
-    Logger.warn('CAMERA_PRESETS', 'Cannot apply preset while transition is in progress')
+  Logger.log('CAMERA_PRESETS', `🎯 PRESET CLICKED: ${preset.name}`)
+  
+  // Simple test - just move camera directly without animation first
+  if (!cameraRef?.value || !orbitControlsRef?.value) {
+    Logger.error('CAMERA_PRESETS', 'Camera or controls not available', {
+      camera: !!cameraRef?.value,
+      controls: !!orbitControlsRef?.value,
+      cameraRef: !!cameraRef,
+      orbitControlsRef: !!orbitControlsRef
+    })
     return
   }
-  
-  if (!canUsePresets.value) {
-    Logger.error('CAMERA_PRESETS', 'Camera or controls not available for preset application')
-    return
-  }
-  
-  Logger.log('CAMERA_PRESETS', `Applying preset: ${preset.name}`, preset)
-  
+
+  // Direct assignment test (without animation)
   try {
-    await animateCamera(preset)
-    Logger.log('CAMERA_PRESETS', `Successfully applied preset: ${preset.name}`)
+    const camera = cameraRef.value
+    const controls = orbitControlsRef.value
+    
+    Logger.log('CAMERA_PRESETS', 'Camera object info:', {
+      type: camera.constructor.name,
+      hasPosition: !!camera.position,
+      currentPos: {
+        x: camera.position.x,
+        y: camera.position.y,
+        z: camera.position.z
+      }
+    })
+    
+    Logger.log('CAMERA_PRESETS', 'Controls object info:', {
+      type: controls.constructor.name,
+      hasTarget: !!controls.target,
+      hasUpdate: typeof controls.update === 'function',
+      currentTarget: controls.target ? {
+        x: controls.target.x,
+        y: controls.target.y,
+        z: controls.target.z
+      } : null
+    })
+    
+    // Direct assignment for testing
+    camera.position.set(preset.position.x, preset.position.y, preset.position.z)
+    if (controls.target) {
+      controls.target.set(preset.target.x, preset.target.y, preset.target.z)
+    }
+    if (controls.update) {
+      controls.update()
+    }
+    
+    currentPreset.value = preset.id
+    Logger.log('CAMERA_PRESETS', `✅ Direct preset applied: ${preset.name}`)
+    
   } catch (error) {
-    Logger.error('CAMERA_PRESETS', `Error applying preset ${preset.name}`, error)
+    Logger.error('CAMERA_PRESETS', `❌ Error applying preset ${preset.name}`, error)
   }
 }
 
@@ -248,6 +351,18 @@ const resetCamera = async () => {
               {{ canUsePresets ? 'Ready' : 'Not Available' }}
             </span>
           </div>
+          <div class="status-item">
+            <span class="label">Debug:</span>
+            <span class="value">{{ debugStatus.hasCamera ? '📷' : '❌' }} {{ debugStatus.hasControls ? '🎮' : '❌' }}</span>
+          </div>
+        </div>
+
+        <!-- Test Section -->
+        <div class="test-section">
+          <div class="section-title">Debug Test</div>
+          <button class="test-btn" @click="testClick">
+            🧪 Test Click Event
+          </button>
         </div>
 
         <!-- Preset Buttons -->
@@ -350,7 +465,7 @@ const resetCamera = async () => {
   position: absolute;
   top: 50px;
   right: 0;
-  width: 460px;
+  width: 400px;
   max-height: 75vh;
   background: rgba(0, 8, 16, 0.97);
   border: 2px solid rgba(255, 102, 0, 0.6);
@@ -554,6 +669,34 @@ const resetCamera = async () => {
   color: #cc9966;
   font-size: 11px;
   opacity: 0.9;
+}
+
+/* Test Section */
+.test-section {
+  margin-bottom: 18px;
+  text-align: center;
+  padding: 12px;
+  background: rgba(0, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 6px;
+}
+
+.test-btn {
+  background: rgba(0, 255, 255, 0.1);
+  border: 1px solid rgba(0, 255, 255, 0.4);
+  color: #00ffff;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.test-btn:hover {
+  background: rgba(0, 255, 255, 0.2);
+  border-color: rgba(0, 255, 255, 0.6);
 }
 
 /* Reset Section */
