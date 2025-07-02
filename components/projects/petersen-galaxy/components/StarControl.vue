@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { Logger } from '../../../utils/logger'
 
 // Star cluster control state
 const showStars = ref(true)
@@ -41,7 +42,7 @@ const handleStarClick = (orbitKey: string, starIndex: number) => {
   const orbit = orbitConfig[orbitKey as keyof typeof orbitConfig]
   orbit.stars[starIndex].active = !orbit.stars[starIndex].active
   // Future: Add star-specific effects or interactions
-  console.log(`Star ${orbit.stars[starIndex].id} in ${orbit.name} ${orbit.stars[starIndex].active ? 'activated' : 'deactivated'}`)
+  Logger.log('STAR_CONTROL', `Star ${orbit.stars[starIndex].id} in ${orbit.name} ${orbit.stars[starIndex].active ? 'activated' : 'deactivated'}`)
 }
 
 // Expose state to parent component

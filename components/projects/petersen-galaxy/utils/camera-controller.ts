@@ -1,5 +1,6 @@
 import { Vector3 } from 'three'
 import type { Ref } from 'vue'
+import { Logger } from '../../../utils/logger'
 
 /**
  * Camera controller utility for adjusting camera position and angle
@@ -27,7 +28,7 @@ export class CameraController {
   adjustForGrid(onComplete?: () => void): void {
     // Prevent overlapping animations
     if (this.isAnimating) {
-      console.log('Animation already in progress, skipping...')
+      Logger.log('CAMERA_CONTROLLER', 'Animation already in progress, skipping...')
       return
     }
 
@@ -53,7 +54,7 @@ export class CameraController {
         // Check if camera is already at target position (within tolerance)
         if (this.isAtTargetPosition(currentPos, targetPos)) {
           // Camera is already in position, no animation needed
-          console.log('Camera already at target position - showing grid immediately')
+          Logger.log('CAMERA_CONTROLLER', 'Camera already at target position - showing grid immediately')
           if (this.onComplete) {
             this.onComplete()
           }
@@ -89,7 +90,7 @@ export class CameraController {
     const elevationMatch = Math.abs(currentElevation - targetElevation) <= angleTolerance
     const directDistanceMatch = directDistance <= directDistanceTolerance
     
-    console.log(`Camera position check:
+    Logger.throttle('CAMERA_CONTROLLER', `Camera position check:
       Current distance: ${currentDistance.toFixed(2)} AU (target: ${targetDistance.toFixed(2)} AU)
       Current elevation: ${currentElevation.toFixed(1)}° (target: ${targetElevation.toFixed(1)}°)
       Direct 3D distance: ${directDistance.toFixed(2)} AU

@@ -74,7 +74,7 @@ const updateCameraInfo = () => {
       return
     }
   } catch (error) {
-    console.error('Error accessing camera:', error)
+    Logger.error('CAMERA_INFO', 'Error accessing camera for position calculation', error)
   }
   
   // Fallback: use stable values if camera is not available
