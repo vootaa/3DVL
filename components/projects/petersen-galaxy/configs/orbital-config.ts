@@ -4,7 +4,7 @@ import { Color } from 'three'
 export const orbitalConfig = {
   // Particle counts
   totalCount: 6000, // Balanced for clear rings and performance
-  orbitParticleRatio: 0.7, // 70% orbital, 30% scattered
+  orbitParticleRatio: 0.8, // 80% orbital, 20% scattered
   
   // Orbital distribution ratios (optimized: middle +50%, outer +100%)
   orbitDistribution: {
