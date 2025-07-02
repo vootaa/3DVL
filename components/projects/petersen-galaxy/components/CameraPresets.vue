@@ -274,7 +274,7 @@ const resetCamera = () => {
 
 .presets-toggle {
   background: rgba(0, 12, 20, 0.9);
-  border: 2px solid #00ccff; /* 统一蓝色主色调 */
+  border: 1px solid #00ccff; /* 统一边框大小 */
   color: #00ccff; /* 统一蓝色主色调 */
   padding: 8px 16px;
   border-radius: 6px;
@@ -308,7 +308,7 @@ const resetCamera = () => {
   width: 480px;
   max-height: 75vh;
   background: rgba(0, 8, 16, 0.97);
-  border: 2px solid rgba(0, 204, 255, 0.6); /* 统一蓝色主色调 */
+  border: 1px solid rgba(0, 204, 255, 0.6); /* 统一边框大小 */
   border-radius: 10px;
   overflow-y: auto;
   animation: slideDown 0.3s ease;

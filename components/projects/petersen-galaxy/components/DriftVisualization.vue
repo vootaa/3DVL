@@ -3,12 +3,12 @@ import { ref, computed, inject, onMounted, onUnmounted } from 'vue'
 import type { Ref } from 'vue'
 import { Logger } from '../../../utils/logger'
 
-// Drift visualization state
-const isDriftVisible = ref(false)
+// Drift visualization state - 默认开启
+const isDriftVisible = ref(true)
 const isInitialized = ref(false)
 
 // Inject drift controller from parent
-const driftController = inject<Ref<any>>('driftController')
+const driftController = inject<any>('driftController')
 
 // Toggle drift visualization
 const toggleDriftVisualization = () => {
@@ -16,7 +16,7 @@ const toggleDriftVisualization = () => {
   
   isDriftVisible.value = !isDriftVisible.value
   
-  if (driftController?.value) {
+  if (driftController) {
     if (isDriftVisible.value) {
       enableDriftVisualization()
     } else {
@@ -29,22 +29,22 @@ const toggleDriftVisualization = () => {
 
 // Enable drift trail visualization
 const enableDriftVisualization = () => {
-  if (!driftController?.value) return
+  if (!driftController) return
   
   try {
     // Enable particle trails
-    if (driftController.value.enableTrails) {
-      driftController.value.enableTrails(true)
+    if (driftController.enableTrails) {
+      driftController.enableTrails(true)
     }
     
     // Increase particle visibility
-    if (driftController.value.setTrailIntensity) {
-      driftController.value.setTrailIntensity(0.8)
+    if (driftController.setTrailIntensity) {
+      driftController.setTrailIntensity(0.8)
     }
     
     // Show velocity vectors
-    if (driftController.value.showVelocityVectors) {
-      driftController.value.showVelocityVectors(true)
+    if (driftController.showVelocityVectors) {
+      driftController.showVelocityVectors(true)
     }
     
     Logger.log('DRIFT_VISUALIZATION', 'Drift trails and velocity vectors enabled')
@@ -55,17 +55,17 @@ const enableDriftVisualization = () => {
 
 // Disable drift trail visualization
 const disableDriftVisualization = () => {
-  if (!driftController?.value) return
+  if (!driftController) return
   
   try {
     // Disable particle trails
-    if (driftController.value.enableTrails) {
-      driftController.value.enableTrails(false)
+    if (driftController.enableTrails) {
+      driftController.enableTrails(false)
     }
     
     // Hide velocity vectors
-    if (driftController.value.showVelocityVectors) {
-      driftController.value.showVelocityVectors(false)
+    if (driftController.showVelocityVectors) {
+      driftController.showVelocityVectors(false)
     }
     
     Logger.log('DRIFT_VISUALIZATION', 'Drift trails and velocity vectors disabled')
@@ -76,20 +76,24 @@ const disableDriftVisualization = () => {
 
 // Computed status
 const driftStatus = computed(() => {
-  if (!driftController?.value) return 'Not Available'
+  if (!driftController) return 'Not Available'
   return isDriftVisible.value ? 'Active' : 'Inactive'
 })
 
 const canUseDrift = computed(() => {
-  return !!(driftController?.value)
+  return !!(driftController)
 })
 
 onMounted(() => {
   // Check if drift controller is available
   setTimeout(() => {
     isInitialized.value = true
-    if (driftController?.value) {
+    if (driftController) {
       Logger.log('DRIFT_VISUALIZATION', 'Drift controller detected and ready')
+      // 默认启用漂移轨迹
+      if (isDriftVisible.value) {
+        enableDriftVisualization()
+      }
     } else {
       Logger.warn('DRIFT_VISUALIZATION', 'Drift controller not found')
     }

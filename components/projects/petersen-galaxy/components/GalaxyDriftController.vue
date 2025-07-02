@@ -168,7 +168,7 @@ const driftController = {
 
 // Provide galaxy center and drift controller to child components
 provide('galaxyCenter', galaxyCenter)
-provide('driftController', ref(driftController))
+provide('driftController', driftController) // 直接提供对象，不需要包装在ref中
 provide('galaxyDriftData', {
   position: displayDriftPosition,
   velocity: displayDriftVelocity,

@@ -479,7 +479,7 @@ onUnmounted(() => {
 
 .debug-toggle {
   background: rgba(0, 12, 20, 0.9);
-  border: 2px solid #00ccff;
+  border: 1px solid #00ccff; /* 统一边框大小 */
   color: #00ccff;
   padding: 8px 16px;
   border-radius: 6px;
