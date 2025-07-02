@@ -8,11 +8,11 @@ import {
   Float32BufferAttribute,
   Vector3,
 } from 'three'
-import { orbitalConfig } from './orbital-config'
+import { orbitalConfig } from '../configs/orbital-config'
 
 // Import shaders
-import starVertexShader from './shaders/star-vertex.glsl'
-import starFragmentShader from './shaders/star-fragment.glsl'
+import starVertexShader from '../shaders/star-vertex.glsl'
+import starFragmentShader from '../shaders/star-fragment.glsl'
 
 // Inject galaxy center position
 const galaxyCenter = inject('galaxyCenter', ref(new Vector3(0, 0, 0)))

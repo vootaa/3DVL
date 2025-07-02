@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from 'three'
 import { ref, provide, watch, onMounted } from 'vue'
-import OrbitalSystem from './OrbitalSystem.vue'
-import StarCluster from './StarCluster.vue'
-import StarControl from './StarControl.vue'
-import GridControl from './GridControl.vue'
-import CameraInfo from './CameraInfo.vue'
-import GalaxyDriftController from './GalaxyDriftController.vue'
+import OrbitalSystem from './components/OrbitalSystem.vue'
+import StarCluster from './components/StarCluster.vue'
+import StarControl from './components/StarControl.vue'
+import GridControl from './components/GridControl.vue'
+import CameraInfo from './components/CameraInfo.vue'
+import GalaxyDriftController from './components/GalaxyDriftController.vue'
 import { CameraController } from './utils/camera-controller'
 
 const gl = {

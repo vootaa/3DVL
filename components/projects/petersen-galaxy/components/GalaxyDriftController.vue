@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, provide } from 'vue'
 import { Vector3 } from 'three'
 import { useRenderLoop } from '@tresjs/core'
-import { galaxyDriftConfig, createInitialDriftState, type GalaxyDriftState } from './galaxy-drift-config'
+import { galaxyDriftConfig, createInitialDriftState, type GalaxyDriftState } from '../configs/galaxy-drift-config'
 
 // Galaxy drift state
 const driftState = ref<GalaxyDriftState>(createInitialDriftState())

@@ -2,10 +2,10 @@
 import { AdditiveBlending, Points, ShaderMaterial, Vector3 } from 'three'
 import { ref, inject, computed } from 'vue'
 import { useRenderLoop } from '@tresjs/core'
-import { orbitalConfig, orbitalColorConfig } from './orbital-config'
+import { orbitalConfig, orbitalColorConfig } from '../configs/orbital-config'
 
-import vertexShader from './shaders/orbital-vertex.glsl'
-import fragmentShader from './shaders/orbital-fragment.glsl'
+import vertexShader from '../shaders/orbital-vertex.glsl'
+import fragmentShader from '../shaders/orbital-fragment.glsl'
 
 // Inject galaxy center position
 const galaxyCenter = inject('galaxyCenter', ref(new Vector3(0, 0, 0)))
