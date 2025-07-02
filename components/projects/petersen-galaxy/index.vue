@@ -7,6 +7,7 @@ import StarControl from './components/StarControl.vue'
 import GridControl from './components/GridControl.vue'
 import CameraInfo from './components/CameraInfo.vue'
 import GalaxyDriftController from './components/GalaxyDriftController.vue'
+import DriftTrailRenderer from './components/DriftTrailRenderer.vue'
 import DriftMonitor from './components/DriftMonitor.vue'
 import PerformanceMonitor from './components/PerformanceMonitor.vue'
 import CameraPresets from './components/CameraPresets.vue'
@@ -94,6 +95,9 @@ watch(
     <TresCanvas v-bind="gl">
       <!-- Renderer stats collector (invisible component for performance monitoring) -->
       <RendererStatsCollector />
+      
+      <!-- Drift trail renderer (visualizes drift trajectory) -->
+      <DriftTrailRenderer />
       
       <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
 

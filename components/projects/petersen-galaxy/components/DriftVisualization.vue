@@ -11,7 +11,15 @@ const driftController = inject<any>('driftController')
 
 // Toggle drift visualization
 const toggleDriftVisualization = () => {
-  if (!canUseDrift.value) return // Don't toggle if disabled
+  if (!canUseDrift.value) {
+    Logger.warn('DRIFT_VISUALIZATION', 'Drift controller not available - cannot toggle trails', {
+      driftController: !!driftController,
+      isInitialized: isInitialized.value
+    })
+    // Still allow the visual toggle for debugging
+    isDriftVisible.value = !isDriftVisible.value
+    return
+  }
   
   isDriftVisible.value = !isDriftVisible.value
   
@@ -24,6 +32,13 @@ const toggleDriftVisualization = () => {
   }
   
   Logger.log('DRIFT_VISUALIZATION', `Drift visualization ${isDriftVisible.value ? 'enabled' : 'disabled'}`)
+  
+  // Provide user feedback about what to expect
+  if (isDriftVisible.value && canUseDrift.value) {
+    setTimeout(() => {
+      Logger.log('DRIFT_VISUALIZATION', 'Drift trails enabled! Look for glowing cyan-blue particles that trace the galaxy center movement. It may take a few seconds for the trail to become visible.')
+    }, 1000)
+  }
 }
 
 // Enable drift trail visualization
@@ -73,14 +88,21 @@ const disableDriftVisualization = () => {
   }
 }
 
-// Computed status
-const driftStatus = computed(() => {
-  if (!driftController) return 'Not Available'
-  return isDriftVisible.value ? 'Active' : 'Inactive'
-})
 
 const canUseDrift = computed(() => {
-  return !!(driftController)
+  const hasController = !!(driftController)
+  const hasTrailMethods = hasController && 
+    typeof driftController.enableTrails === 'function' &&
+    typeof driftController.showVelocityVectors === 'function'
+  
+  Logger.throttle('DRIFT_VISUALIZATION_STATUS', 'Drift capability check', {
+    hasController,
+    hasTrailMethods,
+    driftControllerType: typeof driftController,
+    isInitialized: isInitialized.value
+  }, 5000) // Log every 5 seconds
+  
+  return hasController && hasTrailMethods
 })
 
 onMounted(() => {
@@ -112,15 +134,20 @@ onUnmounted(() => {
     class="drift-control" 
     @click="toggleDriftVisualization" 
     :class="{ active: isDriftVisible, disabled: !canUseDrift }"
-    :title="canUseDrift ? 'Toggle drift trajectory visualization' : 'Drift controller not available'"
+    :title="canUseDrift ? 'Toggle drift trajectory visualization. When ON, you will see glowing trail particles following the galaxy center movement.' : 'Drift controller not available - check console for details'"
   >
     <div class="control-label">DRIFT TRAILS</div>
-    <div class="control-value">{{ isDriftVisible ? 'ON' : 'OFF' }}</div>
+    <div class="control-value">
+      {{ !canUseDrift ? 'N/A' : (isDriftVisible ? 'ON' : 'OFF') }}
+    </div>
+    <!-- Status indicator for debugging -->
+    <div class="status-indicator" v-if="!canUseDrift">⚠</div>
   </div>
 </template>
 
 <style lang="css" scoped>
 .drift-control {
+  position: relative;
   background: rgba(0, 12, 20, 0.85);
   border: 1px solid rgba(0, 204, 255, 0.4);
   border-radius: 8px;
@@ -169,12 +196,12 @@ onUnmounted(() => {
 }
 
 .drift-control.disabled {
-  opacity: 0.5;
+  opacity: 0.7;
   cursor: not-allowed;
-  border-color: rgba(0, 204, 255, 0.2);
-  color: rgba(0, 204, 255, 0.4);
-  background: rgba(0, 12, 20, 0.6);
-  pointer-events: none;
+  border-color: rgba(255, 100, 100, 0.4);
+  color: rgba(255, 150, 150, 0.6);
+  background: rgba(20, 5, 5, 0.6);
+  /* Remove pointer-events: none to allow click debugging */
 }
 
 .control-label {
@@ -187,6 +214,15 @@ onUnmounted(() => {
   line-height: 1em;
   margin: 2px 0;
   text-align: right;
+}
+
+.status-indicator {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 12px;
+  color: #ff9999;
+  opacity: 0.8;
 }
 
 @media only screen and (max-width: 900px) {
