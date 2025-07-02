@@ -75,10 +75,10 @@ watch(
       <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
 
       <!-- Subtle ambient lighting for better 3D perception -->
-      <TresAmbientLight :intensity="0.05" color="#004488" />
+      <TresAmbientLight :intensity="0.08" color="#004488" />
 
       <!-- Grid Helper - shown only after camera adjustment -->
-      <TresGridHelper v-if="gridControlRef?.showGrid && showGridAfterCameraMove" :args="[12, 12, '#003366', '#002244']"
+      <TresGridHelper v-if="gridControlRef?.showGrid && showGridAfterCameraMove" :args="[16, 16, '#003366', '#002244']"
         :position="[0, -4.2, 0]" />
 
       <OrbitalSystem />

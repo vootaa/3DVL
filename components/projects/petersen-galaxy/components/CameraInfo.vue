@@ -100,7 +100,8 @@ onUnmounted(() => {
 
 <template>
   <div class="camera-info">
-    <div class="info-header">CAMERA</div>
+    <div class="info-header">CAMERA CONTROL</div>
+    
     <div class="info-content">
       <!-- Distance row - centered -->
       <div class="info-row distance-row">
@@ -119,6 +120,11 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Camera Controls Instructions - after camera info -->
+    <div class="controls-instructions">
+      <span class="control-hint">Drag to orbit • Scroll to zoom</span>
     </div>
     
     <!-- Galaxy Drift Section -->
@@ -304,6 +310,24 @@ onUnmounted(() => {
   color: #ffcc99;
 }
 
+/* Camera controls section */
+.controls-instructions {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 6px 0;
+  font-size: 0.75em;
+  opacity: 0.8;
+  border-top: 1px solid rgba(119, 255, 170, 0.2);
+  padding-top: 6px;
+}
+
+.control-hint {
+  color: #77ffaa;
+  text-align: center;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
 /* Responsive design */
 @media only screen and (max-width: 900px) {
   .camera-info {
@@ -319,6 +343,16 @@ onUnmounted(() => {
 
   .info-label {
     font-size: 0.9em;
+  }
+
+  .controls-instructions {
+    font-size: 0.65em;
+    margin: 6px 0 4px 0;
+    padding-top: 4px;
+  }
+
+  .control-hint {
+    letter-spacing: 0.3px;
   }
 }
 </style>
