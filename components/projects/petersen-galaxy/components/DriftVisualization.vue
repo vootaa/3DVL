@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, inject, onMounted, onUnmounted } from 'vue'
-import type { Ref } from 'vue'
 import { Logger } from '../../../utils/logger'
 
-// Drift visualization state - 默认开启
+// Drift visualization state - default enabled
 const isDriftVisible = ref(true)
 const isInitialized = ref(false)
 
@@ -90,7 +89,7 @@ onMounted(() => {
     isInitialized.value = true
     if (driftController) {
       Logger.log('DRIFT_VISUALIZATION', 'Drift controller detected and ready')
-      // 默认启用漂移轨迹
+      // Enable drift trails by default
       if (isDriftVisible.value) {
         enableDriftVisualization()
       }
@@ -123,10 +122,10 @@ onUnmounted(() => {
 <style lang="css" scoped>
 .drift-control {
   background: rgba(0, 12, 20, 0.85);
-  border: 1px solid rgba(0, 204, 255, 0.4); /* 统一蓝色主色调 */
+  border: 1px solid rgba(0, 204, 255, 0.4);
   border-radius: 8px;
   padding: 10px 15px;
-  color: #00CCFF; /* 统一蓝色主色调 */
+  color: #00CCFF;
   font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
   font-weight: 500;
   font-variant-numeric: slashed-zero tabular-nums;
@@ -145,7 +144,7 @@ onUnmounted(() => {
   transition: all 0.2s ease;
   z-index: 100;
   box-shadow: 0 0 15px rgba(0, 204, 255, 0.2);
-  /* Helmet concave/convex effect - 统一蓝色风格 */
+  /* Helmet concave/convex effect */
   background-image: 
     linear-gradient(45deg, rgba(0, 204, 255, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.2) 100%),
     radial-gradient(circle at 70% 30%, rgba(0, 204, 255, 0.05) 0%, transparent 70%);
@@ -175,7 +174,7 @@ onUnmounted(() => {
   border-color: rgba(0, 204, 255, 0.2);
   color: rgba(0, 204, 255, 0.4);
   background: rgba(0, 12, 20, 0.6);
-  pointer-events: none; /* 确保禁用时无法点击 */
+  pointer-events: none;
 }
 
 .control-label {

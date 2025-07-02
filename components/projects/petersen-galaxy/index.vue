@@ -53,13 +53,8 @@ const orbitControlsConfig = {
 }
 
 onMounted(() => {
-  console.log('🚀 Galaxy component mounted')
-  
   // Use nextTick to ensure TresCanvas components are ready
-  nextTick(() => {
-    console.log('📸 After nextTick - Camera ref:', !!cameraRef.value)
-    console.log('🎮 After nextTick - Controls ref:', !!orbitControlsRef.value)
-    
+  nextTick(() => { 
     // Initialize camera controller
     cameraController = new CameraController(cameraRef, orbitControlsRef)
     

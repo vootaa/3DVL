@@ -2,7 +2,7 @@
 import { ref, inject, computed, onMounted, onUnmounted } from 'vue'
 import { Logger } from '../../../utils/logger'
 import { LoggingConfig } from '../configs/logging-config'
-import { formatWithUnit, getBestUnit } from '../configs/astronomical-units'
+import { formatWithUnit} from '../configs/astronomical-units'
 
 // Type definitions for injected data
 interface GalaxyDriftData {
@@ -16,7 +16,6 @@ interface GalaxyCenter {
   value: { x: number; y: number; z: number }
 }
 
-// Inject galaxy drift data with proper typing
 const galaxyDriftData = inject<GalaxyDriftData>('galaxyDriftData', null as any)
 const galaxyCenter = inject<GalaxyCenter>('galaxyCenter', null as any)
 
@@ -261,16 +260,16 @@ const updateDebugInfo = () => {
 // Computed values for display
 const driftStatusColor = computed(() => {
   switch (debugInfo.value.diagnosis) {
-    case 'ACTIVE_DRIFT': return '#00ff00'
-    case 'NO_VELOCITY': return '#ff6600'
-    case 'NO_MOVEMENT': return '#ff0000'
-    case 'INJECTION_FAILED': return '#990000'
-    default: return '#ffff00'
+    case 'ACTIVE_DRIFT': return '#00ccff'
+    case 'NO_VELOCITY': return '#6699ff'
+    case 'NO_MOVEMENT': return '#4477ff'
+    case 'INJECTION_FAILED': return '#2255bb'
+    default: return '#99bbff'
   }
 })
 
 const injectionStatusColor = computed(() => {
-  return debugInfo.value.injectionStatus === 'SUCCESS' ? '#00ff00' : '#ff0000'
+  return debugInfo.value.injectionStatus === 'SUCCESS' ? '#00ccff' : '#4477ff'
 })
 
 // Function to change unit preferences
@@ -327,7 +326,7 @@ onUnmounted(() => {
           </div>
           <div class="status-item">
             <span class="label">Is Drifting:</span>
-            <span class="value" :style="{ color: debugInfo.isDrifting ? '#00ff00' : '#ff0000' }">
+            <span class="value" :style="{ color: debugInfo.isDrifting ? '#00ccff' : '#4477ff' }">
               {{ debugInfo.isDrifting ? 'YES' : 'NO' }}
             </span>
           </div>
@@ -479,7 +478,7 @@ onUnmounted(() => {
 
 .debug-toggle {
   background: rgba(0, 12, 20, 0.9);
-  border: 1px solid #00ccff; /* 统一边框大小 */
+  border: 1px solid #00ccff;
   color: #00ccff;
   padding: 8px 16px;
   border-radius: 6px;
@@ -509,7 +508,7 @@ onUnmounted(() => {
   max-height: 85vh;
   background: rgba(0, 8, 16, 0.97);
   /* Darker background */
-  border: 2px solid rgba(0, 204, 255, 0.6);
+  border: 1px solid rgba(0, 204, 255, 0.6);
   border-radius: 10px;
   overflow-y: auto;
   animation: slideDown 0.3s ease;
@@ -582,24 +581,24 @@ onUnmounted(() => {
 }
 
 .section-title {
-  color: #ffaa00;
+  color: #00ccff; /* 统一蓝色主色调 */
   font-weight: 700;
   font-size: 13px;
   margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  text-shadow: 0 0 6px rgba(255, 170, 0, 0.4);
-  border-left: 3px solid #ffaa00;
+  text-shadow: 0 0 6px rgba(0, 204, 255, 0.4); /* 统一蓝色主色调 */
+.section-title {
+  color: #00ccff; /* 统一蓝色主色调 */
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 6px rgba(0, 204, 255, 0.4); /* 统一蓝色主色调 */
+  border-left: 3px solid #00ccff; /* 统一蓝色主色调 */
   padding-left: 8px;
 }
-
-.status-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  font-size: 12px;
-  padding: 4px 0;
   transition: all 0.2s ease;
 }
 
@@ -693,7 +692,7 @@ onUnmounted(() => {
   padding: 4px;
 }
 
-/* Unit reference styles - 采用与 Performance Tips 一致的样式 */
+/* Unit reference styles */
 .unit-reference {
   display: flex;
   flex-direction: column;
@@ -708,30 +707,30 @@ onUnmounted(() => {
   border-radius: 4px;
   font-size: 10px;
   opacity: 0.7;
-  background: rgba(255, 170, 0, 0.05);
+  background: rgba(0, 204, 255, 0.05); /* 统一蓝色背景 */
   border: 1px solid transparent;
   transition: all 0.3s ease;
 }
 
 .unit-item:hover {
   opacity: 1;
-  background: rgba(255, 170, 0, 0.1);
-  border-color: rgba(255, 170, 0, 0.2);
+  background: rgba(0, 204, 255, 0.1); /* 统一蓝色背景 */
+  border-color: rgba(0, 204, 255, 0.2); /* 统一蓝色边框 */
 }
 
 .unit-symbol {
-  color: #ffcc44;
+  color: #66ddff; /* 统一蓝色主色调 */
   font-weight: 700;
   font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
   min-width: 45px;
   margin-right: 8px;
   text-align: left;
   font-size: 10px;
-  text-shadow: 0 0 4px rgba(255, 204, 68, 0.3);
+  text-shadow: 0 0 4px rgba(0, 204, 255, 0.3); /* 统一蓝色阴影 */
 }
 
 .unit-name {
-  color: #ffdd88;
+  color: #99ddff; /* 统一蓝色主色调 */
   font-size: 10px;
   opacity: 0.9;
   flex-grow: 1;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, inject, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
+import { ref, inject, computed, onMounted, onUnmounted } from 'vue'
 import type { PerspectiveCamera } from 'three'
 import type { Ref } from 'vue'
 import { Logger } from '../../../utils/logger'
@@ -198,7 +198,7 @@ const resetCamera = () => {
           </div>
           <div class="status-item">
             <span class="label">Controls:</span>
-            <span class="value" :style="{ color: canUsePresets ? '#00ff00' : '#ff0000' }">
+            <span class="value" :style="{ color: canUsePresets ? '#00ccff' : '#4477ff' }">
               {{ canUsePresets ? 'Ready' : 'Not Available' }}
             </span>
           </div>
@@ -274,8 +274,8 @@ const resetCamera = () => {
 
 .presets-toggle {
   background: rgba(0, 12, 20, 0.9);
-  border: 1px solid #00ccff; /* 统一边框大小 */
-  color: #00ccff; /* 统一蓝色主色调 */
+  border: 1px solid #00ccff;
+  color: #00ccff;
   padding: 8px 16px;
   border-radius: 6px;
   font-family: inherit;
@@ -287,13 +287,13 @@ const resetCamera = () => {
 }
 
 .presets-toggle:hover:not(:disabled) {
-  background: rgba(255, 102, 0, 0.1);
-  box-shadow: 0 0 10px rgba(255, 102, 0, 0.3);
+  background: rgba(0, 204, 255, 0.1);
+  box-shadow: 0 0 10px rgba(0, 204, 255, 0.3);
 }
 
 .presets-toggle.active {
-  background: rgba(255, 102, 0, 0.2);
-  box-shadow: 0 0 15px rgba(255, 102, 0, 0.5);
+  background: rgba(0, 204, 255, 0.2);
+  box-shadow: 0 0 15px rgba(0, 204, 255, 0.5);
 }
 
 .presets-toggle:disabled {
@@ -308,11 +308,11 @@ const resetCamera = () => {
   width: 480px;
   max-height: 75vh;
   background: rgba(0, 8, 16, 0.97);
-  border: 1px solid rgba(0, 204, 255, 0.6); /* 统一边框大小 */
+  border: 1px solid rgba(0, 204, 255, 0.6);
   border-radius: 10px;
   overflow-y: auto;
   animation: slideDown 0.3s ease;
-  box-shadow: 0 8px 32px rgba(255, 102, 0, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 204, 255, 0.15);
   backdrop-filter: blur(8px);
 }
 
@@ -332,22 +332,22 @@ const resetCamera = () => {
   justify-content: space-between;
   align-items: center;
   padding: 14px 18px;
-  border-bottom: 1px solid rgba(255, 102, 0, 0.4);
-  background: linear-gradient(135deg, rgba(255, 102, 0, 0.15), rgba(255, 80, 0, 0.1));
+  border-bottom: 1px solid rgba(0, 204, 255, 0.4);
+  background: linear-gradient(135deg, rgba(0, 204, 255, 0.15), rgba(0, 150, 200, 0.1));
 }
 
 .presets-header h3 {
   margin: 0;
-  color: #66ddff; /* 统一蓝色主色调 */
+  color: #66ddff;
   font-size: 15px;
   font-weight: 700;
-  text-shadow: 0 0 8px rgba(0, 204, 255, 0.3); /* 统一蓝色主色调 */
+  text-shadow: 0 0 8px rgba(0, 204, 255, 0.3);
 }
 
 .close-btn {
   background: none;
   border: none;
-  color: #00ccff; /* 统一蓝色主色调 */
+  color: #00ccff;
   font-size: 20px;
   cursor: pointer;
   padding: 0;
@@ -372,7 +372,7 @@ const resetCamera = () => {
 .current-status {
   margin-bottom: 18px;
   padding-bottom: 14px;
-  border-bottom: 1px solid rgba(255, 102, 0, 0.25);
+  border-bottom: 1px solid rgba(0, 204, 255, 0.25);
 }
 
 .status-item {
@@ -388,7 +388,7 @@ const resetCamera = () => {
 }
 
 .label {
-  color: #99ddff; /* 统一蓝色主色调 */
+  color: #99ddff;
   font-weight: 600;
 }
 
@@ -405,14 +405,14 @@ const resetCamera = () => {
 }
 
 .section-title {
-  color: #00ccff; /* 统一蓝色主色调 */
+  color: #00ccff;
   font-weight: 700;
   font-size: 13px;
   margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  text-shadow: 0 0 6px rgba(0, 204, 255, 0.4); /* 统一蓝色主色调 */
-  border-left: 3px solid #00ccff; /* 统一蓝色主色调 */
+  text-shadow: 0 0 6px rgba(0, 204, 255, 0.4);
+  border-left: 3px solid #00ccff;
   padding-left: 8px;
 }
 
@@ -426,8 +426,8 @@ const resetCamera = () => {
   display: flex;
   flex-direction: column;
   padding: 14px;
-  background: rgba(255, 102, 0, 0.05);
-  border: 1px solid rgba(255, 102, 0, 0.2);
+  background: rgba(0, 204, 255, 0.05);
+  border: 1px solid rgba(0, 204, 255, 0.2);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -437,16 +437,16 @@ const resetCamera = () => {
 }
 
 .preset-btn:hover:not(:disabled) {
-  background: rgba(255, 102, 0, 0.15);
-  border-color: rgba(255, 102, 0, 0.4);
+  background: rgba(0, 204, 255, 0.15);
+  border-color: rgba(0, 204, 255, 0.4);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 102, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 204, 255, 0.2);
 }
 
 .preset-btn.active {
-  background: rgba(255, 102, 0, 0.25);
-  border-color: rgba(255, 102, 0, 0.6);
-  box-shadow: 0 0 15px rgba(255, 102, 0, 0.4);
+  background: rgba(0, 204, 255, 0.25);
+  border-color: rgba(0, 204, 255, 0.6);
+  box-shadow: 0 0 15px rgba(0, 204, 255, 0.4);
 }
 
 .preset-btn:disabled {
@@ -466,8 +466,8 @@ const resetCamera = () => {
 }
 
 .preset-shortcut {
-  background: rgba(255, 102, 0, 0.2);
-  color: #ff8800;
+  background: rgba(0, 204, 255, 0.2);
+  color: #66ddff;
   font-size: 10px;
   font-weight: 700;
   padding: 2px 6px;
@@ -481,14 +481,14 @@ const resetCamera = () => {
 }
 
 .preset-name {
-  color: #ff8800;
+  color: #66ddff;
   font-weight: 600;
   font-size: 13px;
   margin-bottom: 4px;
 }
 
 .preset-description {
-  color: #cc9966;
+  color: #99ccff;
   font-size: 11px;
   opacity: 0.9;
   margin-bottom: 4px;
@@ -496,7 +496,7 @@ const resetCamera = () => {
 }
 
 .preset-duration {
-  color: #ff9966;
+  color: #99bbff;
   font-size: 10px;
   opacity: 0.7;
   font-style: italic;
@@ -510,8 +510,8 @@ const resetCamera = () => {
 
 .reset-btn {
   background: rgba(0, 12, 20, 0.8);
-  border: 1px solid rgba(255, 102, 0, 0.4);
-  color: #ff8800;
+  border: 1px solid rgba(0, 204, 255, 0.4);
+  color: #66ddff;
   padding: 10px 20px;
   border-radius: 6px;
   font-family: inherit;
@@ -522,8 +522,8 @@ const resetCamera = () => {
 }
 
 .reset-btn:hover:not(:disabled) {
-  background: rgba(255, 102, 0, 0.1);
-  border-color: rgba(255, 102, 0, 0.6);
+  background: rgba(0, 204, 255, 0.1);
+  border-color: rgba(0, 204, 255, 0.6);
 }
 
 .reset-btn:disabled {
@@ -533,7 +533,7 @@ const resetCamera = () => {
 
 /* Instructions */
 .instructions-section {
-  border-top: 1px solid rgba(255, 102, 0, 0.25);
+  border-top: 1px solid rgba(0, 204, 255, 0.25);
   padding-top: 12px;
 }
 
@@ -548,9 +548,9 @@ const resetCamera = () => {
   align-items: center;
   font-size: 11px;
   padding: 6px 8px;
-  background: rgba(255, 102, 0, 0.05);
+  background: rgba(0, 204, 255, 0.05);
   border-radius: 4px;
-  border: 1px solid rgba(255, 102, 0, 0.1);
+  border: 1px solid rgba(0, 204, 255, 0.1);
 }
 
 .instruction-icon {
@@ -559,7 +559,7 @@ const resetCamera = () => {
 }
 
 .instruction-text {
-  color: #cc9966;
+  color: #99ccff;
   flex-grow: 1;
 }
 
@@ -573,11 +573,11 @@ const resetCamera = () => {
 }
 
 .presets-panel::-webkit-scrollbar-thumb {
-  background: rgba(255, 102, 0, 0.5);
+  background: rgba(0, 204, 255, 0.5);
   border-radius: 3px;
 }
 
 .presets-panel::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 102, 0, 0.7);
+  background: rgba(0, 204, 255, 0.7);
 }
 </style>

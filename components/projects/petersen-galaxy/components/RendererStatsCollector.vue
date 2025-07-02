@@ -20,26 +20,26 @@ const collectStats = () => {
     const stats = {
       render: {
         calls: info.render?.calls || 0,
-        triangles: info.render?.triangles || 0, // 保持为 0，这对点云项目是正确的
-        points: info.render?.points || 0, // 这是重点数据 - 星系中的点
-        lines: info.render?.lines || 0, // 可能的轨道线或连接线
+        triangles: info.render?.triangles || 0,
+        points: info.render?.points || 0,
+        lines: info.render?.lines || 0,
         frame: info.render?.frame || frameCount,
       },
       memory: {
         geometries: info.memory?.geometries || 0,
-        textures: info.memory?.textures || 0, // 保持为 0，使用程序化着色
+        textures: info.memory?.textures || 0,
       },
       programs: info.programs?.length || 0,
       timestamp: performance.now(),
       frameCount: frameCount,
-      // 项目类型标识
+      // Project type identifier
       projectType: 'point-cloud-galaxy'
     }
     
     ;(window as any).__THREE_RENDERER_INFO__ = stats
     
-    // 调试日志 - 专注于点云和线条数据
-    if (frameCount % 120 === 0) { // 每120帧输出一次 (约2秒)
+    // Debug logging - focus on point cloud and line data
+    if (frameCount % 120 === 0) { // Output every 120 frames (~2 seconds)
       Logger.log('PETERSEN_GALAXY_RENDER_STATS', 'Point cloud render stats updated', {
         drawCalls: stats.render.calls,
         points: stats.render.points,
@@ -59,7 +59,7 @@ const collectStats = () => {
 onMounted(() => {
   Logger.log('RENDERER_STATS_COLLECTOR', 'Point cloud renderer stats collector initialized')
   
-  // 在渲染前收集统计信息
+  // Collect statistics before rendering
   onBeforeRender(collectStats)
 })
 </script>

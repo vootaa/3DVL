@@ -29,25 +29,25 @@ let fpsUpdateTime = performance.now()
 
 // Frame time smoothing
 const frameTimeHistory: number[] = []
-const FRAME_TIME_HISTORY_SIZE = 30 // 保存最近30帧的数据用于平滑
+const FRAME_TIME_HISTORY_SIZE = 30
 let frameTimeSum = 0
 
 // Performance status colors
 const performanceStatusColor = computed(() => {
   const fps = performanceData.value.fps
-  if (fps >= 55) return '#00ff00' // Excellent
-  if (fps >= 45) return '#88ff00' // Good
-  if (fps >= 30) return '#ffaa00' // Fair
-  if (fps >= 20) return '#ff6600' // Poor
-  return '#ff0000' // Critical
+  if (fps >= 55) return '#00ccff' // Excellent
+  if (fps >= 45) return '#66ddff' // Good
+  if (fps >= 30) return '#99bbff' // Fair
+  if (fps >= 20) return '#6699ff' // Poor
+  return '#4477ff' // Critical
 })
 
 const memoryStatusColor = computed(() => {
   const usage = performanceData.value.memory.used / performanceData.value.memory.total
-  if (usage < 0.5) return '#00ff00' // Good
-  if (usage < 0.7) return '#ffaa00' // Warning
-  if (usage < 0.9) return '#ff6600' // High
-  return '#ff0000' // Critical
+  if (usage < 0.5) return '#00ccff' // Good
+  if (usage < 0.7) return '#66ddff' // Warning
+  if (usage < 0.9) return '#99bbff' // High
+  return '#4477ff' // Critical
 })
 
 // Formatted display values
@@ -331,8 +331,8 @@ onUnmounted(() => {
 
 .performance-toggle {
   background: rgba(0, 12, 20, 0.9);
-  border: 1px solid #00ccff; /* 统一边框大小 */
-  color: #00ccff; /* 统一蓝色主色调 */
+  border: 1px solid #00ccff;
+  color: #00ccff;
   padding: 8px 16px;
   border-radius: 6px;
   font-family: inherit;
@@ -344,13 +344,13 @@ onUnmounted(() => {
 }
 
 .performance-toggle:hover {
-  background: rgba(255, 170, 0, 0.1);
-  box-shadow: 0 0 10px rgba(255, 170, 0, 0.3);
+  background: rgba(0, 204, 255, 0.1);
+  box-shadow: 0 0 10px rgba(0, 204, 255, 0.3);
 }
 
 .performance-toggle.active {
-  background: rgba(255, 170, 0, 0.2);
-  box-shadow: 0 0 15px rgba(255, 170, 0, 0.5);
+  background: rgba(0, 204, 255, 0.2);
+  box-shadow: 0 0 15px rgba(0, 204, 255, 0.5);
 }
 
 .performance-panel {
@@ -360,11 +360,11 @@ onUnmounted(() => {
   width: 400px;
   max-height: 70vh;
   background: rgba(0, 8, 16, 0.97);
-  border: 1px solid rgba(0, 204, 255, 0.6); /* 统一边框大小 */
+  border: 1px solid rgba(0, 204, 255, 0.6);
   border-radius: 10px;
   overflow-y: auto;
   animation: slideDown 0.3s ease;
-  box-shadow: 0 8px 32px rgba(0, 204, 255, 0.15); /* 统一蓝色主色调 */
+  box-shadow: 0 8px 32px rgba(0, 204, 255, 0.15);
   backdrop-filter: blur(8px);
 }
 
@@ -384,22 +384,22 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 14px 18px;
-  border-bottom: 1px solid rgba(255, 170, 0, 0.4);
-  background: linear-gradient(135deg, rgba(255, 170, 0, 0.15), rgba(255, 140, 0, 0.1));
+  border-bottom: 1px solid rgba(0, 204, 255, 0.4);
+  background: linear-gradient(135deg, rgba(0, 204, 255, 0.15), rgba(0, 150, 200, 0.1));
 }
 
 .performance-header h3 {
   margin: 0;
-  color: #66ddff; /* 统一蓝色主色调 */
+  color: #66ddff;
   font-size: 15px;
   font-weight: 700;
-  text-shadow: 0 0 8px rgba(255, 170, 0, 0.3);
+  text-shadow: 0 0 8px rgba(0, 204, 255, 0.3);
 }
 
 .close-btn {
   background: none;
   border: none;
-  color: #00ccff; /* 统一蓝色主色调 */
+  color: #00ccff;
   font-size: 20px;
   cursor: pointer;
   padding: 0;
@@ -423,7 +423,7 @@ onUnmounted(() => {
 .performance-section {
   margin-bottom: 18px;
   padding-bottom: 14px;
-  border-bottom: 1px solid rgba(0, 204, 255, 0.25); /* 统一蓝色主色调 */
+  border-bottom: 1px solid rgba(0, 204, 255, 0.25);
 }
 
 .performance-section:last-child {
@@ -432,14 +432,14 @@ onUnmounted(() => {
 }
 
 .section-title {
-  color: #00ccff; /* 统一蓝色主色调 */
+  color: #00ccff;
   font-weight: 700;
   font-size: 13px;
   margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  text-shadow: 0 0 6px rgba(0, 204, 255, 0.4); /* 统一蓝色主色调 */
-  border-left: 3px solid #00ccff; /* 统一蓝色主色调 */
+  text-shadow: 0 0 6px rgba(0, 204, 255, 0.4);
+  border-left: 3px solid #00ccff;
   padding-left: 8px;
 }
 
@@ -454,14 +454,14 @@ onUnmounted(() => {
 }
 
 .status-item:hover {
-  background: rgba(255, 170, 0, 0.05);
+  background: rgba(0, 204, 255, 0.05);
   border-radius: 4px;
   padding: 4px 8px;
 }
 
 .status-item.highlight {
   background: rgba(0, 255, 255, 0.1);
-  border-left: 3px solid #00ffff;
+  border-left: 3px solid #00ccff;
   padding: 6px 12px;
   margin: 4px 0;
   border-radius: 4px;
@@ -471,11 +471,11 @@ onUnmounted(() => {
 @keyframes highlightPulse {
   0%, 100% { 
     background: rgba(0, 255, 255, 0.1);
-    border-color: #00ffff;
+    border-color: #00ccff;
   }
   50% { 
     background: rgba(0, 255, 255, 0.15);
-    border-color: #44ffff;
+    border-color: #66ddff;
   }
 }
 
@@ -486,12 +486,12 @@ onUnmounted(() => {
 }
 
 .status-item.secondary .label {
-  color: #cc9966;
+  color: #99ccff;
   font-size: 10px;
 }
 
 .status-item.secondary .value {
-  color: #998866;
+  color: #99bbff;
   font-style: italic;
   font-size: 10px;
 }
@@ -501,7 +501,7 @@ onUnmounted(() => {
 }
 
 .label {
-  color: #ffcc88;
+  color: #99ccff;
   font-weight: 600;
   flex-shrink: 0;
   margin-right: 16px;
@@ -533,24 +533,24 @@ onUnmounted(() => {
   border-radius: 4px;
   font-size: 11px;
   opacity: 0.5;
-  background: rgba(255, 170, 0, 0.05);
+  background: rgba(0, 204, 255, 0.05);
   border: 1px solid transparent;
   transition: all 0.3s ease;
 }
 
 .tip-item.active {
   opacity: 1;
-  background: rgba(255, 170, 0, 0.15);
-  border-color: rgba(255, 170, 0, 0.3);
+  background: rgba(0, 204, 255, 0.15);
+  border-color: rgba(0, 204, 255, 0.3);
   animation: tipPulse 2s infinite;
 }
 
 @keyframes tipPulse {
   0%, 100% { 
-    box-shadow: 0 0 0 rgba(255, 170, 0, 0.3); 
+    box-shadow: 0 0 0 rgba(0, 204, 255, 0.3); 
   }
   50% { 
-    box-shadow: 0 0 10px rgba(255, 170, 0, 0.3); 
+    box-shadow: 0 0 10px rgba(0, 204, 255, 0.3); 
   }
 }
 
@@ -560,19 +560,19 @@ onUnmounted(() => {
 }
 
 .tip-text {
-  color: #ffdd88;
+  color: #99ddff;
   font-size: 11px;
 }
 
 .performance-footer {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid rgba(255, 170, 0, 0.3);
+  border-top: 1px solid rgba(0, 204, 255, 0.3);
   text-align: center;
 }
 
 .timestamp {
-  color: #cc9966;
+  color: #6699cc;
   font-size: 11px;
   font-style: italic;
   opacity: 0.8;
@@ -592,11 +592,11 @@ onUnmounted(() => {
 }
 
 .performance-panel::-webkit-scrollbar-thumb {
-  background: rgba(255, 170, 0, 0.5);
+  background: rgba(0, 204, 255, 0.5);
   border-radius: 3px;
 }
 
 .performance-panel::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 170, 0, 0.7);
+  background: rgba(0, 204, 255, 0.7);
 }
 </style>

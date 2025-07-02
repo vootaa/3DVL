@@ -220,7 +220,7 @@ onUnmounted(() => {
 }
 
 .angle-value {
-  color: #ffcc00;
+  color: #66ddff;
   font-weight: 600;
   font-size: 11px;
   text-align: right;

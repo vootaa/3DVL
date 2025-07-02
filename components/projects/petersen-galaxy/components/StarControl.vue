@@ -36,10 +36,10 @@ defineExpose({
   top: 100px; /* Position below GridControl (20px + 60px + 20px margin) */
   left: 20px;
   background: rgba(0, 12, 20, 0.85);
-  border: 1px solid rgba(0, 204, 255, 0.4); /* 统一蓝色主色调 */
+  border: 1px solid rgba(0, 204, 255, 0.4);
   border-radius: 8px;
   padding: 10px 15px;
-  color: #00CCFF; /* 统一蓝色主色调 */
+  color: #00CCFF;
   font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
   font-weight: 500;
   font-variant-numeric: slashed-zero tabular-nums;
@@ -58,7 +58,7 @@ defineExpose({
   transition: all 0.2s ease;
   z-index: 100;
   box-shadow: 0 0 15px rgba(0, 204, 255, 0.2);
-  /* Helmet concave/convex effect - 统一蓝色风格 */
+  /* Helmet concave/convex effect */
   background-image: 
     linear-gradient(45deg, rgba(0, 204, 255, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.2) 100%),
     radial-gradient(circle at 70% 30%, rgba(0, 204, 255, 0.05) 0%, transparent 70%);
