@@ -311,7 +311,7 @@ onUnmounted(() => {
     <!-- Debug Panel -->
     <div v-if="showDebugPanel" class="debug-panel">
       <div class="debug-header">
-        <h3>Petersen Galaxy Drift Monitor</h3>
+        <h3>🔍 Petersen Galaxy Drift Monitor</h3>
         <button class="close-btn" @click="showDebugPanel = false">×</button>
       </div>
 
