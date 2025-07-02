@@ -14,6 +14,20 @@ import { starClusterConfig } from '../configs/star-cluster-config'
 import starVertexShader from '../shaders/star-vertex.glsl'
 import starFragmentShader from '../shaders/star-fragment.glsl'
 
+// Props for controlling evolution behavior
+interface Props {
+  skipEvolution?: boolean // If true, skip evolution and show final state immediately
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  skipEvolution: false
+})
+
+// Events to emit
+const emit = defineEmits<{
+  'evolution-complete': []
+}>()
+
 // Inject galaxy center position
 const galaxyCenter = inject('galaxyCenter', ref(new Vector3(0, 0, 0)))
 
@@ -43,6 +57,11 @@ let animationTime = 0
 let animationId: number
 let isInitialized = false
 let evolutionComplete = false
+let hasEvolvedOnce = false
+let evolutionCompleteEmitted = false
+
+// Determine if evolution should be skipped (either by prop or if already evolved)
+const shouldSkipEvolution = props.skipEvolution
 
 // Store initial chaotic positions for reset
 const initialChaoticPositions = new Float32Array(stars.length * 3)
@@ -65,22 +84,30 @@ const initStars = () => {
   const initialAngles = new Float32Array(stars.length)
   
   stars.forEach((star, index) => {
-    // Start from chaotic position (like orbital system)
-    const initialRadius = Math.random() * 6.24 // maxSpaceRadius
-    const initialAngle = Math.random() * Math.PI * 2
-    const initialHeight = (Math.random() - 0.5) * 1.5
-    
     const i3 = index * 3
     
-    // Initial chaotic position
-    positions[i3] = Math.cos(initialAngle) * initialRadius
-    positions[i3 + 1] = initialHeight
-    positions[i3 + 2] = Math.sin(initialAngle) * initialRadius
-    
-    // Store initial chaotic positions for state management
-    initialChaoticPositions[i3] = positions[i3]
-    initialChaoticPositions[i3 + 1] = positions[i3 + 1]
-    initialChaoticPositions[i3 + 2] = positions[i3 + 2]
+    if (!shouldSkipEvolution) {
+      // First time: start from chaotic position (like orbital system)
+      const initialRadius = Math.random() * 6.24 // maxSpaceRadius
+      const initialAngle = Math.random() * Math.PI * 2
+      const initialHeight = (Math.random() - 0.5) * 1.5
+      
+      // Initial chaotic position
+      positions[i3] = Math.cos(initialAngle) * initialRadius
+      positions[i3 + 1] = initialHeight
+      positions[i3 + 2] = Math.sin(initialAngle) * initialRadius
+      
+      // Store initial chaotic positions for state management
+      initialChaoticPositions[i3] = positions[i3]
+      initialChaoticPositions[i3 + 1] = positions[i3 + 1]
+      initialChaoticPositions[i3 + 2] = positions[i3 + 2]
+    } else {
+      // Skip evolution: start directly in orbital position
+      const targetAngle = star.theta * Math.PI / 180
+      positions[i3] = star.r * Math.cos(targetAngle)
+      positions[i3 + 1] = 0
+      positions[i3 + 2] = star.r * Math.sin(targetAngle)
+    }
     
     // Target orbital data
     targetRadii[index] = star.r
@@ -101,12 +128,20 @@ const initStars = () => {
     colors[i3 + 1] = color.g
     colors[i3 + 2] = color.b
     
-    // Start with small size (will grow during evolution)
+    // Start with small size (will grow during evolution) or full size if skipping evolution
     const sizeConfig = starSizes[star.type as StellarType]
-    sizes[index] = sizeConfig.base * 0.3 // Start small
+    if (!shouldSkipEvolution) {
+      sizes[index] = sizeConfig.base * 0.3 // Start small for evolution
+    } else {
+      sizes[index] = sizeConfig.base // Skip evolution, full size
+    }
     
-    // Start dim (will brighten during evolution)
-    alphas[index] = 0.1 + Math.random() * 0.1
+    // Start dim (will brighten during evolution) or full brightness if skipping evolution
+    if (!shouldSkipEvolution) {
+      alphas[index] = 0.1 + Math.random() * 0.1 // Start dim for evolution
+    } else {
+      alphas[index] = 0.85 // Skip evolution, full brightness
+    }
     
     // Time offset (for twinkling effect - reduced amplitude)
     times[index] = Math.random() * Math.PI * 2
@@ -175,15 +210,38 @@ const animate = () => {
         const i3 = i * 3
         const star = stars[i]
         
-        // Evolution progress (0 to 1 over time) with smooth easing
-        const rawProgress = Math.min(1.0, animationTime * 0.04) // 25 seconds to fully evolve
-        // Apply easeInOutCubic for smoother evolution
-        const evolutionProgress = rawProgress < 0.5 
-          ? 4 * rawProgress * rawProgress * rawProgress 
-          : 1 - Math.pow(-2 * rawProgress + 2, 3) / 2;
+        // Evolution progress (0 to 1 over time) with smooth easing - only if not skipping evolution
+        let evolutionProgress = 1.0 // Default to fully evolved
         
-        if (rawProgress >= 1.0) {
-          evolutionComplete = true
+        if (!shouldSkipEvolution) {
+          const rawProgress = Math.min(1.0, animationTime * 0.04) // 25 seconds to fully evolve
+          // Apply easeInOutCubic for smoother evolution
+          evolutionProgress = rawProgress < 0.5 
+            ? 4 * rawProgress * rawProgress * rawProgress 
+            : 1 - Math.pow(-2 * rawProgress + 2, 3) / 2;
+          
+          if (rawProgress >= 1.0 && !evolutionComplete) {
+            evolutionComplete = true
+            hasEvolvedOnce = true
+            
+            // Emit evolution complete event only once
+            if (!evolutionCompleteEmitted) {
+              evolutionCompleteEmitted = true
+              emit('evolution-complete')
+            }
+          }
+        } else {
+          // Skipping evolution, already complete
+          if (!evolutionComplete) {
+            evolutionComplete = true
+            hasEvolvedOnce = true
+            
+            // Emit evolution complete event immediately when skipping
+            if (!evolutionCompleteEmitted) {
+              evolutionCompleteEmitted = true
+              emit('evolution-complete')
+            }
+          }
         }
         
         // Current orbital angle (rotating with time) - ensure exact orbit positioning
@@ -221,14 +279,26 @@ const animate = () => {
         const timeOffset = animationTime + i * 0.5 // Stagger animations using loop index
         const amplitudeVariation = 1.0 + amplitude * Math.sin(timeOffset * 2.0)
         
-        const currentSize = (baseSize * amplitudeVariation * 0.3) + 
-                           (baseSize * amplitudeVariation - baseSize * amplitudeVariation * 0.3) * evolutionProgress
-        sizes.array[i] = currentSize
+        if (!hasEvolvedOnce) {
+          // During first-time evolution
+          const currentSize = (baseSize * amplitudeVariation * 0.3) + 
+                             (baseSize * amplitudeVariation - baseSize * amplitudeVariation * 0.3) * evolutionProgress
+          sizes.array[i] = currentSize
+        } else {
+          // Already evolved, maintain final size with amplitude variation
+          sizes.array[i] = baseSize * amplitudeVariation
+        }
         
         // Evolve brightness from dim to bright (stable final brightness)
-        const targetAlpha = 0.85 // Fixed brightness for stable appearance
-        const currentAlpha = 0.1 + (targetAlpha - 0.1) * evolutionProgress
-        alphas.array[i] = currentAlpha
+        if (!hasEvolvedOnce) {
+          // During first-time evolution
+          const targetAlpha = 0.85 // Fixed brightness for stable appearance
+          const currentAlpha = 0.1 + (targetAlpha - 0.1) * evolutionProgress
+          alphas.array[i] = currentAlpha
+        } else {
+          // Already evolved, maintain stable brightness
+          alphas.array[i] = 0.85
+        }
       }
       
       positions.needsUpdate = true
@@ -250,6 +320,9 @@ const animate = () => {
 }
 
 onMounted(() => {
+  if (shouldSkipEvolution) {
+    hasEvolvedOnce = true
+  }
   initStars()
   animate()
 })

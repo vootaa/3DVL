@@ -24,6 +24,9 @@ const cameraRef = ref()
 const orbitControlsRef = ref()
 const showGridAfterCameraMove = ref(false)
 
+// Star evolution state - track if evolution has already happened
+const hasEvolutionOccurred = ref(false)
+
 // Camera controller instance
 let cameraController: CameraController
 
@@ -89,6 +92,8 @@ watch(
       <StarCluster 
         v-if="starControlRef?.showStars" 
         :ref="(el) => starControlRef && (starControlRef.starClusterRef = el)"
+        :skip-evolution="hasEvolutionOccurred"
+        @evolution-complete="hasEvolutionOccurred = true"
       />
       
       <!-- OrbitControls with zoom and angle limits -->
