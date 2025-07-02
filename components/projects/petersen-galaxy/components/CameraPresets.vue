@@ -274,8 +274,8 @@ const resetCamera = () => {
 
 .presets-toggle {
   background: rgba(0, 12, 20, 0.9);
-  border: 2px solid #ff6600;
-  color: #ff6600;
+  border: 2px solid #00ccff; /* 统一蓝色主色调 */
+  color: #00ccff; /* 统一蓝色主色调 */
   padding: 8px 16px;
   border-radius: 6px;
   font-family: inherit;
@@ -308,7 +308,7 @@ const resetCamera = () => {
   width: 480px;
   max-height: 75vh;
   background: rgba(0, 8, 16, 0.97);
-  border: 2px solid rgba(255, 102, 0, 0.6);
+  border: 2px solid rgba(0, 204, 255, 0.6); /* 统一蓝色主色调 */
   border-radius: 10px;
   overflow-y: auto;
   animation: slideDown 0.3s ease;
@@ -338,16 +338,16 @@ const resetCamera = () => {
 
 .presets-header h3 {
   margin: 0;
-  color: #ff8800;
+  color: #66ddff; /* 统一蓝色主色调 */
   font-size: 15px;
   font-weight: 700;
-  text-shadow: 0 0 8px rgba(255, 102, 0, 0.3);
+  text-shadow: 0 0 8px rgba(0, 204, 255, 0.3); /* 统一蓝色主色调 */
 }
 
 .close-btn {
   background: none;
   border: none;
-  color: #ff6600;
+  color: #00ccff; /* 统一蓝色主色调 */
   font-size: 20px;
   cursor: pointer;
   padding: 0;
@@ -388,7 +388,7 @@ const resetCamera = () => {
 }
 
 .label {
-  color: #ff9966;
+  color: #99ddff; /* 统一蓝色主色调 */
   font-weight: 600;
 }
 
@@ -405,14 +405,14 @@ const resetCamera = () => {
 }
 
 .section-title {
-  color: #ff6600;
+  color: #00ccff; /* 统一蓝色主色调 */
   font-weight: 700;
   font-size: 13px;
   margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  text-shadow: 0 0 6px rgba(255, 102, 0, 0.4);
-  border-left: 3px solid #ff6600;
+  text-shadow: 0 0 6px rgba(0, 204, 255, 0.4); /* 统一蓝色主色调 */
+  border-left: 3px solid #00ccff; /* 统一蓝色主色调 */
   padding-left: 8px;
 }
 

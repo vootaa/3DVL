@@ -105,7 +105,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="drift-control" @click="toggleDriftVisualization" :class="{ active: isDriftVisible, disabled: !canUseDrift }">
+  <div 
+    class="drift-control" 
+    @click="toggleDriftVisualization" 
+    :class="{ active: isDriftVisible, disabled: !canUseDrift }"
+    :title="canUseDrift ? 'Toggle drift trajectory visualization' : 'Drift controller not available'"
+  >
     <div class="control-label">DRIFT TRAILS</div>
     <div class="control-value">{{ isDriftVisible ? 'ON' : 'OFF' }}</div>
   </div>
@@ -114,10 +119,10 @@ onUnmounted(() => {
 <style lang="css" scoped>
 .drift-control {
   background: rgba(0, 12, 20, 0.85);
-  border: 1px solid rgba(100, 200, 100, 0.4); /* Green color for drift */
+  border: 1px solid rgba(0, 204, 255, 0.4); /* 统一蓝色主色调 */
   border-radius: 8px;
   padding: 10px 15px;
-  color: #66CC66;
+  color: #00CCFF; /* 统一蓝色主色调 */
   font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
   font-weight: 500;
   font-variant-numeric: slashed-zero tabular-nums;
@@ -135,37 +140,38 @@ onUnmounted(() => {
   box-sizing: border-box;
   transition: all 0.2s ease;
   z-index: 100;
-  box-shadow: 0 0 15px rgba(100, 200, 100, 0.2);
-  /* Helmet concave/convex effect - same style as other controls but with green */
+  box-shadow: 0 0 15px rgba(0, 204, 255, 0.2);
+  /* Helmet concave/convex effect - 统一蓝色风格 */
   background-image: 
-    linear-gradient(45deg, rgba(100, 200, 100, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.2) 100%),
-    radial-gradient(circle at 70% 30%, rgba(100, 200, 100, 0.05) 0%, transparent 70%);
+    linear-gradient(45deg, rgba(0, 204, 255, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.2) 100%),
+    radial-gradient(circle at 70% 30%, rgba(0, 204, 255, 0.05) 0%, transparent 70%);
 }
 
 .drift-control:hover:not(.disabled) {
-  background: rgba(0, 20, 10, 0.9);
-  border-color: rgba(100, 200, 100, 0.6);
-  box-shadow: 0 0 25px rgba(100, 200, 100, 0.4);
+  background: rgba(0, 20, 30, 0.9);
+  border-color: rgba(0, 204, 255, 0.6);
+  box-shadow: 0 0 25px rgba(0, 204, 255, 0.4);
   transform: skew(-0.5deg, 1.5deg) rotate(1deg) scale(1.02);
   /* Enhanced helmet effect on hover */
   background-image: 
-    linear-gradient(45deg, rgba(100, 200, 100, 0.15) 0%, transparent 50%, rgba(0, 0, 0, 0.3) 100%),
-    radial-gradient(circle at 70% 30%, rgba(100, 200, 100, 0.08) 0%, transparent 70%);
+    linear-gradient(45deg, rgba(0, 204, 255, 0.15) 0%, transparent 50%, rgba(0, 0, 0, 0.3) 100%),
+    radial-gradient(circle at 70% 30%, rgba(0, 204, 255, 0.08) 0%, transparent 70%);
 }
 
 .drift-control.active {
-  background: rgba(0, 30, 15, 0.9);
-  border-color: rgba(100, 255, 100, 0.7);
-  color: #88FF88;
-  box-shadow: 0 0 30px rgba(100, 255, 100, 0.5);
+  background: rgba(0, 30, 40, 0.9);
+  border-color: rgba(0, 255, 255, 0.7);
+  color: #66DDFF;
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
 }
 
 .drift-control.disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  border-color: #666;
-  color: #666;
-  background: rgba(20, 20, 20, 0.8);
+  border-color: rgba(0, 204, 255, 0.2);
+  color: rgba(0, 204, 255, 0.4);
+  background: rgba(0, 12, 20, 0.6);
+  pointer-events: none; /* 确保禁用时无法点击 */
 }
 
 .control-label {

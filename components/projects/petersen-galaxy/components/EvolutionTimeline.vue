@@ -97,8 +97,8 @@ onUnmounted(() => {
 }
 
 .timeline-content {
-  background: linear-gradient(135deg, rgba(20, 5, 40, 0.95), rgba(10, 2, 25, 0.9));
-  border: 1px solid rgba(138, 43, 226, 0.6);
+  background: linear-gradient(135deg, rgba(0, 12, 20, 0.95), rgba(0, 8, 16, 0.9)); /* 统一蓝色主色调 */
+  border: 1px solid rgba(0, 204, 255, 0.6); /* 统一蓝色主色调 */
   border-radius: 12px;
   padding: 12px 20px;
   display: flex;
@@ -107,8 +107,8 @@ onUnmounted(() => {
   min-width: 300px;
   backdrop-filter: blur(10px);
   box-shadow: 
-    0 8px 32px rgba(138, 43, 226, 0.3),
-    inset 0 1px 0 rgba(138, 43, 226, 0.2);
+    0 8px 32px rgba(0, 204, 255, 0.3), /* 统一蓝色主色调 */
+    inset 0 1px 0 rgba(0, 204, 255, 0.2); /* 统一蓝色主色调 */
 }
 
 .timeline-text {
@@ -119,7 +119,7 @@ onUnmounted(() => {
 }
 
 .timeline-title {
-  color: #bb77ff;
+  color: #66ddff; /* 统一蓝色主色调 */
   font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
   font-size: 12px;
   font-weight: 600;
@@ -128,7 +128,7 @@ onUnmounted(() => {
 }
 
 .timeline-age {
-  color: #ffcc77;
+  color: #00ccff; /* 统一蓝色主色调 */
   font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
   font-size: 14px;
   font-weight: 700;
@@ -137,14 +137,14 @@ onUnmounted(() => {
 .timeline-progress {
   width: 80px;
   height: 4px;
-  background: rgba(138, 43, 226, 0.3);
+  background: rgba(0, 204, 255, 0.3); /* 统一蓝色主色调 */
   border-radius: 2px;
   overflow: hidden;
 }
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #8a2be2, #bb77ff);
+  background: linear-gradient(90deg, #0088cc, #66ddff); /* 统一蓝色主色调 */
   border-radius: 2px;
   transition: width 0.1s ease;
 }

@@ -331,8 +331,8 @@ onUnmounted(() => {
 
 .performance-toggle {
   background: rgba(0, 12, 20, 0.9);
-  border: 2px solid #ffaa00;
-  color: #ffaa00;
+  border: 2px solid #00ccff; /* 统一蓝色主色调 */
+  color: #00ccff; /* 统一蓝色主色调 */
   padding: 8px 16px;
   border-radius: 6px;
   font-family: inherit;
@@ -360,11 +360,11 @@ onUnmounted(() => {
   width: 400px;
   max-height: 70vh;
   background: rgba(0, 8, 16, 0.97);
-  border: 2px solid rgba(255, 170, 0, 0.6);
+  border: 2px solid rgba(0, 204, 255, 0.6); /* 统一蓝色主色调 */
   border-radius: 10px;
   overflow-y: auto;
   animation: slideDown 0.3s ease;
-  box-shadow: 0 8px 32px rgba(255, 170, 0, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 204, 255, 0.15); /* 统一蓝色主色调 */
   backdrop-filter: blur(8px);
 }
 
@@ -390,7 +390,7 @@ onUnmounted(() => {
 
 .performance-header h3 {
   margin: 0;
-  color: #ffdd00;
+  color: #66ddff; /* 统一蓝色主色调 */
   font-size: 15px;
   font-weight: 700;
   text-shadow: 0 0 8px rgba(255, 170, 0, 0.3);
@@ -399,7 +399,7 @@ onUnmounted(() => {
 .close-btn {
   background: none;
   border: none;
-  color: #ffaa00;
+  color: #00ccff; /* 统一蓝色主色调 */
   font-size: 20px;
   cursor: pointer;
   padding: 0;
@@ -423,7 +423,7 @@ onUnmounted(() => {
 .performance-section {
   margin-bottom: 18px;
   padding-bottom: 14px;
-  border-bottom: 1px solid rgba(255, 170, 0, 0.25);
+  border-bottom: 1px solid rgba(0, 204, 255, 0.25); /* 统一蓝色主色调 */
 }
 
 .performance-section:last-child {
@@ -432,14 +432,14 @@ onUnmounted(() => {
 }
 
 .section-title {
-  color: #ffaa00;
+  color: #00ccff; /* 统一蓝色主色调 */
   font-weight: 700;
   font-size: 13px;
   margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  text-shadow: 0 0 6px rgba(255, 170, 0, 0.4);
-  border-left: 3px solid #ffaa00;
+  text-shadow: 0 0 6px rgba(0, 204, 255, 0.4); /* 统一蓝色主色调 */
+  border-left: 3px solid #00ccff; /* 统一蓝色主色调 */
   padding-left: 8px;
 }
 

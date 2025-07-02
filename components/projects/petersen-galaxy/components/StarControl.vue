@@ -36,10 +36,10 @@ defineExpose({
   top: 100px; /* Position below GridControl (20px + 60px + 20px margin) */
   left: 20px;
   background: rgba(0, 12, 20, 0.85);
-  border: 1px solid rgba(255, 165, 0, 0.4); /* Orange color to differentiate from grid */
+  border: 1px solid rgba(0, 204, 255, 0.4); /* 统一蓝色主色调 */
   border-radius: 8px;
   padding: 10px 15px;
-  color: #FFA500;
+  color: #00CCFF; /* 统一蓝色主色调 */
   font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
   font-weight: 500;
   font-variant-numeric: slashed-zero tabular-nums;
@@ -57,22 +57,22 @@ defineExpose({
   box-sizing: border-box;
   transition: all 0.2s ease;
   z-index: 100;
-  box-shadow: 0 0 15px rgba(255, 165, 0, 0.2);
-  /* Helmet concave/convex effect - same style as GridControl but with orange */
+  box-shadow: 0 0 15px rgba(0, 204, 255, 0.2);
+  /* Helmet concave/convex effect - 统一蓝色风格 */
   background-image: 
-    linear-gradient(45deg, rgba(255, 165, 0, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.2) 100%),
-    radial-gradient(circle at 70% 30%, rgba(255, 165, 0, 0.05) 0%, transparent 70%);
+    linear-gradient(45deg, rgba(0, 204, 255, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.2) 100%),
+    radial-gradient(circle at 70% 30%, rgba(0, 204, 255, 0.05) 0%, transparent 70%);
 }
 
 .star-control:hover {
-  background: rgba(20, 12, 0, 0.9);
-  border-color: rgba(255, 165, 0, 0.6);
-  box-shadow: 0 0 25px rgba(255, 165, 0, 0.4);
+  background: rgba(0, 20, 30, 0.9);
+  border-color: rgba(0, 204, 255, 0.6);
+  box-shadow: 0 0 25px rgba(0, 204, 255, 0.4);
   transform: skew(-0.5deg, 1.5deg) rotate(1deg) scale(1.02);
   /* Enhanced helmet effect on hover */
   background-image: 
-    linear-gradient(45deg, rgba(255, 165, 0, 0.15) 0%, transparent 50%, rgba(0, 0, 0, 0.3) 100%),
-    radial-gradient(circle at 70% 30%, rgba(255, 165, 0, 0.08) 0%, transparent 70%);
+    linear-gradient(45deg, rgba(0, 204, 255, 0.15) 0%, transparent 50%, rgba(0, 0, 0, 0.3) 100%),
+    radial-gradient(circle at 70% 30%, rgba(0, 204, 255, 0.08) 0%, transparent 70%);
 }
 
 .control-label {
