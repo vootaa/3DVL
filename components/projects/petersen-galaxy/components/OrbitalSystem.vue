@@ -5,7 +5,6 @@ import { useRenderLoop } from '@tresjs/core'
 import { orbitalConfig, orbitalColorConfig } from '../configs/orbital-config'
 import { Logger } from '../../../utils/logger'
 import { LoggingConfig } from '../configs/logging-config'
-import DriftDebugger from '../utils/drift-debug'
 
 import vertexShader from '../shaders/orbital-vertex.glsl'
 import fragmentShader from '../shaders/orbital-fragment.glsl'
@@ -214,14 +213,6 @@ onLoop(({ elapsed }) => {
           timestamp: elapsed.toFixed(2)
         }, LoggingConfig.ORBITAL_DRIFT) // Use centralized config
         
-        // Enhanced drift debugging and validation - only do this occasionally
-        if (Math.floor(elapsed) % 15 === 0) { // Every 15 seconds
-          const injectionStatus = DriftDebugger.validateInjection(
-            'ORBITAL_SYSTEM', 
-            galaxyCenter, 
-            bufferRef
-          )
-        }
       } else {
         Logger.warn('ORBITAL_SYSTEM', 'Galaxy center is not available, using default position (0,0,0)')
         bufferRef.value.position.set(0, 0, 0)

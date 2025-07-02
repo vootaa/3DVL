@@ -268,13 +268,11 @@ onUnmounted(() => {
             <span class="value">{{ performanceData.renderCalls }}</span>
           </div>
           
-          <!-- 重点显示点云数据 - 这是项目的主要渲染内容 -->
           <div class="status-item highlight" v-if="performanceData.points > 0">
             <span class="label">Points:</span>
             <span class="value">{{ formattedPoints }}</span>
           </div>
           
-          <!-- 显示线条数据 (如果有的话) -->
           <div class="status-item" v-if="performanceData.lines > 0">
             <span class="label">Lines:</span>
             <span class="value">{{ formattedLines }}</span>
@@ -285,7 +283,6 @@ onUnmounted(() => {
             <span class="value">{{ performanceData.geometries }}</span>
           </div>
           
-          <!-- 三角形和纹理显示为次要信息，说明不适用 -->
           <div class="status-item secondary">
             <span class="label">Triangles:</span>
             <span class="value">{{ formattedTriangles }}</span>
@@ -360,7 +357,7 @@ onUnmounted(() => {
   position: absolute;
   top: 50px;
   right: 0;
-  width: 360px;
+  width: 400px;
   max-height: 70vh;
   background: rgba(0, 8, 16, 0.97);
   border: 2px solid rgba(255, 170, 0, 0.6);

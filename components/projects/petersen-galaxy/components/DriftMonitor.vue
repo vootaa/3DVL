@@ -499,7 +499,7 @@ onUnmounted(() => {
   position: absolute;
   top: 50px;
   right: 0;
-  width: 360px;
+  width: 400px;
   max-height: 85vh;
   background: rgba(0, 8, 16, 0.97);
   /* Darker background */

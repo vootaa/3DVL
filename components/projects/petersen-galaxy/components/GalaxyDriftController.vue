@@ -3,18 +3,13 @@ import { ref, computed, provide } from 'vue'
 import { Vector3 } from 'three'
 import { useRenderLoop } from '@tresjs/core'
 import { galaxyDriftConfig, createInitialDriftState, type GalaxyDriftState } from '../configs/galaxy-drift-config'
-import DriftDebugger from '../utils/drift-debug'
 import { Logger } from '../../../utils/logger'
 import { LoggingConfig } from '../configs/logging-config'
 
 // Galaxy drift state
 const driftState = ref<GalaxyDriftState>(createInitialDriftState())
 
-// Debug utility instance
-const driftDebugger = DriftDebugger.getInstance()
-
 // Internal time tracking for smooth motion
-let lastTime = 0
 let noiseOffset = Math.random() * 1000
 
 // Simple noise function for realistic perturbations
@@ -87,7 +82,6 @@ onLoop(({ delta, elapsed }) => {
   const deltaTime = Math.min(delta, 0.1) // Cap delta time to prevent large jumps
   
   updateGalaxyDrift(deltaTime, currentTime)
-  lastTime = currentTime
   
   // Expose current state to window for debugging
   if (typeof window !== 'undefined') {
@@ -116,8 +110,6 @@ onLoop(({ delta, elapsed }) => {
 
 // Computed values for external consumption
 const galaxyCenter = computed(() => driftState.value.currentPosition.clone())
-const driftVelocity = computed(() => driftState.value.velocity.clone())
-const driftDistance = computed(() => driftState.value.totalDistance)
 const driftDuration = computed(() => driftState.value.driftTime)
 
 // Computed values for display with enhanced precision and scaling
