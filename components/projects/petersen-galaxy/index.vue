@@ -10,6 +10,7 @@ import GalaxyDriftController from './components/GalaxyDriftController.vue'
 import DriftMonitor from './components/DriftMonitor.vue'
 import PerformanceMonitor from './components/PerformanceMonitor.vue'
 import CameraPresets from './components/CameraPresets.vue'
+import RendererStatsCollector from './components/RendererStatsCollector.vue'
 import { CameraController } from './utils/camera-controller'
 import './utils/drift-validator' // Import to trigger auto-diagnostic
 import DriftRuntimeChecker from './utils/drift-runtime-checker'
@@ -85,6 +86,9 @@ watch(
     <GalaxyDriftController />
 
     <TresCanvas v-bind="gl">
+      <!-- Renderer stats collector (invisible component for performance monitoring) -->
+      <RendererStatsCollector />
+      
       <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
 
       <!-- Subtle ambient lighting for better 3D perception -->

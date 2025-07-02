@@ -14,6 +14,12 @@ export class DriftRuntimeChecker {
    * Start continuous drift monitoring
    */
   static startMonitoring() {
+    // Only run on client side
+    if (typeof window === 'undefined') {
+      console.log('[DRIFT_CHECKER] Skipping monitoring on server side')
+      return
+    }
+
     if (this.isRunning) {
       console.log('[DRIFT_CHECKER] Already monitoring drift system')
       return
@@ -34,6 +40,11 @@ export class DriftRuntimeChecker {
    * Stop drift monitoring
    */
   static stopMonitoring() {
+    // Only run on client side
+    if (typeof window === 'undefined') {
+      return
+    }
+
     if (this.checkInterval) {
       clearInterval(this.checkInterval)
       this.checkInterval = null
