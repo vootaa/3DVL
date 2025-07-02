@@ -177,13 +177,9 @@ const resetCamera = () => {
 <template>
   <div class="camera-presets">
     <!-- Toggle Button -->
-    <button 
-      class="presets-toggle" 
-      @click="togglePresetsPanel"
-      :class="{ active: showPresetsPanel }"
-      :disabled="!canUsePresets"
-    >
-      📷 PRESETS
+    <button class="presets-toggle" @click="togglePresetsPanel" :class="{ active: showPresetsPanel }"
+      :disabled="!canUsePresets">
+      📷 CAMERA PRESETS
     </button>
 
     <!-- Presets Panel -->
@@ -208,7 +204,8 @@ const resetCamera = () => {
           </div>
           <div class="status-item">
             <span class="label">Debug:</span>
-            <span class="value">Cam: {{ debugStatus.cameraReady ? '✅' : '❌' }} | Ctrl: {{ debugStatus.controlsReady ? '✅' : '❌' }}</span>
+            <span class="value">Cam: {{ debugStatus.cameraReady ? '✅' : '❌' }} | Ctrl: {{ debugStatus.controlsReady ?
+              '✅' : '❌' }}</span>
           </div>
         </div>
 
@@ -216,16 +213,9 @@ const resetCamera = () => {
         <div class="presets-section">
           <div class="section-title">Quick Presets</div>
           <div class="presets-grid">
-            <button 
-              v-for="(preset, index) in availablePresets" 
-              :key="preset.id"
-              class="preset-btn"
-              :class="{ 
+            <button v-for="(preset, index) in availablePresets" :key="preset.id" class="preset-btn" :class="{ 
                 active: currentPreset === preset.id
-              }"
-              :disabled="!canUsePresets"
-              @click="applyPreset(preset)"
-            >
+              }" :disabled="!canUsePresets" @click="applyPreset(preset)">
               <div class="preset-header">
                 <div class="preset-icon">{{ preset.icon }}</div>
                 <div class="preset-shortcut">{{ index + 1 }}</div>
@@ -241,11 +231,7 @@ const resetCamera = () => {
 
         <!-- Reset Button -->
         <div class="reset-section">
-          <button 
-            class="reset-btn"
-            :disabled="!canUsePresets"
-            @click="resetCamera"
-          >
+          <button class="reset-btn" :disabled="!canUsePresets" @click="resetCamera">
             🏠 Reset to Default
           </button>
         </div>
