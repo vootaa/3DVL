@@ -80,7 +80,7 @@ watch(
         :size="20" 
         color1="#002244" 
         color2="#001122"
-        :position="[0, -3, 0]"
+        :position="[0, -4.5, 0]"
       />
       
       <OrbitalSystem />

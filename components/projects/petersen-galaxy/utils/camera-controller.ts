@@ -51,8 +51,8 @@ export class CameraController {
    * Calculates target camera position based on distance and azimuth
    */
   private calculateTargetPosition(distance: number, azimuth: number): Vector3 {
-    // For 2-degree elevation: tan(2°) ≈ 0.0349
-    const targetY = distance * 0.035 // Y coordinate for 2-degree elevation
+    // For 2-degree elevation: tan(10°) ≈ 0.176
+    const targetY = distance * 0.176 // Y coordinate for 10-degree elevation
     
     // Calculate horizontal distance in XZ plane
     const horizontalDistance = Math.sqrt(distance * distance - targetY * targetY)
