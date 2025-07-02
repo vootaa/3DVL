@@ -581,23 +581,22 @@ onUnmounted(() => {
 }
 
 .section-title {
-  color: #00ccff; /* 统一蓝色主色调 */
+  color: #00ccff;
   font-weight: 700;
   font-size: 13px;
   margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  text-shadow: 0 0 6px rgba(0, 204, 255, 0.4); /* 统一蓝色主色调 */
+  text-shadow: 0 0 6px rgba(0, 204, 255, 0.4);
 .section-title {
-  color: #00ccff; /* 统一蓝色主色调 */
+  color: #00ccff;
   font-weight: 700;
   font-size: 13px;
   margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  text-shadow: 0 0 6px rgba(0, 204, 255, 0.4); /* 统一蓝色主色调 */
-  border-left: 3px solid #00ccff; /* 统一蓝色主色调 */
-  padding-left: 8px;
+  text-shadow: 0 0 6px rgba(0, 204, 255, 0.4);
+  border-left: 3px solid #00ccff;
 }
   transition: all 0.2s ease;
 }
@@ -707,30 +706,30 @@ onUnmounted(() => {
   border-radius: 4px;
   font-size: 10px;
   opacity: 0.7;
-  background: rgba(0, 204, 255, 0.05); /* 统一蓝色背景 */
+  background: rgba(0, 204, 255, 0.05);
   border: 1px solid transparent;
   transition: all 0.3s ease;
 }
 
 .unit-item:hover {
   opacity: 1;
-  background: rgba(0, 204, 255, 0.1); /* 统一蓝色背景 */
-  border-color: rgba(0, 204, 255, 0.2); /* 统一蓝色边框 */
+  background: rgba(0, 204, 255, 0.1);
+  border-color: rgba(0, 204, 255, 0.2);
 }
 
 .unit-symbol {
-  color: #66ddff; /* 统一蓝色主色调 */
+  color: #66ddff;
   font-weight: 700;
-  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
+  font-family: 'Kodo Mono', monospace;
   min-width: 45px;
   margin-right: 8px;
   text-align: left;
   font-size: 10px;
-  text-shadow: 0 0 4px rgba(0, 204, 255, 0.3); /* 统一蓝色阴影 */
+  text-shadow: 0 0 4px rgba(0, 204, 255, 0.3);
 }
 
 .unit-name {
-  color: #99ddff; /* 统一蓝色主色调 */
+  color: #99ddff;
   font-size: 10px;
   opacity: 0.9;
   flex-grow: 1;
