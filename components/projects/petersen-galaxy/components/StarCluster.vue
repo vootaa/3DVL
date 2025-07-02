@@ -213,7 +213,7 @@ const animate = () => {
         // Evolution progress (0 to 1 over time) with smooth easing - only if not skipping evolution
         let evolutionProgress = 1.0 // Default to fully evolved
         
-        if (!shouldSkipEvolution) {
+        if (!shouldSkipEvolution && !hasEvolvedOnce) {
           const rawProgress = Math.min(1.0, animationTime * 0.04) // 25 seconds to fully evolve
           // Apply easeInOutCubic for smoother evolution
           evolutionProgress = rawProgress < 0.5 
@@ -231,7 +231,7 @@ const animate = () => {
             }
           }
         } else {
-          // Skipping evolution, already complete
+          // Skipping evolution or already evolved, stay complete
           if (!evolutionComplete) {
             evolutionComplete = true
             hasEvolvedOnce = true
@@ -322,6 +322,9 @@ const animate = () => {
 onMounted(() => {
   if (shouldSkipEvolution) {
     hasEvolvedOnce = true
+    evolutionComplete = true
+    // Set animation time to a value that ensures full evolution
+    animationTime = 30.0 // Beyond the 25 second evolution time
   }
   initStars()
   animate()
