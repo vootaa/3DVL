@@ -223,7 +223,7 @@ const animate = () => {
               y: center.y.toFixed(6),
               z: center.z.toFixed(6)
             }
-          }, 5000) // Log every 5 seconds
+          }, 30000) // Log every 30 seconds
         } else {
           Logger.warn('STAR_CLUSTER', 'Galaxy center is not available, using default position (0,0,0)')
           starClusterRef.value.position.set(0, 0, 0)
