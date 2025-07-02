@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, inject } from 'vue'
 import { 
-  Color,
   AdditiveBlending, 
   ShaderMaterial,
   BufferGeometry,
@@ -9,6 +8,7 @@ import {
   Vector3,
 } from 'three'
 import { orbitalConfig } from '../configs/orbital-config'
+import { starClusterConfig } from '../configs/star-cluster-config'
 
 // Import shaders
 import starVertexShader from '../shaders/star-vertex.glsl'
@@ -17,67 +17,18 @@ import starFragmentShader from '../shaders/star-fragment.glsl'
 // Inject galaxy center position
 const galaxyCenter = inject('galaxyCenter', ref(new Vector3(0, 0, 0)))
 
-// Get orbital configuration for synchronization
-const { innerRadius, middleRadius, outerRadius, rotationSpeeds } = orbitalConfig
-
-// Star data configuration
-interface StarData {
-  id: number
-  r: number
-  theta: number
-  type: 'main-sequence' | 'blue-giant' | 'red-giant'
-}
-
-const stars: StarData[] = [
-  // Middle orbit (r=3.0) - Blue Giants  
-  { id: 0, r: middleRadius, theta: 288.0, type: 'blue-giant' },
-  { id: 1, r: middleRadius, theta: 0.0, type: 'blue-giant' },
-  { id: 2, r: middleRadius, theta: 72.0, type: 'blue-giant' },
-  { id: 3, r: middleRadius, theta: 144.0, type: 'blue-giant' },
-  { id: 4, r: middleRadius, theta: 216.0, type: 'blue-giant' },
-  
-  // Inner orbit (r=1.5) - Main Sequence
-  { id: 5, r: innerRadius, theta: 288.0, type: 'main-sequence' },
-  { id: 6, r: innerRadius, theta: 0.0, type: 'main-sequence' },
-  { id: 7, r: innerRadius, theta: 72.0, type: 'main-sequence' },
-  { id: 8, r: innerRadius, theta: 144.0, type: 'main-sequence' },
-  { id: 9, r: innerRadius, theta: 216.0, type: 'main-sequence' },
-  
-  // Outer orbit (r=4.8) - Red Giants
-  { id: 10, r: outerRadius, theta: 278.0, type: 'red-giant' },
-  { id: 11, r: outerRadius, theta: 10.0, type: 'red-giant' },
-  { id: 12, r: outerRadius, theta: 62.0, type: 'red-giant' },
-  { id: 13, r: outerRadius, theta: 154.0, type: 'red-giant' },
-  { id: 14, r: outerRadius, theta: 206.0, type: 'red-giant' },
-  { id: 15, r: outerRadius, theta: 298.0, type: 'red-giant' },
-  { id: 16, r: outerRadius, theta: 350.0, type: 'red-giant' },
-  { id: 17, r: outerRadius, theta: 82.0, type: 'red-giant' },
-  { id: 18, r: outerRadius, theta: 134.0, type: 'red-giant' },
-  { id: 19, r: outerRadius, theta: 226.0, type: 'red-giant' }
-]
-
-// Star color configuration
-const starColors = {
-  'main-sequence': new Color('#FFD700'), // Gold - G-type main sequence star
-  'blue-giant': new Color('#87CEEB'),    // Blue-white - B-type blue giant
-  'red-giant': new Color('#FF4500')      // Orange-red - M-type red giant
-}
-
-// Star size configuration with orbital amplitude variation - reduced sizes
+// Get configuration from imported modules
+const { innerRadius, middleRadius} = orbitalConfig
+const { stars } = starClusterConfig
+const starColors = starClusterConfig.visual.colors
 const starSizes = {
-  'main-sequence': { base: 14, amplitude: 0.05 }, // Inner orbit: ±5% (reduced from 17)
-  'blue-giant': { base: 18, amplitude: 0.10 },     // Middle orbit: ±10% (reduced from 24)
-  'red-giant': { base: 28, amplitude: 0.15 }       // Outer orbit: ±15% (slightly reduced from 30)
+  'green-star': { base: 14, amplitude: 0.05 }, // Inner orbit - green stars
+  'golden-star': { base: 18, amplitude: 0.10 }, // Middle orbit - golden stars  
+  'blue-star': { base: 28, amplitude: 0.15 }   // Outer orbit - blue stars
 }
 
-// Calculate star position
-const calculateStarPosition = (r: number, theta: number) => {
-  const radians = (theta * Math.PI) / 180
-  const x = r * Math.cos(radians)
-  const z = r * Math.sin(radians)
-  const y = (Math.random() - 0.5) * 0.1 // Slight height variation
-  return { x, y, z }
-}
+// Type alias for stellar classifications by color
+type StellarType = 'green-star' | 'golden-star' | 'blue-star'
 
 // Star shaders - now imported from external files
 
@@ -145,13 +96,13 @@ const initStars = () => {
     }
     
     // Color
-    const color = starColors[star.type]
+    const color = starColors[star.type as StellarType]
     colors[i3] = color.r
     colors[i3 + 1] = color.g
     colors[i3 + 2] = color.b
     
     // Start with small size (will grow during evolution)
-    const sizeConfig = starSizes[star.type]
+    const sizeConfig = starSizes[star.type as StellarType]
     sizes[index] = sizeConfig.base * 0.3 // Start small
     
     // Start dim (will brighten during evolution)
@@ -262,7 +213,7 @@ const animate = () => {
         }
         
         // Evolve size with orbital amplitude variation and distance scaling
-        const sizeConfig = starSizes[star.type]
+        const sizeConfig = starSizes[star.type as StellarType]
         const baseSize = sizeConfig.base
         const amplitude = sizeConfig.amplitude
         
@@ -334,7 +285,7 @@ const resetStarsPosition = () => {
       positions.array[i3 + 2] = targetRadius * Math.sin(currentAngle)
       
       // Set final evolved sizes and brightness
-      const sizeConfig = starSizes[star.type]
+      const sizeConfig = starSizes[star.type as StellarType]
       sizes.array[i] = sizeConfig.base
       alphas.array[i] = 0.85
     }
@@ -381,7 +332,7 @@ defineExpose({
       >
         <TresSphereGeometry :args="[0.02, 8, 8]" />
         <TresMeshBasicMaterial
-          :color="starColors[star.type]"
+          :color="starColors[star.type as StellarType]"
           :transparent="true"
           :opacity="0.8"
         />
