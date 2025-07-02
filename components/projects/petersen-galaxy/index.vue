@@ -70,39 +70,28 @@ watch(
   <div class="galaxy-container">
     <!-- Galaxy drift controller (invisible but manages galaxy center) -->
     <GalaxyDriftController />
-    
+
     <TresCanvas v-bind="gl">
       <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
-      
+
       <!-- Subtle ambient lighting for better 3D perception -->
       <TresAmbientLight :intensity="0.05" color="#004488" />
 
       <!-- Grid Helper - shown only after camera adjustment -->
-      <TresGridHelper 
-        v-if="gridControlRef?.showGrid && showGridAfterCameraMove"
-        :size="20" 
-        color1="#002244" 
-        color2="#001122"
-        :position="[0, -4.5, 0]"
-      />
-      
+      <TresGridHelper v-if="gridControlRef?.showGrid && showGridAfterCameraMove" :args="[12, 12, '#003366', '#002244']"
+        :position="[0, -4.2, 0]" />
+
       <OrbitalSystem />
-      
+
       <!-- Star cluster component - conditional display with ref -->
-      <StarCluster 
-        v-if="starControlRef?.showStars" 
-        :ref="(el) => starControlRef && (starControlRef.starClusterRef = el)"
-        :skip-evolution="hasEvolutionOccurred"
-        @evolution-complete="hasEvolutionOccurred = true"
-      />
-      
+      <StarCluster v-if="starControlRef?.showStars"
+        :ref="(el) => starControlRef && (starControlRef.starClusterRef = el)" :skip-evolution="hasEvolutionOccurred"
+        @evolution-complete="hasEvolutionOccurred = true" />
+
       <!-- OrbitControls with zoom and angle limits -->
-      <OrbitControls 
-        ref="orbitControlsRef"
-        v-bind="orbitControlsConfig"
-      />
+      <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
     </TresCanvas>
-    
+
     <!-- Control panels -->
     <StarControl ref="starControlRef" />
     <GridControl ref="gridControlRef" />
