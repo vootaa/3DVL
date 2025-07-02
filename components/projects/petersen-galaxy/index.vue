@@ -8,6 +8,8 @@ import GridControl from './components/GridControl.vue'
 import CameraInfo from './components/CameraInfo.vue'
 import GalaxyDriftController from './components/GalaxyDriftController.vue'
 import DriftMonitor from './components/DriftMonitor.vue'
+import PerformanceMonitor from './components/PerformanceMonitor.vue'
+import CameraPresets from './components/CameraPresets.vue'
 import { CameraController } from './utils/camera-controller'
 import './utils/drift-validator' // Import to trigger auto-diagnostic
 import DriftRuntimeChecker from './utils/drift-runtime-checker'
@@ -34,6 +36,7 @@ const hasEvolutionOccurred = ref(false)
 let cameraController: CameraController
 
 provide('camera', cameraRef)
+provide('orbitControls', orbitControlsRef)
 
 const orbitControlsConfig = {
   enableDamping: true,
@@ -109,6 +112,12 @@ watch(
     
     <!-- Drift debugging monitor -->
     <DriftMonitor />
+    
+    <!-- Performance monitor -->
+    <PerformanceMonitor />
+    
+    <!-- Camera presets component -->
+    <CameraPresets />
   </div>
 </template>
 

@@ -42,9 +42,26 @@ const debugInfo = ref({
 const showDebugPanel = ref(false)
 let updateInterval: NodeJS.Timeout | null = null
 
-// Unit preferences
+// Unit preferences with dropdown options
 const preferredDistanceUnit = ref('GU')
 const preferredVelocityUnit = ref('GU')
+
+// Available unit options for dropdowns
+const distanceUnitOptions = computed(() => [
+  { value: 'nGU', label: 'nGU (Nano Galaxy Unit)' },
+  { value: 'mGU', label: 'mGU (Milli Galaxy Unit)' },
+  { value: 'GU', label: 'GU (Galaxy Unit)' },
+  { value: 'AU', label: 'AU (Astronomical Unit)' },
+  { value: 'ly', label: 'ly (Light Year)' },
+  { value: 'pc', label: 'pc (Parsec)' }
+])
+
+const velocityUnitOptions = computed(() => [
+  { value: 'GU', label: 'GU/s (Galaxy Units per second)' },
+  { value: 'mGU', label: 'mGU/s (Milli Galaxy Units per second)' },
+  { value: 'km/s', label: 'km/s (Kilometers per second)' },
+  { value: 'AU/yr', label: 'AU/yr (Astronomical Units per year)' }
+])
 
 // Formatted display values
 const formattedVelocity = computed(() => {
@@ -251,6 +268,17 @@ const injectionStatusColor = computed(() => {
   return debugInfo.value.injectionStatus === 'SUCCESS' ? '#00ff00' : '#ff0000'
 })
 
+// Function to change unit preferences
+const changeDistanceUnit = (newUnit: string) => {
+  preferredDistanceUnit.value = newUnit
+  Logger.throttle('DriftMonitor', `Distance unit changed to ${newUnit}`, LoggingConfig.DRIFT_MONITOR_UPDATE)
+}
+
+const changeVelocityUnit = (newUnit: string) => {
+  preferredVelocityUnit.value = newUnit
+  Logger.throttle('DriftMonitor', `Velocity unit changed to ${newUnit}`, LoggingConfig.DRIFT_MONITOR_UPDATE)
+}
+
 onMounted(() => {
   // Update debug info every 2 seconds for more responsive display
   updateInterval = setInterval(updateDebugInfo, 2000)
@@ -375,6 +403,47 @@ onUnmounted(() => {
           </div>
         </div>
 
+        <!-- Unit Settings -->
+        <div class="debug-section">
+          <div class="section-title">Display Units</div>
+          <div class="unit-settings">
+            <div class="unit-setting">
+              <label for="distance-unit">Distance:</label>
+              <select 
+                id="distance-unit"
+                v-model="preferredDistanceUnit"
+                @change="changeDistanceUnit(preferredDistanceUnit)"
+                class="unit-selector"
+              >
+                <option 
+                  v-for="option in distanceUnitOptions" 
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+            <div class="unit-setting">
+              <label for="velocity-unit">Velocity:</label>
+              <select 
+                id="velocity-unit"
+                v-model="preferredVelocityUnit"
+                @change="changeVelocityUnit(preferredVelocityUnit)"
+                class="unit-selector"
+              >
+                <option 
+                  v-for="option in velocityUnitOptions" 
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         <!-- Astronomical Unit Reference -->
         <div class="debug-section">
           <div class="section-title">Unit Reference</div>
@@ -402,6 +471,29 @@ onUnmounted(() => {
             <div class="unit-item">
               <span class="unit-symbol">pc</span>
               <span class="unit-name">Parsec (~3.26 light years)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Unit Switcher -->
+        <div class="debug-section">
+          <div class="section-title">Unit Switcher</div>
+          <div class="unit-switcher">
+            <div class="switcher-item">
+              <span class="label">Distance Unit:</span>
+              <select v-model="preferredDistanceUnit" @change="changeDistanceUnit(preferredDistanceUnit)">
+                <option v-for="option in distanceUnitOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+            <div class="switcher-item">
+              <span class="label">Velocity Unit:</span>
+              <select v-model="preferredVelocityUnit" @change="changeVelocityUnit(preferredVelocityUnit)">
+                <option v-for="option in velocityUnitOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
             </div>
           </div>
         </div>
@@ -586,6 +678,57 @@ onUnmounted(() => {
   border: 1px solid rgba(0, 255, 100, 0.2);
 }
 
+/* Unit settings styles */
+.unit-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.unit-setting {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+}
+
+.unit-setting label {
+  color: #88ccff;
+  font-weight: 600;
+  min-width: 60px;
+  font-size: 11px;
+}
+
+.unit-selector {
+  background: rgba(0, 12, 20, 0.8);
+  border: 1px solid rgba(0, 204, 255, 0.4);
+  border-radius: 4px;
+  color: #ffffff;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-family: inherit;
+  flex-grow: 1;
+  transition: all 0.2s ease;
+}
+
+.unit-selector:hover {
+  border-color: rgba(0, 204, 255, 0.6);
+  background: rgba(0, 12, 20, 0.9);
+}
+
+.unit-selector:focus {
+  outline: none;
+  border-color: #00ccff;
+  box-shadow: 0 0 8px rgba(0, 204, 255, 0.3);
+}
+
+.unit-selector option {
+  background: rgba(0, 12, 20, 0.95);
+  color: #ffffff;
+  padding: 4px;
+}
+
 /* Unit reference styles */
 .unit-reference {
   display: flex;
@@ -665,5 +808,52 @@ onUnmounted(() => {
 
 .debug-panel::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 204, 255, 0.7);
+}
+
+/* Unit switcher styles */
+.unit-switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 6px;
+  background: rgba(0, 204, 255, 0.05);
+  border: 1px solid rgba(0, 204, 255, 0.2);
+}
+
+.switcher-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.switcher-item:hover {
+  background: rgba(0, 204, 255, 0.1);
+}
+
+.switcher-item .label {
+  color: #88ccff;
+  font-weight: 600;
+  margin-right: 12px;
+}
+
+.switcher-item select {
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  border: 1px solid rgba(0, 204, 255, 0.5);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.switcher-item select:hover {
+  border-color: #00ccff;
 }
 </style>
