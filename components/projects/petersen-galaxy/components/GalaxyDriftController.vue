@@ -3,9 +3,15 @@ import { ref, computed, provide } from 'vue'
 import { Vector3 } from 'three'
 import { useRenderLoop } from '@tresjs/core'
 import { galaxyDriftConfig, createInitialDriftState, type GalaxyDriftState } from '../configs/galaxy-drift-config'
+import DriftDebugger from '../utils/drift-debug'
+import { Logger } from '../../../utils/logger'
+import { LoggingConfig } from '../configs/logging-config'
 
 // Galaxy drift state
 const driftState = ref<GalaxyDriftState>(createInitialDriftState())
+
+// Debug utility instance
+const driftDebugger = DriftDebugger.getInstance()
 
 // Internal time tracking for smooth motion
 let lastTime = 0
@@ -82,6 +88,14 @@ onLoop(({ delta, elapsed }) => {
   
   updateGalaxyDrift(deltaTime, currentTime)
   lastTime = currentTime
+  
+  // Use Logger.throttle for drift debugging instead of manual time checking
+  Logger.throttle('DRIFT_DEBUG', 'Drift system status check', {
+    position: driftState.value.currentPosition,
+    velocity: driftState.value.velocity.length(),
+    totalDistance: driftState.value.totalDistance,
+    timestamp: currentTime.toFixed(2)
+  }, LoggingConfig.DRIFT_DEBUG) // Use centralized config
 })
 
 // Computed values for external consumption
@@ -122,6 +136,11 @@ provide('galaxyDriftData', {
   distance: displayDriftDistance,
   duration: driftDuration
 })
+
+// Expose drift config to window for runtime checker
+if (typeof window !== 'undefined') {
+  (window as any).__DRIFT_CONFIG__ = galaxyDriftConfig
+}
 
 // Reset function for debugging
 const resetDrift = () => {

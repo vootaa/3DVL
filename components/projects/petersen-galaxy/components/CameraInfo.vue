@@ -16,29 +16,6 @@ let animationFrameId: number | null = null
 // Get camera reference from parent component
 const cameraRef = inject<Ref<PerspectiveCamera | null>>('camera')
 
-// Get galaxy drift data from parent component with error handling
-const galaxyDriftData = inject('galaxyDriftData', {
-  position: ref({ x: '0.000', y: '0.000', z: '0.000' }),
-  velocity: ref('0.0000'),
-  distance: ref('0.00'),
-  duration: ref(0)
-})
-
-// Validate galaxy drift data injection
-if (!galaxyDriftData || !galaxyDriftData.position) {
-  Logger.error('CAMERA_INFO', 'Failed to inject galaxyDriftData from GalaxyDriftController', {
-    galaxyDriftData,
-    hasPosition: !!galaxyDriftData?.position,
-    type: typeof galaxyDriftData
-  })
-} else {
-  Logger.log('CAMERA_INFO', 'Successfully injected galaxyDriftData', {
-    initialPosition: galaxyDriftData.position.value,
-    velocity: galaxyDriftData.velocity.value,
-    distance: galaxyDriftData.distance.value
-  })
-}
-
 // Validate camera injection
 if (!cameraRef) {
   Logger.error('CAMERA_INFO', 'Failed to inject camera reference from parent component')
@@ -149,31 +126,7 @@ onUnmounted(() => {
     <div class="controls-instructions">
       <span class="control-hint">Drag to orbit • Scroll to zoom</span>
     </div>
-    
-    <!-- Galaxy Drift Section -->
-    <div class="info-header drift-header">GALAXY DRIFT</div>
-    <div class="info-content">
-      <div class="info-row">
-        <span class="info-label">
-          <i class="info-icon drift-icon">⚬</i> Position
-        </span>
-        <span class="info-value position-value">
-          ({{ galaxyDriftData.position.value.x }}, {{ galaxyDriftData.position.value.y }}, {{ galaxyDriftData.position.value.z }}) mGU
-        </span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">
-          <i class="info-icon velocity-icon">→</i> Velocity
-        </span>
-        <span class="info-value velocity-value">{{ galaxyDriftData.velocity.value }} nGU/ms</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">
-          <i class="info-icon distance-icon">⤷</i> Total Drift
-        </span>
-        <span class="info-value drift-distance-value">{{ galaxyDriftData.distance.value }} nGU</span>
-      </div>
-    </div>
+
   </div>
 </template>
 
@@ -305,32 +258,6 @@ onUnmounted(() => {
 .angle-value {
   color: #ffcc77;
   margin-left: 4px;
-}
-
-/* Galaxy drift section styles */
-.drift-header {
-  margin-top: 8px;
-  color: #ff6b6b;
-  border-bottom-color: rgba(255, 107, 107, 0.3);
-}
-
-.drift-icon {
-  color: #ff6b6b;
-}
-
-.position-value {
-  color: #ff9999;
-  font-size: 0.72em;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 0.3px;
-}
-
-.velocity-value {
-  color: #ffaa77;
-}
-
-.drift-distance-value {
-  color: #ffcc99;
 }
 
 /* Camera controls section */

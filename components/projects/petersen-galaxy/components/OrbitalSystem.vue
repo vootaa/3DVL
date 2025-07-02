@@ -4,6 +4,8 @@ import { ref, inject } from 'vue'
 import { useRenderLoop } from '@tresjs/core'
 import { orbitalConfig, orbitalColorConfig } from '../configs/orbital-config'
 import { Logger } from '../../../utils/logger'
+import { LoggingConfig } from '../configs/logging-config'
+import DriftDebugger from '../utils/drift-debug'
 
 import vertexShader from '../shaders/orbital-vertex.glsl'
 import fragmentShader from '../shaders/orbital-fragment.glsl'
@@ -202,14 +204,24 @@ onLoop(({ elapsed }) => {
         const center = galaxyCenter.value
         bufferRef.value.position.set(center.x, center.y, center.z)
         
-        // Log drift occasionally for debugging
+        // Use Logger.throttle for consistent logging
         Logger.throttle('ORBITAL_DRIFT', 'Galaxy center applied to orbital system', {
           position: {
             x: center.x.toFixed(6),
             y: center.y.toFixed(6),
             z: center.z.toFixed(6)
-          }
-        }, 30000) // Log every 30 seconds
+          },
+          timestamp: elapsed.toFixed(2)
+        }, LoggingConfig.ORBITAL_DRIFT) // Use centralized config
+        
+        // Enhanced drift debugging and validation - only do this occasionally
+        if (Math.floor(elapsed) % 15 === 0) { // Every 15 seconds
+          const injectionStatus = DriftDebugger.validateInjection(
+            'ORBITAL_SYSTEM', 
+            galaxyCenter, 
+            bufferRef
+          )
+        }
       } else {
         Logger.warn('ORBITAL_SYSTEM', 'Galaxy center is not available, using default position (0,0,0)')
         bufferRef.value.position.set(0, 0, 0)

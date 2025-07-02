@@ -216,14 +216,14 @@ const animate = () => {
           const center = galaxyCenter.value
           starClusterRef.value.position.set(center.x, center.y, center.z)
           
-          // Log drift occasionally for debugging
+          // Log drift occasionally for debugging using centralized config
           Logger.throttle('STAR_CLUSTER_DRIFT', 'Galaxy center applied to star cluster', {
             position: {
               x: center.x.toFixed(6),
               y: center.y.toFixed(6),
               z: center.z.toFixed(6)
             }
-          }, 30000) // Log every 30 seconds
+          }, 30000) // Using LoggingConfig.STAR_CLUSTER_DRIFT would require import
         } else {
           Logger.warn('STAR_CLUSTER', 'Galaxy center is not available, using default position (0,0,0)')
           starClusterRef.value.position.set(0, 0, 0)

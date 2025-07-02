@@ -7,7 +7,10 @@ import StarControl from './components/StarControl.vue'
 import GridControl from './components/GridControl.vue'
 import CameraInfo from './components/CameraInfo.vue'
 import GalaxyDriftController from './components/GalaxyDriftController.vue'
+import DriftMonitor from './components/DriftMonitor.vue'
 import { CameraController } from './utils/camera-controller'
+import './utils/drift-validator' // Import to trigger auto-diagnostic
+import DriftRuntimeChecker from './utils/drift-runtime-checker'
 
 const gl = {
   clearColor: '#000811',
@@ -45,6 +48,13 @@ const orbitControlsConfig = {
 onMounted(() => {
   // Initialize camera controller
   cameraController = new CameraController(cameraRef, orbitControlsRef)
+  
+  // Initialize drift runtime checker in development
+  if (process.env.NODE_ENV === 'development') {
+    setTimeout(() => {
+      DriftRuntimeChecker.startMonitoring()
+    }, 2000)
+  }
 })
 
 // Handle grid visibility changes
@@ -96,6 +106,9 @@ watch(
     <StarControl ref="starControlRef" />
     <GridControl ref="gridControlRef" />
     <CameraInfo />
+    
+    <!-- Drift debugging monitor -->
+    <DriftMonitor />
   </div>
 </template>
 
