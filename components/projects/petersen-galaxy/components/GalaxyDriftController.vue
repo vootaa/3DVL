@@ -196,6 +196,6 @@ defineExpose({
 </script>
 
 <template>
-  <!-- This component is invisible - it only manages drift state -->
-  <div style="display: none;"></div>
+  <!-- This component provides drift data to its children -->
+  <slot />
 </template>

@@ -1,44 +1,55 @@
 <script setup lang="ts">
 import { ref, computed, inject, onMounted, onUnmounted } from 'vue'
 import { Logger } from '../../../utils/logger'
+import { useDriftState } from '../composables/useDriftState'
+
+// Use global drift state manager
+const { driftState, canUseDrift: canUseDriftGlobal, toggleTrails } = useDriftState()
 
 // Drift visualization state - default enabled
 const isDriftVisible = ref(true)
 const isInitialized = ref(false)
 
-// Inject drift controller from parent
-const driftController = inject<any>('driftController')
+// Inject drift controller and data from parent (fallback)
+const driftController = inject<any>('driftController', null)
+const galaxyDriftData = inject<any>('galaxyDriftData', null)
 
 // Toggle drift visualization
 const toggleDriftVisualization = () => {
+  Logger.log('DRIFT_VISUALIZATION', 'Toggle called', {
+    canUseDrift: canUseDrift.value,
+    canUseDriftGlobal: canUseDriftGlobal.value,
+    hasDriftController: !!driftController,
+    hasGalaxyDriftData: !!galaxyDriftData,
+    driftState: driftState
+  })
+  
   if (!canUseDrift.value) {
-    Logger.warn('DRIFT_VISUALIZATION', 'Drift controller not available - cannot toggle trails', {
-      driftController: !!driftController,
-      isInitialized: isInitialized.value
-    })
-    // Still allow the visual toggle for debugging
+    Logger.warn('DRIFT_VISUALIZATION', 'Cannot use drift - allowing visual toggle anyway')
+    // Still allow visual toggle for debugging
     isDriftVisible.value = !isDriftVisible.value
     return
   }
   
   isDriftVisible.value = !isDriftVisible.value
   
-  if (driftController) {
+  // Try to use global state manager first
+  if (canUseDriftGlobal.value) {
+    const trailsEnabled = toggleTrails()
+    Logger.log('DRIFT_VISUALIZATION', `Global trails ${trailsEnabled ? 'enabled' : 'disabled'}`)
+  }
+  // Fallback to injected controller
+  else if (driftController && driftController.enableTrails) {
     if (isDriftVisible.value) {
       enableDriftVisualization()
     } else {
       disableDriftVisualization()
     }
+  } else {
+    Logger.warn('DRIFT_VISUALIZATION', 'No drift control method available, using basic toggle')
   }
   
   Logger.log('DRIFT_VISUALIZATION', `Drift visualization ${isDriftVisible.value ? 'enabled' : 'disabled'}`)
-  
-  // Provide user feedback about what to expect
-  if (isDriftVisible.value && canUseDrift.value) {
-    setTimeout(() => {
-      Logger.log('DRIFT_VISUALIZATION', 'Drift trails enabled! Look for glowing cyan-blue particles that trace the galaxy center movement. It may take a few seconds for the trail to become visible.')
-    }, 1000)
-  }
 }
 
 // Enable drift trail visualization
@@ -88,35 +99,81 @@ const disableDriftVisualization = () => {
   }
 }
 
+// Computed status
+const driftStatus = computed(() => {
+  if (!driftController) return 'Not Available'
+  return isDriftVisible.value ? 'Active' : 'Inactive'
+})
 
 const canUseDrift = computed(() => {
-  const hasController = !!(driftController)
-  const hasTrailMethods = hasController && 
-    typeof driftController.enableTrails === 'function' &&
-    typeof driftController.showVelocityVectors === 'function'
+  // 优先使用全局状态管理器
+  const globalCanUse = canUseDriftGlobal.value
   
-  Logger.throttle('DRIFT_VISUALIZATION_STATUS', 'Drift capability check', {
+  // 备选：检查注入的数据源
+  const hasController = !!(driftController && driftController.trailsEnabled)
+  const hasData = !!(galaxyDriftData && galaxyDriftData.position)
+  const hasWindowState = typeof window !== 'undefined' && !!(window as any).__CURRENT_DRIFT_STATE__
+  
+  const result = globalCanUse || hasController || hasData || hasWindowState
+  
+  Logger.log('DRIFT_VISUALIZATION', 'Checking drift availability', {
+    globalCanUse,
     hasController,
-    hasTrailMethods,
-    driftControllerType: typeof driftController,
-    isInitialized: isInitialized.value
-  }, 5000) // Log every 5 seconds
+    hasData,
+    hasWindowState,
+    result,
+    driftState: driftState
+  })
   
-  return hasController && hasTrailMethods
+  return result
+})
+
+const driftButtonText = computed(() => {
+  if (!canUseDrift.value) {
+    return 'N/A'
+  }
+  return isDriftVisible.value ? 'ON' : 'OFF'
 })
 
 onMounted(() => {
+  // 立即检查注入状态
+  console.log('=== DRIFT VISUALIZATION IMMEDIATE CHECK ===')
+  console.log('driftController:', driftController)
+  console.log('galaxyDriftData:', galaxyDriftData)
+  console.log('canUseDrift:', canUseDrift.value)
+  console.log('canUseDriftGlobal:', canUseDriftGlobal.value)
+  console.log('driftState:', driftState)
+  console.log('=== END IMMEDIATE CHECK ===')
+  
   // Check if drift controller is available
   setTimeout(() => {
     isInitialized.value = true
-    if (driftController) {
-      Logger.log('DRIFT_VISUALIZATION', 'Drift controller detected and ready')
-      // Enable drift trails by default
+    
+    // 延迟检查注入状态
+    console.log('=== DRIFT VISUALIZATION DELAYED CHECK ===')
+    console.log('driftController:', driftController)
+    console.log('galaxyDriftData:', galaxyDriftData)
+    console.log('canUseDrift:', canUseDrift.value)
+    console.log('canUseDriftGlobal:', canUseDriftGlobal.value)
+    console.log('driftState:', driftState)
+    console.log('window.__CURRENT_DRIFT_STATE__:', typeof window !== 'undefined' ? (window as any).__CURRENT_DRIFT_STATE__ : 'not available')
+    console.log('=== END DELAYED CHECK ===')
+    
+    Logger.log('DRIFT_VISUALIZATION', 'Component initialized', {
+      hasDriftController: !!driftController,
+      hasGalaxyDriftData: !!galaxyDriftData,
+      canUseDrift: canUseDrift.value,
+      canUseDriftGlobal: canUseDriftGlobal.value,
+      driftState: driftState
+    })
+    
+    if (canUseDrift.value) {
+      Logger.log('DRIFT_VISUALIZATION', 'Drift functionality available')
       if (isDriftVisible.value) {
         enableDriftVisualization()
       }
     } else {
-      Logger.warn('DRIFT_VISUALIZATION', 'Drift controller not found')
+      Logger.warn('DRIFT_VISUALIZATION', 'No drift functionality available')
     }
   }, 1000)
 })
@@ -134,20 +191,15 @@ onUnmounted(() => {
     class="drift-control" 
     @click="toggleDriftVisualization" 
     :class="{ active: isDriftVisible, disabled: !canUseDrift }"
-    :title="canUseDrift ? 'Toggle drift trajectory visualization. When ON, you will see glowing trail particles following the galaxy center movement.' : 'Drift controller not available - check console for details'"
+    :title="canUseDrift ? 'Toggle drift trajectory visualization' : 'Drift controller not available'"
   >
     <div class="control-label">DRIFT TRAILS</div>
-    <div class="control-value">
-      {{ !canUseDrift ? 'N/A' : (isDriftVisible ? 'ON' : 'OFF') }}
-    </div>
-    <!-- Status indicator for debugging -->
-    <div class="status-indicator" v-if="!canUseDrift">⚠</div>
+    <div class="control-value">{{ driftButtonText }}</div>
   </div>
 </template>
 
 <style lang="css" scoped>
 .drift-control {
-  position: relative;
   background: rgba(0, 12, 20, 0.85);
   border: 1px solid rgba(0, 204, 255, 0.4);
   border-radius: 8px;
@@ -196,12 +248,12 @@ onUnmounted(() => {
 }
 
 .drift-control.disabled {
-  opacity: 0.7;
+  opacity: 0.5;
   cursor: not-allowed;
-  border-color: rgba(255, 100, 100, 0.4);
-  color: rgba(255, 150, 150, 0.6);
-  background: rgba(20, 5, 5, 0.6);
-  /* Remove pointer-events: none to allow click debugging */
+  border-color: rgba(0, 204, 255, 0.2);
+  color: rgba(0, 204, 255, 0.4);
+  background: rgba(0, 12, 20, 0.6);
+  /* 移除 pointer-events: none; 允许点击以便调试 */
 }
 
 .control-label {
@@ -214,15 +266,6 @@ onUnmounted(() => {
   line-height: 1em;
   margin: 2px 0;
   text-align: right;
-}
-
-.status-indicator {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  font-size: 12px;
-  color: #ff9999;
-  opacity: 0.8;
 }
 
 @media only screen and (max-width: 900px) {

@@ -90,7 +90,19 @@ watch(
 <template>
   <div class="galaxy-container">
     <!-- Galaxy drift controller (invisible but manages galaxy center) -->
-    <GalaxyDriftController />
+    <!-- 注意：GalaxyDriftController 需要包含其他依赖组件 -->
+    <GalaxyDriftController>
+      <!-- 将需要注入数据的组件放在这里 -->
+      <template #default>
+        <!-- Drift visualization control (top left) -->
+        <div class="drift-visualization-container">
+          <DriftVisualization />
+        </div>
+        
+        <!-- Drift debugging monitor -->
+        <DriftMonitor />
+      </template>
+    </GalaxyDriftController>
 
     <TresCanvas v-bind="gl">
       <!-- Renderer stats collector (invisible component for performance monitoring) -->
@@ -127,19 +139,11 @@ watch(
     <!-- Evolution timeline (top center) -->
     <EvolutionTimeline />
     
-    <!-- Drift debugging monitor -->
-    <DriftMonitor />
-    
     <!-- Performance monitor -->
     <PerformanceMonitor />
     
     <!-- Camera presets component -->
     <CameraPresets />
-    
-    <!-- Drift visualization control (top left) -->
-    <div class="drift-visualization-container">
-      <DriftVisualization />
-    </div>
   </div>
 </template>
 
