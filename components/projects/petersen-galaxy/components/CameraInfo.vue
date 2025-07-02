@@ -102,38 +102,37 @@ onUnmounted(() => {
 
 <template>
   <div class="camera-info">
-    <div class="info-header">CAMERA CONTROL</div>
+    <div class="info-header">Camera Control Info</div>
     
     <div class="info-content">
-      <!-- Distance row - centered -->
-      <div class="info-row distance-row">
-        <div class="distance-display">
-          <i class="info-icon distance-icon">↕</i> Distance: <span class="distance-value">{{ displayDistance }}</span>
+      <!-- Distance & Zoom Control -->
+      <div class="control-group">
+        <div class="control-row">
+          <span class="control-label">
+            <i class="control-icon">📏</i> Distance
+          </span>
+          <span class="control-value">{{ displayDistance }}</span>
+        </div>
+        <div class="control-hint">Scroll to zoom • GU = Galaxy Unit</div>
+      </div>
+
+      <!-- Angles & Orbit Control -->
+      <div class="control-group">
+        <div class="control-hint">Drag to orbit</div>
+        <div class="angle-row">
+          <span class="angle-label">
+            <i class="control-icon">🧭</i> Azimuth
+          </span>
+          <span class="angle-value">{{ displayAzimuth }}</span>
+        </div>
+        <div class="angle-row">
+          <span class="angle-label">
+            <i class="control-icon">📐</i> Elevation
+          </span>
+          <span class="angle-value">{{ displayElevation }}</span>
         </div>
       </div>
-      <!-- Angles row - grid layout -->
-      <div class="info-row angle-grid-row">
-        <div class="angle-grid">
-          <div class="angle-item">
-            <i class="info-icon azimuth-icon">↻</i> Azimuth: <span class="angle-value">{{ displayAzimuth }}°</span>
-          </div>
-          <div class="angle-item">
-            <i class="info-icon elevation-icon">⇅</i> Elevation: <span class="angle-value">{{ displayElevation }}°</span>
-          </div>
-        </div>
-      </div>
     </div>
-
-    <!-- Camera Controls Instructions - after camera info -->
-    <div class="controls-instructions">
-      <span class="control-hint">Drag to orbit • Scroll to zoom</span>
-    </div>
-    
-    <!-- Unit Information -->
-    <div class="unit-info">
-      <span class="unit-hint">Units: Galaxy Units (GU) • 1 GU = simulation scale</span>
-    </div>
-
   </div>
 </template>
 
@@ -142,193 +141,120 @@ onUnmounted(() => {
   position: absolute;
   bottom: 20px;
   left: 20px;
-  background: rgba(0, 12, 20, 0.85);
-  border: 1px solid rgba(0, 204, 255, 0.4);
+  background: linear-gradient(135deg, rgba(0, 20, 40, 0.95), rgba(0, 10, 25, 0.92));
+  border: 1px solid rgba(0, 180, 255, 0.6);
   border-radius: 8px;
-  padding: 10px 15px;
-  color: #00CCFF;
-  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  padding: 12px;
+  color: #00ccff;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
   font-weight: 500;
-  font-variant-numeric: slashed-zero tabular-nums;
-  text-transform: uppercase;
-  line-height: 1em;
-  transform: skew(0.5deg, -1.5deg) rotate(-1deg);
-  transform-origin: center center;
-  pointer-events: none;
-  width: 320px;
-  min-height: 110px;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  transition: all 0.2s ease;
+  font-size: 12px;
+  width: 240px;
+  backdrop-filter: blur(8px);
+  box-shadow: 
+    0 4px 20px rgba(0, 180, 255, 0.15),
+    inset 0 1px 0 rgba(0, 180, 255, 0.2);
   z-index: 100;
-  box-shadow: 0 0 15px rgba(0, 204, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.camera-info:hover {
+  border-color: rgba(0, 200, 255, 0.8);
+  box-shadow: 
+    0 6px 25px rgba(0, 180, 255, 0.25),
+    inset 0 1px 0 rgba(0, 180, 255, 0.3);
 }
 
 .info-header {
-  font-size: 0.9em;
-  opacity: 0.8;
-  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #66ddff;
   text-align: center;
-  border-bottom: 1px solid rgba(0, 204, 255, 0.2);
-  padding-bottom: 3px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(0, 180, 255, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .info-content {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 12px;
 }
 
-.info-row {
+.control-group {
+  position: relative;
+}
+
+.control-row, .angle-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.9em;
-  line-height: 1.1;
-}
-
-/* Distance row - special centered layout */
-.distance-row {
-  justify-content: center;
   margin-bottom: 4px;
 }
 
-.distance-display {
+.control-label, .angle-label {
   display: flex;
   align-items: center;
-  font-size: 1em;
+  color: #99ddff;
+  font-size: 11px;
   font-weight: 500;
 }
 
-.info-label {
-  display: flex;
-  align-items: center;
-  opacity: 0.9;
-  font-size: 1em;
+.control-icon {
+  margin-right: 6px;
+  font-size: 12px;
+  filter: hue-rotate(200deg);
 }
 
-.info-value {
-  font-size: 0.85em;
+.control-value {
+  color: #00ff88;
   font-weight: 600;
+  font-size: 12px;
+  text-align: right;
+  min-width: 60px;
+}
+
+.angle-value {
+  color: #ffcc00;
+  font-weight: 600;
+  font-size: 11px;
   text-align: right;
   min-width: 50px;
 }
 
-.info-icon {
-  display: inline-block;
-  margin-right: 5px;
-  font-style: normal;
-  font-size: 1.2em;
-}
-
-.distance-icon {
-  transform: rotate(45deg);
-}
-
-.azimuth-icon {
-  font-size: 1.2em;
-  margin-right: 4px;
-  color: #00CCFF;
-}
-
-.elevation-icon {
-  font-weight: bold;
-  margin-right: 4px;
-  color: #00CCFF;
-}
-
-/* Color coding similar to space-game observation controls */
-.distance-value {
-  color: #66ff99;
-}
-
-/* Angle grid layout */
-.angle-grid-row {
-  display: block;
-}
-
-.angle-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  width: 100%;
-}
-
-.angle-item {
-  display: flex;
-  align-items: center;
-  font-size: 0.85em;
-  color: #00CCFF;
-}
-
-.angle-value {
-  color: #ffcc77;
-  margin-left: 4px;
-}
-
-/* Camera controls section */
-.controls-instructions {
-  display: flex;
-  justify-content: center;
-  margin: 8px 0 6px 0;
-  font-size: 0.75em;
-  opacity: 0.8;
-  border-top: 1px solid rgba(119, 255, 170, 0.2);
-  padding-top: 6px;
-}
-
 .control-hint {
-  color: #77ffaa;
-  text-align: center;
-  font-weight: 400;
-  letter-spacing: 0.5px;
-}
-
-/* Unit information section */
-.unit-info {
-  display: flex;
-  justify-content: center;
-  margin: 4px 0 2px 0;
-  font-size: 0.65em;
-  opacity: 0.6;
-  border-top: 1px solid rgba(255, 170, 0, 0.2);
-  padding-top: 4px;
-}
-
-.unit-hint {
-  color: #ffaa77;
-  text-align: center;
-  font-weight: 300;
-  letter-spacing: 0.3px;
+  font-size: 9px;
+  color: #88bbdd;
+  opacity: 0.8;
   font-style: italic;
+  text-align: center;
+  margin: 2px 0;
+  padding: 2px 0;
+  border-top: 1px solid rgba(0, 180, 255, 0.15);
+}
+
+.control-group:first-child .control-hint {
+  border-top: none;
+  border-bottom: 1px solid rgba(0, 180, 255, 0.15);
+  margin-bottom: 6px;
 }
 
 /* Responsive design */
 @media only screen and (max-width: 900px) {
   .camera-info {
-    padding: 8px 12px;
-    width: 160px;
-    min-height: 55px;
-    transform: skew(0.25deg, -1deg) rotate(-0.75deg);
+    width: 200px;
+    padding: 10px;
+    font-size: 11px;
   }
-
-  .info-value {
-    font-size: 0.8em;
+  
+  .info-header {
+    font-size: 10px;
   }
-
-  .info-label {
-    font-size: 0.9em;
-  }
-
-  .controls-instructions {
-    font-size: 0.65em;
-    margin: 6px 0 4px 0;
-    padding-top: 4px;
-  }
-
+  
   .control-hint {
-    letter-spacing: 0.3px;
+    font-size: 8px;
   }
 }
 </style>

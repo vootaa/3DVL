@@ -56,7 +56,7 @@ const cameraPresets: CameraPreset[] = [
     id: 'close-inspect',
     name: 'Close Inspect',
     description: 'Detailed core inspection',  
-    position: { x: 5, y: 4, z: 5 },
+    position: { x: 2.5, y: 2, z: 2.5 },
     target: { x: 0, y: 0, z: 0 },
     icon: '🔍',
     transition: 1200
