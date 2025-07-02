@@ -102,12 +102,13 @@ onUnmounted(() => {
   <div class="camera-info">
     <div class="info-header">CAMERA</div>
     <div class="info-content">
-      <div class="info-row">
-        <span class="info-label">
-          <i class="info-icon distance-icon">↕</i> Distance
-        </span>
-        <span class="info-value distance-value">{{ displayDistance }} AU</span>
+      <!-- Distance row - centered -->
+      <div class="info-row distance-row">
+        <div class="distance-display">
+          <i class="info-icon distance-icon">↕</i> Distance: <span class="distance-value">{{ displayDistance }} AU</span>
+        </div>
       </div>
+      <!-- Angles row - grid layout -->
       <div class="info-row angle-grid-row">
         <div class="angle-grid">
           <div class="angle-item">
@@ -196,6 +197,19 @@ onUnmounted(() => {
   align-items: center;
   font-size: 0.9em;
   line-height: 1.1;
+}
+
+/* Distance row - special centered layout */
+.distance-row {
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.distance-display {
+  display: flex;
+  align-items: center;
+  font-size: 1em;
+  font-weight: 500;
 }
 
 .info-label {
