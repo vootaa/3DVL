@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { AdditiveBlending, Points, ShaderMaterial, Vector3 } from 'three'
-import { ref, inject, computed } from 'vue'
+import { ref, inject } from 'vue'
 import { useRenderLoop } from '@tresjs/core'
 import { orbitalConfig, orbitalColorConfig } from '../configs/orbital-config'
 
@@ -65,7 +65,7 @@ for (let i = 0; i < totalCount; i++) {
     // Start from completely random chaotic positions within the space
     const initialRadius = Math.random() * maxSpaceRadius
     const initialAngle = Math.random() * Math.PI * 2
-    const initialHeight = (Math.random() - 0.5) * 1.5 // Much thinner disk distribution
+    const initialHeight = (Math.random() - 0.5) * 2.25 // Increased height distribution (+50% thicker disk)
 
     positions[i3] = Math.cos(initialAngle) * initialRadius
     positions[i3 + 1] = initialHeight
@@ -75,13 +75,13 @@ for (let i = 0; i < totalCount; i++) {
     colors[i3 + 1] = particleColor.g
     colors[i3 + 2] = particleColor.b
 
-    // Smaller scale for thinner, more precise rings
+    // Increased scale for larger particles (+50%)
     if (targetRadius === innerRadius) {
-      scales[i] = 0.6 + Math.random() * 0.3 // Inner ring - thinner but bright
+      scales[i] = 0.9 + Math.random() * 0.45 // Inner ring - increased from 0.6-0.9 to 0.9-1.35
     } else if (targetRadius === middleRadius) {
-      scales[i] = 0.5 + Math.random() * 0.3 // Middle ring - thin
+      scales[i] = 0.75 + Math.random() * 0.45 // Middle ring - increased from 0.5-0.8 to 0.75-1.2
     } else {
-      scales[i] = 0.4 + Math.random() * 0.2 // Outer ring - thinnest
+      scales[i] = 0.6 + Math.random() * 0.3 // Outer ring - increased from 0.4-0.6 to 0.6-0.9
     }
   } else {
     // Scattered particles - positioned close to ring areas with same color family
@@ -94,7 +94,7 @@ for (let i = 0; i < totalCount; i++) {
       const radiusVariation = (Math.random() - 0.5) * 0.8 // ±0.4 variation
       const radius = Math.max(0.3, baseRadius + radiusVariation)
       const angle = Math.random() * Math.PI * 2
-      const height = (Math.random() - 0.5) * 0.8 // Very thin disk
+      const height = (Math.random() - 0.5) * 1.2 // Increased height for thicker disk (+50%)
 
       positions[i3] = Math.cos(angle) * radius
       positions[i3 + 1] = height
@@ -107,7 +107,7 @@ for (let i = 0; i < totalCount; i++) {
       const radiusVariation = (Math.random() - 0.5) * 1.0 // ±0.5 variation
       const radius = Math.max(0.5, baseRadius + radiusVariation)
       const angle = Math.random() * Math.PI * 2
-      const height = (Math.random() - 0.5) * 1.0 // Thin disk
+      const height = (Math.random() - 0.5) * 1.5 // Increased height for thicker disk (+50%)
 
       positions[i3] = Math.cos(angle) * radius
       positions[i3 + 1] = height
@@ -120,7 +120,7 @@ for (let i = 0; i < totalCount; i++) {
       const radiusVariation = (Math.random() - 0.5) * 1.2 // ±0.6 variation
       const radius = Math.max(1.0, baseRadius + radiusVariation)
       const angle = Math.random() * Math.PI * 2
-      const height = (Math.random() - 0.5) * 1.2 // Thin disk
+      const height = (Math.random() - 0.5) * 1.8 // Increased height for thicker disk (+50%)
 
       positions[i3] = Math.cos(angle) * radius
       positions[i3 + 1] = height
@@ -139,14 +139,14 @@ for (let i = 0; i < totalCount; i++) {
     colors[i3 + 1] = scatteredColor.g
     colors[i3 + 2] = scatteredColor.b
 
-    // Slightly larger scales for scattered particles for better visibility
-    scales[i] = 0.9 + Math.random() * 0.5
+    // Increased scales for scattered particles (+50% size)
+    scales[i] = 1.35 + Math.random() * 0.75 // Increased from 0.9-1.4 to 1.35-2.1
   }
 
-  // Reduced initial randomness for more precise ring formation and thin disk
-  const randomStrength = 1.2
+  // Increased initial randomness for thicker ring formation and disk (+50%)
+  const randomStrength = 1.8 // Increased from 1.2
   const randomX = (Math.random() - 0.5) * randomStrength
-  const randomY = (Math.random() - 0.5) * (randomStrength * 0.3) // Much less Y variation for thin disk
+  const randomY = (Math.random() - 0.5) * (randomStrength * 0.45) // Increased Y variation for thicker disk
   const randomZ = (Math.random() - 0.5) * randomStrength
 
   randomnessArray[i3] = randomX

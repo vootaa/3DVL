@@ -38,7 +38,7 @@ void main() {
         // Calculate orbital position
         vec3 orbitalPosition = vec3(
             currentRadius * cos(angle),
-            modelPosition.y * (1.0 - orbitInfluence * 0.99), // Almost completely flatten to thin disk
+            modelPosition.y * (1.0 - orbitInfluence * 0.985), // Slightly less flattening for thicker disk (+50% height)
             currentRadius * sin(angle)
         );
         
@@ -68,9 +68,9 @@ void main() {
         
         // Add random disturbances in all directions
         float timeVariation = uTime * 0.3;
-        float xDisturbance = sin(timeVariation + distanceToCenter * 2.0) * 0.15;
-        float zDisturbance = cos(timeVariation + angle * 3.0) * 0.15;
-        float yDisturbance = sin(timeVariation * 1.5 + distanceToCenter) * 0.08;
+        float xDisturbance = sin(timeVariation + distanceToCenter * 2.0) * 0.23; // Increased for thicker ring (+50%)
+        float zDisturbance = cos(timeVariation + angle * 3.0) * 0.23; // Increased for thicker ring (+50%)
+        float yDisturbance = sin(timeVariation * 1.5 + distanceToCenter) * 0.12; // Increased Y disturbance (+50%)
         
         // Apply synchronized rotation
         angle += syncedRotation;
@@ -81,8 +81,8 @@ void main() {
         modelPosition.y += yDisturbance;
     }
     
-    // Very reduced randomness for precise ring formation
-    float randomnessStrength = mix(1.0, 0.02, smoothstep(0.0, 1.0, orbitInfluence));
+    // Slightly increased randomness for thicker ring formation (+50%)
+    float randomnessStrength = mix(1.0, 0.03, smoothstep(0.0, 1.0, orbitInfluence));
     modelPosition.xyz += aRandomness * randomnessStrength;
 
     vec4 viewPosition = viewMatrix * modelPosition;

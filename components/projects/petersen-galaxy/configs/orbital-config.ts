@@ -22,7 +22,7 @@ export const orbitalConfig = {
   maxSpaceRadius: 6.24, // outerRadius * 1.3
   
   // Particle properties
-  particleSize: 8, // Smaller for thinner ring lines
+  particleSize: 12, // Increased from 8 to 12 (+50% size)
   
   // Rotation speeds - synchronized base speed with random oscillations for stable relative structure
   rotationSpeeds: {
