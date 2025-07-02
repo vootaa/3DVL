@@ -3,12 +3,30 @@ import { AdditiveBlending, Points, ShaderMaterial, Vector3 } from 'three'
 import { ref, inject } from 'vue'
 import { useRenderLoop } from '@tresjs/core'
 import { orbitalConfig, orbitalColorConfig } from '../configs/orbital-config'
+import { Logger } from '../../../utils/logger'
 
 import vertexShader from '../shaders/orbital-vertex.glsl'
 import fragmentShader from '../shaders/orbital-fragment.glsl'
 
-// Inject galaxy center position
+// Inject galaxy center position with error handling
 const galaxyCenter = inject('galaxyCenter', ref(new Vector3(0, 0, 0)))
+
+// Validate galaxy center injection
+if (!galaxyCenter || !galaxyCenter.value) {
+  Logger.error('ORBITAL_SYSTEM', 'Failed to inject galaxyCenter from GalaxyDriftController', {
+    galaxyCenter,
+    hasValue: !!galaxyCenter?.value,
+    type: typeof galaxyCenter
+  })
+} else {
+  Logger.log('ORBITAL_SYSTEM', 'Successfully injected galaxyCenter', {
+    initialPosition: {
+      x: galaxyCenter.value.x.toFixed(3),
+      y: galaxyCenter.value.y.toFixed(3),
+      z: galaxyCenter.value.z.toFixed(3)
+    }
+  })
+}
 
 // Use imported configuration
 const { totalCount, orbitParticleRatio, orbitDistribution, innerRadius, middleRadius, outerRadius, maxSpaceRadius, particleSize, rotationSpeeds } = orbitalConfig
@@ -178,9 +196,29 @@ onLoop(({ elapsed }) => {
     const material = bufferRef.value.material as ShaderMaterial
     material.uniforms.uTime.value = elapsed
     
-    // Apply galaxy center drift
-    const center = galaxyCenter.value
-    bufferRef.value.position.set(center.x, center.y, center.z)
+    // Apply galaxy center drift with error handling
+    try {
+      if (galaxyCenter?.value) {
+        const center = galaxyCenter.value
+        bufferRef.value.position.set(center.x, center.y, center.z)
+        
+        // Log drift occasionally for debugging
+        Logger.throttle('ORBITAL_DRIFT', 'Galaxy center applied to orbital system', {
+          position: {
+            x: center.x.toFixed(6),
+            y: center.y.toFixed(6),
+            z: center.z.toFixed(6)
+          }
+        }, 5000) // Log every 5 seconds
+      } else {
+        Logger.warn('ORBITAL_SYSTEM', 'Galaxy center is not available, using default position (0,0,0)')
+        bufferRef.value.position.set(0, 0, 0)
+      }
+    } catch (error) {
+      Logger.error('ORBITAL_SYSTEM', 'Error applying galaxy center drift to orbital system', error)
+      // Fallback to default position
+      bufferRef.value.position.set(0, 0, 0)
+    }
   }
 })
 </script>

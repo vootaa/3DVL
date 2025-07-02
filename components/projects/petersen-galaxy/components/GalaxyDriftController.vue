@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, provide } from 'vue'
+import { ref, computed, provide } from 'vue'
 import { Vector3 } from 'three'
 import { useRenderLoop } from '@tresjs/core'
 import { galaxyDriftConfig, createInitialDriftState, type GalaxyDriftState } from '../configs/galaxy-drift-config'

@@ -9,6 +9,7 @@ import {
 } from 'three'
 import { orbitalConfig } from '../configs/orbital-config'
 import { starClusterConfig } from '../configs/star-cluster-config'
+import { Logger } from '../../../utils/logger'
 
 // Import shaders
 import starVertexShader from '../shaders/star-vertex.glsl'
@@ -28,8 +29,25 @@ const emit = defineEmits<{
   'evolution-complete': []
 }>()
 
-// Inject galaxy center position
+// Inject galaxy center position with error handling
 const galaxyCenter = inject('galaxyCenter', ref(new Vector3(0, 0, 0)))
+
+// Validate galaxy center injection
+if (!galaxyCenter || !galaxyCenter.value) {
+  Logger.error('STAR_CLUSTER', 'Failed to inject galaxyCenter from GalaxyDriftController', {
+    galaxyCenter,
+    hasValue: !!galaxyCenter?.value,
+    type: typeof galaxyCenter
+  })
+} else {
+  Logger.log('STAR_CLUSTER', 'Successfully injected galaxyCenter', {
+    initialPosition: {
+      x: galaxyCenter.value.x.toFixed(3),
+      y: galaxyCenter.value.y.toFixed(3),
+      z: galaxyCenter.value.z.toFixed(3)
+    }
+  })
+}
 
 // Get configuration from imported modules
 const { innerRadius, middleRadius} = orbitalConfig
@@ -191,10 +209,30 @@ const animate = () => {
     const cameraDistance = cameraPosition.value.length()
     starMaterial.value.uniforms.cameraDistance.value = cameraDistance
     
-    // Apply galaxy center drift to star cluster
+    // Apply galaxy center drift to star cluster with error handling
     if (starClusterRef.value) {
-      const center = galaxyCenter.value
-      starClusterRef.value.position.set(center.x, center.y, center.z)
+      try {
+        if (galaxyCenter?.value) {
+          const center = galaxyCenter.value
+          starClusterRef.value.position.set(center.x, center.y, center.z)
+          
+          // Log drift occasionally for debugging
+          Logger.throttle('STAR_CLUSTER_DRIFT', 'Galaxy center applied to star cluster', {
+            position: {
+              x: center.x.toFixed(6),
+              y: center.y.toFixed(6),
+              z: center.z.toFixed(6)
+            }
+          }, 5000) // Log every 5 seconds
+        } else {
+          Logger.warn('STAR_CLUSTER', 'Galaxy center is not available, using default position (0,0,0)')
+          starClusterRef.value.position.set(0, 0, 0)
+        }
+      } catch (error) {
+        Logger.error('STAR_CLUSTER', 'Error applying galaxy center drift to star cluster', error)
+        // Fallback to default position
+        starClusterRef.value.position.set(0, 0, 0)
+      }
     }
     
     // Update positions to follow orbital rotation

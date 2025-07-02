@@ -3,6 +3,7 @@ import { computed, ref, onMounted, onUnmounted, inject } from 'vue'
 import { Vector3 } from 'three'
 import type { PerspectiveCamera } from 'three'
 import type { Ref } from 'vue'
+import { Logger } from '../../../utils/logger'
 
 // Camera control state tracking
 const cameraDistance = ref(20)
@@ -15,13 +16,35 @@ let animationFrameId: number | null = null
 // Get camera reference from parent component
 const cameraRef = inject<Ref<PerspectiveCamera | null>>('camera')
 
-// Get galaxy drift data from parent component
+// Get galaxy drift data from parent component with error handling
 const galaxyDriftData = inject('galaxyDriftData', {
   position: ref({ x: '0.000', y: '0.000', z: '0.000' }),
   velocity: ref('0.0000'),
   distance: ref('0.00'),
   duration: ref(0)
 })
+
+// Validate galaxy drift data injection
+if (!galaxyDriftData || !galaxyDriftData.position) {
+  Logger.error('CAMERA_INFO', 'Failed to inject galaxyDriftData from GalaxyDriftController', {
+    galaxyDriftData,
+    hasPosition: !!galaxyDriftData?.position,
+    type: typeof galaxyDriftData
+  })
+} else {
+  Logger.log('CAMERA_INFO', 'Successfully injected galaxyDriftData', {
+    initialPosition: galaxyDriftData.position.value,
+    velocity: galaxyDriftData.velocity.value,
+    distance: galaxyDriftData.distance.value
+  })
+}
+
+// Validate camera injection
+if (!cameraRef) {
+  Logger.error('CAMERA_INFO', 'Failed to inject camera reference from parent component')
+} else {
+  Logger.log('CAMERA_INFO', 'Successfully injected camera reference')
+}
 
 // Grid center reference point
 const gridCenter = new Vector3(0, 0, 0)
