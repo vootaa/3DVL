@@ -8,19 +8,19 @@ export const galaxyDriftConfig = {
   // Drift motion parameters
   motionPattern: {
     // Primary drift velocity (enhanced for clear visibility)
-    primaryVelocity: new Vector3(0.15, 0.12, 0.18), // Increased by 50% for better visibility
+    primaryVelocity: new Vector3(0.03, 0.025, 0.035),
     
     // Oscillation parameters for natural variation
     oscillation: {
-      amplitude: new Vector3(1.5, 1.0, 1.25), // Increased amplitude for more noticeable movement
-      frequency: new Vector3(0.35, 0.40, 0.30), // Slightly faster frequency
+      amplitude: new Vector3(0.6, 0.4, 0.5), // amplitude for noticeable movement
+      frequency: new Vector3(0.15, 0.20, 0.15), // Slightly faster frequency
       phase: new Vector3(0, Math.PI/3, Math.PI/2) // Phase offset for each axis
     },
     
     // Random perturbations for realistic motion
     perturbation: {
-      strength: 0.20, // Increased strength for more visible perturbations
-      frequency: 0.8   // Faster perturbation changes
+      strength: 0.10,
+      frequency: 0.4
     }
   },
   

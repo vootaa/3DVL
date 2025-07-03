@@ -34,16 +34,17 @@ const driftDataService = useGalaxyDriftData()
  * Galaxy center drift represents the actual movement of the galaxy in world space
  */
 const processDriftData = (positionData: { x: string; y: string; z: string }): Vector3 | null => {
+  const galaxyCenter = driftDataService.getGalaxyCenter()
+  if (!galaxyCenter) return null
+
   // Convert raw data (mGU) to GU by dividing by 1000
-  const currentPos = new Vector3(
+  const driftPos = new Vector3(
     parseFloat(positionData.x) / 1000,
     parseFloat(positionData.y) / 1000,
     parseFloat(positionData.z) / 1000
   )
   
-  // Return the actual galaxy center position for trail visualization
-  // This represents the galaxy's movement in world coordinates
-  return currentPos.clone()
+  return driftPos.clone().sub(new Vector3(galaxyCenter.x, galaxyCenter.y, galaxyCenter.z))
 }
 
 /**
