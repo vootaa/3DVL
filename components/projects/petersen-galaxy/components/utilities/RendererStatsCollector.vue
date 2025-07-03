@@ -39,7 +39,7 @@ const collectStats = () => {
     ;(window as any).__THREE_RENDERER_INFO__ = stats
     
     // Debug logging - focus on point cloud and line data
-    if (frameCount % 120 === 0) { // Output every 120 frames (~2 seconds)
+    if (frameCount % 300 === 0) { // Output every 300 frames (~5 seconds)
       Logger.log('PETERSEN_GALAXY_RENDER_STATS', 'Point cloud render stats updated', {
         drawCalls: stats.render.calls,
         points: stats.render.points,
