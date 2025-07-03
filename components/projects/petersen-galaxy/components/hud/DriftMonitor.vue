@@ -80,68 +80,40 @@ const debugInfo = ref({
 const showDebugPanel = ref(false)
 let updateInterval: NodeJS.Timeout | null = null
 
-// Unit preferences with dropdown options
-const preferredDistanceUnit = ref('GU')
-const preferredVelocityUnit = ref('GU')
-
-// Available unit options for dropdowns
-const distanceUnitOptions = computed(() => [
-  { value: 'nGU', label: 'nGU (Nano Galaxy Unit)' },
-  { value: 'mGU', label: 'mGU (Milli Galaxy Unit)' },
-  { value: 'GU', label: 'GU (Galaxy Unit)' },
-  { value: 'AU', label: 'AU (Astronomical Unit)' },
-  { value: 'ly', label: 'ly (Light Year)' },
-  { value: 'pc', label: 'pc (Parsec)' }
-])
-
-const velocityUnitOptions = computed(() => [
-  { value: 'GU', label: 'GU/s (Galaxy Units per second)' },
-  { value: 'mGU', label: 'mGU/s (Milli Galaxy Units per second)' },
-  { value: 'nGU', label: 'nGU/s (Nano Galaxy Units per second)' },
-  { value: 'AU', label: 'AU/s (Astronomical Units per second)' },
-  { value: 'km', label: 'km/s (Kilometers per second)' }
-])
-
-// Formatted display values with user-selected units
+// Formatted display values using fixed GU units
 const formattedVelocity = computed(() => {
-  const unit = preferredVelocityUnit.value
   const value = debugInfo.value.velocityMagnitude
-  return formatWithUnit(value, unit, 'distance', 8) + '/s'
+  return formatWithUnit(value, 'GU', 'distance', 8) + '/s'
 })
 
 const formattedPositionChange = computed(() => {
-  const unit = preferredDistanceUnit.value
   const value = debugInfo.value.positionChange
-  return formatWithUnit(value, unit, 'distance', 8)
+  return formatWithUnit(value, 'GU', 'distance', 8)
 })
 
 const formattedPosition = computed(() => {
   const pos = debugInfo.value.statistics.currentPosition
-  const unit = preferredDistanceUnit.value
   return {
-    x: formatWithUnit(pos.x, unit, 'distance', 3),
-    y: formatWithUnit(pos.y, unit, 'distance', 3),
-    z: formatWithUnit(pos.z, unit, 'distance', 3),
-    unit: unit
+    x: formatWithUnit(pos.x, 'GU', 'distance', 3),
+    y: formatWithUnit(pos.y, 'GU', 'distance', 3),
+    z: formatWithUnit(pos.z, 'GU', 'distance', 3),
+    unit: 'GU'
   }
 })
 
 const formattedTotalDistance = computed(() => {
-  const unit = preferredDistanceUnit.value
   const value = debugInfo.value.statistics.totalDistance
-  return formatWithUnit(value, unit, 'distance', 6)
+  return formatWithUnit(value, 'GU', 'distance', 6)
 })
 
 const formattedAvgVelocity = computed(() => {
-  const unit = preferredVelocityUnit.value
   const value = debugInfo.value.statistics.averageVelocity
-  return formatWithUnit(value, unit, 'distance', 8) + '/s'
+  return formatWithUnit(value, 'GU', 'distance', 8) + '/s'
 })
 
 const formattedMaxVelocity = computed(() => {
-  const unit = preferredVelocityUnit.value
   const value = debugInfo.value.statistics.maxVelocity
-  return formatWithUnit(value, unit, 'distance', 8) + '/s'
+  return formatWithUnit(value, 'GU', 'distance', 8) + '/s'
 })
 
 // Toggle debug panel visibility
@@ -257,6 +229,9 @@ const updateDebugInfo = () => {
       statistics: debugInfo.value.statistics
     }, LoggingConfig.DRIFT_MONITOR_UPDATE)
 
+    // Update chart data
+    updateChartData()
+
   } catch (error) {
     Logger.error('DRIFT_MONITOR', 'Error updating debug info', error)
     debugInfo.value.diagnosis = 'UPDATE_ERROR'
@@ -289,16 +264,52 @@ const injectionStatusColor = computed(() => {
   return debugInfo.value.injectionStatus === 'SUCCESS' ? '#00ccff' : '#4477ff'
 })
 
-// Function to change unit preferences
-const changeDistanceUnit = (newUnit: string) => {
-  preferredDistanceUnit.value = newUnit
-  Logger.throttle('DriftMonitor', `Distance unit changed to ${newUnit}`, LoggingConfig.DRIFT_MONITOR_UPDATE)
+// Lightweight chart data for velocity and position change (last 50 points)
+const velocityHistory = ref<number[]>([])
+const positionChangeHistory = ref<number[]>([])
+const maxHistoryLength = 50
+
+// Update chart data
+const updateChartData = () => {
+  // Add current values to history
+  velocityHistory.value.push(debugInfo.value.velocityMagnitude)
+  positionChangeHistory.value.push(debugInfo.value.positionChange)
+  
+  // Keep only last N points
+  if (velocityHistory.value.length > maxHistoryLength) {
+    velocityHistory.value.shift()
+  }
+  if (positionChangeHistory.value.length > maxHistoryLength) {
+    positionChangeHistory.value.shift()
+  }
 }
 
-const changeVelocityUnit = (newUnit: string) => {
-  preferredVelocityUnit.value = newUnit
-  Logger.throttle('DriftMonitor', `Velocity unit changed to ${newUnit}`, LoggingConfig.DRIFT_MONITOR_UPDATE)
+// Generate SVG path for chart
+const generateChartPath = (data: number[], width: number = 200, height: number = 40) => {
+  if (data.length < 2) return ''
+  
+  const maxValue = Math.max(...data, 0.0001) // Prevent division by zero
+  const stepX = width / (data.length - 1)
+  
+  let path = `M 0 ${height - (data[0] / maxValue) * height}`
+  
+  for (let i = 1; i < data.length; i++) {
+    const x = i * stepX
+    const y = height - (data[i] / maxValue) * height
+    path += ` L ${x} ${y}`
+  }
+  
+  return path
 }
+
+// Chart paths for velocity and position change
+const velocityChartPath = computed(() => 
+  generateChartPath(velocityHistory.value, 180, 30)
+)
+
+const positionChangeChartPath = computed(() => 
+  generateChartPath(positionChangeHistory.value, 180, 30)
+)
 
 onMounted(() => {
   // Update debug info every 2 seconds for more responsive display
@@ -355,16 +366,85 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Current Metrics -->
+        <!-- RAW Drift Data (moved above Current Metrics) -->
+        <div class="debug-section" v-if="galaxyDriftData">
+          <div class="section-title">RAW Drift Data</div>
+          <div class="status-item">
+            <span class="label">Position (mGU):</span>
+            <span class="value position-value">
+              ({{ galaxyDriftData.position.value.x }},
+              {{ galaxyDriftData.position.value.y }},
+              {{ galaxyDriftData.position.value.z }})
+            </span>
+          </div>
+          <div class="status-item">
+            <span class="label">Velocity (mGU/s):</span>
+            <span class="value">{{ galaxyDriftData.velocity.value }}</span>
+          </div>
+          <div class="status-item">
+            <span class="label">Distance (mGU):</span>
+            <span class="value">{{ galaxyDriftData.distance.value }}</span>
+          </div>
+        </div>
+
+        <!-- Current Metrics with Charts -->
         <div class="debug-section">
           <div class="section-title">Current Metrics</div>
           <div class="status-item">
             <span class="label">Velocity:</span>
-            <span class="value">{{ formattedVelocity }}</span>
+            <div class="value-with-chart">
+              <span class="value">{{ formattedVelocity }}</span>
+              <div class="mini-chart" v-if="velocityHistory.length > 1">
+                <svg width="180" height="30" viewBox="0 0 180 30">
+                  <path
+                    :d="velocityChartPath"
+                    stroke="#00ccff"
+                    stroke-width="1.5"
+                    fill="none"
+                    opacity="0.8"
+                  />
+                  <defs>
+                    <linearGradient id="velocityGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" style="stop-color:#00ccff;stop-opacity:0.1" />
+                      <stop offset="100%" style="stop-color:#00ccff;stop-opacity:0.8" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    :d="velocityChartPath + ' L 180 30 L 0 30 Z'"
+                    fill="url(#velocityGradient)"
+                    opacity="0.3"
+                  />
+                </svg>
+              </div>
+            </div>
           </div>
           <div class="status-item">
             <span class="label">Position Change:</span>
-            <span class="value">{{ formattedPositionChange }}</span>
+            <div class="value-with-chart">
+              <span class="value">{{ formattedPositionChange }}</span>
+              <div class="mini-chart" v-if="positionChangeHistory.length > 1">
+                <svg width="180" height="30" viewBox="0 0 180 30">
+                  <path
+                    :d="positionChangeChartPath"
+                    stroke="#66ff66"
+                    stroke-width="1.5"
+                    fill="none"
+                    opacity="0.8"
+                  />
+                  <defs>
+                    <linearGradient id="positionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" style="stop-color:#66ff66;stop-opacity:0.1" />
+                      <stop offset="100%" style="stop-color:#66ff66;stop-opacity:0.8" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    :d="positionChangeChartPath + ' L 180 30 L 0 30 Z'"
+                    fill="url(#positionGradient)"
+                    opacity="0.3"
+                  />
+                </svg>
+              </div>
+            </div>
           </div>
           <div class="status-item">
             <span class="label">Position:</span>
@@ -399,53 +479,9 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Raw Data (if available) -->
-        <div class="debug-section" v-if="galaxyDriftData">
-          <div class="section-title">Raw Drift Data</div>
-          <div class="status-item">
-            <span class="label">Position (mGU):</span>
-            <span class="value position-value">
-              ({{ galaxyDriftData.position.value.x }},
-              {{ galaxyDriftData.position.value.y }},
-              {{ galaxyDriftData.position.value.z }})
-            </span>
-          </div>
-          <div class="status-item">
-            <span class="label">Velocity (mGU/s):</span>
-            <span class="value">{{ galaxyDriftData.velocity.value }}</span>
-          </div>
-          <div class="status-item">
-            <span class="label">Distance (mGU):</span>
-            <span class="value">{{ galaxyDriftData.distance.value }}</span>
-          </div>
-        </div>
 
-        <!-- Unit Settings -->
-        <div class="debug-section">
-          <div class="section-title">Display Units</div>
-          <div class="unit-settings">
-            <div class="unit-setting">
-              <label for="distance-unit">Distance:</label>
-              <select id="distance-unit" v-model="preferredDistanceUnit"
-                @change="changeDistanceUnit(preferredDistanceUnit)" class="unit-selector">
-                <option v-for="option in distanceUnitOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-            </div>
-            <div class="unit-setting">
-              <label for="velocity-unit">Velocity:</label>
-              <select id="velocity-unit" v-model="preferredVelocityUnit"
-                @change="changeVelocityUnit(preferredVelocityUnit)" class="unit-selector">
-                <option v-for="option in velocityUnitOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-            </div>
-          </div>
-        </div>
 
-        <!-- Astronomical Unit Reference -->
+        <!-- Unit Reference (simplified) -->
         <div class="debug-section">
           <div class="section-title">Unit Reference</div>
           <div class="unit-reference">
@@ -460,18 +496,6 @@ onUnmounted(() => {
             <div class="unit-item">
               <span class="unit-symbol">nGU</span>
               <span class="unit-name">Nano Galaxy Unit (10⁻⁹ GU)</span>
-            </div>
-            <div class="unit-item">
-              <span class="unit-symbol">AU</span>
-              <span class="unit-name">Astronomical Unit (~150M km)</span>
-            </div>
-            <div class="unit-item">
-              <span class="unit-symbol">ly</span>
-              <span class="unit-name">Light Year (~9.46 trillion km)</span>
-            </div>
-            <div class="unit-item">
-              <span class="unit-symbol">pc</span>
-              <span class="unit-name">Parsec (~3.26 light years)</span>
             </div>
           </div>
         </div>
@@ -657,56 +681,30 @@ onUnmounted(() => {
   border: 1px solid rgba(0, 255, 100, 0.2);
 }
 
-/* Unit settings styles */
-.unit-settings {
+/* Chart display styles */
+.value-with-chart {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 8px;
+  align-items: flex-end;
+  gap: 4px;
 }
 
-.unit-setting {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 11px;
+.mini-chart {
+  width: 180px;
+  height: 30px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  border: 1px solid rgba(0, 204, 255, 0.2);
+  overflow: hidden;
 }
 
-.unit-setting label {
-  color: #88ccff;
-  font-weight: 600;
-  min-width: 60px;
-  font-size: 11px;
+.mini-chart svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
-.unit-selector {
-  background: rgba(0, 12, 20, 0.8);
-  border: 1px solid rgba(0, 204, 255, 0.4);
-  border-radius: 4px;
-  color: #ffffff;
-  padding: 4px 8px;
-  font-size: 10px;
-  font-family: inherit;
-  flex-grow: 1;
-  transition: all 0.2s ease;
-}
 
-.unit-selector:hover {
-  border-color: rgba(0, 204, 255, 0.6);
-  background: rgba(0, 12, 20, 0.9);
-}
-
-.unit-selector:focus {
-  outline: none;
-  border-color: #00ccff;
-  box-shadow: 0 0 8px rgba(0, 204, 255, 0.3);
-}
-
-.unit-selector option {
-  background: rgba(0, 12, 20, 0.95);
-  color: #ffffff;
-  padding: 4px;
-}
 
 /* Unit reference styles */
 .unit-reference {
@@ -789,50 +787,5 @@ onUnmounted(() => {
   background: rgba(0, 204, 255, 0.7);
 }
 
-/* Unit switcher styles */
-.unit-switcher {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 8px;
-  padding: 10px;
-  border-radius: 6px;
-  background: rgba(0, 204, 255, 0.05);
-  border: 1px solid rgba(0, 204, 255, 0.2);
-}
 
-.switcher-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  padding: 8px 12px;
-  border-radius: 4px;
-  transition: background 0.2s ease;
-}
-
-.switcher-item:hover {
-  background: rgba(0, 204, 255, 0.1);
-}
-
-.switcher-item .label {
-  color: #88ccff;
-  font-weight: 600;
-  margin-right: 12px;
-}
-
-.switcher-item select {
-  background: rgba(0, 0, 0, 0.7);
-  color: #ffffff;
-  border: 1px solid rgba(0, 204, 255, 0.5);
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: border-color 0.2s ease;
-}
-
-.switcher-item select:hover {
-  border-color: #00ccff;
-}
 </style>
