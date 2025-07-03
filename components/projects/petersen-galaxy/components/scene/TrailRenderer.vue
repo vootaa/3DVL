@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { BufferGeometry, Float32BufferAttribute, LineBasicMaterial, Vector3 } from 'three'
+import { ref, onMounted, onUnmounted, watch, nextTick, computed } from 'vue'
+import { Float32BufferAttribute, MeshBasicMaterial, Vector3, TubeGeometry, CatmullRomCurve3 } from 'three'
 import { useGalaxyDriftData } from '../../services/galaxy-drift-data'
 import { Logger } from '../../../../utils/logger'
 
@@ -18,13 +18,23 @@ const TRAIL_CONFIG = {
   maxPoints: 500,
   minDistance: 0.001,
   keepOrigin: true,
-  color: 0x00ffff,
+  tube: {
+    radius: 0.005,        // Tube radius
+    tubularSegments: 200, // Tubular segments
+    radialSegments: 8,    // Radial segments
+    closed: false         // Not closed
+  },
+  colors: {
+    head: '#00ffff',      // Head color (newest position)
+    tail: '#004466',      // Tail color (historical position)
+    glow: '#0088aa'       // Glow color
+  }
 }
 
 // Trail state
 const trailPoints = ref<Vector3[]>([])  // Store relative positions (offset removed)
-const trailGeometry = ref<BufferGeometry | null>(null)
-const trailMaterial = ref<LineBasicMaterial | null>(null)
+const trailGeometry = ref<TubeGeometry | null>(null)
+const trailMaterial = ref<MeshBasicMaterial | null>(null)
 const trailOffset = ref<Vector3 | null>(null)
 
 // Throttling
@@ -33,6 +43,26 @@ const SAMPLE_THROTTLE = 100
 
 // Galaxy drift data service
 const driftDataService = useGalaxyDriftData()
+
+// Dynamic color calculation
+const trailColor = computed(() => {
+  const pointCount = trailPoints.value.length
+  if (pointCount < 10) {
+    return TRAIL_CONFIG.colors.head
+  } else if (pointCount < 50) {
+    return TRAIL_CONFIG.colors.glow
+  } else {
+    return TRAIL_CONFIG.colors.tail
+  }
+})
+
+// Dynamic scaling
+const trailScale = computed((): [number, number, number] => {
+  const length = calculateTrailLength()
+  const baseScale = 1.0
+  const dynamicScale = Math.min(2.0, 1.0 + length * 0.1)
+  return [baseScale, baseScale, dynamicScale]
+})
 
 const addTrailPoint = (newPoint: Vector3) => {
   if (trailPoints.value.length > 0) {
@@ -56,15 +86,62 @@ const addTrailPoint = (newPoint: Vector3) => {
   }
 }
 
+/**
+ * Create tube trail geometry
+ */
+const createTubeTrail = () => {
+  if (trailPoints.value.length < 2) return
+
+  try {
+    // Create smooth curve
+    const curve = new CatmullRomCurve3(trailPoints.value)
+    
+    // Create tube geometry
+    const geometry = new TubeGeometry(
+      curve,
+      TRAIL_CONFIG.tube.tubularSegments,
+      TRAIL_CONFIG.tube.radius,
+      TRAIL_CONFIG.tube.radialSegments,
+      TRAIL_CONFIG.tube.closed
+    )
+
+    // Add color attributes for gradient effect
+    const colors = new Float32Array(geometry.attributes.position.count * 3)
+    const positionCount = geometry.attributes.position.count
+    
+    for (let i = 0; i < positionCount; i++) {
+      const progress = (i / positionCount) // Progress from 0 to 1
+      
+      // Gradient from tail (blue) to head (cyan)
+      const r = progress * 0.0 + (1 - progress) * 0.0  // Red component
+      const g = progress * 1.0 + (1 - progress) * 0.4  // Green component
+      const b = progress * 1.0 + (1 - progress) * 0.6  // Blue component
+      
+      colors[i * 3] = r
+      colors[i * 3 + 1] = g
+      colors[i * 3 + 2] = b
+    }
+    
+    geometry.setAttribute('color', new Float32BufferAttribute(colors, 3))
+    
+    trailGeometry.value = geometry
+    
+    Logger.log('TRAIL_RENDERER', `Tube trail created with ${trailPoints.value.length} points`)
+  } catch (error) {
+    Logger.error('TRAIL_RENDERER', 'Error creating tube trail:', error)
+  }
+}
+
 const initializeTrail = () => {
-  trailGeometry.value = new BufferGeometry()
-  trailMaterial.value = new LineBasicMaterial({
-    color: TRAIL_CONFIG.color,
+  trailMaterial.value = new MeshBasicMaterial({
+    color: TRAIL_CONFIG.colors.head,
     transparent: true,
-    opacity: 1.0
+    opacity: 0.8,
+    vertexColors: true,  // Enable vertex colors
+    // wireframe: true    // Optional: show wireframe
   })
 
-  Logger.log('TRAIL_RENDERER', 'Trail renderer initialized')
+  Logger.log('TRAIL_RENDERER', 'Enhanced trail renderer initialized')
 }
 
 /**
@@ -75,8 +152,8 @@ const clearTrail = () => {
   lastSampleTime.value = 0
 
   if (trailGeometry.value) {
-    trailGeometry.value.setAttribute('position', new Float32BufferAttribute([], 3))
-    trailGeometry.value.attributes.position.needsUpdate = true
+    trailGeometry.value.dispose()
+    trailGeometry.value = null
   }
 
   Logger.log('TRAIL_RENDERER', 'Trail cleared')
@@ -141,27 +218,21 @@ const calculateTrailLength = (): number => {
  * Update trail geometry with current trail points
  */
 const updateTrailGeometry = () => {
-  if (!trailGeometry.value || trailPoints.value.length < 2) return
+  if (trailPoints.value.length < 2) return
 
   try {
-    const positions = new Float32Array(trailPoints.value.length * 3)
-    trailPoints.value.forEach((pos, i) => {
-      positions[i * 3] = pos.x
-      positions[i * 3 + 1] = pos.y
-      positions[i * 3 + 2] = pos.z
-    })
+    // Recreate tube geometry
+    createTubeTrail()
 
-    trailGeometry.value.setAttribute('position', new Float32BufferAttribute(positions, 3))
-    trailGeometry.value.attributes.position.needsUpdate = true
-
-    if (trailPoints.value.length % 50 === 0) {
+    // Periodic log output
+    if (trailPoints.value.length % 25 === 0) {
       const actualLength = calculateTrailLength()
       const firstPos = trailPoints.value[0]
       const lastPos = trailPoints.value[trailPoints.value.length - 1]
       const straightDistance = firstPos.distanceTo(lastPos)
 
       Logger.log('TRAIL_RENDERER',
-        `Trail: ${trailPoints.value.length}/${TRAIL_CONFIG.maxPoints} points, ` +
+        `Enhanced trail: ${trailPoints.value.length}/${TRAIL_CONFIG.maxPoints} points, ` +
         `path: ${actualLength.toFixed(4)} GU, ` +
         `straight: ${straightDistance.toFixed(4)} GU`
       )
@@ -197,7 +268,7 @@ const samplePosition = () => {
 // Watch enabled state
 watch(() => props.enabled, (enabled) => {
   if (enabled) {
-    Logger.log('TRAIL_RENDERER', 'Trail rendering enabled')
+    Logger.log('TRAIL_RENDERER', 'Enhanced trail rendering enabled')
     clearTrail()
 
     // Set initial offset when enabling
@@ -208,7 +279,7 @@ watch(() => props.enabled, (enabled) => {
       Logger.log('TRAIL_RENDERER', `Trail offset recorded: (${trailOffset.value.x.toFixed(6)}, ${trailOffset.value.y.toFixed(6)}, ${trailOffset.value.z.toFixed(6)})`)
     }
   } else {
-    Logger.log('TRAIL_RENDERER', 'Trail rendering disabled')
+    Logger.log('TRAIL_RENDERER', 'Enhanced trail rendering disabled')
     clearTrail()
   }
 }, { immediate: true })
@@ -252,7 +323,18 @@ defineExpose({
 
 <template>
   <TresGroup v-if="props.enabled">
-    <TresLine v-if="trailGeometry && trailMaterial && trailPoints.length >= 2" :geometry="trailGeometry"
-      :material="trailMaterial" :visible="true" />
+    <!-- Use TresMesh instead of TresLine, similar to space game orbits -->
+    <TresMesh 
+      v-if="trailGeometry && trailMaterial && trailPoints.length >= 2" 
+      :geometry="trailGeometry"
+      :scale="trailScale"
+    >
+      <TresMeshBasicMaterial 
+        :color="trailColor" 
+        :transparent="true"
+        :opacity="0.8"
+        :vertex-colors="true"
+      />
+    </TresMesh>
   </TresGroup>
 </template>
