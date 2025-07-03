@@ -16,7 +16,7 @@ const props = withDefaults(defineProps<Props>(), {
 // Trail configuration
 const TRAIL_CONFIG = {
   maxPoints: 500,           // Maximum points in circular buffer
-  samplingInterval: 500,    // Sampling interval in ms
+  minDistance: 0.001,      // Minimum distance between points in GU
   color: 0x00ffff,         // Trail color (bright cyan)
 }
 
@@ -24,10 +24,49 @@ const TRAIL_CONFIG = {
 const trailPoints = ref<Vector3[]>([])  // Store galaxy center positions in world coordinates
 const trailGeometry = ref<BufferGeometry | null>(null)
 const trailMaterial = ref<LineBasicMaterial | null>(null)
+const trailOffset = ref<Vector3 | null>(null)
+
 const lastSampleTime = ref(0)
+const SAMPLE_THROTTLE = 100
 
 // Galaxy drift data service
 const driftDataService = useGalaxyDriftData()
+
+const addTrailPoint = (newPoint: Vector3) => {
+  if (trailPoints.value.length > 0) {
+    const lastPoint = trailPoints.value[trailPoints.value.length - 1]
+    const distance = newPoint.distanceTo(lastPoint)
+
+    if (distance < TRAIL_CONFIG.minDistance) {
+      return
+    }
+  }
+
+  trailPoints.value.push(newPoint.clone())
+
+  if (trailPoints.value.length > TRAIL_CONFIG.maxPoints) {
+    trailPoints.value.shift()
+  }
+}
+
+const initializeTrail = () => {
+  trailGeometry.value = new BufferGeometry()
+  trailMaterial.value = new LineBasicMaterial({
+    color: TRAIL_CONFIG.color,
+    transparent: true,
+    opacity: 1.0
+  })
+
+  const currentCenter = driftDataService.getGalaxyCenter()
+  if (currentCenter) {
+    trailOffset.value = new Vector3(currentCenter.x, currentCenter.y, currentCenter.z)
+    Logger.log('TRAIL_RENDERER', `Trail offset recorded: (${trailOffset.value.x.toFixed(6)}, ${trailOffset.value.y.toFixed(6)}, ${trailOffset.value.z.toFixed(6)})`)
+
+    trailPoints.value = [new Vector3(0, 0, 0)]
+  }
+
+  Logger.log('TRAIL_RENDERER', 'Trail renderer initialized with offset correction')
+}
 
 /**
  * Convert raw position data to GU units for trail visualization
@@ -39,6 +78,10 @@ const processDriftData = (positionData: { x: string; y: string; z: string }): Ve
     parseFloat(positionData.y) / 1000,
     parseFloat(positionData.z) / 1000
   )
+
+  if (trailOffset.value) {
+    worldPos.sub(trailOffset.value)
+  }
 
   return worldPos
 }
@@ -115,11 +158,10 @@ const updateTrailGeometry = () => {
  */
 const samplePosition = () => {
   const now = Date.now()
-
-  // Check sampling interval
-  if (now - lastSampleTime.value < TRAIL_CONFIG.samplingInterval) {
+  if (now - lastSampleTime.value < SAMPLE_THROTTLE) {
     return
   }
+  lastSampleTime.value = now
 
   // Get current position data
   const positionData = driftDataService.getDriftPosition()
@@ -129,73 +171,44 @@ const samplePosition = () => {
   const galaxyPos = processDriftData(positionData)
   if (!galaxyPos) return
 
-  // Add to trail buffer (circular buffer)
-  trailPoints.value.push(galaxyPos)
-  if (trailPoints.value.length > TRAIL_CONFIG.maxPoints) {
-    trailPoints.value.shift()
-  }
+  // base on distance filter
+  addTrailPoint(galaxyPos)
 
   // Update geometry
-  updateTrailGeometry()
-
-  // Update state
-  lastSampleTime.value = now
-
-  // Enhanced logging - detailed buffer information every 50 points
-  if (trailPoints.value.length % 50 === 0) {
-    const bufferSize = trailPoints.value.length
-    const firstPoint = trailPoints.value[0]
-    const lastPoint = trailPoints.value[bufferSize - 1]
-
-    Logger.log('TRAIL_RENDERER', `Trail buffer: ${bufferSize}/${TRAIL_CONFIG.maxPoints} points`)
-    Logger.log('TRAIL_RENDERER', `  First point: (${firstPoint.x.toFixed(6)}, ${firstPoint.y.toFixed(6)}, ${firstPoint.z.toFixed(6)})`)
-    Logger.log('TRAIL_RENDERER', `  Last point:  (${lastPoint.x.toFixed(6)}, ${lastPoint.y.toFixed(6)}, ${lastPoint.z.toFixed(6)})`)
-    Logger.log('TRAIL_RENDERER', `  Distance span: ${firstPoint.distanceTo(lastPoint).toFixed(6)} units`)
-
-    // Calculate data ranges across all dimensions
-    const xValues = trailPoints.value.map(p => p.x)
-    const yValues = trailPoints.value.map(p => p.y)
-    const zValues = trailPoints.value.map(p => p.z)
-
-    const xRange = { min: Math.min(...xValues), max: Math.max(...xValues) }
-    const yRange = { min: Math.min(...yValues), max: Math.max(...yValues) }
-    const zRange = { min: Math.min(...zValues), max: Math.max(...zValues) }
-
-    Logger.log('TRAIL_RENDERER', `  X range: ${xRange.min.toFixed(6)} to ${xRange.max.toFixed(6)} (span: ${(xRange.max - xRange.min).toFixed(6)})`)
-    Logger.log('TRAIL_RENDERER', `  Y range: ${yRange.min.toFixed(6)} to ${yRange.max.toFixed(6)} (span: ${(yRange.max - yRange.min).toFixed(6)})`)
-    Logger.log('TRAIL_RENDERER', `  Z range: ${zRange.min.toFixed(6)} to ${zRange.max.toFixed(6)} (span: ${(zRange.max - zRange.min).toFixed(6)})`)
-
-    // Check data precision - warn if values are too small to be meaningful
-    const maxAbsValue = Math.max(
-      Math.abs(xRange.min), Math.abs(xRange.max),
-      Math.abs(yRange.min), Math.abs(yRange.max),
-      Math.abs(zRange.min), Math.abs(zRange.max)
-    )
-
-    if (maxAbsValue < 0.000001) {
-      Logger.log('TRAIL_RENDERER', `  ⚠️ WARNING: Data precision very low (max: ${maxAbsValue.toFixed(9)}), may not be visible`)
-    } else {
-      Logger.log('TRAIL_RENDERER', `  ✅ Data precision acceptable (max: ${maxAbsValue.toFixed(6)})`)
-    }
+  if (trailPoints.value.length >= 2) {
+    updateTrailGeometry()
   }
 }
 
-/**
- * Initialize trail rendering
- */
-const initializeTrail = () => {
-  // Create geometry
-  trailGeometry.value = new BufferGeometry()
+watch(() => props.enabled, (enabled) => {
+  if (enabled) {
+    Logger.log('TRAIL_RENDERER', 'Trail rendering enabled')
+    clearTrail()
 
-  // Create material
-  trailMaterial.value = new LineBasicMaterial({
-    color: TRAIL_CONFIG.color,
-    transparent: true,
-    opacity: 1.0
-  })
+    const currentCenter = driftDataService.getGalaxyCenter()
+    if (currentCenter) {
+      trailOffset.value = new Vector3(currentCenter.x, currentCenter.y, currentCenter.z)
+      trailPoints.value = [new Vector3(0, 0, 0)]
+      Logger.log('TRAIL_RENDERER', `Trail offset recorded: (${trailOffset.value.x.toFixed(6)}, ${trailOffset.value.y.toFixed(6)}, ${trailOffset.value.z.toFixed(6)})`)
+    }
+  } else {
+    Logger.log('TRAIL_RENDERER', 'Trail rendering disabled')
+    clearTrail()
+  }
+}, { immediate: true })
 
-  Logger.log('TRAIL_RENDERER', 'Trail renderer initialized')
-}
+watch(
+  () => driftDataService.getGalaxyCenter(),
+  (newCenter) => {
+    if (newCenter && props.enabled) {
+      const positionData = driftDataService.getDriftPosition()
+      if (positionData) {
+        samplePosition()
+      }
+    }
+  },
+  { immediate: false }
+)
 
 /**
  * Clear trail data
@@ -226,25 +239,6 @@ const cleanup = () => {
   trailMaterial.value = null
 }
 
-// Sampling timer
-let samplingTimer: NodeJS.Timeout | null = null
-
-// Watch enabled state
-watch(() => props.enabled, (enabled) => {
-  if (enabled) {
-    Logger.log('TRAIL_RENDERER', 'Trail rendering enabled')
-    clearTrail()
-    samplingTimer = setInterval(samplePosition, TRAIL_CONFIG.samplingInterval)
-  } else {
-    Logger.log('TRAIL_RENDERER', 'Trail rendering disabled')
-    if (samplingTimer) {
-      clearInterval(samplingTimer)
-      samplingTimer = null
-    }
-    clearTrail()
-  }
-}, { immediate: true })
-
 // Setup and cleanup
 onMounted(() => {
   nextTick(() => {
@@ -253,12 +247,9 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  if (samplingTimer) {
-    clearInterval(samplingTimer)
-    samplingTimer = null
-  }
   cleanup()
 })
+
 
 // Expose methods for debugging
 defineExpose({
@@ -283,7 +274,6 @@ defineExpose({
     console.log('TRAIL_DIAGNOSIS: Complete Trail Analysis')
     console.log('  Buffer size:', trailPoints.value.length)
     console.log('  Galaxy center:', currentCenter.toArray().map(v => v.toFixed(6)))
-    console.log('  Sampling interval:', TRAIL_CONFIG.samplingInterval, 'ms')
     console.log('  Max points:', TRAIL_CONFIG.maxPoints)
 
     if (trailPoints.value.length > 0) {
