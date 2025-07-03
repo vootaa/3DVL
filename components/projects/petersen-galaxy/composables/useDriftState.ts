@@ -1,4 +1,4 @@
-import { ref, computed, reactive, watch } from "vue"
+import { computed, reactive} from "vue"
 import { Logger } from '../../../utils/logger'
 
 // Global drift state manager
@@ -56,7 +56,6 @@ export const useDriftState = () => {
     const hasWindowState = typeof window !== 'undefined' && !!(window as any).__CURRENT_DRIFT_STATE__
     const isAvailable = globalDriftState.isAvailable || hasWindowState
     
-    // 只在状态改变时记录日志
     const currentStatus = { isAvailable, hasWindowState, globalInitialized: globalDriftState.initialized, globalAvailable: globalDriftState.isAvailable }
     const statusString = JSON.stringify(currentStatus)
     
