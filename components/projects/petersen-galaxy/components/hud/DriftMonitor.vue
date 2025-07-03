@@ -30,15 +30,25 @@ if (galaxyDriftData || galaxyCenter) {
 }
 
 // Watch for data changes and update service
-watch([galaxyDriftData, galaxyCenter], ([newDriftData, newGalaxyCenter]) => {
-  if (newDriftData || newGalaxyCenter) {
-    driftDataService.injectData(newDriftData, newGalaxyCenter)
-    Logger.log('DRIFT_MONITOR', 'Data injected into service', {
-      hasDriftData: !!newDriftData,
-      hasGalaxyCenter: !!newGalaxyCenter,
-      driftDataKeys: newDriftData ? Object.keys(newDriftData) : [],
-      galaxyCenterKeys: newGalaxyCenter ? Object.keys(newGalaxyCenter) : []
-    })
+watch([
+  () => galaxyDriftData?.position?.value,
+  () => galaxyDriftData?.velocity?.value,
+  () => galaxyDriftData?.distance?.value,
+  () => galaxyDriftData?.duration?.value,
+  () => galaxyCenter?.value
+], ([newPos, newVel, newDist, newDuration, newCenter]) => {
+  if (galaxyDriftData || galaxyCenter) {
+    driftDataService.injectData(galaxyDriftData, galaxyCenter)
+    Logger.throttle('DRIFT_MONITOR', 'Data injected into service', {
+      hasDriftData: !!galaxyDriftData,
+      hasGalaxyCenter: !!galaxyCenter,
+      // Safe logging without circular references
+      positionValue: newPos ? 'available' : 'none',
+      velocityValue: newVel ? 'available' : 'none',
+      distanceValue: newDist ? 'available' : 'none',
+      durationValue: newDuration ? 'available' : 'none',
+      centerValue: newCenter ? 'available' : 'none'
+    }, 2000) // 2秒节流
   }
 }, { immediate: true, deep: true })
 
@@ -527,7 +537,7 @@ onUnmounted(() => {
   top: 50px;
   right: 0;
   width: 400px;
-  max-height: 85vh;
+  max-height: 75vh;
   background: rgba(0, 8, 16, 0.97);
   border: 1px solid rgba(0, 204, 255, 0.6);
   border-radius: 10px;

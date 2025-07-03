@@ -306,7 +306,7 @@ const resetCamera = () => {
   top: 50px;
   right: 0;
   width: 480px;
-  max-height: 75vh;
+  max-height: 70vh;
   background: rgba(0, 8, 16, 0.97);
   border: 1px solid rgba(0, 204, 255, 0.6);
   border-radius: 10px;

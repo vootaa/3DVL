@@ -3,12 +3,9 @@
  * Provides unified access to galaxy drift state and data
  */
 
-import { ref, computed, type Ref } from 'vue'
-import { Vector3 } from 'three'
+import { ref, type Ref } from 'vue'
 import { Logger } from '../../../utils/logger'
 import { LoggingConfig } from '../configs/logging-config'
-import { formatWithUnit } from '../configs/astronomical-units'
-
 // Galaxy drift data interface
 interface GalaxyDriftData {
   position: { value: { x: string; y: string; z: string } }
@@ -287,8 +284,9 @@ export class GalaxyDriftDataService {
         galaxyCenter: !!this.galaxyCenter.value,
         driftDataKeys: this.driftData.value ? Object.keys(this.driftData.value) : [],
         galaxyCenterKeys: this.galaxyCenter.value ? Object.keys(this.galaxyCenter.value) : [],
-        driftDataStructure: this.driftData.value ? JSON.stringify(this.driftData.value, null, 2) : 'null',
-        galaxyCenterStructure: this.galaxyCenter.value ? JSON.stringify(this.galaxyCenter.value, null, 2) : 'null'
+        // Safe logging without circular references
+        driftDataType: this.driftData.value ? typeof this.driftData.value : 'undefined',
+        galaxyCenterType: this.galaxyCenter.value ? typeof this.galaxyCenter.value : 'undefined'
       }
     })
 

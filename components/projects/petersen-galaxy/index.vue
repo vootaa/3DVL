@@ -3,6 +3,7 @@ import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from 'three'
 import { ref, provide, watch, onMounted, nextTick } from 'vue'
 import OrbitalSystem from './components/scene/OrbitalSystem.vue'
 import StarCluster from './components/scene/StarCluster.vue'
+import TrailRenderer from './components/scene/TrailRenderer.vue'
 import StarControl from './components/controls/StarControl.vue'
 import GridControl from './components/controls/GridControl.vue'
 import TrailControl from './components/controls/TrailControl.vue'
@@ -94,15 +95,19 @@ watch(
     <GalaxyDriftController>
       <!-- Place components that need injected data here -->
       <template #default>
-        <!-- Drift debugging monitor -->
-        <DriftMonitor />
+        <!-- Drift debugging monitor - Client Render -->
+        <ClientOnly>
+          <DriftMonitor />
+        </ClientOnly>
       </template>
     </GalaxyDriftController>
 
     <TresCanvas v-bind="gl">
-      <!-- Renderer stats collector (invisible component for performance monitoring) -->
-      <RendererStatsCollector />
-      
+      <!-- Renderer stats collector (invisible component for performance monitoring) - Client Render -->
+      <ClientOnly>
+        <RendererStatsCollector />
+      </ClientOnly>
+
       <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
 
       <!-- Subtle ambient lighting for better 3D perception -->
@@ -119,6 +124,11 @@ watch(
         :ref="(el) => starControlRef && (starControlRef.starClusterRef = el)" :skip-evolution="hasEvolutionOccurred"
         @evolution-complete="hasEvolutionOccurred = true" />
 
+      <!-- Trail renderer - conditional display based on trail control - Client Render -->
+      <ClientOnly>
+        <TrailRenderer :enabled="trailControlRef?.showDriftTrails" />
+      </ClientOnly>
+
       <!-- OrbitControls with zoom and angle limits -->
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
     </TresCanvas>
@@ -128,15 +138,19 @@ watch(
     <GridControl ref="gridControlRef" />
     <TrailControl ref="trailControlRef" />
     <CameraInfo />
-    
+
     <!-- Evolution timeline (top center) -->
     <EvolutionTimeline />
-    
-    <!-- Performance monitor -->
-    <PerformanceMonitor />
-    
-    <!-- Camera presets component -->
-    <CameraPresets />
+
+    <!-- Performance monitor - Client Render -->
+    <ClientOnly>
+      <PerformanceMonitor />
+    </ClientOnly>
+
+    <!-- Camera presets component - Client Render -->
+    <ClientOnly>
+      <CameraPresets />
+    </ClientOnly>
   </div>
 </template>
 
