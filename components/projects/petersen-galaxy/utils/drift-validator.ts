@@ -4,6 +4,7 @@
  */
 
 import { galaxyDriftConfig } from '../configs/galaxy-drift-config'
+import { Logger } from '../../../utils/logger'
 
 export class DriftValidator {
   static validateConfiguration(): { isValid: boolean; issues: string[]; suggestions: string[] } {
@@ -53,11 +54,11 @@ export class DriftValidator {
   }
 
   static quickDiagnostic(): void {
-    console.log('[DRIFT_VALIDATOR] Starting quick diagnostic...')
+    Logger.log('DRIFT_VALIDATOR', 'Starting quick diagnostic...')
     
     const validation = this.validateConfiguration()
     
-    console.log('[DRIFT_VALIDATOR] Configuration Status:', {
+    Logger.log('DRIFT_VALIDATOR', 'Configuration Status:', {
       isValid: validation.isValid,
       totalIssues: validation.issues.length,
       configEnabled: galaxyDriftConfig.enabled,
@@ -66,10 +67,10 @@ export class DriftValidator {
     })
 
     if (validation.issues.length > 0) {
-      console.warn('[DRIFT_VALIDATOR] Issues found:', validation.issues)
-      console.info('[DRIFT_VALIDATOR] Suggestions:', validation.suggestions)
+      Logger.warn('DRIFT_VALIDATOR', 'Issues found:', validation.issues)
+      Logger.info('DRIFT_VALIDATOR', 'Suggestions:', validation.suggestions)
     } else {
-      console.log('[DRIFT_VALIDATOR] ✅ Configuration appears valid')
+      Logger.log('DRIFT_VALIDATOR', 'Configuration appears valid')
     }
 
     // Expose config to window for debugging
@@ -85,7 +86,7 @@ export class DriftValidator {
       };
       (window as any).__DRIFT_CONFIG__ = configToExpose;
       (window as any).driftValidator = this;
-      console.log('[DRIFT_VALIDATOR] Config exposed to window.__DRIFT_CONFIG__ for debugging')
+      Logger.log('DRIFT_VALIDATOR', 'Config exposed to window.__DRIFT_CONFIG__ for debugging')
     }
   }
 }

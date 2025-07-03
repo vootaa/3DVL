@@ -1,27 +1,31 @@
 <script setup lang="ts">
-const showGrid = ref(false)
+import { ref } from 'vue'
+import { Logger } from '../../../../utils/logger'
 
-const toggleGrid = () => {
-  showGrid.value = !showGrid.value
+// Drift trail control state - default disabled
+const showDriftTrails = ref(false)
+
+// Toggle drift trail display
+const toggleDriftTrails = () => {
+  showDriftTrails.value = !showDriftTrails.value
+  Logger.log('DRIFT_TRAIL_CONTROL', `Drift trails ${showDriftTrails.value ? 'enabled' : 'disabled'}`)
 }
 
+// Expose state to parent component
 defineExpose({
-  showGrid
+  showDriftTrails
 })
 </script>
 
 <template>
-  <div class="grid-control" @click="toggleGrid">
-    <div class="control-label">GRID HELPER</div>
-    <div class="control-value">{{ showGrid ? 'ON' : 'OFF' }}</div>
+  <div class="drift-trail-control" @click="toggleDriftTrails">
+    <div class="control-label">DRIFT TRAILS</div>
+    <div class="control-value">{{ showDriftTrails ? 'ON' : 'OFF' }}</div>
   </div>
 </template>
 
 <style lang="css" scoped>
-.grid-control {
-  position: absolute;
-  top: 20px;
-  left: 20px;
+.drift-trail-control {
   background: rgba(0, 12, 20, 0.85);
   border: 1px solid rgba(0, 204, 255, 0.4);
   border-radius: 8px;
@@ -51,7 +55,7 @@ defineExpose({
     radial-gradient(circle at 70% 30%, rgba(0, 204, 255, 0.05) 0%, transparent 70%);
 }
 
-.grid-control:hover {
+.drift-trail-control:hover {
   background: rgba(0, 20, 30, 0.9);
   border-color: rgba(0, 204, 255, 0.6);
   box-shadow: 0 0 25px rgba(0, 204, 255, 0.4);
@@ -75,7 +79,7 @@ defineExpose({
 }
 
 @media only screen and (max-width: 900px) {
-  .grid-control {
+  .drift-trail-control {
     padding: 8px 12px;
     width: 140px;
     min-height: 50px;

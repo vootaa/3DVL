@@ -5,28 +5,34 @@
 
 export const LoggingConfig = {
   // Main drift system intervals (in milliseconds)
-  DRIFT_DEBUG: 15000,           // Main drift debugging - 15 seconds (increased)
-  ORBITAL_DRIFT: 45000,         // Orbital system drift application - 45 seconds (increased)
-  STAR_CLUSTER_DRIFT: 45000,    // Star cluster drift application - 45 seconds (increased)
-  DRIFT_MONITOR_UPDATE: 10000,  // Debug panel updates - 10 seconds (increased)
+  intervals: {
+    driftDebug: 15000,            // Main drift debugging - 15 seconds
+    orbitalDrift: 45000,          // Orbital system drift application - 45 seconds
+    starClusterDrift: 45000,      // Star cluster drift application - 45 seconds
+    driftMonitorUpdate: 10000,    // Debug panel updates - 10 seconds
+    driftCheck: 60000,            // Runtime system checks - 60 seconds
+    cameraController: 10000,      // Camera movement logs - 10 seconds
+    driftInjectionCheck: 30000,   // Dependency injection validation - 30 seconds
+    performanceMetrics: 120000,   // Performance logs - 120 seconds
+  },
   
-  // System health checks
-  DRIFT_RUNTIME_CHECK: 60000,   // Runtime system checks - 60 seconds (increased)
-  CAMERA_CONTROLLER: 10000,     // Camera movement logs - 10 seconds (increased)
-  
-  // Injection validation
-  DRIFT_INJECTION_CHECK: 30000, // Dependency injection validation - 30 seconds (increased)
-  
-  // Performance monitoring
-  PERFORMANCE_METRICS: 120000,  // Performance logs - 120 seconds (increased)
+  // Legacy support - to be deprecated
+  DRIFT_DEBUG: 15000,
+  ORBITAL_DRIFT: 45000,
+  STAR_CLUSTER_DRIFT: 45000,
+  DRIFT_MONITOR_UPDATE: 10000,
+  DRIFT_RUNTIME_CHECK: 60000,
+  CAMERA_CONTROLLER: 10000,
+  DRIFT_INJECTION_CHECK: 30000,
+  PERFORMANCE_METRICS: 120000,
   
   // Categories for easy filtering
-  CATEGORIES: {
-    DRIFT: 'DRIFT',
-    ORBITAL: 'ORBITAL', 
-    CAMERA: 'CAMERA',
-    PERFORMANCE: 'PERFORMANCE',
-    DEBUG: 'DEBUG'
+  categories: {
+    drift: 'DRIFT',
+    orbital: 'ORBITAL',
+    camera: 'CAMERA',
+    performance: 'PERFORMANCE',
+    debug: 'DEBUG'
   }
 } as const
 

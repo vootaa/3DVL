@@ -138,13 +138,13 @@ const togglePresetsPanel = () => {
 
 // Apply camera preset - DIRECT SWITCH ONLY
 const applyPreset = (preset: CameraPreset) => {
-  console.log('🎯 Applying preset:', preset.name)
+  Logger.log('CAMERA_PRESETS', `Applying preset: ${preset.name}`)
   
   const camera = cameraRef?.value
   const controls = orbitControlsRef?.value
   
   if (!camera || !controls) {
-    console.error('❌ Missing camera or controls')
+    Logger.error('CAMERA_PRESETS', 'Missing camera or controls')
     return
   }
   
@@ -154,7 +154,7 @@ const applyPreset = (preset: CameraPreset) => {
   controls.update()
   
   currentPreset.value = preset.id
-  console.log('✅ Camera preset applied:', preset.name)
+  Logger.log('CAMERA_PRESETS', `Camera preset applied: ${preset.name}`)
 }
 
 // Reset to default view

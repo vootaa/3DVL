@@ -5,15 +5,13 @@ import OrbitalSystem from './components/scene/OrbitalSystem.vue'
 import StarCluster from './components/scene/StarCluster.vue'
 import StarControl from './components/controls/StarControl.vue'
 import GridControl from './components/controls/GridControl.vue'
+import DriftTrailControl from './components/controls/DriftTrailControl.vue'
 import CameraInfo from './components/hud/CameraInfo.vue'
 import GalaxyDriftController from './components/scene/GalaxyDriftController.vue'
-import DriftTrailRenderer from './components/scene/DriftTrailRenderer.vue'
-import SimpleTrailRenderer from './components/scene/SimpleTrailRenderer.vue'
 import DriftMonitor from './components/hud/DriftMonitor.vue'
 import PerformanceMonitor from './components/hud/PerformanceMonitor.vue'
 import CameraPresets from './components/hud/CameraPresets.vue'
 import EvolutionTimeline from './components/hud/EvolutionTimeline.vue'
-import DriftVisualization from './components/hud/DriftVisualization.vue'
 import RendererStatsCollector from './components/utilities/RendererStatsCollector.vue'
 import { CameraController } from './utils/camera-controller'
 import './utils/drift-validator' // Import to trigger auto-diagnostic
@@ -30,6 +28,7 @@ const gl = {
 
 const gridControlRef = ref()
 const starControlRef = ref()
+const driftTrailControlRef = ref()
 const cameraRef = ref()
 const orbitControlsRef = ref()
 const showGridAfterCameraMove = ref(false)
@@ -95,11 +94,6 @@ watch(
     <GalaxyDriftController>
       <!-- Place components that need injected data here -->
       <template #default>
-        <!-- Drift visualization control (top left) -->
-        <div class="drift-visualization-container">
-          <DriftVisualization />
-        </div>
-        
         <!-- Drift debugging monitor -->
         <DriftMonitor />
       </template>
@@ -108,12 +102,6 @@ watch(
     <TresCanvas v-bind="gl">
       <!-- Renderer stats collector (invisible component for performance monitoring) -->
       <RendererStatsCollector />
-      
-      <!-- Drift trail renderer (visualizes drift trajectory) -->
-      <DriftTrailRenderer />
-      
-      <!-- Simple trail renderer for testing -->
-      <SimpleTrailRenderer />
       
       <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
 
@@ -138,6 +126,7 @@ watch(
     <!-- Control panels -->
     <StarControl ref="starControlRef" />
     <GridControl ref="gridControlRef" />
+    <DriftTrailControl ref="driftTrailControlRef" />
     <CameraInfo />
     
     <!-- Evolution timeline (top center) -->
@@ -156,12 +145,5 @@ watch(
   position: relative;
   width: 100%;
   height: 100%;
-}
-
-.drift-visualization-container {
-  position: absolute;
-  top: 180px; /* Position below StarControl (100px + 60px + 20px margin) */
-  left: 20px;
-  z-index: 100;
 }
 </style>

@@ -16,21 +16,21 @@ export class DriftRuntimeChecker {
   static startMonitoring() {
     // Only run on client side
     if (typeof window === 'undefined') {
-      console.log('[DRIFT_CHECKER] Skipping monitoring on server side')
+      Logger.log('DRIFT_CHECKER', 'Skipping monitoring on server side')
       return
     }
 
     if (this.isRunning) {
-      console.log('[DRIFT_CHECKER] Already monitoring drift system')
+      Logger.log('DRIFT_CHECKER', 'Already monitoring drift system')
       return
     }
 
     this.isRunning = true
-    console.log('[DRIFT_CHECKER] Starting drift system monitoring...')
+    Logger.log('DRIFT_CHECKER', 'Starting drift system monitoring...')
 
     this.checkInterval = setInterval(() => {
       this.performRuntimeCheck()
-    }, 30000) // Check every 30 seconds instead of 5
+    }, LoggingConfig.intervals.driftCheck) // Use config interval
 
     // Initial check
     this.performRuntimeCheck()
@@ -50,7 +50,7 @@ export class DriftRuntimeChecker {
       this.checkInterval = null
     }
     this.isRunning = false
-    console.log('[DRIFT_CHECKER] Stopped drift system monitoring')
+    Logger.log('DRIFT_CHECKER', 'Stopped drift system monitoring')
   }
 
   /**
@@ -86,10 +86,9 @@ export class DriftRuntimeChecker {
           }).catch(() => {
             // Config module not accessible
           })
+        }        } catch (configError) {
+          Logger.warn('DRIFT_CHECKER', 'Config access error:', configError)
         }
-      } catch (configError) {
-        console.warn('[DRIFT_CHECKER] Config access error:', configError)
-      }
       
       if (!configEnabled) {
         issues.push('Drift configuration is disabled or not accessible - this may be normal during initialization')
@@ -124,7 +123,7 @@ export class DriftRuntimeChecker {
       const allPassing = Object.values(checks).every(check => check)
       const status = allPassing ? 'HEALTHY' : 'ISSUES_DETECTED'
 
-      console.log(`[DRIFT_CHECKER] System Status: ${status}`, {
+      Logger.log('DRIFT_CHECKER', `System Status: ${status}`, {
         timestamp: new Date().toISOString(),
         checks,
         issues: issues.length > 0 ? issues : 'None detected',
@@ -133,11 +132,11 @@ export class DriftRuntimeChecker {
       })
 
       if (!allPassing) {
-        console.warn('[DRIFT_CHECKER] Drift system has issues that need attention:', issues)
+        Logger.warn('DRIFT_CHECKER', 'Drift system has issues that need attention:', issues)
       }
 
     } catch (error) {
-      console.error('[DRIFT_CHECKER] Error during runtime check:', error)
+      Logger.error('DRIFT_CHECKER', 'Error during runtime check:', error)
     }
   }
 
@@ -187,15 +186,15 @@ export class DriftRuntimeChecker {
    * Manual check that can be called from browser console
    */
   static manualCheck() {
-    console.log('[DRIFT_CHECKER] Performing manual drift system check...')
+    Logger.log('DRIFT_CHECKER', 'Performing manual drift system check...')
     this.performRuntimeCheck()
     
     // Additional manual diagnostics
-    console.log('[DRIFT_CHECKER] Additional diagnostics:')
-    console.log('- To start monitoring: DriftRuntimeChecker.startMonitoring()')
-    console.log('- To stop monitoring: DriftRuntimeChecker.stopMonitoring()')
-    console.log('- Check drift config: galaxyDriftConfig')
-    console.log('- Look for THREE objects with drift applied')
+    Logger.log('DRIFT_CHECKER', 'Additional diagnostics:')
+    Logger.log('DRIFT_CHECKER', '- To start monitoring: DriftRuntimeChecker.startMonitoring()')
+    Logger.log('DRIFT_CHECKER', '- To stop monitoring: DriftRuntimeChecker.stopMonitoring()')
+    Logger.log('DRIFT_CHECKER', '- Check drift config: galaxyDriftConfig')
+    Logger.log('DRIFT_CHECKER', '- Look for THREE objects with drift applied')
   }
 }
 
@@ -204,7 +203,7 @@ if (process.env.NODE_ENV === 'development') {
   // Longer delay to allow all components to properly mount and initialize
   setTimeout(() => {
     DriftRuntimeChecker.startMonitoring()
-  }, 10000) // Increased from 3000 to 10000ms
+  }, LoggingConfig.intervals.driftCheck) // Use config interval
 }
 
 // Expose to global scope for manual testing
