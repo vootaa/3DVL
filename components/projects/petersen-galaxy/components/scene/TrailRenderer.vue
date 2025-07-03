@@ -17,6 +17,7 @@ const props = withDefaults(defineProps<Props>(), {
 const TRAIL_CONFIG = {
   maxPoints: 500,
   minDistance: 0.001,
+  keepOrigin: true,
   color: 0x00ffff,
 }
 
@@ -46,7 +47,12 @@ const addTrailPoint = (newPoint: Vector3) => {
   trailPoints.value.push(newPoint.clone())
 
   if (trailPoints.value.length > TRAIL_CONFIG.maxPoints) {
-    trailPoints.value.shift()
+    if (TRAIL_CONFIG.keepOrigin) {
+      const removeIndex = Math.floor(trailPoints.value.length * 0.3)
+      trailPoints.value.splice(removeIndex, 1)
+    } else {
+      trailPoints.value.shift()
+    }
   }
 }
 
@@ -62,21 +68,73 @@ const initializeTrail = () => {
 }
 
 /**
+ * Clear trail data
+ */
+const clearTrail = () => {
+  trailPoints.value = []
+  lastSampleTime.value = 0
+
+  if (trailGeometry.value) {
+    trailGeometry.value.setAttribute('position', new Float32BufferAttribute([], 3))
+    trailGeometry.value.attributes.position.needsUpdate = true
+  }
+
+  Logger.log('TRAIL_RENDERER', 'Trail cleared')
+}
+
+/**
+ * Cleanup resources
+ */
+const cleanup = () => {
+  if (trailGeometry.value) {
+    trailGeometry.value.dispose()
+  }
+  if (trailMaterial.value) {
+    trailMaterial.value.dispose()
+  }
+  trailGeometry.value = null
+  trailMaterial.value = null
+}
+
+/**
  * Convert raw position data to relative coordinates for trail visualization
  */
 const processDriftData = (positionData: { x: string; y: string; z: string }): Vector3 | null => {
-  const worldPos = new Vector3(
-    parseFloat(positionData.x) / 1000,
-    parseFloat(positionData.y) / 1000,
-    parseFloat(positionData.z) / 1000
-  )
+  try {
+    const x = parseFloat(positionData.x)
+    const y = parseFloat(positionData.y)
+    const z = parseFloat(positionData.z)
 
-  // Remove offset to get relative position
-  if (trailOffset.value) {
-    worldPos.sub(trailOffset.value)
+    if (isNaN(x) || isNaN(y) || isNaN(z)) {
+      Logger.warn('TRAIL_RENDERER', 'Invalid position data received')
+      return null
+    }
+
+    const worldPos = new Vector3(x / 1000, y / 1000, z / 1000)
+
+    // Remove offset to get relative position
+    if (trailOffset.value) {
+      worldPos.sub(trailOffset.value)
+    }
+
+    return worldPos
+  } catch (error) {
+    Logger.error('TRAIL_RENDERER', 'Error processing drift data:', error)
+    return null
   }
+}
 
-  return worldPos
+/**
+ * Calculate actual trail length
+ */
+const calculateTrailLength = (): number => {
+  if (trailPoints.value.length < 2) return 0
+
+  let totalLength = 0
+  for (let i = 1; i < trailPoints.value.length; i++) {
+    totalLength += trailPoints.value[i].distanceTo(trailPoints.value[i - 1])
+  }
+  return totalLength
 }
 
 /**
@@ -98,13 +156,18 @@ const updateTrailGeometry = () => {
   trailGeometry.value.setAttribute('position', new Float32BufferAttribute(positions, 3))
   trailGeometry.value.attributes.position.needsUpdate = true
 
-  // Simplified logging
+  // calculate and log trail stats
   if (trailPoints.value.length % 25 === 0) {
+    const actualLength = calculateTrailLength()
     const firstPos = trailPoints.value[0]
     const lastPos = trailPoints.value[trailPoints.value.length - 1]
-    const trailLength = firstPos.distanceTo(lastPos)
+    const straightDistance = firstPos.distanceTo(lastPos)
 
-    Logger.log('TRAIL_RENDERER', `Trail: ${trailPoints.value.length} points, length: ${trailLength.toFixed(6)} GU`)
+    Logger.log('TRAIL_RENDERER',
+      `Trail: ${trailPoints.value.length} points, ` +
+      `path length: ${actualLength.toFixed(6)} GU, ` +
+      `straight distance: ${straightDistance.toFixed(6)} GU`
+    )
   }
 }
 
@@ -161,35 +224,6 @@ watch(
   { immediate: false }
 )
 
-/**
- * Clear trail data
- */
-const clearTrail = () => {
-  trailPoints.value = []
-  lastSampleTime.value = 0
-
-  if (trailGeometry.value) {
-    trailGeometry.value.setAttribute('position', new Float32BufferAttribute([], 3))
-    trailGeometry.value.attributes.position.needsUpdate = true
-  }
-
-  Logger.log('TRAIL_RENDERER', 'Trail cleared')
-}
-
-/**
- * Cleanup resources
- */
-const cleanup = () => {
-  if (trailGeometry.value) {
-    trailGeometry.value.dispose()
-  }
-  if (trailMaterial.value) {
-    trailMaterial.value.dispose()
-  }
-  trailGeometry.value = null
-  trailMaterial.value = null
-}
-
 // Setup and cleanup
 onMounted(() => {
   nextTick(() => {
@@ -210,7 +244,8 @@ defineExpose({
     enabled: props.enabled,
     hasGeometry: !!trailGeometry.value,
     hasMaterial: !!trailMaterial.value,
-    offsetSet: !!trailOffset.value
+    offsetSet: !!trailOffset.value,
+    trailLength: calculateTrailLength()
   })
 })
 </script>
