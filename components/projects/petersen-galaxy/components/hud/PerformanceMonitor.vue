@@ -323,9 +323,9 @@ onUnmounted(() => {
 <style lang="css" scoped>
 .performance-monitor {
   position: fixed;
-  top: 80px; /* Below the drift monitor */
+  top: 20px; /* Move to the top position */
   right: 20px;
-  z-index: 999;
+  z-index: 1000; /* Higher z-index to be above DriftMonitor */
   font-family: 'Kode Mono', monospace;
 }
 

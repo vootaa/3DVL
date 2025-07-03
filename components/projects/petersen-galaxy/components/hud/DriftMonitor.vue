@@ -332,7 +332,7 @@ onUnmounted(() => {
   <div class="drift-monitor">
     <!-- Toggle Button -->
     <button class="debug-toggle" @click="toggleDebugPanel" :class="{ active: showDebugPanel }">
-      🔍 DRIFT TOOL
+      🔍 DRIFT Monitor
     </button>
 
     <!-- Debug Panel -->
@@ -396,24 +396,14 @@ onUnmounted(() => {
               <span class="value">{{ formattedVelocity }}</span>
               <div class="mini-chart" v-if="velocityHistory.length > 1">
                 <svg width="180" height="30" viewBox="0 0 180 30">
-                  <path
-                    :d="velocityChartPath"
-                    stroke="#00ccff"
-                    stroke-width="1.5"
-                    fill="none"
-                    opacity="0.8"
-                  />
+                  <path :d="velocityChartPath" stroke="#00ccff" stroke-width="1.5" fill="none" opacity="0.8" />
                   <defs>
                     <linearGradient id="velocityGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" style="stop-color:#00ccff;stop-opacity:0.1" />
                       <stop offset="100%" style="stop-color:#00ccff;stop-opacity:0.8" />
                     </linearGradient>
                   </defs>
-                  <path
-                    :d="velocityChartPath + ' L 180 30 L 0 30 Z'"
-                    fill="url(#velocityGradient)"
-                    opacity="0.3"
-                  />
+                  <path :d="velocityChartPath + ' L 180 30 L 0 30 Z'" fill="url(#velocityGradient)" opacity="0.3" />
                 </svg>
               </div>
             </div>
@@ -424,24 +414,15 @@ onUnmounted(() => {
               <span class="value">{{ formattedPositionChange }}</span>
               <div class="mini-chart" v-if="positionChangeHistory.length > 1">
                 <svg width="180" height="30" viewBox="0 0 180 30">
-                  <path
-                    :d="positionChangeChartPath"
-                    stroke="#66ff66"
-                    stroke-width="1.5"
-                    fill="none"
-                    opacity="0.8"
-                  />
+                  <path :d="positionChangeChartPath" stroke="#66ff66" stroke-width="1.5" fill="none" opacity="0.8" />
                   <defs>
                     <linearGradient id="positionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" style="stop-color:#66ff66;stop-opacity:0.1" />
                       <stop offset="100%" style="stop-color:#66ff66;stop-opacity:0.8" />
                     </linearGradient>
                   </defs>
-                  <path
-                    :d="positionChangeChartPath + ' L 180 30 L 0 30 Z'"
-                    fill="url(#positionGradient)"
-                    opacity="0.3"
-                  />
+                  <path :d="positionChangeChartPath + ' L 180 30 L 0 30 Z'" fill="url(#positionGradient)"
+                    opacity="0.3" />
                 </svg>
               </div>
             </div>
@@ -511,9 +492,9 @@ onUnmounted(() => {
 <style lang="css" scoped>
 .drift-monitor {
   position: fixed;
-  top: 20px;
+  top: 80px; /* Move below PerformanceMonitor */
   right: 20px;
-  z-index: 1000;
+  z-index: 999; /* Lower z-index to be below PerformanceMonitor */
   font-family: 'Kode Mono', monospace;
 }
 
