@@ -1,8 +1,20 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick, computed } from 'vue'
-import { Float32BufferAttribute, MeshBasicMaterial, Vector3, TubeGeometry, CatmullRomCurve3 } from 'three'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { 
+  Float32BufferAttribute, 
+  ShaderMaterial, 
+  Vector3, 
+  AdditiveBlending,
+  BufferGeometry,
+  Points
+} from 'three'
 import { useGalaxyDriftData } from '../../services/galaxy-drift-data'
+import { useRenderLoop } from '@tresjs/core'
 import { Logger } from '../../../../utils/logger'
+
+// Import trail particle shaders
+import trailVertexShader from '../../shaders/trail-vertex.glsl'
+import trailFragmentShader from '../../shaders/trail-fragment.glsl'
 
 // Props
 interface Props {
@@ -13,57 +25,201 @@ const props = withDefaults(defineProps<Props>(), {
   enabled: false
 })
 
-// Trail configuration
+// Particle trail configuration
 const TRAIL_CONFIG = {
-  maxPoints: 500,
-  minDistance: 0.001,
-  keepOrigin: true,
-  tube: {
-    radius: 0.005,        // Tube radius
-    tubularSegments: 200, // Tubular segments
-    radialSegments: 8,    // Radial segments
-    closed: false         // Not closed
+  maxParticles: 1000,        // Maximum number of particles
+  particleLifespan: 10.0,    // Particle lifespan (seconds)
+  emissionRate: 50,          // Particles emitted per second
+  minDistance: 0.001,        // Minimum sampling distance
+  particle: {
+    size: 0.5,                // Particle size
+    sizeVariation: 0.25,     // Size variation
+    speed: 0.001,            // Particle speed
+    speedVariation: 0.0005   // Speed variation
   },
   colors: {
-    head: '#00ffff',      // Head color (newest position)
-    tail: '#004466',      // Tail color (historical position)
-    glow: '#0088aa'       // Glow color
+    head: [1.0, 0.8, 0.2],   // Head color (bright orange)
+    middle: [1.0, 0.4, 0.1], // Middle color (orange-red)
+    tail: [0.8, 0.2, 0.0]    // Tail color (dark red)
   }
 }
 
+// Particle data structure
+interface TrailParticle {
+  position: Vector3
+  velocity: Vector3
+  life: number
+  maxLife: number
+  size: number
+  color: [number, number, number]
+  trailProgress: number
+}
+
 // Trail state
-const trailPoints = ref<Vector3[]>([])  // Store relative positions (offset removed)
-const trailGeometry = ref<TubeGeometry | null>(null)
-const trailMaterial = ref<MeshBasicMaterial | null>(null)
+const trailPoints = ref<Vector3[]>([])
+const particles = ref<TrailParticle[]>([])
+const trailGeometry = ref<BufferGeometry | null>(null)
+const trailMaterial = ref<ShaderMaterial | null>(null)
+const trailPointsRef = ref<Points | null>(null)
 const trailOffset = ref<Vector3 | null>(null)
 
-// Throttling
+// Emission control
+const lastEmissionTime = ref(0)
 const lastSampleTime = ref(0)
 const SAMPLE_THROTTLE = 100
 
 // Galaxy drift data service
 const driftDataService = useGalaxyDriftData()
 
-// Dynamic color calculation
-const trailColor = computed(() => {
-  const pointCount = trailPoints.value.length
-  if (pointCount < 10) {
-    return TRAIL_CONFIG.colors.head
-  } else if (pointCount < 50) {
-    return TRAIL_CONFIG.colors.glow
+/**
+ * Create new particle
+ */
+const createParticle = (position: Vector3, trailProgress: number): TrailParticle => {
+  const velocity = new Vector3(
+    (Math.random() - 0.5) * TRAIL_CONFIG.particle.speed,
+    (Math.random() - 0.5) * TRAIL_CONFIG.particle.speed,
+    (Math.random() - 0.5) * TRAIL_CONFIG.particle.speed
+  )
+
+  const life = TRAIL_CONFIG.particleLifespan
+  const size = TRAIL_CONFIG.particle.size + 
+    (Math.random() - 0.5) * TRAIL_CONFIG.particle.sizeVariation
+
+  // Calculate color based on trail progress
+  const { head, middle, tail } = TRAIL_CONFIG.colors
+  let color: [number, number, number]
+  
+  if (trailProgress < 0.5) {
+    const t = trailProgress * 2
+    color = [
+      tail[0] + (middle[0] - tail[0]) * t,
+      tail[1] + (middle[1] - tail[1]) * t,
+      tail[2] + (middle[2] - tail[2]) * t
+    ]
   } else {
-    return TRAIL_CONFIG.colors.tail
+    const t = (trailProgress - 0.5) * 2
+    color = [
+      middle[0] + (head[0] - middle[0]) * t,
+      middle[1] + (head[1] - middle[1]) * t,
+      middle[2] + (head[2] - middle[2]) * t
+    ]
   }
-})
 
-// Dynamic scaling
-const trailScale = computed((): [number, number, number] => {
-  const length = calculateTrailLength()
-  const baseScale = 1.0
-  const dynamicScale = Math.min(2.0, 1.0 + length * 0.1)
-  return [baseScale, baseScale, dynamicScale]
-})
+  return {
+    position: position.clone(),
+    velocity,
+    life,
+    maxLife: life,
+    size,
+    color,
+    trailProgress
+  }
+}
 
+/**
+ * Update particle system
+ */
+const updateParticles = (deltaTime: number) => {
+  // Update existing particles
+  particles.value = particles.value.filter(particle => {
+    particle.life -= deltaTime
+    particle.position.add(particle.velocity.clone().multiplyScalar(deltaTime))
+    
+    // Particle decay effect
+    const lifeRatio = particle.life / particle.maxLife
+    particle.size = TRAIL_CONFIG.particle.size * lifeRatio
+    
+    return particle.life > 0
+  })
+
+  // Emit new particles
+  const now = Date.now()
+  const emissionInterval = 1000 / TRAIL_CONFIG.emissionRate
+  
+  if (now - lastEmissionTime.value > emissionInterval && trailPoints.value.length > 0) {
+    const latestPoint = trailPoints.value[trailPoints.value.length - 1]
+    const trailProgress = 1.0 // Latest point progress is 1.0
+    
+    // Create multiple particles to increase density
+    const particlesPerEmission = 3
+    for (let i = 0; i < particlesPerEmission; i++) {
+      const particle = createParticle(latestPoint, trailProgress)
+      particles.value.push(particle)
+    }
+    
+    lastEmissionTime.value = now
+  }
+
+  // Limit particle count
+  if (particles.value.length > TRAIL_CONFIG.maxParticles) {
+    particles.value.splice(0, particles.value.length - TRAIL_CONFIG.maxParticles)
+  }
+}
+
+/**
+ * Update geometry
+ */
+const updateGeometry = () => {
+  if (!trailGeometry.value || particles.value.length === 0) return
+
+  const particleCount = particles.value.length
+  const positions = new Float32Array(particleCount * 3)
+  const colors = new Float32Array(particleCount * 3)
+  const sizes = new Float32Array(particleCount)
+  const lifes = new Float32Array(particleCount)
+
+  particles.value.forEach((particle, i) => {
+    positions[i * 3] = particle.position.x
+    positions[i * 3 + 1] = particle.position.y
+    positions[i * 3 + 2] = particle.position.z
+
+    colors[i * 3] = particle.color[0]
+    colors[i * 3 + 1] = particle.color[1]
+    colors[i * 3 + 2] = particle.color[2]
+
+    sizes[i] = particle.size
+    lifes[i] = particle.life / particle.maxLife
+  })
+
+  trailGeometry.value.setAttribute('position', new Float32BufferAttribute(positions, 3))
+  trailGeometry.value.setAttribute('color', new Float32BufferAttribute(colors, 3))
+  trailGeometry.value.setAttribute('size', new Float32BufferAttribute(sizes, 1))
+  trailGeometry.value.setAttribute('life', new Float32BufferAttribute(lifes, 1))
+
+  trailGeometry.value.attributes.position.needsUpdate = true
+  trailGeometry.value.attributes.color.needsUpdate = true
+  trailGeometry.value.attributes.size.needsUpdate = true
+  trailGeometry.value.attributes.life.needsUpdate = true
+}
+
+/**
+ * Create particle material
+ */
+const createParticleMaterial = () => {
+  return new ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uSize: { value: TRAIL_CONFIG.particle.size }
+    },
+    vertexShader: trailVertexShader,
+    fragmentShader: trailFragmentShader,
+    transparent: true,
+    blending: AdditiveBlending,
+    depthWrite: false,
+    vertexColors: true
+  })
+}
+
+const initializeTrail = () => {
+  trailGeometry.value = new BufferGeometry()
+  trailMaterial.value = createParticleMaterial()
+
+  Logger.log('TRAIL_RENDERER', 'Particle trail system initialized')
+}
+
+/**
+ * Add trail point
+ */
 const addTrailPoint = (newPoint: Vector3) => {
   if (trailPoints.value.length > 0) {
     const lastPoint = trailPoints.value[trailPoints.value.length - 1]
@@ -76,87 +232,67 @@ const addTrailPoint = (newPoint: Vector3) => {
 
   trailPoints.value.push(newPoint.clone())
 
-  while (trailPoints.value.length > TRAIL_CONFIG.maxPoints) {
-    if (TRAIL_CONFIG.keepOrigin && trailPoints.value.length > 2) {
-      const removeIndex = Math.floor(trailPoints.value.length / 2)
-      trailPoints.value.splice(removeIndex, 1)
-    } else {
-      trailPoints.value.shift()
-    }
+  // Maintain trail point count
+  if (trailPoints.value.length > 100) {
+    trailPoints.value.shift()
   }
 }
 
 /**
- * Create tube trail geometry
+ * Sample position
  */
-const createTubeTrail = () => {
-  if (trailPoints.value.length < 2) return
-
-  try {
-    // Create smooth curve
-    const curve = new CatmullRomCurve3(trailPoints.value)
-    
-    // Create tube geometry
-    const geometry = new TubeGeometry(
-      curve,
-      TRAIL_CONFIG.tube.tubularSegments,
-      TRAIL_CONFIG.tube.radius,
-      TRAIL_CONFIG.tube.radialSegments,
-      TRAIL_CONFIG.tube.closed
-    )
-
-    // Add color attributes for gradient effect
-    const colors = new Float32Array(geometry.attributes.position.count * 3)
-    const positionCount = geometry.attributes.position.count
-    
-    for (let i = 0; i < positionCount; i++) {
-      const progress = (i / positionCount) // Progress from 0 to 1
-      
-      // Gradient from tail (blue) to head (cyan)
-      const r = progress * 0.0 + (1 - progress) * 0.0  // Red component
-      const g = progress * 1.0 + (1 - progress) * 0.4  // Green component
-      const b = progress * 1.0 + (1 - progress) * 0.6  // Blue component
-      
-      colors[i * 3] = r
-      colors[i * 3 + 1] = g
-      colors[i * 3 + 2] = b
-    }
-    
-    geometry.setAttribute('color', new Float32BufferAttribute(colors, 3))
-    
-    trailGeometry.value = geometry
-    
-    Logger.log('TRAIL_RENDERER', `Tube trail created with ${trailPoints.value.length} points`)
-  } catch (error) {
-    Logger.error('TRAIL_RENDERER', 'Error creating tube trail:', error)
+const samplePosition = () => {
+  const now = Date.now()
+  if (now - lastSampleTime.value < SAMPLE_THROTTLE) {
+    return
   }
-}
+  lastSampleTime.value = now
 
-const initializeTrail = () => {
-  trailMaterial.value = new MeshBasicMaterial({
-    color: TRAIL_CONFIG.colors.head,
-    transparent: true,
-    opacity: 0.8,
-    vertexColors: true,  // Enable vertex colors
-    // wireframe: true    // Optional: show wireframe
-  })
+  const positionData = driftDataService.getDriftPosition()
+  if (!positionData) return
 
-  Logger.log('TRAIL_RENDERER', 'Enhanced trail renderer initialized')
+  const galaxyPos = processDriftData(positionData)
+  if (!galaxyPos) return
+
+  addTrailPoint(galaxyPos)
 }
 
 /**
- * Clear trail data
+ * Process drift data
+ */
+const processDriftData = (positionData: { x: string; y: string; z: string }): Vector3 | null => {
+  try {
+    const x = parseFloat(positionData.x)
+    const y = parseFloat(positionData.y)
+    const z = parseFloat(positionData.z)
+
+    if (isNaN(x) || isNaN(y) || isNaN(z)) {
+      return null
+    }
+
+    const worldPos = new Vector3(x / 1000, y / 1000, z / 1000)
+
+    if (trailOffset.value) {
+      worldPos.sub(trailOffset.value)
+    }
+
+    return worldPos
+  } catch (error) {
+    Logger.error('TRAIL_RENDERER', 'Error processing drift data:', error)
+    return null
+  }
+}
+
+/**
+ * Clear trail
  */
 const clearTrail = () => {
   trailPoints.value = []
+  particles.value = []
   lastSampleTime.value = 0
+  lastEmissionTime.value = 0
 
-  if (trailGeometry.value) {
-    trailGeometry.value.dispose()
-    trailGeometry.value = null
-  }
-
-  Logger.log('TRAIL_RENDERER', 'Trail cleared')
+  Logger.log('TRAIL_RENDERER', 'Particle trail cleared')
 }
 
 /**
@@ -173,113 +309,32 @@ const cleanup = () => {
   trailMaterial.value = null
 }
 
-/**
- * Convert raw position data to relative coordinates for trail visualization
- */
-const processDriftData = (positionData: { x: string; y: string; z: string }): Vector3 | null => {
-  try {
-    const x = parseFloat(positionData.x)
-    const y = parseFloat(positionData.y)
-    const z = parseFloat(positionData.z)
-
-    if (isNaN(x) || isNaN(y) || isNaN(z)) {
-      Logger.warn('TRAIL_RENDERER', 'Invalid position data received')
-      return null
+// Render loop
+const { onLoop } = useRenderLoop()
+onLoop(({ elapsed, delta }) => {
+  if (props.enabled) {
+    updateParticles(delta)
+    updateGeometry()
+    
+    if (trailMaterial.value) {
+      trailMaterial.value.uniforms.uTime.value = elapsed
     }
-
-    const worldPos = new Vector3(x / 1000, y / 1000, z / 1000)
-
-    // Remove offset to get relative position
-    if (trailOffset.value) {
-      worldPos.sub(trailOffset.value)
-    }
-
-    return worldPos
-  } catch (error) {
-    Logger.error('TRAIL_RENDERER', 'Error processing drift data:', error)
-    return null
   }
-}
-
-/**
- * Calculate actual trail length
- */
-const calculateTrailLength = (): number => {
-  if (trailPoints.value.length < 2) return 0
-
-  let totalLength = 0
-  for (let i = 1; i < trailPoints.value.length; i++) {
-    totalLength += trailPoints.value[i].distanceTo(trailPoints.value[i - 1])
-  }
-  return totalLength
-}
-
-/**
- * Update trail geometry with current trail points
- */
-const updateTrailGeometry = () => {
-  if (trailPoints.value.length < 2) return
-
-  try {
-    // Recreate tube geometry
-    createTubeTrail()
-
-    // Periodic log output
-    if (trailPoints.value.length % 25 === 0) {
-      const actualLength = calculateTrailLength()
-      const firstPos = trailPoints.value[0]
-      const lastPos = trailPoints.value[trailPoints.value.length - 1]
-      const straightDistance = firstPos.distanceTo(lastPos)
-
-      Logger.log('TRAIL_RENDERER',
-        `Enhanced trail: ${trailPoints.value.length}/${TRAIL_CONFIG.maxPoints} points, ` +
-        `path: ${actualLength.toFixed(4)} GU, ` +
-        `straight: ${straightDistance.toFixed(4)} GU`
-      )
-    }
-  } catch (error) {
-    Logger.error('TRAIL_RENDERER', 'Error updating trail geometry:', error)
-  }
-}
-
-/**
- * Sample current galaxy center position and update trail
- */
-const samplePosition = () => {
-  const now = Date.now()
-  if (now - lastSampleTime.value < SAMPLE_THROTTLE) {
-    return
-  }
-  lastSampleTime.value = now
-
-  const positionData = driftDataService.getDriftPosition()
-  if (!positionData) return
-
-  const galaxyPos = processDriftData(positionData)
-  if (!galaxyPos) return
-
-  addTrailPoint(galaxyPos)
-
-  if (trailPoints.value.length >= 2) {
-    updateTrailGeometry()
-  }
-}
+})
 
 // Watch enabled state
 watch(() => props.enabled, (enabled) => {
   if (enabled) {
-    Logger.log('TRAIL_RENDERER', 'Enhanced trail rendering enabled')
+    Logger.log('TRAIL_RENDERER', 'Particle trail rendering enabled')
     clearTrail()
 
-    // Set initial offset when enabling
     const currentCenter = driftDataService.getGalaxyCenter()
     if (currentCenter) {
       trailOffset.value = new Vector3(currentCenter.x, currentCenter.y, currentCenter.z)
-      trailPoints.value = [new Vector3(0, 0, 0)]  // Start from origin
       Logger.log('TRAIL_RENDERER', `Trail offset recorded: (${trailOffset.value.x.toFixed(6)}, ${trailOffset.value.y.toFixed(6)}, ${trailOffset.value.z.toFixed(6)})`)
     }
   } else {
-    Logger.log('TRAIL_RENDERER', 'Enhanced trail rendering disabled')
+    Logger.log('TRAIL_RENDERER', 'Particle trail rendering disabled')
     clearTrail()
   }
 }, { immediate: true })
@@ -311,30 +366,20 @@ defineExpose({
   clearTrail,
   getTrailStats: () => ({
     pointCount: trailPoints.value.length,
-    maxPoints: TRAIL_CONFIG.maxPoints,
-    enabled: props.enabled,
-    hasGeometry: !!trailGeometry.value,
-    hasMaterial: !!trailMaterial.value,
-    offsetSet: !!trailOffset.value,
-    trailLength: calculateTrailLength()
+    particleCount: particles.value.length,
+    maxParticles: TRAIL_CONFIG.maxParticles,
+    enabled: props.enabled
   })
 })
 </script>
 
 <template>
   <TresGroup v-if="props.enabled">
-    <!-- Use TresMesh instead of TresLine, similar to space game orbits -->
-    <TresMesh 
-      v-if="trailGeometry && trailMaterial && trailPoints.length >= 2" 
+    <TresPoints
+      ref="trailPointsRef"
+      v-if="trailGeometry && trailMaterial && particles.length > 0"
       :geometry="trailGeometry"
-      :scale="trailScale"
-    >
-      <TresMeshBasicMaterial 
-        :color="trailColor" 
-        :transparent="true"
-        :opacity="0.8"
-        :vertex-colors="true"
-      />
-    </TresMesh>
+      :material="trailMaterial"
+    />
   </TresGroup>
 </template>
