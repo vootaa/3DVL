@@ -46,9 +46,9 @@ const addTrailPoint = (newPoint: Vector3) => {
 
   trailPoints.value.push(newPoint.clone())
 
-  if (trailPoints.value.length > TRAIL_CONFIG.maxPoints) {
-    if (TRAIL_CONFIG.keepOrigin) {
-      const removeIndex = Math.floor(trailPoints.value.length * 0.3)
+  while (trailPoints.value.length > TRAIL_CONFIG.maxPoints) {
+    if (TRAIL_CONFIG.keepOrigin && trailPoints.value.length > 2) {
+      const removeIndex = Math.floor(trailPoints.value.length / 2)
       trailPoints.value.splice(removeIndex, 1)
     } else {
       trailPoints.value.shift()
@@ -143,31 +143,31 @@ const calculateTrailLength = (): number => {
 const updateTrailGeometry = () => {
   if (!trailGeometry.value || trailPoints.value.length < 2) return
 
-  // All points in trailPoints are already relative coordinates
-  // We render them directly as they represent the drift path from origin
-  const positions = new Float32Array(trailPoints.value.length * 3)
-  trailPoints.value.forEach((pos, i) => {
-    positions[i * 3] = pos.x
-    positions[i * 3 + 1] = pos.y
-    positions[i * 3 + 2] = pos.z
-  })
+  try {
+    const positions = new Float32Array(trailPoints.value.length * 3)
+    trailPoints.value.forEach((pos, i) => {
+      positions[i * 3] = pos.x
+      positions[i * 3 + 1] = pos.y
+      positions[i * 3 + 2] = pos.z
+    })
 
-  // Update geometry
-  trailGeometry.value.setAttribute('position', new Float32BufferAttribute(positions, 3))
-  trailGeometry.value.attributes.position.needsUpdate = true
+    trailGeometry.value.setAttribute('position', new Float32BufferAttribute(positions, 3))
+    trailGeometry.value.attributes.position.needsUpdate = true
 
-  // calculate and log trail stats
-  if (trailPoints.value.length % 25 === 0) {
-    const actualLength = calculateTrailLength()
-    const firstPos = trailPoints.value[0]
-    const lastPos = trailPoints.value[trailPoints.value.length - 1]
-    const straightDistance = firstPos.distanceTo(lastPos)
+    if (trailPoints.value.length % 50 === 0) {
+      const actualLength = calculateTrailLength()
+      const firstPos = trailPoints.value[0]
+      const lastPos = trailPoints.value[trailPoints.value.length - 1]
+      const straightDistance = firstPos.distanceTo(lastPos)
 
-    Logger.log('TRAIL_RENDERER',
-      `Trail: ${trailPoints.value.length} points, ` +
-      `path length: ${actualLength.toFixed(6)} GU, ` +
-      `straight distance: ${straightDistance.toFixed(6)} GU`
-    )
+      Logger.log('TRAIL_RENDERER',
+        `Trail: ${trailPoints.value.length}/${TRAIL_CONFIG.maxPoints} points, ` +
+        `path: ${actualLength.toFixed(4)} GU, ` +
+        `straight: ${straightDistance.toFixed(4)} GU`
+      )
+    }
+  } catch (error) {
+    Logger.error('TRAIL_RENDERER', 'Error updating trail geometry:', error)
   }
 }
 
@@ -252,12 +252,7 @@ defineExpose({
 
 <template>
   <TresGroup v-if="props.enabled">
-    <TresLine 
-      v-if="trailGeometry && trailMaterial && trailPoints.length >= 2" 
-      :geometry="trailGeometry"
-      :material="trailMaterial" 
-      :visible="true" 
-    />
+    <TresLine v-if="trailGeometry && trailMaterial && trailPoints.length >= 2" :geometry="trailGeometry"
+      :material="trailMaterial" :visible="true" />
   </TresGroup>
 </template>
-
