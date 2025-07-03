@@ -34,17 +34,13 @@ const driftDataService = useGalaxyDriftData()
  * Galaxy center drift represents the actual movement of the galaxy in world space
  */
 const processDriftData = (positionData: { x: string; y: string; z: string }): Vector3 | null => {
-  const galaxyCenter = driftDataService.getGalaxyCenter()
-  if (!galaxyCenter) return null
-
-  // Convert raw data (mGU) to GU by dividing by 1000
   const driftPos = new Vector3(
     parseFloat(positionData.x) / 1000,
     parseFloat(positionData.y) / 1000,
     parseFloat(positionData.z) / 1000
   )
   
-  return driftPos.clone().sub(new Vector3(galaxyCenter.x, galaxyCenter.y, galaxyCenter.z))
+  return driftPos
 }
 
 /**
@@ -53,19 +49,77 @@ const processDriftData = (positionData: { x: string; y: string; z: string }): Ve
 const updateTrailGeometry = () => {
   if (!trailGeometry.value || trailPoints.value.length < 2) return
   
-  const positions = new Float32Array(trailPoints.value.length * 3)
-  
-  // Populate positions from galaxy center trail points
-  for (let i = 0; i < trailPoints.value.length; i++) {
-    const point = trailPoints.value[i]
-    positions[i * 3] = point.x
-    positions[i * 3 + 1] = point.y
-    positions[i * 3 + 2] = point.z
+  // Get current galaxy center position as reference point
+  const galaxyCenter = driftDataService.getGalaxyCenter()
+  if (!galaxyCenter) {
+    Logger.log('TRAIL_RENDERER', 'Cannot update trail geometry: no galaxy center available')
+    return
   }
+  
+  const currentCenter = new Vector3(galaxyCenter.x, galaxyCenter.y, galaxyCenter.z)
+  
+  // Convert relative coordinates to world coordinates
+  const worldPositions = trailPoints.value.map(relativePos => {
+    const worldPos = relativePos.clone().add(currentCenter)
+    return worldPos
+  })
+  
+  // Check if points are too close together to be visualized
+  let significantPoints = 0
+  for (let i = 1; i < worldPositions.length; i++) {
+    const distance = worldPositions[i].distanceTo(worldPositions[i-1])
+    if (distance > 0.000001) { // Minimum distance threshold
+      significantPoints++
+    }
+  }
+  
+  if (significantPoints < 2) {
+    Logger.log('TRAIL_RENDERER', `⚠️ WARNING: Only ${significantPoints} significant points (distance > 0.000001), trail may not be visible`)
+  }
+  
+  // Create positions array for geometry
+  const positions = new Float32Array(worldPositions.length * 3)
+  worldPositions.forEach((pos, i) => {
+    positions[i * 3] = pos.x
+    positions[i * 3 + 1] = pos.y
+    positions[i * 3 + 2] = pos.z
+  })
   
   // Update geometry
   trailGeometry.value.setAttribute('position', new Float32BufferAttribute(positions, 3))
   trailGeometry.value.attributes.position.needsUpdate = true
+  
+  // Detailed coordinate conversion logging (every 25 points)
+  if (worldPositions.length % 25 === 0) {
+    const firstWorld = worldPositions[0]
+    const lastWorld = worldPositions[worldPositions.length - 1]
+    const firstRelative = trailPoints.value[0]
+    const lastRelative = trailPoints.value[trailPoints.value.length - 1]
+    
+    Logger.log('TRAIL_RENDERER', `Trail geometry updated: ${worldPositions.length} points`)
+    Logger.log('TRAIL_RENDERER', `  Galaxy center: (${currentCenter.x.toFixed(6)}, ${currentCenter.y.toFixed(6)}, ${currentCenter.z.toFixed(6)})`)
+    Logger.log('TRAIL_RENDERER', `  Coordinate conversion comparison:`)
+    Logger.log('TRAIL_RENDERER', `    First relative: (${firstRelative.x.toFixed(6)}, ${firstRelative.y.toFixed(6)}, ${firstRelative.z.toFixed(6)})`)
+    Logger.log('TRAIL_RENDERER', `    First world:    (${firstWorld.x.toFixed(6)}, ${firstWorld.y.toFixed(6)}, ${firstWorld.z.toFixed(6)})`)
+    Logger.log('TRAIL_RENDERER', `    Last relative:  (${lastRelative.x.toFixed(6)}, ${lastRelative.y.toFixed(6)}, ${lastRelative.z.toFixed(6)})`)
+    Logger.log('TRAIL_RENDERER', `    Last world:     (${lastWorld.x.toFixed(6)}, ${lastWorld.y.toFixed(6)}, ${lastWorld.z.toFixed(6)})`)
+    
+    // Check if trail is within reasonable visual range
+    const trailLength = firstWorld.distanceTo(lastWorld)
+    const maxDistanceFromOrigin = Math.max(...worldPositions.map(pos => pos.length()))
+    const minDistanceFromOrigin = Math.min(...worldPositions.map(pos => pos.length()))
+    
+    Logger.log('TRAIL_RENDERER', `  Trail length: ${trailLength.toFixed(6)} units`)
+    Logger.log('TRAIL_RENDERER', `  Distance from origin: ${minDistanceFromOrigin.toFixed(6)} to ${maxDistanceFromOrigin.toFixed(6)}`)
+    
+    // Check trail spread relative to galaxy center
+    const trailSpread = Math.max(...worldPositions.map(pos => pos.distanceTo(currentCenter)))
+    if (trailSpread < 0.001) {
+      Logger.log('TRAIL_RENDERER', `  ⚠️ WARNING: Trail spread very small (${trailSpread.toFixed(6)}), may not be visible`)
+    } else {
+      Logger.log('TRAIL_RENDERER', `  ✅ Trail spread acceptable: ${trailSpread.toFixed(6)} units from galaxy center`)
+    }
+  }
 }
 
 /**
@@ -99,9 +153,42 @@ const samplePosition = () => {
   // Update state
   lastSampleTime.value = now
   
-  // Simplified logging - only log key state changes
+  // Enhanced logging - detailed buffer information every 50 points
   if (trailPoints.value.length % 50 === 0) {
-    Logger.log('TRAIL_RENDERER', `Trail buffer: ${trailPoints.value.length}/${TRAIL_CONFIG.maxPoints} points`)
+    const bufferSize = trailPoints.value.length
+    const firstPoint = trailPoints.value[0]
+    const lastPoint = trailPoints.value[bufferSize - 1]
+    
+    Logger.log('TRAIL_RENDERER', `Trail buffer: ${bufferSize}/${TRAIL_CONFIG.maxPoints} points`)
+    Logger.log('TRAIL_RENDERER', `  First point: (${firstPoint.x.toFixed(6)}, ${firstPoint.y.toFixed(6)}, ${firstPoint.z.toFixed(6)})`)
+    Logger.log('TRAIL_RENDERER', `  Last point:  (${lastPoint.x.toFixed(6)}, ${lastPoint.y.toFixed(6)}, ${lastPoint.z.toFixed(6)})`)
+    Logger.log('TRAIL_RENDERER', `  Distance span: ${firstPoint.distanceTo(lastPoint).toFixed(6)} units`)
+    
+    // Calculate data ranges across all dimensions
+    const xValues = trailPoints.value.map(p => p.x)
+    const yValues = trailPoints.value.map(p => p.y)
+    const zValues = trailPoints.value.map(p => p.z)
+    
+    const xRange = { min: Math.min(...xValues), max: Math.max(...xValues) }
+    const yRange = { min: Math.min(...yValues), max: Math.max(...yValues) }
+    const zRange = { min: Math.min(...zValues), max: Math.max(...zValues) }
+    
+    Logger.log('TRAIL_RENDERER', `  X range: ${xRange.min.toFixed(6)} to ${xRange.max.toFixed(6)} (span: ${(xRange.max - xRange.min).toFixed(6)})`)
+    Logger.log('TRAIL_RENDERER', `  Y range: ${yRange.min.toFixed(6)} to ${yRange.max.toFixed(6)} (span: ${(yRange.max - yRange.min).toFixed(6)})`)
+    Logger.log('TRAIL_RENDERER', `  Z range: ${zRange.min.toFixed(6)} to ${zRange.max.toFixed(6)} (span: ${(zRange.max - zRange.min).toFixed(6)})`)
+    
+    // Check data precision - warn if values are too small to be meaningful
+    const maxAbsValue = Math.max(
+      Math.abs(xRange.min), Math.abs(xRange.max),
+      Math.abs(yRange.min), Math.abs(yRange.max),
+      Math.abs(zRange.min), Math.abs(zRange.max)
+    )
+    
+    if (maxAbsValue < 0.000001) {
+      Logger.log('TRAIL_RENDERER', `  ⚠️ WARNING: Data precision very low (max: ${maxAbsValue.toFixed(9)}), may not be visible`)
+    } else {
+      Logger.log('TRAIL_RENDERER', `  ✅ Data precision acceptable (max: ${maxAbsValue.toFixed(6)})`)
+    }
   }
 }
 
@@ -194,7 +281,55 @@ defineExpose({
     enabled: props.enabled,
     hasGeometry: !!trailGeometry.value,
     hasMaterial: !!trailMaterial.value
-  })
+  }),
+  // Advanced trail diagnostics
+  diagnoseTrail: () => {
+    const galaxyCenter = driftDataService.getGalaxyCenter()
+    if (!galaxyCenter) {
+      console.log('TRAIL_DIAGNOSIS: No galaxy center available')
+      return
+    }
+    
+    const currentCenter = new Vector3(galaxyCenter.x, galaxyCenter.y, galaxyCenter.z)
+    
+    console.log('TRAIL_DIAGNOSIS: Complete Trail Analysis')
+    console.log('  Buffer size:', trailPoints.value.length)
+    console.log('  Galaxy center:', currentCenter.toArray().map(v => v.toFixed(6)))
+    console.log('  Sampling interval:', TRAIL_CONFIG.samplingInterval, 'ms')
+    console.log('  Max points:', TRAIL_CONFIG.maxPoints)
+    
+    if (trailPoints.value.length > 0) {
+      console.log('  First 5 points (relative -> world coordinate conversion):')
+      trailPoints.value.slice(0, 5).forEach((relativePos, i) => {
+        const worldPos = relativePos.clone().add(currentCenter)
+        console.log(`    Point ${i}: rel(${relativePos.x.toFixed(6)}, ${relativePos.y.toFixed(6)}, ${relativePos.z.toFixed(6)}) -> world(${worldPos.x.toFixed(6)}, ${worldPos.y.toFixed(6)}, ${worldPos.z.toFixed(6)})`)
+      })
+      
+      // Check point distances
+      console.log('  Point-to-point distances:')
+      const worldPositions = trailPoints.value.map(rel => rel.clone().add(currentCenter))
+      for (let i = 1; i < Math.min(5, worldPositions.length); i++) {
+        const distance = worldPositions[i].distanceTo(worldPositions[i-1])
+        console.log(`    Point ${i-1} to ${i}: ${distance.toFixed(6)} units`)
+      }
+    }
+    
+    // Check geometry state
+    if (trailGeometry.value) {
+      const positions = trailGeometry.value.attributes.position
+      console.log('  Geometry state:')
+      console.log('    Position attribute:', positions ? `${positions.count} vertices` : 'none')
+      console.log('    Needs update:', positions ? positions.needsUpdate : 'N/A')
+    }
+    
+    // Check material state
+    if (trailMaterial.value) {
+      console.log('  Material state:')
+      console.log('    Color:', trailMaterial.value.color.getHex().toString(16))
+      console.log('    Opacity:', trailMaterial.value.opacity)
+      console.log('    Visible:', trailMaterial.value.visible)
+    }
+  }
 })
 </script>
 
