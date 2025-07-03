@@ -2,8 +2,8 @@
 import { ref, inject, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useRenderLoop } from '@tresjs/core'
 import { Vector3, AdditiveBlending, Float32BufferAttribute } from 'three'
-import { Logger } from '../../../utils/logger'
-import { useDriftState } from '../composables/useDriftState'
+import { Logger } from '../../../../utils/logger'
+import { useDriftState } from '../../composables/useDriftState'
 
 // Use global drift state
 const { driftState, cleanup } = useDriftState()
@@ -25,16 +25,16 @@ const clearTrail = () => {
   trailOpacities.value = []
 }
 
-// 辅助函数：获取轨迹颜色
+// Helper function: Get trail color
 const getTrailColor = (index: number, total: number) => {
   const age = index / Math.max(total - 1, 1)
-  const hue = 180 + age * 60 // 从青色到蓝色
+  const hue = 180 + age * 60 // From cyan to blue
   const saturation = 100
-  const lightness = 50 + age * 30 // 新点更亮
+  const lightness = 50 + age * 30 // Newer points are brighter
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`
 }
 
-// 辅助函数：获取位置数组用于连线
+// Helper function: Get position array for line connections
 const getPositionsArray = () => {
   const positions = new Float32Array(trailPoints.value.length * 3)
   for (let i = 0; i < trailPoints.value.length; i++) {
@@ -46,7 +46,7 @@ const getPositionsArray = () => {
   return positions
 }
 
-// 计算属性：获取当前位置
+// Computed property: Get current position
 const getCurrentPosition = computed(() => {
   if (trailPoints.value.length === 0) return [0, 0, 0] as [number, number, number]
   const last = trailPoints.value[trailPoints.value.length - 1]
@@ -123,7 +123,7 @@ const updateTrailGeometry = () => {
     geometry.attributes.position.needsUpdate = true
     geometry.attributes.alpha.needsUpdate = true
     
-    // 减少日志频率，只在轨迹点数量是10的倍数时记录
+    // Reduce logging frequency, only log when trail points count is a multiple of 10
     if (trailPoints.value.length % 10 === 0) {
       Logger.log('DRIFT_TRAIL_RENDERER', `Updated geometry with ${trailPoints.value.length} points`)
     }
@@ -181,7 +181,7 @@ onLoop(() => {
       addTrailPoint(currentPos)
       
       // Debug log occasionally
-      if (trailPoints.value.length % 25 === 0) { // 每25个点记录一次，而不是每10个
+      if (trailPoints.value.length % 25 === 0) { // Log every 25 points instead of every 10
         Logger.log('DRIFT_TRAIL_RENDERER', `Trail points: ${trailPoints.value.length}, Current pos: (${currentPos.x.toFixed(6)}, ${currentPos.y.toFixed(6)}, ${currentPos.z.toFixed(6)})`)
       }
     }
@@ -190,15 +190,15 @@ onLoop(() => {
 
 onUnmounted(() => {
   clearTrail()
-  cleanup() // 清理全局状态管理器的定时器
+  cleanup() // Clean up global state manager timers
   Logger.log('DRIFT_TRAIL_RENDERER', 'Trail renderer component unmounted')
 })
 </script>
 
 <template>
-  <!-- 粒子轨迹系统 -->
+  <!-- Particle trail system -->
   <TresGroup v-if="isTrailVisible && trailPoints.length > 0">
-    <!-- 使用简单的球体作为轨迹点，更容易看到 -->
+    <!-- Use simple spheres as trail points for better visibility -->
     <TresMesh 
       v-for="(point, index) in trailPoints" 
       :key="index"
@@ -212,7 +212,7 @@ onUnmounted(() => {
       />
     </TresMesh>
     
-    <!-- 连接线 -->
+    <!-- Connection lines -->
     <TresLine v-if="trailPoints.length > 1">
       <TresBufferGeometry>
         <TresBufferAttribute
@@ -230,7 +230,7 @@ onUnmounted(() => {
     </TresLine>
   </TresGroup>
   
-  <!-- 当前位置高亮标记 -->
+  <!-- Current position highlight marker -->
   <TresMesh v-if="isTrailVisible && trailPoints.length > 0" :position="getCurrentPosition">
     <TresSphereGeometry :args="[0.008, 8, 8]" />
     <TresMeshBasicMaterial color="#ffff00" />

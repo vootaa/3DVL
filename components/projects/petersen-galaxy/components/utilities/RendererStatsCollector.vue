@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useTres, useLoop } from '@tresjs/core'
-import { Logger } from '../../../utils/logger'
+import { Logger } from '../../../../utils/logger'
 
 // Access to Three.js renderer for performance monitoring
 const { renderer } = useTres()

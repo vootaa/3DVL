@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { Logger } from '../../../utils/logger'
-import { LoggingConfig } from '../configs/logging-config'
+import { Logger } from '../../../../utils/logger'
+import { LoggingConfig } from '../../configs/logging-config'
 
 // Performance metrics
 const performanceData = ref({
@@ -130,7 +130,7 @@ const updateFPS = () => {
   }
   
   // Update smoothed frame time (only update every few frames to reduce flicker)
-  if (frameCount % 10 === 0) { // 每10帧更新一次，约每167ms更新
+  if (frameCount % 10 === 0) { // Update every 10 frames, approximately every 167ms
     const smoothedFrameTime = frameTimeSum / frameTimeHistory.length
     performanceData.value.frameTime = smoothedFrameTime
   }

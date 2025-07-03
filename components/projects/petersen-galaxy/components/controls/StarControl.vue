@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Logger } from '../../../utils/logger'
+import { Logger } from '../../../../utils/logger'
 
 // Star cluster control state
 const showStars = ref(true)

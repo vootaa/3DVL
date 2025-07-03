@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, inject, computed, onMounted, onUnmounted } from 'vue'
-import { Logger } from '../../../utils/logger'
-import { LoggingConfig } from '../configs/logging-config'
-import { formatWithUnit} from '../configs/astronomical-units'
+import { Logger } from '../../../../utils/logger'
+import { LoggingConfig } from '../../configs/logging-config'
+import { formatWithUnit} from '../../configs/astronomical-units'
 
 // Type definitions for injected data
 interface GalaxyDriftData {

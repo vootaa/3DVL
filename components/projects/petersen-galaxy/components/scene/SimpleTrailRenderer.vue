@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { Vector3 } from 'three'
-import { Logger } from '../../../utils/logger'
-import { useDriftState } from '../composables/useDriftState'
+import { Logger } from '../../../../utils/logger'
+import { useDriftState } from '../../composables/useDriftState'
 
 // Use global drift state
 const { driftState } = useDriftState()
@@ -68,7 +68,7 @@ watch(
         lastTrailPosition = currentPos
       }
       
-      // 只每5秒记录一次日志，避免刷屏
+      // Log only every 5 seconds to avoid spam
       const now = Date.now()
       if (now - lastLogTime > 5000) {
         Logger.log('SIMPLE_TRAIL', `Position updated: (${position.x.toFixed(4)}, ${position.y.toFixed(4)}, ${position.z.toFixed(4)}), Trail points: ${trailPoints.value.length}`)

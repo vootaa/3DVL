@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, inject, onMounted, onUnmounted } from 'vue'
-import { Logger } from '../../../utils/logger'
-import { useDriftState } from '../composables/useDriftState'
+import { Logger } from '../../../../utils/logger'
+import { useDriftState } from '../../composables/useDriftState'
 
 // Use global drift state manager
 const { driftState, canUseDrift: canUseDriftGlobal, toggleTrails } = useDriftState()
@@ -111,10 +111,10 @@ const driftStatus = computed(() => {
 })
 
 const canUseDrift = computed(() => {
-  // 优先使用全局状态管理器
+  // Prioritize global state manager
   const globalCanUse = canUseDriftGlobal.value
   
-  // 备选：检查注入的数据源
+  // Fallback: check injected data sources
   const hasController = !!(driftController && driftController.trailsEnabled)
   const hasData = !!(galaxyDriftData && galaxyDriftData.position)
   const hasWindowState = typeof window !== 'undefined' && !!(window as any).__CURRENT_DRIFT_STATE__
@@ -141,7 +141,7 @@ const driftButtonText = computed(() => {
 })
 
 onMounted(() => {
-  // 立即检查注入状态 - 只记录一次
+  // Check injection status immediately - log only once
   console.log('=== DRIFT VISUALIZATION CHECK ===')
   console.log('driftController:', driftController)
   console.log('galaxyDriftData:', galaxyDriftData)
@@ -247,7 +247,7 @@ onUnmounted(() => {
   border-color: rgba(0, 204, 255, 0.2);
   color: rgba(0, 204, 255, 0.4);
   background: rgba(0, 12, 20, 0.6);
-  /* 移除 pointer-events: none; 允许点击以便调试 */
+  /* Remove pointer-events: none; allow clicks for debugging */
 }
 
 .control-label {

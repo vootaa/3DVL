@@ -3,8 +3,8 @@ import { computed, ref, onMounted, onUnmounted, inject } from 'vue'
 import { Vector3 } from 'three'
 import type { PerspectiveCamera } from 'three'
 import type { Ref } from 'vue'
-import { Logger } from '../../../utils/logger'
-import { formatWithUnit, getBestUnit } from '../configs/astronomical-units'
+import { Logger } from '../../../../utils/logger'
+import { formatWithUnit, getBestUnit } from '../../configs/astronomical-units'
 
 // Camera control state tracking
 const cameraDistance = ref(20)

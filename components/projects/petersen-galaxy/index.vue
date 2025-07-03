@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from 'three'
 import { ref, provide, watch, onMounted, nextTick } from 'vue'
-import OrbitalSystem from './components/OrbitalSystem.vue'
-import StarCluster from './components/StarCluster.vue'
-import StarControl from './components/StarControl.vue'
-import GridControl from './components/GridControl.vue'
-import CameraInfo from './components/CameraInfo.vue'
-import GalaxyDriftController from './components/GalaxyDriftController.vue'
-import DriftTrailRenderer from './components/DriftTrailRenderer.vue'
-import SimpleTrailRenderer from './components/SimpleTrailRenderer.vue'
-import DriftMonitor from './components/DriftMonitor.vue'
-import PerformanceMonitor from './components/PerformanceMonitor.vue'
-import CameraPresets from './components/CameraPresets.vue'
-import EvolutionTimeline from './components/EvolutionTimeline.vue'
-import DriftVisualization from './components/DriftVisualization.vue'
-import RendererStatsCollector from './components/RendererStatsCollector.vue'
+import OrbitalSystem from './components/scene/OrbitalSystem.vue'
+import StarCluster from './components/scene/StarCluster.vue'
+import StarControl from './components/controls/StarControl.vue'
+import GridControl from './components/controls/GridControl.vue'
+import CameraInfo from './components/hud/CameraInfo.vue'
+import GalaxyDriftController from './components/scene/GalaxyDriftController.vue'
+import DriftTrailRenderer from './components/scene/DriftTrailRenderer.vue'
+import SimpleTrailRenderer from './components/scene/SimpleTrailRenderer.vue'
+import DriftMonitor from './components/hud/DriftMonitor.vue'
+import PerformanceMonitor from './components/hud/PerformanceMonitor.vue'
+import CameraPresets from './components/hud/CameraPresets.vue'
+import EvolutionTimeline from './components/hud/EvolutionTimeline.vue'
+import DriftVisualization from './components/hud/DriftVisualization.vue'
+import RendererStatsCollector from './components/utilities/RendererStatsCollector.vue'
 import { CameraController } from './utils/camera-controller'
 import './utils/drift-validator' // Import to trigger auto-diagnostic
 import DriftRuntimeChecker from './utils/drift-runtime-checker'
@@ -91,9 +91,9 @@ watch(
 <template>
   <div class="galaxy-container">
     <!-- Galaxy drift controller (invisible but manages galaxy center) -->
-    <!-- 注意：GalaxyDriftController 需要包含其他依赖组件 -->
+    <!-- Note: GalaxyDriftController needs to include other dependent components -->
     <GalaxyDriftController>
-      <!-- 将需要注入数据的组件放在这里 -->
+      <!-- Place components that need injected data here -->
       <template #default>
         <!-- Drift visualization control (top left) -->
         <div class="drift-visualization-container">

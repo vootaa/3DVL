@@ -7,13 +7,13 @@ import {
   Float32BufferAttribute,
   Vector3,
 } from 'three'
-import { orbitalConfig } from '../configs/orbital-config'
-import { starClusterConfig } from '../configs/star-cluster-config'
-import { Logger } from '../../../utils/logger'
+import { orbitalConfig } from '../../configs/orbital-config'
+import { starClusterConfig } from '../../configs/star-cluster-config'
+import { Logger } from '../../../../utils/logger'
 
 // Import shaders
-import starVertexShader from '../shaders/star-vertex.glsl'
-import starFragmentShader from '../shaders/star-fragment.glsl'
+import starVertexShader from '../../shaders/star-vertex.glsl'
+import starFragmentShader from '../../shaders/star-fragment.glsl'
 
 // Props for controlling evolution behavior
 interface Props {

@@ -2,7 +2,7 @@
 import { ref, inject, computed, onMounted, onUnmounted } from 'vue'
 import type { PerspectiveCamera } from 'three'
 import type { Ref } from 'vue'
-import { Logger } from '../../../utils/logger'
+import { Logger } from '../../../../utils/logger'
 
 // Camera presets configuration
 interface CameraPreset {
