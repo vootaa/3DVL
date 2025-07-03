@@ -16,7 +16,7 @@ const props = withDefaults(defineProps<Props>(), {
 // Trail configuration
 const TRAIL_CONFIG = {
   maxPoints: 500,           // Maximum points in circular buffer
-  samplingInterval: 100,    // Sampling interval in ms
+  samplingInterval: 500,    // Sampling interval in ms
   color: 0x00ffff,         // Trail color (bright cyan)
 }
 
