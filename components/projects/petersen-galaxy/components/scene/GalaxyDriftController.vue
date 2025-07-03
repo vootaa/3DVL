@@ -124,15 +124,15 @@ const displayDriftPosition = computed(() => {
 })
 
 const displayDriftVelocity = computed(() => {
-  // Scale up and convert to milliseconds: 1,000,000,000,000x for better visibility
-  const scale = 1000000000000
+  // Scale up to milli Galaxy Units per millisecond for better readability: 1,000,000x 
+  const scale = 1000000
   const speed = driftState.value.velocity.length() * scale
   return speed.toFixed(6)
 })
 
 const displayDriftDistance = computed(() => {
-  // Scale up by 10,000,000,000,000x for nano Galaxy Units (nGU)
-  const scale = 10000000000000
+  // Scale up by 1,000,000x for micro Galaxy Units (μGU)
+  const scale = 1000000
   return (driftState.value.totalDistance * scale).toFixed(10)
 })
 
@@ -170,10 +170,10 @@ const driftController = {
 provide('galaxyCenter', galaxyCenter)
 provide('driftController', driftController)
 provide('galaxyDriftData', {
-  position: { value: displayDriftPosition },
-  velocity: { value: displayDriftVelocity },
-  distance: { value: displayDriftDistance },
-  duration: { value: driftDuration }
+  position: displayDriftPosition,
+  velocity: displayDriftVelocity, 
+  distance: displayDriftDistance,
+  duration: driftDuration
 })
 
 // Also provide raw data for debugging

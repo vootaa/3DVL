@@ -114,14 +114,26 @@ export class GalaxyDriftDataService {
    * Get current drift position
    */
   public getDriftPosition(): { x: string; y: string; z: string } | null {
-    // Handle computed values
-    if (this.driftData.value?.position?.value) {
-      return this.driftData.value.position.value
-    }
-    
-    // Handle direct values
-    if (this.driftData.value?.position) {
-      return this.driftData.value.position
+    try {
+      // Handle computed values (Vue refs)
+      if (this.driftData.value?.position) {
+        const pos = this.driftData.value.position
+        
+        // Check if it's a Vue computed ref with .value
+        if (pos && typeof pos === 'object' && 'value' in pos) {
+          const innerPos = (pos as any).value
+          if (innerPos && typeof innerPos === 'object' && 'x' in innerPos) {
+            return innerPos as { x: string; y: string; z: string }
+          }
+        }
+        
+        // Check if it's a direct object
+        if (pos && typeof pos === 'object' && 'x' in pos) {
+          return pos as { x: string; y: string; z: string }
+        }
+      }
+    } catch (error) {
+      Logger.warn('GALAXY_DRIFT_SERVICE', 'Error getting drift position:', error)
     }
     
     return null
@@ -131,14 +143,20 @@ export class GalaxyDriftDataService {
    * Get current velocity
    */
   public getVelocity(): string {
-    // Handle computed values
-    if (this.driftData.value?.velocity?.value) {
-      return this.driftData.value.velocity.value
-    }
-    
-    // Handle direct values
-    if (this.driftData.value?.velocity) {
-      return this.driftData.value.velocity
+    try {
+      if (this.driftData.value?.velocity) {
+        const vel = this.driftData.value.velocity
+        
+        // Check if it's a Vue computed ref with .value
+        if (vel && typeof vel === 'object' && 'value' in vel) {
+          return String((vel as any).value)
+        }
+        
+        // Check if it's a direct value
+        return typeof vel === 'string' ? vel : String(vel)
+      }
+    } catch (error) {
+      Logger.warn('GALAXY_DRIFT_SERVICE', 'Error getting velocity:', error)
     }
     
     return 'N/A'
@@ -148,14 +166,20 @@ export class GalaxyDriftDataService {
    * Get current distance
    */
   public getDistance(): string {
-    // Handle computed values
-    if (this.driftData.value?.distance?.value) {
-      return this.driftData.value.distance.value
-    }
-    
-    // Handle direct values
-    if (this.driftData.value?.distance) {
-      return this.driftData.value.distance
+    try {
+      if (this.driftData.value?.distance) {
+        const dist = this.driftData.value.distance
+        
+        // Check if it's a Vue computed ref with .value
+        if (dist && typeof dist === 'object' && 'value' in dist) {
+          return String((dist as any).value)
+        }
+        
+        // Check if it's a direct value
+        return typeof dist === 'string' ? dist : String(dist)
+      }
+    } catch (error) {
+      Logger.warn('GALAXY_DRIFT_SERVICE', 'Error getting distance:', error)
     }
     
     return 'N/A'
@@ -165,14 +189,25 @@ export class GalaxyDriftDataService {
    * Get galaxy center position
    */
   public getGalaxyCenter(): { x: number; y: number; z: number } | null {
-    // Handle computed values
-    if (this.galaxyCenter.value?.value) {
-      return this.galaxyCenter.value.value
-    }
-    
-    // Handle direct values
-    if (this.galaxyCenter.value) {
-      return this.galaxyCenter.value
+    try {
+      if (this.galaxyCenter.value) {
+        const center = this.galaxyCenter.value
+        
+        // Check if it's a Vue computed ref with .value
+        if (center && typeof center === 'object' && 'value' in center) {
+          const innerCenter = (center as any).value
+          if (innerCenter && typeof innerCenter === 'object' && 'x' in innerCenter) {
+            return innerCenter as { x: number; y: number; z: number }
+          }
+        }
+        
+        // Check if it's a direct object
+        if (center && typeof center === 'object' && 'x' in center) {
+          return center as { x: number; y: number; z: number }
+        }
+      }
+    } catch (error) {
+      Logger.warn('GALAXY_DRIFT_SERVICE', 'Error getting galaxy center:', error)
     }
     
     return null
@@ -251,7 +286,9 @@ export class GalaxyDriftDataService {
         driftData: !!this.driftData.value,
         galaxyCenter: !!this.galaxyCenter.value,
         driftDataKeys: this.driftData.value ? Object.keys(this.driftData.value) : [],
-        galaxyCenterKeys: this.galaxyCenter.value ? Object.keys(this.galaxyCenter.value) : []
+        galaxyCenterKeys: this.galaxyCenter.value ? Object.keys(this.galaxyCenter.value) : [],
+        driftDataStructure: this.driftData.value ? JSON.stringify(this.driftData.value, null, 2) : 'null',
+        galaxyCenterStructure: this.galaxyCenter.value ? JSON.stringify(this.galaxyCenter.value, null, 2) : 'null'
       }
     })
 
