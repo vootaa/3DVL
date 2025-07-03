@@ -4,7 +4,6 @@ import { Vector3 } from 'three'
 import { useRenderLoop } from '@tresjs/core'
 import { galaxyDriftConfig, createInitialDriftState, type GalaxyDriftState } from '../../configs/galaxy-drift-config'
 import { Logger } from '../../../../utils/logger'
-import { LoggingConfig } from '../../configs/logging-config'
 
 // Galaxy drift state
 const driftState = ref<GalaxyDriftState>(createInitialDriftState())
