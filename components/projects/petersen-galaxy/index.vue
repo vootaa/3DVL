@@ -5,7 +5,7 @@ import OrbitalSystem from './components/scene/OrbitalSystem.vue'
 import StarCluster from './components/scene/StarCluster.vue'
 import StarControl from './components/controls/StarControl.vue'
 import GridControl from './components/controls/GridControl.vue'
-import DriftTrailControl from './components/controls/DriftTrailControl.vue'
+import TrailControl from './components/controls/TrailControl.vue'
 import CameraInfo from './components/hud/CameraInfo.vue'
 import GalaxyDriftController from './components/scene/GalaxyDriftController.vue'
 import DriftMonitor from './components/hud/DriftMonitor.vue'
@@ -28,7 +28,7 @@ const gl = {
 
 const gridControlRef = ref()
 const starControlRef = ref()
-const driftTrailControlRef = ref()
+const trailControlRef = ref()
 const cameraRef = ref()
 const orbitControlsRef = ref()
 const showGridAfterCameraMove = ref(false)
@@ -126,7 +126,7 @@ watch(
     <!-- Control panels -->
     <StarControl ref="starControlRef" />
     <GridControl ref="gridControlRef" />
-    <DriftTrailControl ref="driftTrailControlRef" />
+    <TrailControl ref="trailControlRef" />
     <CameraInfo />
     
     <!-- Evolution timeline (top center) -->
