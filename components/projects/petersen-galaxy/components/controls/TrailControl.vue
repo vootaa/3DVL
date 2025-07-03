@@ -26,6 +26,9 @@ defineExpose({
 
 <style lang="css" scoped>
 .drift-trail-control {
+  position: absolute;
+  top: 100px; /* Position below GridControl (20px + 60px + 20px margin) */
+  left: 20px;
   background: rgba(0, 12, 20, 0.85);
   border: 1px solid rgba(0, 204, 255, 0.4);
   border-radius: 8px;
