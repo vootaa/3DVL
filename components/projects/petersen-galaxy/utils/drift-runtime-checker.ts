@@ -4,7 +4,6 @@
  */
 
 import { Logger } from '../../../utils/logger'
-import { LoggingConfig } from '../configs/logging-config'
 
 export class DriftRuntimeChecker {
   private static checkInterval: NodeJS.Timeout | null = null
@@ -30,7 +29,7 @@ export class DriftRuntimeChecker {
 
     this.checkInterval = setInterval(() => {
       this.performRuntimeCheck()
-    }, LoggingConfig.intervals.driftCheck) // Use config interval
+    }, 30000) // Check every 30 seconds instead of using config interval
 
     // Initial check
     this.performRuntimeCheck()
@@ -123,16 +122,12 @@ export class DriftRuntimeChecker {
       const allPassing = Object.values(checks).every(check => check)
       const status = allPassing ? 'HEALTHY' : 'ISSUES_DETECTED'
 
-      Logger.log('DRIFT_CHECKER', `System Status: ${status}`, {
-        timestamp: new Date().toISOString(),
-        checks,
-        issues: issues.length > 0 ? issues : 'None detected',
-        totalChecks: Object.keys(checks).length,
-        passingChecks: Object.values(checks).filter(Boolean).length
-      })
-
+      // Simplified logging - only report issues
       if (!allPassing) {
-        Logger.warn('DRIFT_CHECKER', 'Drift system has issues that need attention:', issues)
+        Logger.warn('DRIFT_CHECKER', `System Status: ${status}`, {
+          checks,
+          issues: issues.length > 0 ? issues : 'None detected'
+        })
       }
 
     } catch (error) {
@@ -151,20 +146,12 @@ export class DriftRuntimeChecker {
     if (typeof window !== 'undefined') {
       const currentDriftState = (window as any).__CURRENT_DRIFT_STATE__
       if (currentDriftState && currentDriftState.lastUpdate > recentTime) {
-        Logger.throttle('DRIFT_CHECKER_ACTIVITY', 'Active drift detected from current state', {
-          lastUpdate: currentDriftState.lastUpdate,
-          velocity: currentDriftState.velocity,
-          isActive: currentDriftState.isActive
-        }, LoggingConfig.DRIFT_RUNTIME_CHECK)
         return true
       }
       
       // Also check if config is enabled as fallback
       const config = (window as any).__DRIFT_CONFIG__
       if (config && config.enabled) {
-        Logger.throttle('DRIFT_CHECKER_CONFIG', 'Assuming drift activity based on enabled config', {
-          configEnabled: config.enabled
-        }, LoggingConfig.DRIFT_RUNTIME_CHECK)
         return true
       }
     }
@@ -203,7 +190,7 @@ if (process.env.NODE_ENV === 'development') {
   // Longer delay to allow all components to properly mount and initialize
   setTimeout(() => {
     DriftRuntimeChecker.startMonitoring()
-  }, LoggingConfig.intervals.driftCheck) // Use config interval
+  }, 15000) // 15 seconds delay
 }
 
 // Expose to global scope for manual testing

@@ -86,11 +86,16 @@ const updateGalaxyDrift = (deltaTime: number, totalTime: number) => {
 // Render loop integration
 const { onLoop } = useRenderLoop()
 
+let frameCount = 0
+let lastLogTime = 0
+const LOG_INTERVAL = 5000 // Log every 5 seconds
+
 onLoop(({ delta, elapsed }) => {
   const currentTime = elapsed
   const deltaTime = Math.min(delta, 0.1) // Cap delta time to prevent large jumps
   
   updateGalaxyDrift(deltaTime, currentTime)
+  frameCount++
   
   // Expose current state to window for debugging
   if (typeof window !== 'undefined') {
@@ -108,13 +113,13 @@ onLoop(({ delta, elapsed }) => {
     }
   }
   
-  // Use Logger.throttle for drift debugging instead of manual time checking
-  Logger.throttle('DRIFT_DEBUG', 'Drift system status check', {
-    position: driftState.value.currentPosition,
-    velocity: driftState.value.velocity.length(),
-    totalDistance: driftState.value.totalDistance,
-    timestamp: currentTime.toFixed(2)
-  }, LoggingConfig.DRIFT_DEBUG) // Use centralized config
+  // Simplified logging - only log key state changes
+  const now = Date.now()
+  if (now - lastLogTime > LOG_INTERVAL) {
+    Logger.log('DRIFT_CONTROLLER', `System active: ${frameCount} frames, distance: ${driftState.value.totalDistance.toFixed(6)} GU`)
+    lastLogTime = now
+    frameCount = 0
+  }
 })
 
 // Computed values for external consumption

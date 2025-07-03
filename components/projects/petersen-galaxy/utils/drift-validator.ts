@@ -173,23 +173,15 @@ export class DriftValidator {
   }
 
   static quickDiagnostic(): void {
-    Logger.throttle('DRIFT_VALIDATOR', 'Starting quick diagnostic...', {}, LoggingConfig.DRIFT_DEBUG)
+    Logger.log('DRIFT_VALIDATOR', 'Starting quick diagnostic...')
     
     const validation = this.validateConfiguration()
     
-    Logger.throttle('DRIFT_VALIDATOR', 'Configuration Status:', {
-      isValid: validation.isValid,
-      totalIssues: validation.issues.length,
-      configEnabled: galaxyDriftConfig.enabled,
-      primaryVelocity: galaxyDriftConfig.motionPattern.primaryVelocity,
-      timestamp: new Date().toISOString()
-    }, LoggingConfig.DRIFT_DEBUG)
-
     if (validation.issues.length > 0) {
       Logger.warn('DRIFT_VALIDATOR', 'Issues found:', validation.issues)
       Logger.log('DRIFT_VALIDATOR', 'Suggestions:', validation.suggestions)
     } else {
-      Logger.throttle('DRIFT_VALIDATOR', 'Configuration appears valid', {}, LoggingConfig.DRIFT_DEBUG)
+      Logger.log('DRIFT_VALIDATOR', 'Configuration appears valid')
     }
 
     // Start live drift monitoring
@@ -217,7 +209,7 @@ export class DriftValidator {
 if (process.env.NODE_ENV === 'development') {
   setTimeout(() => {
     DriftValidator.quickDiagnostic()
-  }, LoggingConfig.DRIFT_DEBUG) // Use config interval instead of fixed 1000ms
+  }, 5000) // 5 seconds delay instead of using config interval
 }
 
 export default DriftValidator

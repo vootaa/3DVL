@@ -265,30 +265,19 @@ export class GalaxyDriftDataService {
    */
   private logStatus() {
     const now = Date.now()
-    if (now - lastLogTime < LoggingConfig.DRIFT_MONITOR_UPDATE) {
+    if (now - lastLogTime < 10000) { // Only log every 10 seconds
       return
     }
 
     const status = this.getDriftStatus()
     const availability = this.getAvailabilityStatus()
 
-    Logger.log('GALAXY_DRIFT_SERVICE', 'Status update', {
-      hasData: status.hasData,
-      position: status.formatted.position,
-      velocity: status.velocity,
-      distance: status.distance,
-      center: status.formatted.center,
-      availability,
-      rawData: {
-        driftData: !!this.driftData.value,
-        galaxyCenter: !!this.galaxyCenter.value,
-        driftDataKeys: this.driftData.value ? Object.keys(this.driftData.value) : [],
-        galaxyCenterKeys: this.galaxyCenter.value ? Object.keys(this.galaxyCenter.value) : [],
-        // Safe logging without circular references
-        driftDataType: this.driftData.value ? typeof this.driftData.value : 'undefined',
-        galaxyCenterType: this.galaxyCenter.value ? typeof this.galaxyCenter.value : 'undefined'
-      }
-    })
+    // Simplified logging - only key information
+    if (status.hasData) {
+      Logger.log('GALAXY_DRIFT_SERVICE', `Data available: ${status.formatted.position}`)
+    } else {
+      Logger.log('GALAXY_DRIFT_SERVICE', 'No drift data available')
+    }
 
     lastLogTime = now
   }

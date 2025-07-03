@@ -21,17 +21,17 @@ const TRAIL_CONFIG = {
 }
 
 // Trail state
-const trailPoints = ref<Vector3[]>([])  // Store drift delta positions
+const trailPoints = ref<Vector3[]>([])  // Store galaxy center positions in world coordinates
 const trailGeometry = ref<BufferGeometry | null>(null)
 const trailMaterial = ref<LineBasicMaterial | null>(null)
 const lastSampleTime = ref(0)
-const basePosition = ref<Vector3 | null>(null)  // Galaxy center reference
 
 // Galaxy drift data service
 const driftDataService = useGalaxyDriftData()
 
 /**
- * Convert raw position data to GU units and calculate drift delta
+ * Convert raw position data to GU units for trail visualization
+ * Galaxy center drift represents the actual movement of the galaxy in world space
  */
 const processDriftData = (positionData: { x: string; y: string; z: string }): Vector3 | null => {
   // Convert raw data (mGU) to GU by dividing by 1000
@@ -41,28 +41,20 @@ const processDriftData = (positionData: { x: string; y: string; z: string }): Ve
     parseFloat(positionData.z) / 1000
   )
   
-  // Initialize base position if not set
-  if (!basePosition.value) {
-    basePosition.value = currentPos.clone()
-    return null // No delta for first position
-  }
-  
-  // Calculate drift delta relative to base position
-  // Note: Galaxy drift +0.1 means actual trail should be -0.1 (relative positioning)
-  const driftDelta = basePosition.value.clone().sub(currentPos)
-  
-  return driftDelta
+  // Return the actual galaxy center position for trail visualization
+  // This represents the galaxy's movement in world coordinates
+  return currentPos.clone()
 }
 
 /**
- * Update trail geometry with current drift points
+ * Update trail geometry with current galaxy center positions
  */
 const updateTrailGeometry = () => {
   if (!trailGeometry.value || trailPoints.value.length < 2) return
   
   const positions = new Float32Array(trailPoints.value.length * 3)
   
-  // Populate positions from drift deltas
+  // Populate positions from galaxy center trail points
   for (let i = 0; i < trailPoints.value.length; i++) {
     const point = trailPoints.value[i]
     positions[i * 3] = point.x
@@ -76,7 +68,7 @@ const updateTrailGeometry = () => {
 }
 
 /**
- * Sample current position and update trail
+ * Sample current galaxy center position and update trail
  */
 const samplePosition = () => {
   const now = Date.now()
@@ -90,12 +82,12 @@ const samplePosition = () => {
   const positionData = driftDataService.getDriftPosition()
   if (!positionData) return
   
-  // Process drift data
-  const driftDelta = processDriftData(positionData)
-  if (!driftDelta) return
+  // Process galaxy center position
+  const galaxyPos = processDriftData(positionData)
+  if (!galaxyPos) return
   
   // Add to trail buffer (circular buffer)
-  trailPoints.value.push(driftDelta)
+  trailPoints.value.push(galaxyPos)
   if (trailPoints.value.length > TRAIL_CONFIG.maxPoints) {
     trailPoints.value.shift()
   }
@@ -106,8 +98,10 @@ const samplePosition = () => {
   // Update state
   lastSampleTime.value = now
   
-  // Throttled logging of buffer status
-  Logger.throttle('TRAIL_RENDERER', `Trail buffer: ${trailPoints.value.length}/${TRAIL_CONFIG.maxPoints} points | Latest drift: (${driftDelta.x.toFixed(4)}, ${driftDelta.y.toFixed(4)}, ${driftDelta.z.toFixed(4)}) GU`, {}, 2000)
+  // Simplified logging - only log key state changes
+  if (trailPoints.value.length % 50 === 0) {
+    Logger.log('TRAIL_RENDERER', `Trail buffer: ${trailPoints.value.length}/${TRAIL_CONFIG.maxPoints} points`)
+  }
 }
 
 /**
@@ -132,7 +126,6 @@ const initializeTrail = () => {
  */
 const clearTrail = () => {
   trailPoints.value = []
-  basePosition.value = null
   lastSampleTime.value = 0
   
   if (trailGeometry.value) {
@@ -162,12 +155,12 @@ let samplingTimer: NodeJS.Timeout | null = null
 
 // Watch enabled state
 watch(() => props.enabled, (enabled) => {
-  Logger.log('TRAIL_RENDERER', `Trail rendering ${enabled ? 'enabled' : 'disabled'}`)
-  
   if (enabled) {
+    Logger.log('TRAIL_RENDERER', 'Trail rendering enabled')
     clearTrail()
     samplingTimer = setInterval(samplePosition, TRAIL_CONFIG.samplingInterval)
   } else {
+    Logger.log('TRAIL_RENDERER', 'Trail rendering disabled')
     if (samplingTimer) {
       clearInterval(samplingTimer)
       samplingTimer = null
@@ -198,7 +191,6 @@ defineExpose({
     pointCount: trailPoints.value.length,
     maxPoints: TRAIL_CONFIG.maxPoints,
     enabled: props.enabled,
-    basePosition: basePosition.value,
     hasGeometry: !!trailGeometry.value,
     hasMaterial: !!trailMaterial.value
   })
