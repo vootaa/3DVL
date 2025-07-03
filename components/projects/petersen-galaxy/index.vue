@@ -56,10 +56,10 @@ const orbitControlsConfig = {
 
 onMounted(() => {
   // Use nextTick to ensure TresCanvas components are ready
-  nextTick(() => { 
+  nextTick(() => {
     // Initialize camera controller
     cameraController = new CameraController(cameraRef, orbitControlsRef)
-    
+
     // Initialize drift runtime checker in development
     if (process.env.NODE_ENV === 'development') {
       setTimeout(() => {
@@ -110,10 +110,7 @@ watch(
       <TresAmbientLight :intensity="0.08" color="#004488" />
 
       <!-- Grid Helper - shown only after camera adjustment -->
-      <TresGridHelper v-if="gridControlRef?.showGrid && showGridAfterCameraMove" 
-        :args="[16, 16]" 
-        :color1="'#003366'" 
-        :color2="'#002244'"
+      <TresGridHelper v-if="gridControlRef?.showGrid && showGridAfterCameraMove" :args="[16, 16, '#003366', '#002244']"
         :position="[0, -4.2, 0]" />
 
       <OrbitalSystem />
