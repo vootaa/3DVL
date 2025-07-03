@@ -138,16 +138,16 @@ const samplePosition = () => {
     }
   }
   
-  Logger.throttle('TRAIL_RENDERER', `Sampling position: ${currentPos.x.toFixed(6)}, ${currentPos.y.toFixed(6)}, ${currentPos.z.toFixed(6)}`, {}, 2000) // 2秒节流
+  Logger.throttle('TRAIL_RENDERER', `Sampling position: ${currentPos.x.toFixed(6)}, ${currentPos.y.toFixed(6)}, ${currentPos.z.toFixed(6)}`, {}, 2000) // 2 second throttle
   
   // Check if position changed enough to warrant a new sample
   if (lastPosition.value) {
     const delta = calculateDistance(currentPos, lastPosition.value)
     if (delta < TRAIL_CONFIG.minPositionDelta) {
-      Logger.throttle('TRAIL_RENDERER', `Position delta ${delta.toFixed(8)} below threshold ${TRAIL_CONFIG.minPositionDelta}`, {}, 3000) // 3秒节流
+      Logger.throttle('TRAIL_RENDERER', `Position delta ${delta.toFixed(8)} below threshold ${TRAIL_CONFIG.minPositionDelta}`, {}, 3000) // 3 second throttle
       return // Position hasn't changed enough
     }
-    Logger.throttle('TRAIL_RENDERER', `Position delta ${delta.toFixed(8)} above threshold, adding point`, {}, 1000) // 1秒节流
+    Logger.throttle('TRAIL_RENDERER', `Position delta ${delta.toFixed(8)} above threshold, adding point`, {}, 1000) // 1 second throttle
   }
   
   // Add point to trail

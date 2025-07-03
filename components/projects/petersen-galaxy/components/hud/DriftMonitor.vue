@@ -48,7 +48,7 @@ watch([
       distanceValue: newDist ? 'available' : 'none',
       durationValue: newDuration ? 'available' : 'none',
       centerValue: newCenter ? 'available' : 'none'
-    }, 2000) // 2秒节流
+    }, 10000)
   }
 }, { immediate: true, deep: true })
 
