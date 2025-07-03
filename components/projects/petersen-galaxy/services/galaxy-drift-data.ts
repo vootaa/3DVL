@@ -84,45 +84,98 @@ export class GalaxyDriftDataService {
    * Inject drift data from external sources
    */
   public injectData(driftData?: any, galaxyCenter?: any) {
+    let dataUpdated = false
+    
     if (driftData) {
       this.driftData.value = driftData
       globalDriftData.value = driftData
+      dataUpdated = true
     }
 
     if (galaxyCenter) {
       this.galaxyCenter.value = galaxyCenter
       globalGalaxyCenter.value = galaxyCenter
+      dataUpdated = true
     }
 
-    this.logStatus()
+    // Also check for reactive computed values
+    if (galaxyCenter && typeof galaxyCenter.value === 'object' && galaxyCenter.value instanceof Object) {
+      this.galaxyCenter.value = galaxyCenter
+      globalGalaxyCenter.value = galaxyCenter
+      dataUpdated = true
+    }
+
+    if (dataUpdated) {
+      this.logStatus()
+    }
   }
 
   /**
    * Get current drift position
    */
   public getDriftPosition(): { x: string; y: string; z: string } | null {
-    return this.driftData.value?.position?.value || null
+    // Handle computed values
+    if (this.driftData.value?.position?.value) {
+      return this.driftData.value.position.value
+    }
+    
+    // Handle direct values
+    if (this.driftData.value?.position) {
+      return this.driftData.value.position
+    }
+    
+    return null
   }
 
   /**
    * Get current velocity
    */
   public getVelocity(): string {
-    return this.driftData.value?.velocity?.value || 'N/A'
+    // Handle computed values
+    if (this.driftData.value?.velocity?.value) {
+      return this.driftData.value.velocity.value
+    }
+    
+    // Handle direct values
+    if (this.driftData.value?.velocity) {
+      return this.driftData.value.velocity
+    }
+    
+    return 'N/A'
   }
 
   /**
    * Get current distance
    */
   public getDistance(): string {
-    return this.driftData.value?.distance?.value || 'N/A'
+    // Handle computed values
+    if (this.driftData.value?.distance?.value) {
+      return this.driftData.value.distance.value
+    }
+    
+    // Handle direct values
+    if (this.driftData.value?.distance) {
+      return this.driftData.value.distance
+    }
+    
+    return 'N/A'
   }
 
   /**
    * Get galaxy center position
    */
   public getGalaxyCenter(): { x: number; y: number; z: number } | null {
-    return this.galaxyCenter.value?.value || null
+    // Handle computed values
+    if (this.galaxyCenter.value?.value) {
+      return this.galaxyCenter.value.value
+    }
+    
+    // Handle direct values
+    if (this.galaxyCenter.value) {
+      return this.galaxyCenter.value
+    }
+    
+    return null
   }
 
   /**
@@ -153,7 +206,9 @@ export class GalaxyDriftDataService {
    * Check if drift data is available
    */
   public hasValidData(): boolean {
-    return !!(this.driftData.value?.position?.value || this.galaxyCenter.value?.value)
+    const position = this.getDriftPosition()
+    const center = this.getGalaxyCenter()
+    return !!(position || center)
   }
 
   /**
@@ -191,7 +246,13 @@ export class GalaxyDriftDataService {
       velocity: status.velocity,
       distance: status.distance,
       center: status.formatted.center,
-      availability
+      availability,
+      rawData: {
+        driftData: !!this.driftData.value,
+        galaxyCenter: !!this.galaxyCenter.value,
+        driftDataKeys: this.driftData.value ? Object.keys(this.driftData.value) : [],
+        galaxyCenterKeys: this.galaxyCenter.value ? Object.keys(this.galaxyCenter.value) : []
+      }
     })
 
     lastLogTime = now

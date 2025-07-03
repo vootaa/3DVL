@@ -5,6 +5,7 @@
 
 import { galaxyDriftConfig } from '../configs/galaxy-drift-config'
 import { Logger } from '../../../utils/logger'
+import { LoggingConfig } from '../configs/logging-config'
 
 export class DriftValidator {
   static validateConfiguration(): { isValid: boolean; issues: string[]; suggestions: string[] } {
@@ -54,23 +55,23 @@ export class DriftValidator {
   }
 
   static quickDiagnostic(): void {
-    Logger.log('DRIFT_VALIDATOR', 'Starting quick diagnostic...')
+    Logger.throttle('DRIFT_VALIDATOR', 'Starting quick diagnostic...', {}, LoggingConfig.DRIFT_DEBUG)
     
     const validation = this.validateConfiguration()
     
-    Logger.log('DRIFT_VALIDATOR', 'Configuration Status:', {
+    Logger.throttle('DRIFT_VALIDATOR', 'Configuration Status:', {
       isValid: validation.isValid,
       totalIssues: validation.issues.length,
       configEnabled: galaxyDriftConfig.enabled,
       primaryVelocity: galaxyDriftConfig.motionPattern.primaryVelocity,
       timestamp: new Date().toISOString()
-    })
+    }, LoggingConfig.DRIFT_DEBUG)
 
     if (validation.issues.length > 0) {
       Logger.warn('DRIFT_VALIDATOR', 'Issues found:', validation.issues)
       Logger.info('DRIFT_VALIDATOR', 'Suggestions:', validation.suggestions)
     } else {
-      Logger.log('DRIFT_VALIDATOR', 'Configuration appears valid')
+      Logger.throttle('DRIFT_VALIDATOR', 'Configuration appears valid', {}, LoggingConfig.DRIFT_DEBUG)
     }
 
     // Expose config to window for debugging
@@ -86,7 +87,7 @@ export class DriftValidator {
       };
       (window as any).__DRIFT_CONFIG__ = configToExpose;
       (window as any).driftValidator = this;
-      Logger.log('DRIFT_VALIDATOR', 'Config exposed to window.__DRIFT_CONFIG__ for debugging')
+      Logger.throttle('DRIFT_VALIDATOR', 'Config exposed to window.__DRIFT_CONFIG__ for debugging', {}, LoggingConfig.DRIFT_DEBUG)
     }
   }
 }
@@ -95,7 +96,7 @@ export class DriftValidator {
 if (process.env.NODE_ENV === 'development') {
   setTimeout(() => {
     DriftValidator.quickDiagnostic()
-  }, 1000) // Run early to set up window.__DRIFT_CONFIG__
+  }, LoggingConfig.DRIFT_DEBUG) // Use config interval instead of fixed 1000ms
 }
 
 export default DriftValidator

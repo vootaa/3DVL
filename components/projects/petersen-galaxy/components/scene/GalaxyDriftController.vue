@@ -170,10 +170,18 @@ const driftController = {
 provide('galaxyCenter', galaxyCenter)
 provide('driftController', driftController)
 provide('galaxyDriftData', {
-  position: displayDriftPosition,
-  velocity: displayDriftVelocity,
-  distance: displayDriftDistance,
-  duration: driftDuration
+  position: { value: displayDriftPosition },
+  velocity: { value: displayDriftVelocity },
+  distance: { value: displayDriftDistance },
+  duration: { value: driftDuration }
+})
+
+// Also provide raw data for debugging
+provide('rawDriftData', {
+  currentPosition: computed(() => driftState.value.currentPosition),
+  velocity: computed(() => driftState.value.velocity),
+  totalDistance: computed(() => driftState.value.totalDistance),
+  driftTime: computed(() => driftState.value.driftTime)
 })
 
 // Expose drift config to window for runtime checker

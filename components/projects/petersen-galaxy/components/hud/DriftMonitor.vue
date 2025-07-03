@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, inject, computed, onMounted, onUnmounted } from 'vue'
+import { ref, inject, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Logger } from '../../../../utils/logger'
 import { LoggingConfig } from '../../configs/logging-config'
 import { formatWithUnit} from '../../configs/astronomical-units'
@@ -28,6 +28,36 @@ const galaxyCenter = inject<GalaxyCenter>('galaxyCenter', null as any)
 if (galaxyDriftData || galaxyCenter) {
   driftDataService.injectData(galaxyDriftData, galaxyCenter)
 }
+
+// Watch for data changes and update service
+watch([galaxyDriftData, galaxyCenter], ([newDriftData, newGalaxyCenter]) => {
+  if (newDriftData || newGalaxyCenter) {
+    driftDataService.injectData(newDriftData, newGalaxyCenter)
+    Logger.log('DRIFT_MONITOR', 'Data injected into service', {
+      hasDriftData: !!newDriftData,
+      hasGalaxyCenter: !!newGalaxyCenter,
+      driftDataKeys: newDriftData ? Object.keys(newDriftData) : [],
+      galaxyCenterKeys: newGalaxyCenter ? Object.keys(newGalaxyCenter) : []
+    })
+  }
+}, { immediate: true, deep: true })
+
+// Force update service status periodically
+onMounted(() => {
+  const forceUpdate = () => {
+    driftDataService.forceStatusUpdate()
+  }
+  
+  // Initial update
+  forceUpdate()
+  
+  // Periodic updates
+  const interval = setInterval(forceUpdate, 5000)
+  
+  onUnmounted(() => {
+    clearInterval(interval)
+  })
+})
 
 // Debug state
 const debugInfo = ref({
@@ -147,6 +177,7 @@ const updateDebugInfo = () => {
         diagnosis: 'NO_DATA',
         injectionStatus: availability.isAvailable ? 'PENDING' : 'FAILED',
         lastUpdate: new Date().toLocaleTimeString()
+        // Keep existing statistics
       }
       return
     }
@@ -181,6 +212,12 @@ const updateDebugInfo = () => {
       const dz = center.z - lastPosition.value.z
       positionChange = Math.sqrt(dx * dx + dy * dy + dz * dz)
       currentVelocity = positionChange / deltaTime
+    } else if (lastPosition.value && center) {
+      // Always calculate position change for statistics
+      const dx = center.x - lastPosition.value.x
+      const dy = center.y - lastPosition.value.y
+      const dz = center.z - lastPosition.value.z
+      positionChange = Math.sqrt(dx * dx + dy * dy + dz * dz)
     }
 
     // Update statistics
@@ -192,9 +229,11 @@ const updateDebugInfo = () => {
       positionChange,
       diagnosis: isDrifting ? 'ACTIVE_DRIFT' : (currentVelocity > 0 ? 'MINIMAL_DRIFT' : 'NO_MOVEMENT'),
       statistics: {
-        averageVelocity: currentVelocity,
+        averageVelocity: debugInfo.value.statistics.samplesCollected > 0 
+          ? ((debugInfo.value.statistics.averageVelocity * debugInfo.value.statistics.samplesCollected) + currentVelocity) / (debugInfo.value.statistics.samplesCollected + 1)
+          : currentVelocity,
         maxVelocity: Math.max(debugInfo.value.statistics.maxVelocity, currentVelocity),
-        totalDistance: debugInfo.value.statistics.totalDistance + positionChange,
+        totalDistance: debugInfo.value.statistics.totalDistance + (positionChange || 0),
         duration: debugInfo.value.statistics.duration + deltaTime,
         samplesCollected: debugInfo.value.statistics.samplesCollected + 1,
         currentPosition
@@ -210,9 +249,11 @@ const updateDebugInfo = () => {
     Logger.throttle('DRIFT_MONITOR_UPDATE', 'Monitor updated via service', {
       position: currentPosition,
       velocity: currentVelocity,
+      positionChange,
       isDrifting,
       diagnosis: debugInfo.value.diagnosis,
-      serviceStatus: availability
+      serviceStatus: availability,
+      statistics: debugInfo.value.statistics
     }, LoggingConfig.DRIFT_MONITOR_UPDATE)
 
   } catch (error) {
