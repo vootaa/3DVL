@@ -14,48 +14,6 @@ export interface AstronomicalUnit {
 export const ASTRONOMICAL_UNITS = {
   // Distance Units
   distance: {
-    AU: {
-      name: 'Astronomical Unit',
-      symbol: 'AU',
-      description: 'Average distance between Earth and Sun',
-      meterConversion: 149597870700, // ~150 million km
-      category: 'distance' as const
-    },
-    LY: {
-      name: 'Light Year',
-      symbol: 'ly',
-      description: 'Distance light travels in one year',
-      meterConversion: 9460730472580800, // ~9.46 trillion km
-      category: 'distance' as const
-    },
-    PC: {
-      name: 'Parsec',
-      symbol: 'pc',
-      description: 'Distance at which 1 AU subtends 1 arcsecond',
-      meterConversion: 3.0857e16, // ~3.26 light years
-      category: 'distance' as const
-    },
-    KPC: {
-      name: 'Kiloparsec',
-      symbol: 'kpc',
-      description: '1000 parsecs',
-      meterConversion: 3.0857e19,
-      category: 'distance' as const
-    },
-    MPC: {
-      name: 'Megaparsec',
-      symbol: 'Mpc',
-      description: '1 million parsecs',
-      meterConversion: 3.0857e22,
-      category: 'distance' as const
-    },
-    KM: {
-      name: 'Kilometer',
-      symbol: 'km',
-      description: '1000 meters',
-      meterConversion: 1000,
-      category: 'distance' as const
-    },
     // Galaxy-specific units
     GU: {
       name: 'Galaxy Unit',
@@ -105,35 +63,6 @@ export const ASTRONOMICAL_UNITS = {
     }
   }
 } as const
-
-/**
- * Convert a value from one unit to another
- */
-export function convertUnit(
-  value: number, 
-  fromUnit: string,
-  toUnit: string,
-  category: 'distance' | 'velocity'
-): number {
-  // Simple conversion for now - could be expanded later
-  if (fromUnit === toUnit) return value
-  
-  // Basic GU conversions
-  if (category === 'distance') {
-    let baseValue = value
-    
-    // Convert from unit to GU
-    if (fromUnit === 'mGU') baseValue = value / 1000
-    else if (fromUnit === 'nGU') baseValue = value / 1000000000
-    
-    // Convert from GU to target unit
-    if (toUnit === 'mGU') return baseValue * 1000
-    else if (toUnit === 'nGU') return baseValue * 1000000000
-    else if (toUnit === 'GU') return baseValue
-  }
-  
-  return value
-}
 
 /**
  * Format a number with appropriate precision and unit
@@ -190,21 +119,4 @@ export function getBestUnit(
   return currentUnit
 }
 
-/**
- * Get unit information for display
- */
-export function getUnitInfo(
-  unit: string,
-  category: 'distance' | 'velocity'
-) {
-  if (category === 'distance') {
-    const distanceUnits = ASTRONOMICAL_UNITS.distance
-    const unitKey = unit as keyof typeof distanceUnits
-    return distanceUnits[unitKey] || null
-  } else if (category === 'velocity') {
-    const velocityUnits = ASTRONOMICAL_UNITS.velocity
-    const unitKey = unit as keyof typeof velocityUnits
-    return velocityUnits[unitKey] || null
-  }
-  return null
-}
+
