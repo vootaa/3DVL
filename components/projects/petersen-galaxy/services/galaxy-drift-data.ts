@@ -128,7 +128,7 @@ export class GalaxyDriftDataService {
         }
         
         // Check if it's a direct object
-        if (pos && typeof pos === 'object' && 'x' in pos) {
+        if (pos && typeof pos === 'object' && 'x' in pos && 'y' in pos && 'z' in pos) {
           return pos as { x: string; y: string; z: string }
         }
       }
@@ -202,7 +202,7 @@ export class GalaxyDriftDataService {
         }
         
         // Check if it's a direct object
-        if (center && typeof center === 'object' && 'x' in center) {
+        if (center && typeof center === 'object' && 'x' in center && 'y' in center && 'z' in center) {
           return center as { x: number; y: number; z: number }
         }
       }

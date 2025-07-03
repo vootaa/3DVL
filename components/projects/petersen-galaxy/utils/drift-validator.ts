@@ -69,7 +69,7 @@ export class DriftValidator {
 
     if (validation.issues.length > 0) {
       Logger.warn('DRIFT_VALIDATOR', 'Issues found:', validation.issues)
-      Logger.info('DRIFT_VALIDATOR', 'Suggestions:', validation.suggestions)
+      Logger.log('DRIFT_VALIDATOR', 'Suggestions:', validation.suggestions)
     } else {
       Logger.throttle('DRIFT_VALIDATOR', 'Configuration appears valid', {}, LoggingConfig.DRIFT_DEBUG)
     }
