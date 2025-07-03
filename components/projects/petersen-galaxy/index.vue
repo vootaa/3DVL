@@ -95,18 +95,14 @@ watch(
     <GalaxyDriftController>
       <!-- Place components that need injected data here -->
       <template #default>
-        <!-- Drift debugging monitor - Client Render -->
-        <ClientOnly>
-          <DriftMonitor />
-        </ClientOnly>
+        <!-- Drift debugging monitor -->
+        <DriftMonitor />
       </template>
     </GalaxyDriftController>
 
     <TresCanvas v-bind="gl">
-      <!-- Renderer stats collector (invisible component for performance monitoring) - Client Render -->
-      <ClientOnly>
-        <RendererStatsCollector />
-      </ClientOnly>
+      <!-- Renderer stats collector (invisible component for performance monitoring) -->
+      <RendererStatsCollector />
 
       <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
 
@@ -114,7 +110,10 @@ watch(
       <TresAmbientLight :intensity="0.08" color="#004488" />
 
       <!-- Grid Helper - shown only after camera adjustment -->
-      <TresGridHelper v-if="gridControlRef?.showGrid && showGridAfterCameraMove" :args="[16, 16, '#003366', '#002244']"
+      <TresGridHelper v-if="gridControlRef?.showGrid && showGridAfterCameraMove" 
+        :args="[16, 16]" 
+        :color1="'#003366'" 
+        :color2="'#002244'"
         :position="[0, -4.2, 0]" />
 
       <OrbitalSystem />
@@ -124,10 +123,8 @@ watch(
         :ref="(el) => starControlRef && (starControlRef.starClusterRef = el)" :skip-evolution="hasEvolutionOccurred"
         @evolution-complete="hasEvolutionOccurred = true" />
 
-      <!-- Trail renderer - conditional display based on trail control - Client Render -->
-      <ClientOnly>
-        <TrailRenderer :enabled="trailControlRef?.showDriftTrails" />
-      </ClientOnly>
+      <!-- Trail renderer - conditional display based on trail control -->
+      <TrailRenderer :enabled="trailControlRef?.showDriftTrails" />
 
       <!-- OrbitControls with zoom and angle limits -->
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
@@ -142,15 +139,13 @@ watch(
     <!-- Evolution timeline (top center) -->
     <EvolutionTimeline />
 
-    <!-- Performance monitor - Client Render -->
+    <!-- Performance monitor - needs client-only for performance stats -->
     <ClientOnly>
       <PerformanceMonitor />
     </ClientOnly>
 
-    <!-- Camera presets component - Client Render -->
-    <ClientOnly>
-      <CameraPresets />
-    </ClientOnly>
+    <!-- Camera presets component -->
+    <CameraPresets />
   </div>
 </template>
 

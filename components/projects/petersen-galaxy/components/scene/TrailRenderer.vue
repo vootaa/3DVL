@@ -70,32 +70,42 @@ const addTrailPoint = (position: Vector3) => {
  * Update trail geometry with current points and alpha gradient
  */
 const updateTrailGeometry = () => {
-  if (!trailGeometry.value || trailPoints.value.length < 2) return
-  
-  const points = trailPoints.value
-  const positions = new Float32Array(points.length * 3)
-  
-  // Populate positions
-  for (let i = 0; i < points.length; i++) {
-    const point = points[i]
-    positions[i * 3] = point.x
-    positions[i * 3 + 1] = point.y
-    positions[i * 3 + 2] = point.z
+  try {
+    if (!trailGeometry.value || trailPoints.value.length < 2) return
+    
+    const points = trailPoints.value
+    const positions = new Float32Array(points.length * 3)
+    
+    // Populate positions
+    for (let i = 0; i < points.length; i++) {
+      const point = points[i]
+      positions[i * 3] = point.x
+      positions[i * 3 + 1] = point.y
+      positions[i * 3 + 2] = point.z
+    }
+    
+    // Update geometry attributes safely
+    const positionAttr = new Float32BufferAttribute(positions, 3)
+    trailGeometry.value.setAttribute('position', positionAttr)
+    
+    // Mark for update
+    const positionAttribute = trailGeometry.value.getAttribute('position')
+    if (positionAttribute) {
+      positionAttribute.needsUpdate = true
+    }
+    
+    // Calculate opacity based on trail length (more points = more visible)
+    if (trailMaterial.value) {
+      const fadeRatio = Math.min(points.length / 50, 1.0) // Fade in as points accumulate
+      trailMaterial.value.opacity = TRAIL_CONFIG.alphaMin + (TRAIL_CONFIG.alphaMax - TRAIL_CONFIG.alphaMin) * fadeRatio
+    }
+    
+    Logger.throttle('TRAIL_RENDERER', `Updated trail geometry with ${points.length} points`, {
+      opacity: trailMaterial.value?.opacity
+    }, 1000) // 1秒节流
+  } catch (error) {
+    Logger.warn('TRAIL_RENDERER', 'Error updating trail geometry', { error })
   }
-  
-  // Update geometry attributes
-  trailGeometry.value.setAttribute('position', new Float32BufferAttribute(positions, 3))
-  trailGeometry.value.attributes.position.needsUpdate = true
-  
-  // Calculate opacity based on trail length (more points = more visible)
-  if (trailMaterial.value) {
-    const fadeRatio = Math.min(points.length / 50, 1.0) // Fade in as points accumulate
-    trailMaterial.value.opacity = TRAIL_CONFIG.alphaMin + (TRAIL_CONFIG.alphaMax - TRAIL_CONFIG.alphaMin) * fadeRatio
-  }
-  
-  Logger.throttle('TRAIL_RENDERER', `Updated trail geometry with ${points.length} points`, {
-    opacity: trailMaterial.value?.opacity
-  }, 1000) // 1秒节流
 }
 
 /**
@@ -163,31 +173,35 @@ const samplePosition = () => {
  * Initialize trail rendering components
  */
 const initializeTrail = () => {
-  // Create geometry
-  trailGeometry.value = new BufferGeometry()
-  
-  // Create material with transparency (note: linewidth is not supported by WebGL)
-  trailMaterial.value = new LineBasicMaterial({
-    color: TRAIL_CONFIG.color,
-    transparent: true,
-    opacity: 0.8,
-    // linewidth is not supported in WebGL - use LineSegments or other alternatives if needed
-  })
-  
-  // Create line object
-  trailLine.value = new Line(trailGeometry.value, trailMaterial.value)
-  
-  // Add to scene if available
-  if (sceneRef.value) {
-    sceneRef.value.add(trailLine.value)
-    Logger.log('TRAIL_RENDERER', 'Trail line added to scene')
+  try {
+    // Create geometry
+    trailGeometry.value = new BufferGeometry()
+    
+    // Create material with transparency (note: linewidth is not supported by WebGL)
+    trailMaterial.value = new LineBasicMaterial({
+      color: TRAIL_CONFIG.color,
+      transparent: true,
+      opacity: 0.8,
+      // linewidth is not supported in WebGL - use LineSegments or other alternatives if needed
+    })
+    
+    // Create line object
+    trailLine.value = new Line(trailGeometry.value, trailMaterial.value)
+    
+    // Add to scene if available
+    if (sceneRef.value) {
+      sceneRef.value.add(trailLine.value)
+      Logger.log('TRAIL_RENDERER', 'Trail line added to scene')
+    }
+    
+    Logger.log('TRAIL_RENDERER', 'Trail renderer initialized', {
+      maxPoints: TRAIL_CONFIG.maxPoints,
+      minDelta: TRAIL_CONFIG.minPositionDelta,
+      samplingInterval: TRAIL_CONFIG.samplingInterval
+    })
+  } catch (error) {
+    Logger.warn('TRAIL_RENDERER', 'Failed to initialize trail renderer', { error })
   }
-  
-  Logger.log('TRAIL_RENDERER', 'Trail renderer initialized', {
-    maxPoints: TRAIL_CONFIG.maxPoints,
-    minDelta: TRAIL_CONFIG.minPositionDelta,
-    samplingInterval: TRAIL_CONFIG.samplingInterval
-  })
 }
 
 /**
@@ -232,34 +246,47 @@ let samplingTimer: NodeJS.Timeout | null = null
 
 // Watch enabled state
 watch(() => props.enabled, (enabled) => {
-  if (enabled) {
-    // Start trail sampling
-    clearTrail()
-    samplingTimer = setInterval(samplePosition, 50) // Sample every 50ms for better responsiveness
-    Logger.log('TRAIL_RENDERER', 'Trail rendering enabled')
-  } else {
-    // Stop trail sampling and clear
-    if (samplingTimer) {
-      clearInterval(samplingTimer)
-      samplingTimer = null
+  try {
+    if (enabled) {
+      // Start trail sampling
+      clearTrail()
+      samplingTimer = setInterval(samplePosition, 50) // Sample every 50ms for better responsiveness
+      Logger.log('TRAIL_RENDERER', 'Trail rendering enabled')
+    } else {
+      // Stop trail sampling and clear
+      if (samplingTimer) {
+        clearInterval(samplingTimer)
+        samplingTimer = null
+      }
+      clearTrail()
+      Logger.log('TRAIL_RENDERER', 'Trail rendering disabled')
     }
-    clearTrail()
-    Logger.log('TRAIL_RENDERER', 'Trail rendering disabled')
+  } catch (error) {
+    Logger.warn('TRAIL_RENDERER', 'Error in enabled state watcher', { error })
   }
 }, { immediate: true })
 
 // Setup and cleanup
 onMounted(() => {
   nextTick(() => {
-    initializeTrail()
+    try {
+      initializeTrail()
+    } catch (error) {
+      Logger.warn('TRAIL_RENDERER', 'Failed to initialize trail on mount', { error })
+    }
   })
 })
 
 onUnmounted(() => {
-  if (samplingTimer) {
-    clearInterval(samplingTimer)
+  try {
+    if (samplingTimer) {
+      clearInterval(samplingTimer)
+      samplingTimer = null
+    }
+    cleanup()
+  } catch (error) {
+    Logger.warn('TRAIL_RENDERER', 'Error during cleanup', { error })
   }
-  cleanup()
 })
 
 // Expose methods for debugging
@@ -278,7 +305,7 @@ defineExpose({
 
 <template>
   <!-- Trail renderer is invisible - it adds objects directly to the scene -->
-  <TresGroup ref="sceneRef" v-if="enabled">
+  <TresGroup ref="sceneRef" v-if="props.enabled">
     <!-- Trail line will be added programmatically -->
   </TresGroup>
 </template>
