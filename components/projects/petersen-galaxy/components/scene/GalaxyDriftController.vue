@@ -24,6 +24,9 @@ const updateGalaxyDrift = (deltaTime: number, totalTime: number) => {
   const state = driftState.value
   const config = galaxyDriftConfig.motionPattern
   
+  // Store previous position for velocity calculation
+  const previousPosition = state.currentPosition.clone()
+  
   // Primary drift motion
   const primaryDrift = config.primaryVelocity.clone().multiplyScalar(deltaTime)
   
@@ -50,15 +53,21 @@ const updateGalaxyDrift = (deltaTime: number, totalTime: number) => {
     boundaryForce.copy(returnDirection).multiplyScalar(forceStrength * deltaTime)
   }
   
-  // Apply all forces to velocity
-  state.velocity.add(primaryDrift).add(oscillation).add(perturbation).add(boundaryForce)
+  // Calculate total displacement for this frame
+  const totalDisplacement = new Vector3()
+    .add(primaryDrift)
+    .add(oscillation)
+    .add(perturbation)
+    .add(boundaryForce)
   
-  // Apply damping to prevent runaway velocity
-  state.velocity.multiplyScalar(0.98)
+  // Update position directly with displacement
+  state.currentPosition.add(totalDisplacement)
   
-  // Update position
-  const previousPosition = state.currentPosition.clone()
-  state.currentPosition.add(state.velocity.clone().multiplyScalar(deltaTime))
+  // Calculate actual velocity as position change / time interval
+  if (deltaTime > 0) {
+    const positionChange = state.currentPosition.clone().sub(previousPosition)
+    state.velocity.copy(positionChange).divideScalar(deltaTime)
+  }
   
   // Update statistics
   const frameDistance = state.currentPosition.distanceTo(previousPosition)
@@ -112,7 +121,7 @@ onLoop(({ delta, elapsed }) => {
 const galaxyCenter = computed(() => driftState.value.currentPosition.clone())
 const driftDuration = computed(() => driftState.value.driftTime)
 
-// Computed values for display with enhanced precision and scaling
+// Computed values for display with proper scaling
 const displayDriftPosition = computed(() => {
   // Scale up by 1000x for milli Galaxy Units (mGU)
   const scale = 1000
@@ -124,16 +133,16 @@ const displayDriftPosition = computed(() => {
 })
 
 const displayDriftVelocity = computed(() => {
-  // Scale up to milli Galaxy Units per millisecond for better readability: 1,000,000x 
-  const scale = 1000000
+  // Velocity is already in GU/s, scale to mGU/s (1000x) for better readability
+  const scale = 1000
   const speed = driftState.value.velocity.length() * scale
   return speed.toFixed(6)
 })
 
 const displayDriftDistance = computed(() => {
-  // Scale up by 1,000,000x for micro Galaxy Units (μGU)
-  const scale = 1000000
-  return (driftState.value.totalDistance * scale).toFixed(10)
+  // Scale up by 1000x for milli Galaxy Units (mGU)
+  const scale = 1000
+  return (driftState.value.totalDistance * scale).toFixed(6)
 })
 
 // Drift visualization control functions

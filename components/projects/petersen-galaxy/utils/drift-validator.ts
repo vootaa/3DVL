@@ -6,6 +6,19 @@
 import { galaxyDriftConfig } from '../configs/galaxy-drift-config'
 import { Logger } from '../../../utils/logger'
 import { LoggingConfig } from '../configs/logging-config'
+import { Vector3 } from 'three'
+
+export interface DriftValidationResult {
+  isValid: boolean
+  speedGUS: number
+  speedMGUS: number
+  positionChangeGU: number
+  timeIntervalS: number
+  calculatedSpeedGUS: number
+  speedMismatch: boolean
+  speedMismatchPercent: number
+  messages: string[]
+}
 
 export class DriftValidator {
   static validateConfiguration(): { isValid: boolean; issues: string[]; suggestions: string[] } {
@@ -54,6 +67,111 @@ export class DriftValidator {
     }
   }
 
+  /**
+   * Validate speed calculation consistency
+   */
+  static validateSpeedCalculation(
+    previousPosition: Vector3,
+    currentPosition: Vector3,
+    timeIntervalS: number,
+    reportedSpeedMGUS: number
+  ): DriftValidationResult {
+    const messages: string[] = []
+    
+    // Calculate position change in GU
+    const positionChangeGU = currentPosition.distanceTo(previousPosition)
+    
+    // Calculate expected speed in GU/s
+    const calculatedSpeedGUS = timeIntervalS > 0 ? positionChangeGU / timeIntervalS : 0
+    
+    // Convert reported speed from mGU/s to GU/s
+    const reportedSpeedGUS = reportedSpeedMGUS / 1000
+    
+    // Check for speed mismatch
+    const speedDifference = Math.abs(calculatedSpeedGUS - reportedSpeedGUS)
+    const speedMismatchPercent = calculatedSpeedGUS > 0 ? (speedDifference / calculatedSpeedGUS) * 100 : 0
+    const speedMismatch = speedMismatchPercent > 5.0 // Allow 5% tolerance for floating point errors
+    
+    // Validation messages
+    messages.push(`Position change: ${positionChangeGU.toFixed(8)} GU`)
+    messages.push(`Time interval: ${timeIntervalS.toFixed(4)} s`)
+    messages.push(`Calculated speed: ${calculatedSpeedGUS.toFixed(8)} GU/s`)
+    messages.push(`Reported speed: ${reportedSpeedGUS.toFixed(8)} GU/s (${reportedSpeedMGUS.toFixed(6)} mGU/s)`)
+    
+    if (speedMismatch) {
+      messages.push(`⚠️ Speed mismatch: ${speedMismatchPercent.toFixed(2)}% difference`)
+    } else {
+      messages.push(`✅ Speed calculation valid (${speedMismatchPercent.toFixed(2)}% difference)`)
+    }
+    
+    return {
+      isValid: !speedMismatch,
+      speedGUS: reportedSpeedGUS,
+      speedMGUS: reportedSpeedMGUS,
+      positionChangeGU,
+      timeIntervalS,
+      calculatedSpeedGUS,
+      speedMismatch,
+      speedMismatchPercent,
+      messages
+    }
+  }
+
+  /**
+   * Monitor live drift data for validation
+   */
+  static monitorLiveDrift() {
+    if (typeof window === 'undefined') return
+
+    let lastPosition: Vector3 | null = null
+    let lastTime = 0
+
+    const checkDriftState = () => {
+      const driftState = (window as any).__CURRENT_DRIFT_STATE__
+      
+      if (!driftState || !driftState.position) {
+        Logger.throttle('DRIFT_VALIDATOR_MONITOR', 'No live drift state available', {}, LoggingConfig.DRIFT_DEBUG)
+        return
+      }
+
+      const currentPosition = new Vector3(
+        driftState.position.x,
+        driftState.position.y,
+        driftState.position.z
+      )
+      const currentTime = driftState.lastUpdate
+
+      if (lastPosition && lastTime && currentTime > lastTime) {
+        const timeInterval = (currentTime - lastTime) / 1000 // Convert to seconds
+        const reportedSpeed = typeof driftState.velocity === 'number' ? driftState.velocity * 1000 : 0 // Convert to mGU/s
+
+        const validation = this.validateSpeedCalculation(
+          lastPosition,
+          currentPosition,
+          timeInterval,
+          reportedSpeed
+        )
+
+        Logger.throttle('DRIFT_VALIDATOR_LIVE', 'Live drift validation', {
+          validation,
+          driftState: {
+            position: driftState.position,
+            velocity: driftState.velocity,
+            totalDistance: driftState.totalDistance,
+            isActive: driftState.isActive
+          }
+        }, LoggingConfig.DRIFT_DEBUG)
+      }
+
+      lastPosition = currentPosition.clone()
+      lastTime = currentTime
+    }
+    
+    // Check drift state every 5 seconds
+    setInterval(checkDriftState, 5000)
+    checkDriftState() // Initial check
+  }
+
   static quickDiagnostic(): void {
     Logger.throttle('DRIFT_VALIDATOR', 'Starting quick diagnostic...', {}, LoggingConfig.DRIFT_DEBUG)
     
@@ -73,6 +191,9 @@ export class DriftValidator {
     } else {
       Logger.throttle('DRIFT_VALIDATOR', 'Configuration appears valid', {}, LoggingConfig.DRIFT_DEBUG)
     }
+
+    // Start live drift monitoring
+    this.monitorLiveDrift()
 
     // Expose config to window for debugging
     if (typeof window !== 'undefined') {

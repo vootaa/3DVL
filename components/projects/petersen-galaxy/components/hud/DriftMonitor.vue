@@ -201,7 +201,8 @@ const updateDebugInfo = () => {
     if (velocityString !== 'N/A') {
       const velocityMatch = velocityString.match(/([\d.e-]+)/)
       if (velocityMatch) {
-        currentVelocity = parseFloat(velocityMatch[1])
+        // Velocity from GalaxyDriftController is in mGU/s, convert to GU/s for calculations
+        currentVelocity = parseFloat(velocityMatch[1]) / 1000
       }
     }
 
@@ -211,7 +212,7 @@ const updateDebugInfo = () => {
       const dy = center.y - lastPosition.value.y
       const dz = center.z - lastPosition.value.z
       positionChange = Math.sqrt(dx * dx + dy * dy + dz * dz)
-      currentVelocity = positionChange / deltaTime
+      currentVelocity = positionChange / deltaTime  // This is in GU/s
     } else if (lastPosition.value && center) {
       // Always calculate position change for statistics
       const dx = center.x - lastPosition.value.x
@@ -410,11 +411,11 @@ onUnmounted(() => {
             </span>
           </div>
           <div class="status-item">
-            <span class="label">Velocity (nGU/ms):</span>
+            <span class="label">Velocity (mGU/s):</span>
             <span class="value">{{ galaxyDriftData.velocity.value }}</span>
           </div>
           <div class="status-item">
-            <span class="label">Distance (nGU):</span>
+            <span class="label">Distance (mGU):</span>
             <span class="value">{{ galaxyDriftData.distance.value }}</span>
           </div>
         </div>
