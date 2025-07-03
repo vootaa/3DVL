@@ -3,6 +3,7 @@ import { ref, inject, computed, onMounted, onUnmounted } from 'vue'
 import type { PerspectiveCamera } from 'three'
 import type { Ref } from 'vue'
 import { Logger } from '../../../../utils/logger'
+import { OrbitControlsAccessTest } from '../../utils/orbit-controls-test'
 
 // Camera presets configuration
 interface CameraPreset {
@@ -84,15 +85,34 @@ const orbitControlsRef = inject<Ref<any>>('orbitControls')
 const availablePresets = computed(() => cameraPresets)
 
 const canUsePresets = computed(() => {
-  // Enable for testing - simple check
-  return true
+  // Check if camera and controls are available
+  const camera = cameraRef?.value
+  const controls = orbitControlsRef?.value
+  
+  // Allow usage if camera exists and controls component exists
+  // We don't need to check for target initialization here since we handle it in applyPreset
+  return !!(camera && controls)
 })
 
 // Debug status for template
-const debugStatus = computed(() => ({
-  cameraReady: !!cameraRef?.value,
-  controlsReady: !!orbitControlsRef?.value
-}))
+const debugStatus = computed(() => {
+  const camera = cameraRef?.value
+  const controlsComponent = orbitControlsRef?.value
+  
+  let accessTest = null
+  if (controlsComponent) {
+    accessTest = OrbitControlsAccessTest.testControlsAccess(controlsComponent)
+  }
+  
+  return {
+    cameraReady: !!camera,
+    controlsReady: !!controlsComponent,
+    targetReady: accessTest?.success || false,
+    cameraRef: !!cameraRef,
+    orbitControlsRef: !!orbitControlsRef,
+    accessMethod: accessTest?.method || 'none'
+  }
+})
 
 // Keyboard shortcuts support
 const handleKeyPress = (event: KeyboardEvent) => {
@@ -141,20 +161,49 @@ const applyPreset = (preset: CameraPreset) => {
   Logger.log('CAMERA_PRESETS', `Applying preset: ${preset.name}`)
   
   const camera = cameraRef?.value
-  const controls = orbitControlsRef?.value
+  const controlsComponent = orbitControlsRef?.value
   
-  if (!camera || !controls) {
-    Logger.error('CAMERA_PRESETS', 'Missing camera or controls')
+  if (!camera) {
+    Logger.error('CAMERA_PRESETS', 'Missing camera reference')
     return
   }
   
-  // Direct assignment - instant switch
-  camera.position.set(preset.position.x, preset.position.y, preset.position.z)
-  controls.target.set(preset.target.x, preset.target.y, preset.target.z)
-  controls.update()
+  if (!controlsComponent) {
+    Logger.error('CAMERA_PRESETS', 'Missing controls reference')
+    return
+  }
   
-  currentPreset.value = preset.id
-  Logger.log('CAMERA_PRESETS', `Camera preset applied: ${preset.name}`)
+  try {
+    // Direct assignment - instant switch
+    camera.position.set(preset.position.x, preset.position.y, preset.position.z)
+    
+    // Use the test utility to find the correct way to access OrbitControls
+    const accessTest = OrbitControlsAccessTest.testControlsAccess(controlsComponent)
+    
+    if (accessTest.success) {
+      // Successfully found OrbitControls, set the target
+      accessTest.target.set(preset.target.x, preset.target.y, preset.target.z)
+      
+      // Update the controls if update method exists
+      if (typeof accessTest.controls.update === 'function') {
+        accessTest.controls.update()
+      }
+      
+      Logger.log('CAMERA_PRESETS', `Successfully applied preset: ${preset.name} (method: ${accessTest.method})`)
+    } else {
+      // Log structure for debugging in development
+      if (process.env.NODE_ENV === 'development') {
+        OrbitControlsAccessTest.logControlsStructure(controlsComponent)
+      }
+      
+      Logger.warn('CAMERA_PRESETS', 'Could not access OrbitControls target - controls may not be fully initialized')
+      Logger.log('CAMERA_PRESETS', `Camera position set for preset: ${preset.name} (target setting skipped)`)
+    }
+    
+    currentPreset.value = preset.id
+  } catch (error) {
+    Logger.error('CAMERA_PRESETS', `Error applying preset: ${error}`)
+  }
 }
 
 // Reset to default view
@@ -205,7 +254,11 @@ const resetCamera = () => {
           <div class="status-item">
             <span class="label">Debug:</span>
             <span class="value">Cam: {{ debugStatus.cameraReady ? '✅' : '❌' }} | Ctrl: {{ debugStatus.controlsReady ?
-              '✅' : '❌' }}</span>
+              '✅' : '❌' }} | Target: {{ debugStatus.targetReady ? '✅' : '❌' }} | Method: {{ debugStatus.accessMethod }}</span>
+          </div>
+          <div class="status-item">
+            <span class="label">Refs:</span>
+            <span class="value">CamRef: {{ debugStatus.cameraRef ? '✅' : '❌' }} | CtrlRef: {{ debugStatus.orbitControlsRef ? '✅' : '❌' }}</span>
           </div>
         </div>
 
