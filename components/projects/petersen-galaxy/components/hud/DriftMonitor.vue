@@ -681,20 +681,20 @@ onUnmounted(() => {
 }
 
 /* Scrollbar styling */
-.drift-panel.unified-panel::-webkit-scrollbar {
+.drift-panel::-webkit-scrollbar {
   width: 6px;
 }
 
-.drift-panel.unified-panel::-webkit-scrollbar-track {
+.drift-panel::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.3);
 }
 
-.drift-panel.unified-panel::-webkit-scrollbar-thumb {
+.drift-panel::-webkit-scrollbar-thumb {
   background: rgba(0, 204, 255, 0.5);
   border-radius: 3px;
 }
 
-.drift-panel.unified-panel::-webkit-scrollbar-thumb:hover {
+.drift-panel::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 204, 255, 0.7);
 }
 </style>

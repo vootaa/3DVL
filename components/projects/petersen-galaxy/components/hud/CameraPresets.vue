@@ -28,7 +28,7 @@ const cameraPresets: CameraPreset[] = [
   },
   {
     id: 'spiral-arm',
-    name: 'Spiral Arm', 
+    name: 'Spiral Arm',
     description: 'View from spiral arm perspective',
     position: { x: 16, y: 2, z: 16 },
     target: { x: -3, y: 0, z: -3 },
@@ -56,7 +56,7 @@ const cameraPresets: CameraPreset[] = [
   {
     id: 'close-inspect',
     name: 'Close Inspect',
-    description: 'Detailed core inspection',  
+    description: 'Detailed core inspection',
     position: { x: 2.5, y: 2, z: 2.5 },
     target: { x: 0, y: 0, z: 0 },
     icon: '🔍',
@@ -74,13 +74,12 @@ const cameraPresets: CameraPreset[] = [
 ]
 
 // Component state
-const showPresetsPanel = ref(false)
 const currentPreset = ref<string | null>(null)
 
 // Inject camera and controls references
 const cameraRef = inject<Ref<PerspectiveCamera | null>>('camera')
 const orbitControlsRef = inject<Ref<any>>('orbitControls')
-const setCurrentPresetId = inject('setCurrentPresetId', (_id: string | null) => {})
+const setCurrentPresetId = inject('setCurrentPresetId', (_id: string | null) => { })
 
 // Computed properties
 const availablePresets = computed(() => cameraPresets)
@@ -89,7 +88,7 @@ const canUsePresets = computed(() => {
   // Check if camera and controls are available
   const camera = cameraRef?.value
   const controls = orbitControlsRef?.value
-  
+
   // Allow usage if camera exists and controls component exists
   // We don't need to check for target initialization here since we handle it in applyPreset
   return !!(camera && controls)
@@ -99,12 +98,12 @@ const canUsePresets = computed(() => {
 const debugStatus = computed(() => {
   const camera = cameraRef?.value
   const controlsComponent = orbitControlsRef?.value
-  
+
   let accessTest = null
   if (controlsComponent) {
     accessTest = OrbitControlsAccessTest.testControlsAccess(controlsComponent)
   }
-  
+
   return {
     cameraReady: !!camera,
     controlsReady: !!controlsComponent,
@@ -118,28 +117,22 @@ const debugStatus = computed(() => {
 // Keyboard shortcuts support
 const handleKeyPress = (event: KeyboardEvent) => {
   // Only handle shortcuts when panel is open
-  if (!showPresetsPanel.value || !canUsePresets.value) return
-  
+  if (!canUsePresets.value) return
+
   const key = event.key.toLowerCase()
   const numKey = parseInt(key)
-  
+
   // Support number keys 1-6 for quick preset selection
   if (numKey >= 1 && numKey <= availablePresets.value.length) {
     event.preventDefault()
     const preset = availablePresets.value[numKey - 1]
     applyPreset(preset)
   }
-  
+
   // Support 'r' for reset
   if (key === 'r') {
     event.preventDefault()
     resetCamera()
-  }
-  
-  // Support escape to close panel
-  if (key === 'escape') {
-    event.preventDefault()
-    showPresetsPanel.value = false
   }
 }
 
@@ -151,52 +144,46 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyPress)
 })
 
-// Toggle presets panel
-const togglePresetsPanel = () => {
-  showPresetsPanel.value = !showPresetsPanel.value
-  Logger.log('CAMERA_PRESETS', `Camera presets panel ${showPresetsPanel.value ? 'opened' : 'closed'}`)
-}
-
 // Apply camera preset - DIRECT SWITCH ONLY
 const applyPreset = (preset: CameraPreset) => {
   Logger.log('CAMERA_PRESETS', `Applying preset: ${preset.name}`)
-  
+
   const camera = cameraRef?.value
   const controlsComponent = orbitControlsRef?.value
-  
+
   if (!camera) {
     Logger.error('CAMERA_PRESETS', 'Missing camera reference')
     return
   }
-  
+
   if (!controlsComponent) {
     Logger.error('CAMERA_PRESETS', 'Missing controls reference')
     return
   }
-  
+
   try {
     // Direct assignment - instant switch
     camera.position.set(preset.position.x, preset.position.y, preset.position.z)
-    
+
     // Use the test utility to find the correct way to access OrbitControls
     const accessTest = OrbitControlsAccessTest.testControlsAccess(controlsComponent)
-    
+
     if (accessTest.success) {
       // Successfully found OrbitControls, set the target
       accessTest.target.set(preset.target.x, preset.target.y, preset.target.z)
-      
+
       // Update the controls if update method exists
       if (typeof accessTest.controls.update === 'function') {
         accessTest.controls.update()
       }
-      
+
       Logger.log('CAMERA_PRESETS', `Successfully applied preset: ${preset.name} (method: ${accessTest.method})`)
     } else {
       // Log structure for debugging in development
       if (process.env.NODE_ENV === 'development') {
         OrbitControlsAccessTest.logControlsStructure(controlsComponent)
       }
-      
+
       Logger.warn('CAMERA_PRESETS', 'Could not access OrbitControls target - controls may not be fully initialized')
       Logger.log('CAMERA_PRESETS', `Camera position set for preset: ${preset.name} (target setting skipped)`)
     }
@@ -218,98 +205,91 @@ const resetCamera = () => {
     icon: '🏠',
     transition: 1800
   }
-  
+
   applyPreset(defaultPreset)
   currentPreset.value = null
 }
 </script>
 
 <template>
-  <div class="camera-presets">
-    <!-- Toggle Button -->
-    <button class="presets-toggle" @click="togglePresetsPanel" :class="{ active: showPresetsPanel }"
-      :disabled="!canUsePresets">
-      📷 CAMERA PRESETS
-    </button>
-
-    <!-- Presets Panel -->
-    <div v-if="showPresetsPanel" class="presets-panel">
-      <div class="presets-header">
-        <h3>📷 Camera Presets</h3>
-        <button class="close-btn" @click="showPresetsPanel = false">×</button>
+  <div class="presets-panel unified-panel">
+    <div class="presets-header">
+      <h3>📷 Camera Presets</h3>
+      <slot name="close"></slot>
+    </div>
+    <div class="presets-content">
+      <!-- Current Status -->
+      <div class="current-status">
+        <div class="status-item">
+          <span class="label">Current Preset:</span>
+          <span class="value">{{ currentPreset || 'Default' }}</span>
+        </div>
+        <div class="status-item">
+          <span class="label">Controls:</span>
+          <span class="value" :style="{ color: canUsePresets ? '#00ccff' : '#4477ff' }">
+            {{ canUsePresets ? 'Ready' : 'Not Available' }}
+          </span>
+        </div>
+        <div class="status-item">
+          <span class="label">Debug:</span>
+          <span class="value">
+            Target: {{ debugStatus.targetReady ? '✅' : '❌' }} |
+            Method: {{ debugStatus.accessMethod }}<br>
+            Camera: {{ debugStatus.cameraReady ? '✅' : '❌' }} |
+            Control: {{ debugStatus.controlsReady ? '✅' : '❌' }}
+          </span>
+        </div>
+        <div class="status-item">
+          <span class="label">Refs:</span>
+          <span class="value">
+            CamRef: {{ debugStatus.cameraRef ? '✅' : '❌' }} |
+            CtrlRef: {{ debugStatus.orbitControlsRef ? '✅' : '❌' }}
+          </span>
+        </div>
       </div>
 
-      <div class="presets-content">
-        <!-- Current Status -->
-        <div class="current-status">
-          <div class="status-item">
-            <span class="label">Current Preset:</span>
-            <span class="value">{{ currentPreset || 'Custom' }}</span>
-          </div>
-          <div class="status-item">
-            <span class="label">Controls:</span>
-            <span class="value" :style="{ color: canUsePresets ? '#00ccff' : '#4477ff' }">
-              {{ canUsePresets ? 'Ready' : 'Not Available' }}
-            </span>
-          </div>
-          <div class="status-item">
-            <span class="label">Debug:</span>
-            <span class="value">Cam: {{ debugStatus.cameraReady ? '✅' : '❌' }} | Ctrl: {{ debugStatus.controlsReady ?
-              '✅' : '❌' }} | Target: {{ debugStatus.targetReady ? '✅' : '❌' }} | Method: {{ debugStatus.accessMethod }}</span>
-          </div>
-          <div class="status-item">
-            <span class="label">Refs:</span>
-            <span class="value">CamRef: {{ debugStatus.cameraRef ? '✅' : '❌' }} | CtrlRef: {{ debugStatus.orbitControlsRef ? '✅' : '❌' }}</span>
-          </div>
-        </div>
-
-        <!-- Preset Buttons -->
-        <div class="presets-section">
-          <div class="section-title">Quick Presets</div>
-          <div class="presets-grid">
-            <button v-for="(preset, index) in availablePresets" :key="preset.id" class="preset-btn" :class="{ 
-                active: currentPreset === preset.id
-              }" :disabled="!canUsePresets" @click="applyPreset(preset)">
-              <div class="preset-header">
-                <div class="preset-icon">{{ preset.icon }}</div>
-                <div class="preset-shortcut">{{ index + 1 }}</div>
-              </div>
-              <div class="preset-info">
-                <div class="preset-name">{{ preset.name }}</div>
-                <div class="preset-description">{{ preset.description }}</div>
-                <div class="preset-duration">{{ preset.transition }}ms</div>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        <!-- Reset Button -->
-        <div class="reset-section">
-          <button class="reset-btn" :disabled="!canUsePresets" @click="resetCamera">
-            🏠 Reset to Default
+      <!-- Preset Buttons -->
+      <div class="presets-section">
+        <div class="section-title">Quick Presets</div>
+        <div class="presets-grid">
+          <button v-for="(preset, index) in availablePresets" :key="preset.id" class="preset-btn" :class="{
+            active: currentPreset === preset.id
+          }" :disabled="!canUsePresets" @click="applyPreset(preset)">
+            <div class="preset-header">
+              <div class="preset-icon">{{ preset.icon }}</div>
+              <div class="preset-shortcut">{{ index + 1 }}</div>
+            </div>
+            <div class="preset-info">
+              <div class="preset-name">{{ preset.name }}</div>
+              <div class="preset-description">{{ preset.description }}</div>
+              <div class="preset-duration">{{ preset.transition }}ms</div>
+            </div>
           </button>
         </div>
+      </div>
 
-        <!-- Usage Instructions -->
-        <div class="instructions-section">
-          <div class="section-title">Controls & Shortcuts</div>
-          <div class="instructions">
-            <div class="instruction-item">
-              <span class="instruction-icon">🖱️</span>
-              <span class="instruction-text">Click any preset to switch camera view</span>
-            </div>
-            <div class="instruction-item">
-              <span class="instruction-icon">⌨️</span>
-              <span class="instruction-text">Press 1-6 for quick preset selection</span>
-            </div>
-            <div class="instruction-item">
-              <span class="instruction-icon">🔄</span>
-              <span class="instruction-text">Press R to reset to default view</span>
-            </div>
-            <div class="instruction-item">
-              <span class="instruction-icon">⏭️</span>
-              <span class="instruction-text">ESC to close this panel</span>
-            </div>
+      <!-- Reset Button -->
+      <div class="reset-section">
+        <button class="reset-btn" :disabled="!canUsePresets" @click="resetCamera">
+          🏠 Reset to Default
+        </button>
+      </div>
+
+      <!-- Usage Instructions -->
+      <div class="instructions-section">
+        <div class="section-title">Controls & Shortcuts</div>
+        <div class="instructions">
+          <div class="instruction-item">
+            <span class="instruction-icon">🖱️</span>
+            <span class="instruction-text">Click any preset to switch camera view</span>
+          </div>
+          <div class="instruction-item">
+            <span class="instruction-icon">⌨️</span>
+            <span class="instruction-text">Press 1-6 for quick preset selection</span>
+          </div>
+          <div class="instruction-item">
+            <span class="instruction-icon">🔄</span>
+            <span class="instruction-text">Press R to reset to default view</span>
           </div>
         </div>
       </div>
@@ -318,49 +298,12 @@ const resetCamera = () => {
 </template>
 
 <style lang="css" scoped>
-.camera-presets {
-  position: fixed;
-  top: 140px; /* Below performance monitor */
-  right: 20px;
-  z-index: 998;
-  font-family: 'Kode Mono', monospace;
-}
-
-.presets-toggle {
-  background: rgba(0, 12, 20, 0.9);
-  border: 1px solid #00ccff;
-  color: #00ccff;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-family: inherit;
-  font-weight: 600;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-}
-
-.presets-toggle:hover:not(:disabled) {
-  background: rgba(0, 204, 255, 0.1);
-  box-shadow: 0 0 10px rgba(0, 204, 255, 0.3);
-}
-
-.presets-toggle.active {
-  background: rgba(0, 204, 255, 0.2);
-  box-shadow: 0 0 15px rgba(0, 204, 255, 0.5);
-}
-
-.presets-toggle:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.presets-panel {
-  position: absolute;
-  top: 50px;
-  right: 0;
-  width: 480px;
-  max-height: 70vh;
+.presets-panel.unified-panel {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  height: 600px;
+  max-height: 80vh;
   background: rgba(0, 8, 16, 0.97);
   border: 1px solid rgba(0, 204, 255, 0.6);
   border-radius: 10px;
@@ -368,6 +311,7 @@ const resetCamera = () => {
   animation: slideDown 0.3s ease;
   box-shadow: 0 8px 32px rgba(0, 204, 255, 0.15);
   backdrop-filter: blur(8px);
+  z-index: 1001;
 }
 
 @keyframes slideDown {
@@ -375,6 +319,7 @@ const resetCamera = () => {
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -448,7 +393,7 @@ const resetCamera = () => {
 
 .value {
   color: #ffffff;
-  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
+  font-family: 'Kodo Mono', monospace;
   font-size: 12px;
   font-weight: 500;
 }
@@ -472,7 +417,7 @@ const resetCamera = () => {
 
 .presets-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
 }
 
