@@ -21,7 +21,6 @@ const performanceData = ref({
   lastUpdate: ''
 })
 
-const showPerformancePanel = ref(false)
 let updateInterval: NodeJS.Timeout | null = null
 let frameCount = 0
 let lastFrameTime = performance.now()
@@ -103,12 +102,6 @@ const performanceStatus = computed(() => {
   if (fps >= 20) return 'POOR'
   return 'CRITICAL'
 })
-
-// Toggle performance panel
-const togglePerformancePanel = () => {
-  showPerformancePanel.value = !showPerformancePanel.value
-  Logger.log('PERFORMANCE_MONITOR', `Performance panel ${showPerformancePanel.value ? 'opened' : 'closed'}`)
-}
 
 // Update FPS calculation
 const updateFPS = () => {
@@ -204,160 +197,115 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="performance-monitor">
-    <!-- Toggle Button -->
-    <button 
-      class="performance-toggle" 
-      @click="togglePerformancePanel"
-      :class="{ active: showPerformancePanel }"
-    >
-      ⚡ PERFORMANCE
-    </button>
-
-    <!-- Performance Panel -->
-    <div v-if="showPerformancePanel" class="performance-panel">
-      <div class="performance-header">
-        <h3>⚡ Performance Monitor</h3>
-        <button class="close-btn" @click="showPerformancePanel = false">×</button>
+  <div class="performance-panel unified-panel">
+    <div class="performance-header">
+      <h3>⚡ Performance Monitor</h3>
+      <slot name="close"></slot>
+    </div>
+    <div class="performance-content">
+      <!-- FPS & Frame Time -->
+      <div class="performance-section">
+        <div class="section-title">Rendering Performance</div>
+        <div class="status-item">
+          <span class="label">FPS:</span>
+          <span class="value" :style="{ color: performanceStatusColor }">
+            {{ performanceData.fps }}
+          </span>
+        </div>
+        <div class="status-item">
+          <span class="label">Frame Time:</span>
+          <span class="value">{{ formattedFrameTime }}</span>
+        </div>
+        <div class="status-item">
+          <span class="label">Status:</span>
+          <span class="value" :style="{ color: performanceStatusColor }">
+            {{ performanceStatus }}
+          </span>
+        </div>
       </div>
 
-      <div class="performance-content">
-        <!-- FPS & Frame Time -->
-        <div class="performance-section">
-          <div class="section-title">Rendering Performance</div>
-          <div class="status-item">
-            <span class="label">FPS:</span>
-            <span class="value" :style="{ color: performanceStatusColor }">
-              {{ performanceData.fps }}
-            </span>
-          </div>
-          <div class="status-item">
-            <span class="label">Frame Time:</span>
-            <span class="value">{{ formattedFrameTime }}</span>
-          </div>
-          <div class="status-item">
-            <span class="label">Status:</span>
-            <span class="value" :style="{ color: performanceStatusColor }">
-              {{ performanceStatus }}
-            </span>
-          </div>
+      <!-- Memory Usage -->
+      <div class="performance-section">
+        <div class="section-title">Memory Usage</div>
+        <div class="status-item">
+          <span class="label">JS Heap:</span>
+          <span class="value" :style="{ color: memoryStatusColor }">
+            {{ formattedMemory }}
+          </span>
         </div>
+        <div class="status-item">
+          <span class="label">Usage:</span>
+          <span class="value" :style="{ color: memoryStatusColor }">
+            {{ ((performanceData.memory.used / performanceData.memory.total) * 100).toFixed(1) }}%
+          </span>
+        </div>
+      </div>
 
-        <!-- Memory Usage -->
-        <div class="performance-section">
-          <div class="section-title">Memory Usage</div>
-          <div class="status-item">
-            <span class="label">JS Heap:</span>
-            <span class="value" :style="{ color: memoryStatusColor }">
-              {{ formattedMemory }}
-            </span>
-          </div>
-          <div class="status-item">
-            <span class="label">Usage:</span>
-            <span class="value" :style="{ color: memoryStatusColor }">
-              {{ ((performanceData.memory.used / performanceData.memory.total) * 100).toFixed(1) }}%
-            </span>
-          </div>
+      <!-- Rendering Statistics -->
+      <div class="performance-section">
+        <div class="section-title">Render Statistics</div>
+        <div class="status-item">
+          <span class="label">Draw Calls:</span>
+          <span class="value">{{ performanceData.renderCalls }}</span>
         </div>
+        
+        <div class="status-item highlight" v-if="performanceData.points > 0">
+          <span class="label">Points:</span>
+          <span class="value">{{ formattedPoints }}</span>
+        </div>
+        
+        <div class="status-item" v-if="performanceData.lines > 0">
+          <span class="label">Lines:</span>
+          <span class="value">{{ formattedLines }}</span>
+        </div>
+        
+        <div class="status-item">
+          <span class="label">Geometries:</span>
+          <span class="value">{{ performanceData.geometries }}</span>
+        </div>
+        
+        <div class="status-item secondary">
+          <span class="label">Triangles:</span>
+          <span class="value">{{ formattedTriangles }}</span>
+        </div>
+        <div class="status-item secondary">
+          <span class="label">Textures:</span>
+          <span class="value">{{ formattedTextures }}</span>
+        </div>
+      </div>
 
-        <!-- Rendering Statistics -->
-        <div class="performance-section">
-          <div class="section-title">Render Statistics</div>
-          <div class="status-item">
-            <span class="label">Draw Calls:</span>
-            <span class="value">{{ performanceData.renderCalls }}</span>
+      <!-- Performance Tips -->
+      <div class="performance-section">
+        <div class="section-title">Performance Tips</div>
+        <div class="performance-tips">
+          <div class="tip-item" :class="{ active: performanceData.fps < 30 }">
+            <span class="tip-icon">⚠️</span>
+            <span class="tip-text">FPS below 30: Consider reducing visual effects</span>
           </div>
-          
-          <div class="status-item highlight" v-if="performanceData.points > 0">
-            <span class="label">Points:</span>
-            <span class="value">{{ formattedPoints }}</span>
+          <div class="tip-item" :class="{ active: (performanceData.memory.used / performanceData.memory.total) > 0.8 }">
+            <span class="tip-icon">💾</span>
+            <span class="tip-text">High memory usage: Monitor for memory leaks</span>
           </div>
-          
-          <div class="status-item" v-if="performanceData.lines > 0">
-            <span class="label">Lines:</span>
-            <span class="value">{{ formattedLines }}</span>
-          </div>
-          
-          <div class="status-item">
-            <span class="label">Geometries:</span>
-            <span class="value">{{ performanceData.geometries }}</span>
-          </div>
-          
-          <div class="status-item secondary">
-            <span class="label">Triangles:</span>
-            <span class="value">{{ formattedTriangles }}</span>
-          </div>
-          <div class="status-item secondary">
-            <span class="label">Textures:</span>
-            <span class="value">{{ formattedTextures }}</span>
+          <div class="tip-item" :class="{ active: performanceData.renderCalls > 100 }">
+            <span class="tip-icon">🎨</span>
+            <span class="tip-text">Many draw calls: Consider geometry merging</span>
           </div>
         </div>
+      </div>
 
-        <!-- Performance Tips -->
-        <div class="performance-section">
-          <div class="section-title">Performance Tips</div>
-          <div class="performance-tips">
-            <div class="tip-item" :class="{ active: performanceData.fps < 30 }">
-              <span class="tip-icon">⚠️</span>
-              <span class="tip-text">FPS below 30: Consider reducing visual effects</span>
-            </div>
-            <div class="tip-item" :class="{ active: (performanceData.memory.used / performanceData.memory.total) > 0.8 }">
-              <span class="tip-icon">💾</span>
-              <span class="tip-text">High memory usage: Monitor for memory leaks</span>
-            </div>
-            <div class="tip-item" :class="{ active: performanceData.renderCalls > 100 }">
-              <span class="tip-icon">🎨</span>
-              <span class="tip-text">Many draw calls: Consider geometry merging</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="performance-footer">
-          <span class="timestamp">Last Update: {{ performanceData.lastUpdate }}</span>
-        </div>
+      <div class="performance-footer">
+        <span class="timestamp">Last Update: {{ performanceData.lastUpdate }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <style lang="css" scoped>
-.performance-monitor {
-  position: fixed;
-  top: 20px; /* Move to the top position */
-  right: 20px;
-  z-index: 1000; /* Higher z-index to be above DriftMonitor */
-  font-family: 'Kode Mono', monospace;
-}
-
-.performance-toggle {
-  background: rgba(0, 12, 20, 0.9);
-  border: 1px solid #00ccff;
-  color: #00ccff;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-family: inherit;
-  font-weight: 600;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-}
-
-.performance-toggle:hover {
-  background: rgba(0, 204, 255, 0.1);
-  box-shadow: 0 0 10px rgba(0, 204, 255, 0.3);
-}
-
-.performance-toggle.active {
-  background: rgba(0, 204, 255, 0.2);
-  box-shadow: 0 0 15px rgba(0, 204, 255, 0.5);
-}
-
-.performance-panel {
-  position: absolute;
-  top: 50px;
-  right: 0;
-  width: 400px;
+.performance-panel.unified-panel {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  height: 600px;
   max-height: 80vh;
   background: rgba(0, 8, 16, 0.97);
   border: 1px solid rgba(0, 204, 255, 0.6);
@@ -366,17 +314,7 @@ onUnmounted(() => {
   animation: slideDown 0.3s ease;
   box-shadow: 0 8px 32px rgba(0, 204, 255, 0.15);
   backdrop-filter: blur(8px);
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  z-index: 1001;
 }
 
 .performance-header {

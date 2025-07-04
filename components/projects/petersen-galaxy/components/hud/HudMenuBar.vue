@@ -1,0 +1,115 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import PerformanceMonitor from './PerformanceMonitor.vue'
+import DriftMonitor from './DriftMonitor.vue'
+import CameraPresets from './CameraPresets.vue'
+
+const menuOpen = ref(false)
+const activePanel = ref<'performance' | 'drift' | 'camera' | null>(null)
+
+function openPanel(panel: 'performance' | 'drift' | 'camera') {
+  activePanel.value = panel
+  menuOpen.value = false
+}
+function closePanel() {
+  activePanel.value = null
+}
+</script>
+
+<template>
+  <div class="hud-menu-bar">
+    <button class="menu-btn" @click="menuOpen = !menuOpen">☰ Tools</button>
+    <div v-if="menuOpen" class="menu-dropdown">
+      <div class="menu-item" @click="openPanel('performance')">Performance</div>
+      <div class="menu-item" @click="openPanel('drift')">Drift Monitor</div>
+      <div class="menu-item" @click="openPanel('camera')">Camera Presets</div>
+    </div>
+    <div v-if="activePanel" class="panel-wrapper">
+      <div class="panel-close" @click="closePanel">×</div>
+      <PerformanceMonitor v-if="activePanel === 'performance'">
+        <template #close>
+          <button class="close-btn" @click="closePanel">×</button>
+        </template>
+      </PerformanceMonitor>
+      <DriftMonitor v-if="activePanel === 'drift'" :standalone="false" />
+      <CameraPresets v-if="activePanel === 'camera'" :standalone="false" />
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.hud-menu-bar {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.menu-btn {
+  background: rgba(0, 12, 20, 0.9);
+  border: 1px solid #00ccff;
+  color: #00ccff;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+.menu-btn:hover {
+  background: rgba(0, 204, 255, 0.1);
+  box-shadow: 0 0 10px rgba(0, 204, 255, 0.3);
+}
+.menu-dropdown {
+  margin-top: 8px;
+  background: rgba(0, 8, 16, 0.97);
+  border: 1px solid #00ccff;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 204, 255, 0.15);
+  min-width: 160px;
+  overflow: hidden;
+}
+.menu-item {
+  padding: 12px 20px;
+  color: #00ccff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.menu-item:hover {
+  background: rgba(0, 204, 255, 0.08);
+}
+.panel-wrapper {
+  margin-top: 12px;
+  position: relative;
+  width: 400px;
+  height: 400px;
+  background: none;
+}
+.panel-close {
+  position: absolute;
+  top: 10px;
+  right: 18px;
+  z-index: 2;
+  color: #00ccff;
+  font-size: 22px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-weight: bold;
+}
+.close-btn {
+  background: none;
+  border: none;
+  color: #00ccff;
+  font-size: 22px;
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+</style>
