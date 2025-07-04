@@ -117,13 +117,13 @@ watch(
     () => trailRendererRef.value?.getTrailStats?.().pointCount,
     () => currentPresetId.value
   ],
-  ([showDriftTrails, presetId]) => {
+  ([showDriftTrails, _pointCount, presetId]) => {
     // Trail control enabled and trail point count reaches 1/3
     const stats = trailRendererRef.value?.getTrailStats?.()
     const enoughTrail = stats && stats.enabled && stats.pointCount > stats.maxTrailPoints / 3
     if (showDriftTrails && enoughTrail) {
       if (presetId === 'drift-follow') {
-        // If conditions are met and already at the sixth preset, start review directly
+        // Only auto-playback when explicitly in drift-follow preset
         if (!isReviewingTrail.value) {
           isTrailReviewAvailable.value = false
           // Get trail snapshot and start review
@@ -133,7 +133,7 @@ watch(
           }
         }
       } else {
-        // If conditions are met but not at the sixth preset, show available indicator
+        // Show available tip for other presets
         if (!isReviewingTrail.value) {
           isTrailReviewAvailable.value = true
         }
