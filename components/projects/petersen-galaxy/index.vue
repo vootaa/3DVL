@@ -9,9 +9,7 @@ import GridControl from './components/controls/GridControl.vue'
 import TrailControl from './components/controls/TrailControl.vue'
 import CameraInfo from './components/hud/CameraInfo.vue'
 import GalaxyDriftController from './components/scene/GalaxyDriftController.vue'
-import DriftMonitor from './components/hud/DriftMonitor.vue'
-import PerformanceMonitor from './components/hud/PerformanceMonitor.vue'
-import CameraPresets from './components/hud/CameraPresets.vue'
+import HudMenuBar from './components/hud/HudMenuBar.vue'
 import EvolutionTimeline from './components/hud/EvolutionTimeline.vue'
 import TrailReviewTimeline from './components/hud/TrailReviewTimeline.vue'
 import RendererStatsCollector from './components/utilities/RendererStatsCollector.vue'
@@ -188,54 +186,35 @@ provide('isTrailStopped', isTrailStopped)
     <!-- Galaxy drift controller (invisible but manages galaxy center) -->
     <GalaxyDriftController ref="galaxyDriftControllerRef">
       <template #default>
-        <!-- Drift debugging monitor -->
-        <DriftMonitor />
+        <HudMenuBar />
       </template>
     </GalaxyDriftController>
-
     <TresCanvas v-bind="gl">
       <!-- Renderer stats collector (invisible component for performance monitoring) -->
       <RendererStatsCollector />
-
       <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
-
       <!-- Subtle ambient lighting for better 3D perception -->
       <TresAmbientLight :intensity="0.08" color="#004488" />
-
       <!-- Grid Helper - shown only after camera adjustment -->
       <TresGridHelper v-if="gridControlRef?.showGrid && showGridAfterCameraMove" :args="[16, 16, '#003366', '#002244']"
         :position="[0, -4.2, 0]" />
-
       <OrbitalSystem />
-
       <!-- Star cluster component - conditional display with ref -->
       <StarCluster v-if="starControlRef?.showStars"
         :ref="(el) => starControlRef && (starControlRef.starClusterRef = el)" :skip-evolution="hasEvolutionOccurred"
         @evolution-complete="hasEvolutionOccurred = true" />
-
       <!-- TrailRenderer needs a ref -->
       <TrailRenderer ref="trailRendererRef" :enabled="trailControlRef?.showDriftTrails" />
-
       <!-- OrbitControls with zoom and angle limits -->
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
     </TresCanvas>
-
     <!-- Control panels -->
     <StarControl ref="starControlRef" :disabled="controlsDisabled" />
     <GridControl ref="gridControlRef" :disabled="controlsDisabled" />
     <TrailControl ref="trailControlRef" :disabled="controlsDisabled" />
     <CameraInfo />
-
     <!-- Evolution timeline (top center) -->
     <EvolutionTimeline @visible-change="handleEvolutionTimelineVisible" />
-
-    <!-- Performance monitor - needs client-only for performance stats -->
-    <ClientOnly>
-      <PerformanceMonitor />
-    </ClientOnly>
-
-    <!-- Camera presets component -->
-    <CameraPresets />
     <TrailReviewTimeline v-if="isReviewingTrail" :progress="trailReviewProgress" />
     <TrailReviewTimeline v-else-if="isTrailReviewAvailable" :progress="0" mode="available" />
   </div>

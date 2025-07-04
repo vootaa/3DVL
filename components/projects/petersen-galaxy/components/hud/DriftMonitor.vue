@@ -2,7 +2,7 @@
 import { ref, inject, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Logger } from '../../../../utils/logger'
 import { LoggingConfig } from '../../configs/logging-config'
-import { formatWithUnit} from '../../configs/astronomical-units'
+import { formatWithUnit } from '../../configs/astronomical-units'
 import { useGalaxyDriftData } from '../../services/galaxy-drift-data'
 
 // Use the unified drift data service
@@ -52,22 +52,6 @@ watch([
   }
 }, { immediate: true, deep: true })
 
-// Force update service status periodically
-onMounted(() => {
-  const forceUpdate = () => {
-    driftDataService.forceStatusUpdate()
-  }
-  
-  // Initial update
-  forceUpdate()
-  
-  // Periodic updates
-  const interval = setInterval(forceUpdate, 5000)
-  
-  onUnmounted(() => {
-    clearInterval(interval)
-  })
-})
 
 // Debug state
 const debugInfo = ref({
@@ -87,7 +71,6 @@ const debugInfo = ref({
   lastUpdate: ''
 })
 
-const showDebugPanel = ref(false)
 let updateInterval: NodeJS.Timeout | null = null
 
 // Formatted display values using fixed GU units
@@ -126,12 +109,6 @@ const formattedMaxVelocity = computed(() => {
   return formatWithUnit(value, 'GU', 'distance', 8) + '/s'
 })
 
-// Toggle debug panel visibility
-const toggleDebugPanel = () => {
-  showDebugPanel.value = !showDebugPanel.value
-  Logger.log('DRIFT_MONITOR', `Debug panel ${showDebugPanel.value ? 'opened' : 'closed'}`)
-}
-
 // Track previous position for velocity calculation
 let lastPosition = ref<{ x: number; y: number; z: number } | null>(null)
 let lastUpdateTime = Date.now()
@@ -142,7 +119,7 @@ const updateDebugInfo = () => {
     // Get data from the unified service
     const driftStatus = driftDataService.getDriftStatus()
     const availability = driftDataService.getAvailabilityStatus()
-    
+
     // Log availability status with throttling
     Logger.throttle('DRIFT_MONITOR_DEBUG', 'Checking data sources', {
       availability,
@@ -212,7 +189,7 @@ const updateDebugInfo = () => {
       positionChange,
       diagnosis: isDrifting ? 'ACTIVE_DRIFT' : (currentVelocity > 0 ? 'MINIMAL_DRIFT' : 'NO_MOVEMENT'),
       statistics: {
-        averageVelocity: debugInfo.value.statistics.samplesCollected > 0 
+        averageVelocity: debugInfo.value.statistics.samplesCollected > 0
           ? ((debugInfo.value.statistics.averageVelocity * debugInfo.value.statistics.samplesCollected) + currentVelocity) / (debugInfo.value.statistics.samplesCollected + 1)
           : currentVelocity,
         maxVelocity: Math.max(debugInfo.value.statistics.maxVelocity, currentVelocity),
@@ -246,7 +223,7 @@ const updateDebugInfo = () => {
     Logger.error('DRIFT_MONITOR', 'Error updating debug info', error)
     debugInfo.value.diagnosis = 'UPDATE_ERROR'
     debugInfo.value.injectionStatus = 'ERROR'
-    
+
     // Fallback: try to get from window config
     if (typeof window !== 'undefined' && (window as any).__DRIFT_CONFIG__) {
       debugInfo.value.diagnosis = 'CONFIG_ONLY'
@@ -284,7 +261,7 @@ const updateChartData = () => {
   // Add current values to history
   velocityHistory.value.push(debugInfo.value.velocityMagnitude)
   positionChangeHistory.value.push(debugInfo.value.positionChange)
-  
+
   // Keep only last N points
   if (velocityHistory.value.length > maxHistoryLength) {
     velocityHistory.value.shift()
@@ -297,27 +274,27 @@ const updateChartData = () => {
 // Generate SVG path for chart
 const generateChartPath = (data: number[], width: number = 200, height: number = 40) => {
   if (data.length < 2) return ''
-  
+
   const maxValue = Math.max(...data, 0.0001) // Prevent division by zero
   const stepX = width / (data.length - 1)
-  
+
   let path = `M 0 ${height - (data[0] / maxValue) * height}`
-  
+
   for (let i = 1; i < data.length; i++) {
     const x = i * stepX
     const y = height - (data[i] / maxValue) * height
     path += ` L ${x} ${y}`
   }
-  
+
   return path
 }
 
 // Chart paths for velocity and position change
-const velocityChartPath = computed(() => 
+const velocityChartPath = computed(() =>
   generateChartPath(velocityHistory.value, 180, 30)
 )
 
-const positionChangeChartPath = computed(() => 
+const positionChangeChartPath = computed(() =>
   generateChartPath(positionChangeHistory.value, 180, 30)
 )
 
@@ -339,205 +316,161 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="drift-monitor">
-    <!-- Toggle Button -->
-    <button class="debug-toggle" @click="toggleDebugPanel" :class="{ active: showDebugPanel }">
-      🔍 DRIFT Monitor
-    </button>
-
-    <!-- Debug Panel -->
-    <div v-if="showDebugPanel" class="debug-panel">
-      <div class="debug-header">
-        <h3>🔍 Petersen Galaxy Drift Monitor</h3>
-        <button class="close-btn" @click="showDebugPanel = false">×</button>
+  <div class="drift-panel unified-panel">
+    <div class="debug-header">
+      <h3>🔍 Petersen Galaxy Drift Monitor</h3>
+      <slot name="close"></slot>
+    </div>
+    <div class="debug-content">
+      <!-- Drift Status -->
+      <div class="debug-section">
+        <div class="section-title">Drift Status</div>
+        <div class="status-item">
+          <span class="label">Status:</span>
+          <span class="value" :style="{ color: driftStatusColor }">
+            {{ debugInfo.diagnosis }}
+          </span>
+        </div>
+        <div class="status-item">
+          <span class="label">Is Drifting:</span>
+          <span class="value" :style="{ color: debugInfo.isDrifting ? '#00ccff' : '#4477ff' }">
+            {{ debugInfo.isDrifting ? 'YES' : 'NO' }}
+          </span>
+        </div>
+        <div class="status-item">
+          <span class="label">Injection:</span>
+          <span class="value" :style="{ color: injectionStatusColor }">
+            {{ debugInfo.injectionStatus }}
+          </span>
+        </div>
       </div>
 
-      <div class="debug-content">
-        <!-- Drift Status -->
-        <div class="debug-section">
-          <div class="section-title">Drift Status</div>
-          <div class="status-item">
-            <span class="label">Status:</span>
-            <span class="value" :style="{ color: driftStatusColor }">
-              {{ debugInfo.diagnosis }}
-            </span>
-          </div>
-          <div class="status-item">
-            <span class="label">Is Drifting:</span>
-            <span class="value" :style="{ color: debugInfo.isDrifting ? '#00ccff' : '#4477ff' }">
-              {{ debugInfo.isDrifting ? 'YES' : 'NO' }}
-            </span>
-          </div>
-          <div class="status-item">
-            <span class="label">Injection:</span>
-            <span class="value" :style="{ color: injectionStatusColor }">
-              {{ debugInfo.injectionStatus }}
-            </span>
-          </div>
+      <!-- RAW Drift Data (moved above Current Metrics) -->
+      <div class="debug-section" v-if="galaxyDriftData">
+        <div class="section-title">RAW Drift Data</div>
+        <div class="status-item">
+          <span class="label">Position (mGU):</span>
+          <span class="value position-value">
+            ({{ galaxyDriftData.position.value.x }},
+            {{ galaxyDriftData.position.value.y }},
+            {{ galaxyDriftData.position.value.z }})
+          </span>
         </div>
-
-        <!-- RAW Drift Data (moved above Current Metrics) -->
-        <div class="debug-section" v-if="galaxyDriftData">
-          <div class="section-title">RAW Drift Data</div>
-          <div class="status-item">
-            <span class="label">Position (mGU):</span>
-            <span class="value position-value">
-              ({{ galaxyDriftData.position.value.x }},
-              {{ galaxyDriftData.position.value.y }},
-              {{ galaxyDriftData.position.value.z }})
-            </span>
-          </div>
-          <div class="status-item">
-            <span class="label">Velocity (mGU/s):</span>
-            <span class="value">{{ galaxyDriftData.velocity.value }}</span>
-          </div>
-          <div class="status-item">
-            <span class="label">Distance (mGU):</span>
-            <span class="value">{{ galaxyDriftData.distance.value }}</span>
-          </div>
+        <div class="status-item">
+          <span class="label">Velocity (mGU/s):</span>
+          <span class="value">{{ galaxyDriftData.velocity.value }}</span>
         </div>
-
-        <!-- Current Metrics with Charts -->
-        <div class="debug-section">
-          <div class="section-title">Current Metrics</div>
-          <div class="status-item">
-            <span class="label">Velocity:</span>
-            <div class="value-with-chart">
-              <span class="value">{{ formattedVelocity }}</span>
-              <div class="mini-chart" v-if="velocityHistory.length > 1">
-                <svg width="180" height="30" viewBox="0 0 180 30">
-                  <path :d="velocityChartPath" stroke="#00ccff" stroke-width="1.5" fill="none" opacity="0.8" />
-                  <defs>
-                    <linearGradient id="velocityGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" style="stop-color:#00ccff;stop-opacity:0.1" />
-                      <stop offset="100%" style="stop-color:#00ccff;stop-opacity:0.8" />
-                    </linearGradient>
-                  </defs>
-                  <path :d="velocityChartPath + ' L 180 30 L 0 30 Z'" fill="url(#velocityGradient)" opacity="0.3" />
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div class="status-item">
-            <span class="label">Position Change:</span>
-            <div class="value-with-chart">
-              <span class="value">{{ formattedPositionChange }}</span>
-              <div class="mini-chart" v-if="positionChangeHistory.length > 1">
-                <svg width="180" height="30" viewBox="0 0 180 30">
-                  <path :d="positionChangeChartPath" stroke="#66ff66" stroke-width="1.5" fill="none" opacity="0.8" />
-                  <defs>
-                    <linearGradient id="positionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" style="stop-color:#66ff66;stop-opacity:0.1" />
-                      <stop offset="100%" style="stop-color:#66ff66;stop-opacity:0.8" />
-                    </linearGradient>
-                  </defs>
-                  <path :d="positionChangeChartPath + ' L 180 30 L 0 30 Z'" fill="url(#positionGradient)"
-                    opacity="0.3" />
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div class="status-item">
-            <span class="label">Position:</span>
-            <span class="value position-value">
-              ({{ formattedPosition.x }}, {{ formattedPosition.y }}, {{ formattedPosition.z }})
-            </span>
-          </div>
+        <div class="status-item">
+          <span class="label">Distance (mGU):</span>
+          <span class="value">{{ galaxyDriftData.distance.value }}</span>
         </div>
+      </div>
 
-        <!-- Statistics -->
-        <div class="debug-section">
-          <div class="section-title">Statistics</div>
-          <div class="status-item">
-            <span class="label">Avg Velocity:</span>
-            <span class="value">{{ formattedAvgVelocity }}</span>
-          </div>
-          <div class="status-item">
-            <span class="label">Max Velocity:</span>
-            <span class="value">{{ formattedMaxVelocity }}</span>
-          </div>
-          <div class="status-item">
-            <span class="label">Total Distance:</span>
-            <span class="value">{{ formattedTotalDistance }}</span>
-          </div>
-          <div class="status-item">
-            <span class="label">Duration:</span>
-            <span class="value">{{ debugInfo.statistics.duration.toFixed(2) }}s</span>
-          </div>
-          <div class="status-item">
-            <span class="label">Samples:</span>
-            <span class="value">{{ debugInfo.statistics.samplesCollected }}</span>
-          </div>
-        </div>
-
-
-
-        <!-- Unit Reference (simplified) -->
-        <div class="debug-section">
-          <div class="section-title">Unit Reference</div>
-          <div class="unit-reference">
-            <div class="unit-item">
-              <span class="unit-symbol">GU</span>
-              <span class="unit-name">Galaxy Unit (base scale)</span>
-            </div>
-            <div class="unit-item">
-              <span class="unit-symbol">mGU</span>
-              <span class="unit-name">Milli Galaxy Unit (10⁻³ GU)</span>
-            </div>
-            <div class="unit-item">
-              <span class="unit-symbol">nGU</span>
-              <span class="unit-name">Nano Galaxy Unit (10⁻⁹ GU)</span>
+      <!-- Current Metrics with Charts -->
+      <div class="debug-section">
+        <div class="section-title">Current Metrics</div>
+        <div class="status-item">
+          <span class="label">Velocity:</span>
+          <div class="value-with-chart">
+            <span class="value">{{ formattedVelocity }}</span>
+            <div class="mini-chart" v-if="velocityHistory.length > 1">
+              <svg width="180" height="30" viewBox="0 0 180 30">
+                <path :d="velocityChartPath" stroke="#00ccff" stroke-width="1.5" fill="none" opacity="0.8" />
+                <defs>
+                  <linearGradient id="velocityGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#00ccff;stop-opacity:0.1" />
+                    <stop offset="100%" style="stop-color:#00ccff;stop-opacity:0.8" />
+                  </linearGradient>
+                </defs>
+                <path :d="velocityChartPath + ' L 180 30 L 0 30 Z'" fill="url(#velocityGradient)" opacity="0.3" />
+              </svg>
             </div>
           </div>
         </div>
-
-        <div class="debug-footer">
-          <span class="timestamp">Last Update: {{ debugInfo.lastUpdate }}</span>
+        <div class="status-item">
+          <span class="label">Position Change:</span>
+          <div class="value-with-chart">
+            <span class="value">{{ formattedPositionChange }}</span>
+            <div class="mini-chart" v-if="positionChangeHistory.length > 1">
+              <svg width="180" height="30" viewBox="0 0 180 30">
+                <path :d="positionChangeChartPath" stroke="#66ff66" stroke-width="1.5" fill="none" opacity="0.8" />
+                <defs>
+                  <linearGradient id="positionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#66ff66;stop-opacity:0.1" />
+                    <stop offset="100%" style="stop-color:#66ff66;stop-opacity:0.8" />
+                  </linearGradient>
+                </defs>
+                <path :d="positionChangeChartPath + ' L 180 30 L 0 30 Z'" fill="url(#positionGradient)" opacity="0.3" />
+              </svg>
+            </div>
+          </div>
         </div>
+        <div class="status-item">
+          <span class="label">Position:</span>
+          <span class="value position-value">
+            ({{ formattedPosition.x }}, {{ formattedPosition.y }}, {{ formattedPosition.z }})
+          </span>
+        </div>
+      </div>
+
+      <!-- Statistics -->
+      <div class="debug-section">
+        <div class="section-title">Statistics</div>
+        <div class="status-item">
+          <span class="label">Avg Velocity:</span>
+          <span class="value">{{ formattedAvgVelocity }}</span>
+        </div>
+        <div class="status-item">
+          <span class="label">Max Velocity:</span>
+          <span class="value">{{ formattedMaxVelocity }}</span>
+        </div>
+        <div class="status-item">
+          <span class="label">Total Distance:</span>
+          <span class="value">{{ formattedTotalDistance }}</span>
+        </div>
+        <div class="status-item">
+          <span class="label">Duration:</span>
+          <span class="value">{{ debugInfo.statistics.duration.toFixed(2) }}s</span>
+        </div>
+        <div class="status-item">
+          <span class="label">Samples:</span>
+          <span class="value">{{ debugInfo.statistics.samplesCollected }}</span>
+        </div>
+      </div>
+
+      <!-- Unit Reference -->
+      <div class="debug-section">
+        <div class="section-title">Unit Reference</div>
+        <div class="unit-reference">
+          <div class="unit-item">
+            <span class="unit-symbol">GU</span>
+            <span class="unit-name">Galaxy Unit (base scale)</span>
+          </div>
+          <div class="unit-item">
+            <span class="unit-symbol">mGU</span>
+            <span class="unit-name">Milli Galaxy Unit (10⁻³ GU)</span>
+          </div>
+          <div class="unit-item">
+            <span class="unit-symbol">nGU</span>
+            <span class="unit-name">Nano Galaxy Unit (10⁻⁹ GU)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="debug-footer">
+        <span class="timestamp">Last Update: {{ debugInfo.lastUpdate }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <style lang="css" scoped>
-.drift-monitor {
-  position: fixed;
-  top: 80px; /* Move below PerformanceMonitor */
-  right: 20px;
-  z-index: 999; /* Lower z-index to be below PerformanceMonitor */
-  font-family: 'Kode Mono', monospace;
-}
-
-.debug-toggle {
-  background: rgba(0, 12, 20, 0.9);
-  border: 1px solid #00ccff;
-  color: #00ccff;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-family: inherit;
-  font-weight: 600;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-}
-
-.debug-toggle:hover {
-  background: rgba(0, 204, 255, 0.1);
-  box-shadow: 0 0 10px rgba(0, 204, 255, 0.3);
-}
-
-.debug-toggle.active {
-  background: rgba(0, 204, 255, 0.2);
-  box-shadow: 0 0 15px rgba(0, 204, 255, 0.5);
-}
-
-.debug-panel {
-  position: absolute;
-  top: 50px;
-  right: 0;
-  width: 400px;
-  max-height: 75vh;
+.drift-panel.unified-panel {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  height: 600px;
+  max-height: 80vh;
   background: rgba(0, 8, 16, 0.97);
   border: 1px solid rgba(0, 204, 255, 0.6);
   border-radius: 10px;
@@ -545,18 +478,7 @@ onUnmounted(() => {
   animation: slideDown 0.3s ease;
   box-shadow: 0 8px 32px rgba(0, 204, 255, 0.15);
   backdrop-filter: blur(8px);
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  z-index: 1001;
 }
 
 .debug-header {
@@ -653,7 +575,7 @@ onUnmounted(() => {
 
 .value {
   color: #ffffff;
-  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
+  font-family: 'Kodo Mono', monospace;
   text-align: right;
   flex-grow: 1;
   word-break: break-all;
@@ -694,8 +616,6 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
 }
-
-
 
 /* Unit reference styles */
 .unit-reference {
@@ -761,22 +681,20 @@ onUnmounted(() => {
 }
 
 /* Scrollbar styling */
-.debug-panel::-webkit-scrollbar {
+.drift-panel.unified-panel::-webkit-scrollbar {
   width: 6px;
 }
 
-.debug-panel::-webkit-scrollbar-track {
+.drift-panel.unified-panel::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.3);
 }
 
-.debug-panel::-webkit-scrollbar-thumb {
+.drift-panel.unified-panel::-webkit-scrollbar-thumb {
   background: rgba(0, 204, 255, 0.5);
   border-radius: 3px;
 }
 
-.debug-panel::-webkit-scrollbar-thumb:hover {
+.drift-panel.unified-panel::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 204, 255, 0.7);
 }
-
-
 </style>

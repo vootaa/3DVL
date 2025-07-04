@@ -14,11 +14,15 @@ function openPanel(panel: 'performance' | 'drift' | 'camera') {
 function closePanel() {
   activePanel.value = null
 }
+function handleMenuBtnClick() {
+  activePanel.value = null
+  menuOpen.value = !menuOpen.value
+}
 </script>
 
 <template>
   <div class="hud-menu-bar">
-    <button class="menu-btn" @click="menuOpen = !menuOpen">☰ Tools</button>
+    <button class="menu-btn" @click="handleMenuBtnClick">☰ Tools</button>
     <div v-if="menuOpen" class="menu-dropdown">
       <div class="menu-item" @click="openPanel('performance')">Performance</div>
       <div class="menu-item" @click="openPanel('drift')">Drift Monitor</div>
@@ -26,13 +30,23 @@ function closePanel() {
     </div>
     <div v-if="activePanel" class="panel-wrapper">
       <div class="panel-close" @click="closePanel">×</div>
-      <PerformanceMonitor v-if="activePanel === 'performance'">
+      <clientonly>
+        <PerformanceMonitor v-if="activePanel === 'performance'">
+          <template #close>
+            <button class="close-btn" @click="closePanel">×</button>
+          </template>
+        </PerformanceMonitor>
+      </clientonly>
+      <DriftMonitor v-if="activePanel === 'drift'">
         <template #close>
           <button class="close-btn" @click="closePanel">×</button>
         </template>
-      </PerformanceMonitor>
-      <DriftMonitor v-if="activePanel === 'drift'" :standalone="false" />
-      <CameraPresets v-if="activePanel === 'camera'" :standalone="false" />
+      </DriftMonitor>
+      <CameraPresets v-if="activePanel === 'camera'">
+        <template #close>
+          <button class="close-btn" @click="closePanel">×</button>
+        </template>
+      </CameraPresets>
     </div>
   </div>
 </template>
@@ -47,6 +61,7 @@ function closePanel() {
   flex-direction: column;
   align-items: flex-end;
 }
+
 .menu-btn {
   background: rgba(0, 12, 20, 0.9);
   border: 1px solid #00ccff;
@@ -60,10 +75,12 @@ function closePanel() {
   transition: all 0.3s ease;
   text-transform: uppercase;
 }
+
 .menu-btn:hover {
   background: rgba(0, 204, 255, 0.1);
   box-shadow: 0 0 10px rgba(0, 204, 255, 0.3);
 }
+
 .menu-dropdown {
   margin-top: 8px;
   background: rgba(0, 8, 16, 0.97);
@@ -73,6 +90,7 @@ function closePanel() {
   min-width: 160px;
   overflow: hidden;
 }
+
 .menu-item {
   padding: 12px 20px;
   color: #00ccff;
@@ -80,9 +98,11 @@ function closePanel() {
   cursor: pointer;
   transition: background 0.2s;
 }
+
 .menu-item:hover {
   background: rgba(0, 204, 255, 0.08);
 }
+
 .panel-wrapper {
   margin-top: 12px;
   position: relative;
@@ -90,6 +110,7 @@ function closePanel() {
   height: 400px;
   background: none;
 }
+
 .panel-close {
   position: absolute;
   top: 10px;
@@ -102,6 +123,7 @@ function closePanel() {
   border: none;
   font-weight: bold;
 }
+
 .close-btn {
   background: none;
   border: none;
