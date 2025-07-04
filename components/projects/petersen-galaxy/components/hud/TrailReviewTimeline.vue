@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { defineProps } from 'vue'
-const props = defineProps<{ progress: number }>()
+const props = defineProps<{ progress: number, mode?: string }>()
 </script>
 
 <template>
-  <div class="trail-review-timeline">
-    <div class="timeline-content">
-    <span class="timeline-title">Galaxy drift playback in progress...</span>
-      <span class="timeline-progress-text">{{ (progress * 100).toFixed(0) }}%</span>
-      <div class="timeline-progress">
-        <div class="progress-bar" :style="{ width: `${progress * 100}%` }"></div>
-      </div>
+    <div class="trail-review-timeline">
+        <div class="timeline-content">
+            <span class="timeline-title" v-if="props.mode === 'available'">Galaxy Drift Replay Mode Available</span>
+            <span class="timeline-title" v-else>Galaxy Drift Replay In Progress...</span>
+            <span class="timeline-progress-text" v-if="props.mode !== 'available'">{{ (props.progress * 100).toFixed(0) }}%</span>
+            <div class="timeline-progress">
+                <div class="progress-bar" :style="{ width: `${(props.mode === 'available' ? 100 : props.progress * 100)}%` }"></div>
+            </div>
+        </div>
     </div>
-  </div>
 </template>
 
 <style scoped>
@@ -41,12 +41,14 @@ const props = defineProps<{ progress: number }>()
 }
 .timeline-title {
   color: #66ddff;
-  font-size: 13px;
-  font-weight: 600;
+  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
 }
 .timeline-progress-text {
   color: #00ccff;
-  font-size: 13px;
+  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  font-size: 16px;
   font-weight: 700;
 }
 .timeline-progress {

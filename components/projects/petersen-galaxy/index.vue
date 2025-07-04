@@ -59,16 +59,17 @@ const orbitControlsConfig = {
 // Global trail review state
 const isReviewingTrail = ref(false)
 const trailReviewProgress = ref(0)
+const isTrailReviewAvailable = ref(false) // 新增：漂移回顾模式可用提示
 
-// EvolutionTimeline visibility state (communicate with its component)
-const isEvolutionTimelineVisible = ref(true)
+// EvolutionTimeline visibility state
+const isEvolutionTimelineVisible = ref(false)
 function handleEvolutionTimelineVisible(val: boolean) {
   isEvolutionTimelineVisible.value = val
 }
 
-// Control panel disabled state
+// 控制面板禁用状态
 const controlsDisabled = computed(() =>
-  isReviewingTrail.value || isEvolutionTimelineVisible.value
+  isReviewingTrail.value || isEvolutionTimelineVisible.value || isTrailReviewAvailable.value
 )
 
 // Provide global state for child components
@@ -81,10 +82,12 @@ const trailRendererRef = ref()
 // Provide for CameraPresets
 provide('trailRendererRef', trailRendererRef)
 provide('startTrailReview', startTrailReview)
+provide('setTrailReviewAvailable', setTrailReviewAvailable)
 
 // Trail review trigger function (called by CameraPresets)
 async function startTrailReview(trailPoints: any[]) {
   if (!trailPoints || trailPoints.length < 2) return
+  isTrailReviewAvailable.value = false
   isReviewingTrail.value = true
   trailReviewProgress.value = 0
 
@@ -97,6 +100,11 @@ async function startTrailReview(trailPoints: any[]) {
   }
   isReviewingTrail.value = false
   trailReviewProgress.value = 0
+}
+
+// 新增：设置漂移回顾模式可用提示
+function setTrailReviewAvailable(val: boolean) {
+  isTrailReviewAvailable.value = val
 }
 
 onMounted(() => {
@@ -186,9 +194,10 @@ watch(
 
     <!-- Camera presets component -->
     <CameraPresets />
-
-    <!-- Trail review progress bar -->
+    <!-- 漂移回顾动画进度条 -->
     <TrailReviewTimeline v-if="isReviewingTrail" :progress="trailReviewProgress" />
+    <!-- 漂移回顾模式可用提示 -->
+    <TrailReviewTimeline v-else-if="isTrailReviewAvailable" :progress="0" mode="available" />
   </div>
 </template>
 

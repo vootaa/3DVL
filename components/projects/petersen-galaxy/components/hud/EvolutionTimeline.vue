@@ -1,53 +1,57 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, defineEmits } from 'vue'
 
-// Evolution timeline state
-const isVisible = ref(true)
-const currentAge = ref(0)
-const maxAge = 13.8 // 13.8 billion years (age of universe)
-const animationDuration = 13800 // 13.8 seconds
+const isVisible = ref(false)
 
-// Timeline animation
+const maxAge = 13.8 // 13.8 billion years
+const currentAge = ref(maxAge)
+const animationDuration = 13800 // ms
+
 let startTime: number | null = null
 let animationId: number | null = null
 
 const emit = defineEmits(['visible-change'])
 
-const formatAge = (ageInBillions: number): string => {
-  if (ageInBillions < 0.1) {
-    return `${(ageInBillions * 1000).toFixed(0)}M years ago`
-  } else {
-    return `${ageInBillions.toFixed(1)}B years ago`
-  }
+/**
+ * Format age as a fixed-width full number in years with thousands separator and 'ago'
+ * e.g. 13,800,000,000 ago
+ */
+function formatFullAge(ageInBillions: number): string {
+  if (ageInBillions <= 0) return '00,000,000,000 Year(s) Ago'
+  const years = Math.round(ageInBillions * 1_000_000_000)
+  // Pad with zeros to always show 11 digits (e.g. 00000000000)
+  const padded = years.toString().padStart(11, '0')
+  // Add thousands separator
+  const withCommas = padded.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return `${withCommas} Year(s) Ago`
 }
+
+const progress = ref(0)
 
 const startEvolutionAnimation = () => {
   const animate = (currentTime: number) => {
     if (startTime === null) {
       startTime = currentTime
     }
-    
     const elapsed = currentTime - startTime
-    const progress = Math.min(elapsed / animationDuration, 1)
-    
-    // Evolution goes backwards in time (from universe formation to now)
-    currentAge.value = maxAge * (1 - progress)
-    
-    if (progress < 1) {
+    const prog = Math.min(elapsed / animationDuration, 1)
+    progress.value = prog
+    currentAge.value = maxAge * (1 - prog)
+    if (prog < 1) {
       animationId = requestAnimationFrame(animate)
     } else {
-      // Hide after animation completes with a delay
+      // Animation finished, keep at 0 for 2 seconds, then disappear
+      currentAge.value = 0
       setTimeout(() => {
         isVisible.value = false
       }, 2000)
     }
   }
-  
   animationId = requestAnimationFrame(animate)
 }
 
 onMounted(() => {
-  // Start animation after a short delay
+  isVisible.value = true
   setTimeout(() => {
     startEvolutionAnimation()
   }, 1000)
@@ -67,15 +71,14 @@ watch(isVisible, (val) => {
 <template>
   <div v-if="isVisible" class="evolution-timeline">
     <div class="timeline-content">
-      <div class="timeline-text">
+      <div class="timeline-text timeline-center">
         <span class="timeline-title">Petersen Galaxy Evolution Timeline</span>
-        <span class="timeline-age">{{ formatAge(currentAge) }}</span>
+        <span class="timeline-age">
+          {{ formatFullAge(currentAge) }}
+        </span>
       </div>
       <div class="timeline-progress">
-        <div 
-          class="progress-bar" 
-          :style="{ width: `${((maxAge - currentAge) / maxAge) * 100}%` }"
-        ></div>
+        <div class="progress-bar" :style="{ width: `${progress * 100}%` }"></div>
       </div>
     </div>
   </div>
@@ -96,6 +99,7 @@ watch(isVisible, (val) => {
     opacity: 0;
     transform: translateX(-50%) translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -108,11 +112,12 @@ watch(isVisible, (val) => {
   border-radius: 12px;
   padding: 12px 20px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   min-width: 300px;
   backdrop-filter: blur(10px);
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(0, 204, 255, 0.3),
     inset 0 1px 0 rgba(0, 204, 255, 0.2);
 }
@@ -124,20 +129,28 @@ watch(isVisible, (val) => {
   flex-grow: 1;
 }
 
+.timeline-center {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
 .timeline-title {
   color: #66ddff;
-  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-  font-size: 12px;
-  font-weight: 600;
+  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .timeline-age {
   color: #00ccff;
-  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-  font-size: 14px;
+  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  font-size: 16px;
   font-weight: 700;
+  margin-top: 4px;
+  letter-spacing: 1px;
 }
 
 .timeline-progress {
@@ -162,19 +175,15 @@ watch(isVisible, (val) => {
     padding: 10px 16px;
     gap: 10px;
   }
-  
-  .timeline-icon {
-    font-size: 20px;
-  }
-  
+
   .timeline-title {
+    font-size: 16px;
+  }
+
+  .timeline-age {
     font-size: 11px;
   }
-  
-  .timeline-age {
-    font-size: 13px;
-  }
-  
+
   .timeline-progress {
     width: 60px;
   }
