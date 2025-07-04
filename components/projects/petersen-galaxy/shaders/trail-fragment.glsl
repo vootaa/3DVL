@@ -1,19 +1,21 @@
+varying float vTrailProgress;
 varying vec3 vColor;
-varying float vLife;
 
 void main() {
   vec2 center = gl_PointCoord - vec2(0.5);
   float dist = length(center);
-  
-// Create glow effect
-float core = 1.0 - smoothstep(0.0, 0.2, dist);
-float glow = 1.0 - smoothstep(0.0, 0.5, dist);
 
-float intensity = core * 2.0 + glow * 0.5;
-intensity *= vLife; // Life cycle decay
+  // Glow: head is more intense
+  float glow = 1.0 - smoothstep(0.0, 0.5, dist);
+  float headGlow = mix(0.5, 1.2, vTrailProgress); // head is brighter
 
-  vec3 finalColor = vColor * intensity;
-  float alpha = intensity * 0.8;
-  
-  gl_FragColor = vec4(finalColor, alpha);
+  float alpha = glow * headGlow;
+
+  // Clamp alpha to [0.1, 1.0]
+  alpha = clamp(alpha, 0.1, 1.0);
+
+  gl_FragColor = vec4(vColor, alpha);
+
+  // Optional: fade out very edge
+  if (alpha < 0.11) discard; // slightly above 0.1 to avoid edge artifacts
 }
