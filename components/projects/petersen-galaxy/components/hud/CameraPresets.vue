@@ -80,9 +80,6 @@ const currentPreset = ref<string | null>(null)
 // Inject camera and controls references
 const cameraRef = inject<Ref<PerspectiveCamera | null>>('camera')
 const orbitControlsRef = inject<Ref<any>>('orbitControls')
-const startTrailReview = inject('startTrailReview') as (points: any[]) => void
-const trailRendererRef = inject<any>('trailRendererRef', null)
-const setTrailReviewAvailable = inject('setTrailReviewAvailable', (_val: boolean) => {})
 const setCurrentPresetId = inject('setCurrentPresetId', (_id: string | null) => {})
 
 // Computed properties
@@ -204,27 +201,6 @@ const applyPreset = (preset: CameraPreset) => {
       Logger.log('CAMERA_PRESETS', `Camera position set for preset: ${preset.name} (target setting skipped)`)
     }
     setCurrentPresetId(preset.id)
-    // Check Drift Follow trail review conditions
-    if (preset.id === 'drift-follow') {
-      if (trailRendererRef && typeof trailRendererRef.getTrailStats === 'function' && typeof trailRendererRef.getTrailSnapshot === 'function') {
-        const stats = trailRendererRef.getTrailStats()
-        if (stats.enabled && stats.pointCount > stats.maxTrailPoints / 3) {
-          // Condition met, trigger playback
-          const trailPoints = trailRendererRef.getTrailSnapshot()
-          if (startTrailReview && typeof startTrailReview === 'function') {
-            startTrailReview(trailPoints)
-          }
-          setTrailReviewAvailable(false)
-        } else {
-          setTrailReviewAvailable(true)
-        }
-      } else {
-        setTrailReviewAvailable(false)
-      }
-    } else {
-      setTrailReviewAvailable(false)
-    }
-    
     currentPreset.value = preset.id
   } catch (error) {
     Logger.error('CAMERA_PRESETS', `Error applying preset: ${error}`)

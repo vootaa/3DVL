@@ -85,17 +85,13 @@ const updateGalaxyDrift = (deltaTime: number, totalTime: number) => {
 // Render loop integration
 const { onLoop } = useRenderLoop()
 
-let frameCount = 0
-let lastLogTime = 0
-const LOG_INTERVAL = 5000 // Log every 5 seconds
 
 onLoop(({ delta, elapsed }) => {
   const currentTime = elapsed
   const deltaTime = Math.min(delta, 0.1) // Cap delta time to prevent large jumps
-  
+
   updateGalaxyDrift(deltaTime, currentTime)
-  frameCount++
-  
+
   // Expose current state to window for debugging
   if (typeof window !== 'undefined') {
     (window as any).__CURRENT_DRIFT_STATE__ = {
@@ -110,14 +106,6 @@ onLoop(({ delta, elapsed }) => {
       totalDistance: driftState.value.totalDistance,
       driftTime: driftState.value.driftTime
     }
-  }
-  
-  // Simplified logging - only log key state changes
-  const now = Date.now()
-  if (now - lastLogTime > LOG_INTERVAL) {
-    Logger.log('DRIFT_CONTROLLER', `System active: ${frameCount} frames, distance: ${driftState.value.totalDistance.toFixed(6)} GU`)
-    lastLogTime = now
-    frameCount = 0
   }
 })
 
@@ -172,16 +160,19 @@ const setTrailIntensity = (intensity: number) => {
 // Trail playback animation
 async function startTrailReview(trailPoints: Vector3[], onProgress?: (progress: number) => void) {
   if (!trailPoints || trailPoints.length < 2) return
+
   const total = trailPoints.length
   const duration = 2500 // ms
   const stepTime = duration / total
   for (let i = 0; i < total; i++) {
-    driftState.value.currentPosition.copy(trailPoints[i])
+    // TO DO Playback
+
+
     if (onProgress) onProgress(i / (total - 1))
     await new Promise(res => setTimeout(res, stepTime))
   }
   if (onProgress) onProgress(1)
-  // After playback, stay at the last point
+  Logger.log('DRIFT_CONTROLLER', 'Trail review playback finished')
 }
 
 // Drift controller interface for child components

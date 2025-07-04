@@ -93,25 +93,27 @@ function setTrailReviewAvailable(val: boolean) {
 }
 provide('setTrailReviewAvailable', setTrailReviewAvailable)
 
-// Trail review trigger function (called by CameraPresets)
+// Trail review trigger function
 async function startTrailReview(trailPoints: any[]) {
   if (!trailPoints || trailPoints.length < 2) return
+
+  trailReviewProgress.value = 0
   isTrailReviewAvailable.value = false
   isReviewingTrail.value = true
   isTrailStopped.value = true // Stop sampling and new data rendering
-  trailReviewProgress.value = 0
+  
   const galaxyDriftController = galaxyDriftControllerRef.value
   if (galaxyDriftController?.startTrailReview) {
     await galaxyDriftController.startTrailReview(trailPoints, (progress: number) => {
       trailReviewProgress.value = progress
     })
   }
-  isReviewingTrail.value = false
 
+  isReviewingTrail.value = false
   trailRendererRef.value?.resetTrailAndOffset()
   isTrailStopped.value = false // Playback finished
-  trailReviewProgress.value = 0
 }
+
 // Watch trail point count and trail control state to automatically determine whether to show TrailReviewTimeline or start playback directly
 watch(
   [
@@ -127,12 +129,9 @@ watch(
       if (presetId === 'drift-follow') {
         // Only auto-playback when explicitly in drift-follow preset
         if (!isReviewingTrail.value) {
-          isTrailReviewAvailable.value = false
           // Get trail snapshot and start review
           const trailPoints = trailRendererRef.value?.getTrailSnapshot?.()
-          if (trailPoints && trailPoints.length > 1) {
-            startTrailReview(trailPoints)
-          }
+          startTrailReview(trailPoints)
         }
       } else {
         // Show available tip for other presets
