@@ -4,12 +4,10 @@ import { ref, provide, watch, onMounted, nextTick, computed } from 'vue'
 import OrbitalSystem from './components/scene/OrbitalSystem.vue'
 import StarCluster from './components/scene/StarCluster.vue'
 import TrailRenderer from './components/scene/TrailRenderer.vue'
-import StarControl from './components/controls/StarControl.vue'
-import GridControl from './components/controls/GridControl.vue'
-import TrailControl from './components/controls/TrailControl.vue'
+import SwitchMenuBar from './components/menu/SwitchMenuBar.vue'
+import ToolsMenuBar from './components/menu/ToolsMenuBar.vue'
 import CameraInfo from './components/hud/CameraInfo.vue'
 import GalaxyDriftController from './components/scene/GalaxyDriftController.vue'
-import HudMenuBar from './components/hud/HudMenuBar.vue'
 import EvolutionTimeline from './components/hud/EvolutionTimeline.vue'
 import TrailReviewTimeline from './components/hud/TrailReviewTimeline.vue'
 import RendererStatsCollector from './components/utilities/RendererStatsCollector.vue'
@@ -30,6 +28,7 @@ const gl = {
 const gridControlRef = ref()
 const starControlRef = ref()
 const trailControlRef = ref()
+const controlsPanelRef = ref()
 const cameraRef = ref()
 const orbitControlsRef = ref()
 const showGridAfterCameraMove = ref(false)
@@ -99,7 +98,7 @@ async function startTrailReview(trailPoints: any[]) {
   isTrailReviewAvailable.value = false
   isReviewingTrail.value = true
   isTrailStopped.value = true // Stop sampling and new data rendering
-  
+
   const galaxyDriftController = galaxyDriftControllerRef.value
   if (galaxyDriftController?.startTrailReview) {
     await galaxyDriftController.startTrailReview(trailPoints, (progress: number) => {
@@ -179,6 +178,26 @@ watch(
 
 const isTrailStopped = ref(false)
 provide('isTrailStopped', isTrailStopped)
+
+const gridOn = ref(false)
+const trailOn = ref(false)
+const starOn = ref(false)
+watch(() => gridControlRef.value?.showGrid, val => { gridOn.value = !!val }, { immediate: true })
+watch(() => trailControlRef.value?.showDriftTrails, val => { trailOn.value = !!val }, { immediate: true })
+watch(() => starControlRef.value?.showStars, val => { starOn.value = !!val }, { immediate: true })
+
+function handleToggleGrid() {
+  gridOn.value = !gridOn.value
+  if (gridControlRef.value) gridControlRef.value.showGrid = gridOn.value
+}
+function handleToggleTrail() {
+  trailOn.value = !trailOn.value
+  if (trailControlRef.value) trailControlRef.value.showDriftTrails = trailOn.value
+}
+function handleToggleStar() {
+  starOn.value = !starOn.value
+  if (starControlRef.value) starControlRef.value.showStars = starOn.value
+}
 </script>
 
 <template>
@@ -186,7 +205,7 @@ provide('isTrailStopped', isTrailStopped)
     <!-- Galaxy drift controller (invisible but manages galaxy center) -->
     <GalaxyDriftController ref="galaxyDriftControllerRef">
       <template #default>
-        <HudMenuBar />
+        <ToolsMenuBar />
       </template>
     </GalaxyDriftController>
     <TresCanvas v-bind="gl">
@@ -209,9 +228,8 @@ provide('isTrailStopped', isTrailStopped)
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
     </TresCanvas>
     <!-- Control panels -->
-    <StarControl ref="starControlRef" :disabled="controlsDisabled" />
-    <GridControl ref="gridControlRef" :disabled="controlsDisabled" />
-    <TrailControl ref="trailControlRef" :disabled="controlsDisabled" />
+    <SwitchMenuBar :grid-on="gridOn" :trail-on="trailOn" :star-on="starOn" :on-toggle-grid="handleToggleGrid"
+      :on-toggle-trail="handleToggleTrail" :on-toggle-star="handleToggleStar" :disabled="controlsDisabled" />
     <CameraInfo />
     <!-- Evolution timeline (top center) -->
     <EvolutionTimeline @visible-change="handleEvolutionTimelineVisible" />
