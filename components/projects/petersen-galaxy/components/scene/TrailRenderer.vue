@@ -215,6 +215,18 @@ const cleanup = () => {
   trailMaterial.value = null
 }
 
+const resetTrailAndOffset = () => {
+  clearTrail()
+  const currentCenter = driftDataService.getGalaxyCenter()
+  if (currentCenter) {
+    trailOffset.value = new Vector3(currentCenter.x, currentCenter.y, currentCenter.z)
+    if (TRAIL_CONFIG.trail.keepOrigin) {
+      trailPoints.value = [new Vector3(0, 0, 0)]
+    }
+    Logger.log('TRAIL_RENDERER', `Trail offset recorded: (${trailOffset.value.x.toFixed(6)}, ${trailOffset.value.y.toFixed(6)}, ${trailOffset.value.z.toFixed(6)})`)
+  }
+}
+
 // Render loop
 const { onLoop } = useRenderLoop()
 onLoop(({ elapsed }) => {
@@ -231,15 +243,7 @@ onLoop(({ elapsed }) => {
 watch(() => props.enabled, (enabled) => {
   if (enabled) {
     Logger.log('TRAIL_RENDERER', 'Particle trail rendering enabled')
-    clearTrail()
-    const currentCenter = driftDataService.getGalaxyCenter()
-    if (currentCenter) {
-      trailOffset.value = new Vector3(currentCenter.x, currentCenter.y, currentCenter.z)
-      if (TRAIL_CONFIG.trail.keepOrigin) {
-        trailPoints.value = [new Vector3(0, 0, 0)]
-      }
-      Logger.log('TRAIL_RENDERER', `Trail offset recorded: (${trailOffset.value.x.toFixed(6)}, ${trailOffset.value.y.toFixed(6)}, ${trailOffset.value.z.toFixed(6)})`)
-    }
+    resetTrailAndOffset()
   } else {
     Logger.log('TRAIL_RENDERER', 'Particle trail rendering disabled')
     clearTrail()
@@ -258,6 +262,7 @@ onUnmounted(() => {
 
 defineExpose({
   clearTrail,
+  resetTrailAndOffset,
   getTrailStats: () => ({
     pointCount: trailPoints.value.length,
     maxParticles: TRAIL_CONFIG.maxParticles,

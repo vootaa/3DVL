@@ -107,7 +107,9 @@ async function startTrailReview(trailPoints: any[]) {
     })
   }
   isReviewingTrail.value = false
-  isTrailStopped.value = false // Playback finished, resume sampling and rendering
+
+  trailRendererRef.value?.resetTrailAndOffset()
+  isTrailStopped.value = false // Playback finished
   trailReviewProgress.value = 0
 }
 // Watch trail point count and trail control state to automatically determine whether to show TrailReviewTimeline or start playback directly

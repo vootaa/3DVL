@@ -17,13 +17,13 @@ const emit = defineEmits(['visible-change'])
  * e.g. 13,800,000,000 ago
  */
 function formatFullAge(ageInBillions: number): string {
-  if (ageInBillions <= 0) return '00,000,000,000 Year(s) Ago'
+  if (ageInBillions <= 0) return 'NOW'
   const years = Math.round(ageInBillions * 1_000_000_000)
   // Pad with zeros to always show 11 digits (e.g. 00000000000)
   const padded = years.toString().padStart(11, '0')
   // Add thousands separator
   const withCommas = padded.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-  return `${withCommas} Year(s) Ago`
+  return `${withCommas} Years Ago`
 }
 
 const progress = ref(0)
