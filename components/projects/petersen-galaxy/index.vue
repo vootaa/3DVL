@@ -98,6 +98,7 @@ async function startTrailReview(trailPoints: any[]) {
   if (!trailPoints || trailPoints.length < 2) return
   isTrailReviewAvailable.value = false
   isReviewingTrail.value = true
+  isTrailStopped.value = true // Stop sampling and new data rendering
   trailReviewProgress.value = 0
   const galaxyDriftController = galaxyDriftControllerRef.value
   if (galaxyDriftController?.startTrailReview) {
@@ -106,6 +107,7 @@ async function startTrailReview(trailPoints: any[]) {
     })
   }
   isReviewingTrail.value = false
+  isTrailStopped.value = false // Playback finished, resume sampling and rendering
   trailReviewProgress.value = 0
 }
 // Watch trail point count and trail control state to automatically determine whether to show TrailReviewTimeline or start playback directly
@@ -115,7 +117,7 @@ watch(
     () => trailRendererRef.value?.getTrailStats?.().pointCount,
     () => currentPresetId.value
   ],
-  ([showDriftTrails, pointCount, presetId], _, onCleanup) => {
+  ([showDriftTrails, presetId]) => {
     // Trail control enabled and trail point count reaches 1/3
     const stats = trailRendererRef.value?.getTrailStats?.()
     const enoughTrail = stats && stats.enabled && stats.pointCount > stats.maxTrailPoints / 3
@@ -175,6 +177,9 @@ watch(
   },
   { flush: 'post' }
 )
+
+const isTrailStopped = ref(false)
+provide('isTrailStopped', isTrailStopped)
 </script>
 
 <template>

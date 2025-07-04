@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick, inject } from 'vue'
 import { 
   Float32BufferAttribute, 
   ShaderMaterial, 
@@ -50,6 +50,7 @@ const lastSampleTime = ref(0)
 const SAMPLE_THROTTLE = 100
 
 const driftDataService = useGalaxyDriftData()
+const isTrailStopped = inject('isTrailStopped', ref(false))
 
 /**
  * Update geometry: distribute particles evenly along the trail
@@ -136,6 +137,7 @@ const initializeTrail = () => {
  * Add trail point with smart buffer management
  */
 const addTrailPoint = (newPoint: Vector3) => {
+  if (isTrailStopped.value) return // Do not sample new points during playback
   if (trailPoints.value.length > 0) {
     const lastPoint = trailPoints.value[trailPoints.value.length - 1]
     const distance = newPoint.distanceTo(lastPoint)
@@ -216,7 +218,7 @@ const cleanup = () => {
 // Render loop
 const { onLoop } = useRenderLoop()
 onLoop(({ elapsed }) => {
-  if (props.enabled) {
+  if (props.enabled && !isTrailStopped.value) {
     samplePosition()
     updateGeometry()
     if (trailMaterial.value) {
