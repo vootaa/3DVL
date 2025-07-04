@@ -59,7 +59,8 @@ const orbitControlsConfig = {
 // Global trail review state
 const isReviewingTrail = ref(false)
 const trailReviewProgress = ref(0)
-const isTrailReviewAvailable = ref(false) // 新增：漂移回顾模式可用提示
+const isTrailReviewAvailable = ref(false) // Trail review mode available indicator
+const currentPresetId = ref<string | null>(null) // Current camera preset id
 
 // EvolutionTimeline visibility state
 const isEvolutionTimelineVisible = ref(false)
@@ -76,12 +77,21 @@ const controlsDisabled = computed(() =>
 provide('isReviewingTrail', isReviewingTrail)
 provide('trailReviewProgress', trailReviewProgress)
 
+// Provide for CameraPresets to record the current preset
+function setCurrentPresetId(id: string | null) {
+  currentPresetId.value = id
+}
+provide('setCurrentPresetId', setCurrentPresetId)
+
 const galaxyDriftControllerRef = ref()
 const trailRendererRef = ref()
 
 // Provide for CameraPresets
 provide('trailRendererRef', trailRendererRef)
 provide('startTrailReview', startTrailReview)
+function setTrailReviewAvailable(val: boolean) {
+  isTrailReviewAvailable.value = val
+}
 provide('setTrailReviewAvailable', setTrailReviewAvailable)
 
 // Trail review trigger function (called by CameraPresets)
@@ -90,8 +100,6 @@ async function startTrailReview(trailPoints: any[]) {
   isTrailReviewAvailable.value = false
   isReviewingTrail.value = true
   trailReviewProgress.value = 0
-
-  // Get GalaxyDriftController instance
   const galaxyDriftController = galaxyDriftControllerRef.value
   if (galaxyDriftController?.startTrailReview) {
     await galaxyDriftController.startTrailReview(trailPoints, (progress: number) => {
@@ -101,11 +109,40 @@ async function startTrailReview(trailPoints: any[]) {
   isReviewingTrail.value = false
   trailReviewProgress.value = 0
 }
-
-// 新增：设置漂移回顾模式可用提示
-function setTrailReviewAvailable(val: boolean) {
-  isTrailReviewAvailable.value = val
-}
+// Watch trail point count and trail control state to automatically determine whether to show TrailReviewTimeline or start playback directly
+watch(
+  [
+    () => trailControlRef.value?.showDriftTrails,
+    () => trailRendererRef.value?.getTrailStats?.().pointCount,
+    () => currentPresetId.value
+  ],
+  ([showDriftTrails, pointCount, presetId], _, onCleanup) => {
+    // Trail control enabled and trail point count reaches 1/3
+    const stats = trailRendererRef.value?.getTrailStats?.()
+    const enoughTrail = stats && stats.enabled && stats.pointCount > stats.maxTrailPoints / 3
+    if (showDriftTrails && enoughTrail) {
+      if (presetId === 'drift-follow') {
+        // If conditions are met and already at the sixth preset, start review directly
+        if (!isReviewingTrail.value) {
+          isTrailReviewAvailable.value = false
+          // Get trail snapshot and start review
+          const trailPoints = trailRendererRef.value?.getTrailSnapshot?.()
+          if (trailPoints && trailPoints.length > 1) {
+            startTrailReview(trailPoints)
+          }
+        }
+      } else {
+        // If conditions are met but not at the sixth preset, show available indicator
+        if (!isReviewingTrail.value) {
+          isTrailReviewAvailable.value = true
+        }
+      }
+    } else {
+      isTrailReviewAvailable.value = false
+    }
+  },
+  { immediate: true }
+)
 
 onMounted(() => {
   // Use nextTick to ensure TresCanvas components are ready
@@ -194,9 +231,7 @@ watch(
 
     <!-- Camera presets component -->
     <CameraPresets />
-    <!-- 漂移回顾动画进度条 -->
     <TrailReviewTimeline v-if="isReviewingTrail" :progress="trailReviewProgress" />
-    <!-- 漂移回顾模式可用提示 -->
     <TrailReviewTimeline v-else-if="isTrailReviewAvailable" :progress="0" mode="available" />
   </div>
 </template>
