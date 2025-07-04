@@ -52,6 +52,7 @@ const startEvolutionAnimation = () => {
 
 onMounted(() => {
   isVisible.value = true
+  emit('visible-change', true) // Immediately notify parent component
   setTimeout(() => {
     startEvolutionAnimation()
   }, 1000)
