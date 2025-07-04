@@ -21,17 +21,25 @@ defineExpose({
   showStars,
   starClusterRef
 })
+
+// Define props
+defineProps<{ disabled?: boolean }>()
 </script>
 
 <template>
-  <div class="star-control" @click="toggleStars">
+  <button
+    class="star-control-btn"
+    :disabled="disabled"
+    :class="{ disabled }"
+    @click="toggleStars"
+  >
     <div class="control-label">STAR CLUSTER</div>
     <div class="control-value">{{ showStars ? 'ON' : 'OFF' }}</div>
-  </div>
+  </button>
 </template>
 
 <style lang="css" scoped>
-.star-control {
+.star-control-btn {
   position: absolute;
   top: 180px; /* Position below TrailControl (100px + 60px + 20px margin) */
   left: 20px;
@@ -64,7 +72,7 @@ defineExpose({
     radial-gradient(circle at 70% 30%, rgba(0, 204, 255, 0.05) 0%, transparent 70%);
 }
 
-.star-control:hover {
+.star-control-btn:hover {
   background: rgba(0, 20, 30, 0.9);
   border-color: rgba(0, 204, 255, 0.6);
   box-shadow: 0 0 25px rgba(0, 204, 255, 0.4);
@@ -73,6 +81,13 @@ defineExpose({
   background-image: 
     linear-gradient(45deg, rgba(0, 204, 255, 0.15) 0%, transparent 50%, rgba(0, 0, 0, 0.3) 100%),
     radial-gradient(circle at 70% 30%, rgba(0, 204, 255, 0.08) 0%, transparent 70%);
+}
+
+.star-control-btn.disabled,
+.star-control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .control-label {
@@ -88,7 +103,7 @@ defineExpose({
 }
 
 @media only screen and (max-width: 900px) {
-  .star-control {
+  .star-control-btn {
     top: 90px; /* Adjusted for mobile */
     padding: 8px 12px;
     width: 140px;

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const showGrid = ref(false)
+defineProps<{ disabled?: boolean }>()
 
 const toggleGrid = () => {
   showGrid.value = !showGrid.value
@@ -11,14 +12,19 @@ defineExpose({
 </script>
 
 <template>
-  <div class="grid-control" @click="toggleGrid">
+  <button
+    class="grid-control-btn"
+    :disabled="disabled"
+    :class="{ disabled }"
+    @click="toggleGrid"
+  >
     <div class="control-label">GRID HELPER</div>
     <div class="control-value">{{ showGrid ? 'ON' : 'OFF' }}</div>
-  </div>
+  </button>
 </template>
 
 <style lang="css" scoped>
-.grid-control {
+.grid-control-btn {
   position: absolute;
   top: 20px;
   left: 20px;
@@ -51,7 +57,7 @@ defineExpose({
     radial-gradient(circle at 70% 30%, rgba(0, 204, 255, 0.05) 0%, transparent 70%);
 }
 
-.grid-control:hover {
+.grid-control-btn:hover {
   background: rgba(0, 20, 30, 0.9);
   border-color: rgba(0, 204, 255, 0.6);
   box-shadow: 0 0 25px rgba(0, 204, 255, 0.4);
@@ -74,8 +80,15 @@ defineExpose({
   text-align: right;
 }
 
+.grid-control-btn.disabled,
+.grid-control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 @media only screen and (max-width: 900px) {
-  .grid-control {
+  .grid-control-btn {
     padding: 8px 12px;
     width: 140px;
     min-height: 50px;
