@@ -68,9 +68,8 @@ function handleEvolutionTimelineVisible(val: boolean) {
   isEvolutionTimelineVisible.value = val
 }
 
-// 控制面板禁用状态
 const controlsDisabled = computed(() =>
-  isReviewingTrail.value || isEvolutionTimelineVisible.value || isTrailReviewAvailable.value
+  isReviewingTrail.value || isEvolutionTimelineVisible.value
 )
 
 // Provide global state for child components
