@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import PerformanceMonitor from './PerformanceMonitor.vue'
-import DriftMonitor from './DriftMonitor.vue'
-import CameraPresets from './CameraPresets.vue'
+import PerformanceMonitor from '../hud/PerformanceMonitor.vue'
+import DriftMonitor from '../hud/DriftMonitor.vue'
+import CameraPresets from '../hud/CameraPresets.vue'
 
 const menuOpen = ref(false)
 const activePanel = ref<'performance' | 'drift' | 'camera' | null>(null)
@@ -22,7 +22,10 @@ function handleMenuBtnClick() {
 
 <template>
   <div class="hud-menu-bar">
-    <button class="menu-btn" @click="handleMenuBtnClick">☰ Tools</button>
+    <button class="menu-btn" @click="handleMenuBtnClick">
+      <i class="i-carbon-tools w-4 h-4" aria-hidden="true" />
+      <span class="menu-btn-label">Tools</span>
+    </button>
     <div v-if="menuOpen" class="menu-dropdown">
       <div class="menu-item" @click="openPanel('performance')">Performance</div>
       <div class="menu-item" @click="openPanel('drift')">Drift Monitor</div>
@@ -66,7 +69,6 @@ function handleMenuBtnClick() {
   background: rgba(0, 12, 20, 0.9);
   border: 1px solid #00ccff;
   color: #00ccff;
-  padding: 8px 18px;
   border-radius: 6px;
   font-family: inherit;
   font-weight: 600;
@@ -74,6 +76,26 @@ function handleMenuBtnClick() {
   cursor: pointer;
   transition: all 0.3s ease;
   text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  width: auto;
+  height: 38px;
+  padding: 0 18px;
+}
+
+.menu-btn i {
+  font-size: 1.3em;
+  vertical-align: middle;
+}
+
+.menu-btn-label {
+  margin-left: 0.5em;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #00ccff;
 }
 
 .menu-btn:hover {
@@ -100,7 +122,7 @@ function handleMenuBtnClick() {
 }
 
 .menu-item:hover {
-  background: rgba(0, 204, 255, 0.08);
+  background: rgba(0, 204, 255, 0.15);
 }
 
 .panel-wrapper {
