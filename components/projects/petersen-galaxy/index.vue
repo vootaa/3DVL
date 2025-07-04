@@ -16,8 +16,9 @@ import EvolutionTimeline from './components/hud/EvolutionTimeline.vue'
 import TrailReviewTimeline from './components/hud/TrailReviewTimeline.vue'
 import RendererStatsCollector from './components/utilities/RendererStatsCollector.vue'
 import { CameraController } from './utils/camera-controller'
-import './utils/drift-validator' // Import to trigger auto-diagnostic
 import DriftRuntimeChecker from './utils/drift-runtime-checker'
+
+import './utils/drift-validator' // Import to trigger auto-diagnostic
 
 const gl = {
   clearColor: '#000811',
@@ -74,14 +75,21 @@ const controlsDisabled = computed(() =>
 provide('isReviewingTrail', isReviewingTrail)
 provide('trailReviewProgress', trailReviewProgress)
 
+const galaxyDriftControllerRef = ref()
+const trailRendererRef = ref()
+
+// Provide for CameraPresets
+provide('trailRendererRef', trailRendererRef)
+provide('startTrailReview', startTrailReview)
+
 // Trail review trigger function (called by CameraPresets)
 async function startTrailReview(trailPoints: any[]) {
   if (!trailPoints || trailPoints.length < 2) return
   isReviewingTrail.value = true
   trailReviewProgress.value = 0
 
-  // Get GalaxyDriftController instance and call its review method
-  const galaxyDriftController = /* Method to get GalaxyDriftController instance */
+  // Get GalaxyDriftController instance
+  const galaxyDriftController = galaxyDriftControllerRef.value
   if (galaxyDriftController?.startTrailReview) {
     await galaxyDriftController.startTrailReview(trailPoints, (progress: number) => {
       trailReviewProgress.value = progress
@@ -128,9 +136,7 @@ watch(
 <template>
   <div class="galaxy-container">
     <!-- Galaxy drift controller (invisible but manages galaxy center) -->
-    <!-- Note: GalaxyDriftController needs to include other dependent components -->
-    <GalaxyDriftController>
-      <!-- Place components that need injected data here -->
+    <GalaxyDriftController ref="galaxyDriftControllerRef">
       <template #default>
         <!-- Drift debugging monitor -->
         <DriftMonitor />
@@ -157,8 +163,8 @@ watch(
         :ref="(el) => starControlRef && (starControlRef.starClusterRef = el)" :skip-evolution="hasEvolutionOccurred"
         @evolution-complete="hasEvolutionOccurred = true" />
 
-      <!-- Trail renderer - conditional display based on trail control -->
-      <TrailRenderer :enabled="trailControlRef?.showDriftTrails" />
+      <!-- TrailRenderer needs a ref -->
+      <TrailRenderer ref="trailRendererRef" :enabled="trailControlRef?.showDriftTrails" />
 
       <!-- OrbitControls with zoom and angle limits -->
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />

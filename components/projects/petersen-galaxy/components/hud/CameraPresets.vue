@@ -81,7 +81,7 @@ const currentPreset = ref<string | null>(null)
 const cameraRef = inject<Ref<PerspectiveCamera | null>>('camera')
 const orbitControlsRef = inject<Ref<any>>('orbitControls')
 const startTrailReview = inject('startTrailReview') as (points: any[]) => void
-const trailRendererRef = inject('trailRendererRef', null) // Must be provided by the parent component
+const trailRendererRef = inject<any>('trailRendererRef', null)
 
 // Computed properties
 const availablePresets = computed(() => cameraPresets)
@@ -204,15 +204,15 @@ const applyPreset = (preset: CameraPreset) => {
     // Check Drift Follow trail review conditions
     if (preset.id === 'drift-follow') {
       // Check trail review conditions
-      if (trailRendererRef?.getTrailStats && trailRendererRef?.getTrailSnapshot) {
-      const stats = trailRendererRef.getTrailStats()
-      if (stats.enabled && stats.pointCount > stats.maxTrailPoints / 3) {
-        // If conditions are met, trigger trail review
-        const trailPoints = trailRendererRef.getTrailSnapshot()
-        if (startTrailReview && typeof startTrailReview === 'function') {
-        startTrailReview(trailPoints)
+      if (trailRendererRef && typeof trailRendererRef.getTrailStats === 'function' && typeof trailRendererRef.getTrailSnapshot === 'function') {
+        const stats = trailRendererRef.getTrailStats()
+        if (stats.enabled && stats.pointCount > stats.maxTrailPoints / 3) {
+          // If conditions are met, trigger trail review
+          const trailPoints = trailRendererRef.getTrailSnapshot()
+          if (startTrailReview && typeof startTrailReview === 'function') {
+            startTrailReview(trailPoints)
+          }
         }
-      }
       }
     }
     
