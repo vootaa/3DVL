@@ -21,7 +21,7 @@ function handleMenuBtnClick() {
 </script>
 
 <template>
-  <div class="hud-menu-bar">
+  <div class="tools-menu-bar">
     <button class="menu-btn" @click="handleMenuBtnClick">
       <i class="i-carbon-tools w-4 h-4" aria-hidden="true" />
       <span class="menu-btn-label">Tools</span>
@@ -55,7 +55,7 @@ function handleMenuBtnClick() {
 </template>
 
 <style scoped>
-.hud-menu-bar {
+.tools-menu-bar {
   position: fixed;
   top: 20px;
   right: 20px;
