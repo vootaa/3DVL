@@ -264,7 +264,8 @@ defineExpose({
     hasGeometry: !!trailGeometry.value,
     hasMaterial: !!trailMaterial.value,
     offsetSet: !!trailOffset.value
-  })
+  }),
+  getTrailSnapshot: () => trailPoints.value.map(p => p.clone())
 })
 </script>
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, provide } from 'vue'
+import { ref, computed, provide} from 'vue'
 import { Vector3 } from 'three'
 import { useRenderLoop } from '@tresjs/core'
 import { galaxyDriftConfig, createInitialDriftState, type GalaxyDriftState } from '../../configs/galaxy-drift-config'
@@ -169,6 +169,21 @@ const setTrailIntensity = (intensity: number) => {
   Logger.log('DRIFT_CONTROLLER', `Trail intensity set to ${trailIntensity.value}`)
 }
 
+// Trail playback animation
+async function startTrailReview(trailPoints: Vector3[], onProgress?: (progress: number) => void) {
+  if (!trailPoints || trailPoints.length < 2) return
+  const total = trailPoints.length
+  const duration = 2500 // ms
+  const stepTime = duration / total
+  for (let i = 0; i < total; i++) {
+    driftState.value.currentPosition.copy(trailPoints[i])
+    if (onProgress) onProgress(i / (total - 1))
+    await new Promise(res => setTimeout(res, stepTime))
+  }
+  if (onProgress) onProgress(1)
+  // After playback, stay at the last point
+}
+
 // Drift controller interface for child components
 const driftController = {
   enableTrails,
@@ -212,7 +227,8 @@ const resetDrift = () => {
 defineExpose({
   resetDrift,
   driftState: computed(() => driftState.value),
-  galaxyCenter
+  galaxyCenter,
+  startTrailReview
 })
 </script>
 

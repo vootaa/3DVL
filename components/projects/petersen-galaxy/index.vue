@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from 'three'
-import { ref, provide, watch, onMounted, nextTick } from 'vue'
+import { ref, provide, watch, onMounted, nextTick, computed } from 'vue'
 import OrbitalSystem from './components/scene/OrbitalSystem.vue'
 import StarCluster from './components/scene/StarCluster.vue'
 import TrailRenderer from './components/scene/TrailRenderer.vue'
@@ -13,6 +13,7 @@ import DriftMonitor from './components/hud/DriftMonitor.vue'
 import PerformanceMonitor from './components/hud/PerformanceMonitor.vue'
 import CameraPresets from './components/hud/CameraPresets.vue'
 import EvolutionTimeline from './components/hud/EvolutionTimeline.vue'
+import TrailReviewTimeline from './components/hud/TrailReviewTimeline.vue'
 import RendererStatsCollector from './components/utilities/RendererStatsCollector.vue'
 import { CameraController } from './utils/camera-controller'
 import './utils/drift-validator' // Import to trigger auto-diagnostic
@@ -52,6 +53,42 @@ const orbitControlsConfig = {
   minPolarAngle: Math.PI * 0.05,
   maxPolarAngle: Math.PI * 0.9,
   enablePan: false,
+}
+
+// Global trail review state
+const isReviewingTrail = ref(false)
+const trailReviewProgress = ref(0)
+
+// EvolutionTimeline visibility state (communicate with its component)
+const isEvolutionTimelineVisible = ref(true)
+function handleEvolutionTimelineVisible(val: boolean) {
+  isEvolutionTimelineVisible.value = val
+}
+
+// Control panel disabled state
+const controlsDisabled = computed(() =>
+  isReviewingTrail.value || isEvolutionTimelineVisible.value
+)
+
+// Provide global state for child components
+provide('isReviewingTrail', isReviewingTrail)
+provide('trailReviewProgress', trailReviewProgress)
+
+// Trail review trigger function (called by CameraPresets)
+async function startTrailReview(trailPoints: any[]) {
+  if (!trailPoints || trailPoints.length < 2) return
+  isReviewingTrail.value = true
+  trailReviewProgress.value = 0
+
+  // Get GalaxyDriftController instance and call its review method
+  const galaxyDriftController = /* Method to get GalaxyDriftController instance */
+  if (galaxyDriftController?.startTrailReview) {
+    await galaxyDriftController.startTrailReview(trailPoints, (progress: number) => {
+      trailReviewProgress.value = progress
+    })
+  }
+  isReviewingTrail.value = false
+  trailReviewProgress.value = 0
 }
 
 onMounted(() => {
@@ -128,13 +165,13 @@ watch(
     </TresCanvas>
 
     <!-- Control panels -->
-    <StarControl ref="starControlRef" />
-    <GridControl ref="gridControlRef" />
-    <TrailControl ref="trailControlRef" />
+    <StarControl ref="starControlRef" :disabled="controlsDisabled" />
+    <GridControl ref="gridControlRef" :disabled="controlsDisabled" />
+    <TrailControl ref="trailControlRef" :disabled="controlsDisabled" />
     <CameraInfo />
 
     <!-- Evolution timeline (top center) -->
-    <EvolutionTimeline />
+    <EvolutionTimeline @visible-change="handleEvolutionTimelineVisible" />
 
     <!-- Performance monitor - needs client-only for performance stats -->
     <ClientOnly>
@@ -143,6 +180,9 @@ watch(
 
     <!-- Camera presets component -->
     <CameraPresets />
+
+    <!-- Trail review progress bar -->
+    <TrailReviewTimeline v-if="isReviewingTrail" :progress="trailReviewProgress" />
   </div>
 </template>
 

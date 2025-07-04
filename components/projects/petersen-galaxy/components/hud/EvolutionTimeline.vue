@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch, defineEmits } from 'vue'
 
 // Evolution timeline state
 const isVisible = ref(true)
 const currentAge = ref(0)
 const maxAge = 13.8 // 13.8 billion years (age of universe)
-const animationDuration = 20000 // 20 seconds
+const animationDuration = 13800 // 13.8 seconds
 
 // Timeline animation
 let startTime: number | null = null
 let animationId: number | null = null
+
+const emit = defineEmits(['visible-change'])
 
 const formatAge = (ageInBillions: number): string => {
   if (ageInBillions < 0.1) {
@@ -55,6 +57,10 @@ onUnmounted(() => {
   if (animationId) {
     cancelAnimationFrame(animationId)
   }
+})
+
+watch(isVisible, (val) => {
+  emit('visible-change', val)
 })
 </script>
 
