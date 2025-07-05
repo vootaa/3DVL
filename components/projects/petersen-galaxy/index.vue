@@ -25,10 +25,8 @@ const gl = {
   toneMapping: NoToneMapping,
 }
 
-const gridControlRef = ref()
 const starControlRef = ref()
 const trailControlRef = ref()
-const controlsPanelRef = ref()
 const cameraRef = ref()
 const orbitControlsRef = ref()
 const showGridAfterCameraMove = ref(false)
@@ -158,45 +156,38 @@ onMounted(() => {
   })
 })
 
-// Handle grid visibility changes
-watch(
-  () => gridControlRef.value?.showGrid,
-  async (showGrid) => {
-    if (showGrid) {
-      // Hide grid first, move camera, then show grid
-      showGridAfterCameraMove.value = false
-      cameraController?.adjustForGrid(() => {
-        showGridAfterCameraMove.value = true
-      })
-    } else {
-      // Hide grid when disabled
-      showGridAfterCameraMove.value = false
-    }
-  },
-  { flush: 'post' }
-)
-
 const isTrailStopped = ref(false)
 provide('isTrailStopped', isTrailStopped)
 
 const gridOn = ref(false)
 const trailOn = ref(false)
 const starOn = ref(false)
-watch(() => gridControlRef.value?.showGrid, val => { gridOn.value = !!val }, { immediate: true })
-watch(() => trailControlRef.value?.showDriftTrails, val => { trailOn.value = !!val }, { immediate: true })
-watch(() => starControlRef.value?.showStars, val => { starOn.value = !!val }, { immediate: true })
 
 function handleToggleGrid() {
   gridOn.value = !gridOn.value
-  if (gridControlRef.value) gridControlRef.value.showGrid = gridOn.value
+
+  if (gridOn.value) {
+    // If grid is enabled, adjust camera and show grid
+    showGridAfterCameraMove.value = false
+    cameraController?.adjustForGrid(() => {
+      showGridAfterCameraMove.value = true
+    })
+  } else {
+    // If grid is disabled, hide it immediately
+    showGridAfterCameraMove.value = false
+  }
+
+  showGridAfterCameraMove.value = false
+
 }
 function handleToggleTrail() {
   trailOn.value = !trailOn.value
-  if (trailControlRef.value) trailControlRef.value.showDriftTrails = trailOn.value
+
 }
+
 function handleToggleStar() {
   starOn.value = !starOn.value
-  if (starControlRef.value) starControlRef.value.showStars = starOn.value
+
 }
 </script>
 
@@ -214,18 +205,17 @@ function handleToggleStar() {
       <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
       <!-- Subtle ambient lighting for better 3D perception -->
       <TresAmbientLight :intensity="0.08" color="#004488" />
-      <!-- Grid Helper - shown only after camera adjustment -->
-      <TresGridHelper v-if="gridControlRef?.showGrid && showGridAfterCameraMove" :args="[16, 16, '#003366', '#002244']"
-        :position="[0, -4.2, 0]" />
-      <OrbitalSystem />
       <!-- Star cluster component - conditional display with ref -->
-      <StarCluster v-if="starControlRef?.showStars"
-        :ref="(el) => starControlRef && (starControlRef.starClusterRef = el)" :skip-evolution="hasEvolutionOccurred"
-        @evolution-complete="hasEvolutionOccurred = true" />
+      <StarCluster v-if="starOn" :ref="(el) => starControlRef && (starControlRef.starClusterRef = el)"
+        :skip-evolution="hasEvolutionOccurred" @evolution-complete="hasEvolutionOccurred = true" />
       <!-- TrailRenderer needs a ref -->
       <TrailRenderer ref="trailRendererRef" :enabled="trailControlRef?.showDriftTrails" />
+      <OrbitalSystem />
       <!-- OrbitControls with zoom and angle limits -->
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
+      <!-- Grid Helper - shown only after camera adjustment -->
+      <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[16, 16, '#003366', '#002244']"
+        :position="[0, -4.2, 0]" />
     </TresCanvas>
     <!-- Control panels -->
     <SwitchMenuBar :grid-on="gridOn" :trail-on="trailOn" :star-on="starOn" :on-toggle-grid="handleToggleGrid"
