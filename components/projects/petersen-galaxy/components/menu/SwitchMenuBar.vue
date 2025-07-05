@@ -25,21 +25,24 @@ function handleMenuBtnClick() {
       <span class="menu-btn-label">Switcher</span>
     </button>
     <div v-if="menuOpen" class="menu-dropdown">
-      <div class="menu-item" @click="props.onToggleGrid">
+      <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
+        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleGrid()">
         <span class="menu-status">
           <i v-if="props.gridOn" class="i-carbon-checkmark-filled"></i>
           <i v-else class="i-carbon-close"></i>
         </span>
         Grid Helper
       </div>
-      <div class="menu-item" @click="props.onToggleTrail">
+      <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
+        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleTrail()">
         <span class="menu-status">
           <i v-if="props.trailOn" class="i-carbon-checkmark-filled"></i>
           <i v-else class="i-carbon-close"></i>
         </span>
         Drift Trails
       </div>
-      <div class="menu-item" @click="props.onToggleStar">
+      <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
+        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleStar()">
         <span class="menu-status">
           <i v-if="props.starOn" class="i-carbon-checkmark-filled"></i>
           <i v-else class="i-carbon-close"></i>
@@ -132,6 +135,12 @@ function handleMenuBtnClick() {
 
 .menu-item:hover {
   background: rgba(0, 204, 255, 0.15);
+}
+
+.menu-item.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
 }
 
 .menu-status {
