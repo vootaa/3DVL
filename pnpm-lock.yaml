@@ -91,8 +91,8 @@ importers:
         specifier: ^4.2.0
         version: 4.2.3(magicast@0.3.5)(vue@3.5.17(typescript@5.8.3))
       postprocessing:
-        specifier: 6.37.2
-        version: 6.37.2(three@0.175.0)
+        specifier: 6.37.6
+        version: 6.37.6(three@0.175.0)
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -4653,10 +4653,10 @@ packages:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
-  postprocessing@6.37.2:
-    resolution: {integrity: sha512-Xm3n1Usgk2eBkufb1ssYDNGb3EXmV2wdQQIRGAWD9yppOYwsHpb8/w/+Opvnx6uEOFyt3US1dFbET5DTSyrRiA==}
+  postprocessing@6.37.6:
+    resolution: {integrity: sha512-KrdKLf1257RkoIk3z3nhRS0aToKrX2xJgtR0lbnOQUjd+1I4GVNv1gQYsQlfRglvEXjpzrwqOA5fXfoDBimadg==}
     peerDependencies:
-      three: '>= 0.157.0 < 0.176.0'
+      three: '>= 0.157.0 < 0.179.0'
 
   potpack@1.0.2:
     resolution: {integrity: sha512-choctRBIV9EMT9WGAZHn3V7t0Z2pMQyl0EZE6pFc/6ml3ssw7Dlf/oAOvFwjm1HVsqfQN8GfeFyJ+d8tRzqueQ==}
@@ -7427,7 +7427,7 @@ snapshots:
     dependencies:
       '@tresjs/core': 4.3.6(three@0.175.0)(typescript@5.8.3)(vue@3.5.17(typescript@5.8.3))
       '@vueuse/core': 11.3.0(vue@3.5.17(typescript@5.8.3))
-      postprocessing: 6.37.2(three@0.175.0)
+      postprocessing: 6.37.6(three@0.175.0)
       three: 0.175.0
       vue: 3.5.17(typescript@5.8.3)
     transitivePeerDependencies:
@@ -11552,7 +11552,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postprocessing@6.37.2(three@0.175.0):
+  postprocessing@6.37.6(three@0.175.0):
     dependencies:
       three: 0.175.0
 

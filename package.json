@@ -41,7 +41,7 @@
     "node-gyp": "^11.2.0",
     "nuxt": "^3.17.3",
     "nuxt-svgo": "^4.2.0",
-    "postprocessing": "6.37.2",
+    "postprocessing": "6.37.6",
     "typescript": "^5.8.3",
     "vite-svg-loader": "^5.1.0"
   }
