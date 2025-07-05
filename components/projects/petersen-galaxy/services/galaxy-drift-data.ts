@@ -5,7 +5,7 @@
 
 import { ref, type Ref } from 'vue'
 import { Logger } from '../../../utils/logger'
-import { LoggingConfig } from '../configs/logging-config'
+
 // Galaxy drift data interface
 interface GalaxyDriftData {
   position: { value: { x: string; y: string; z: string } }
@@ -270,7 +270,6 @@ export class GalaxyDriftDataService {
     }
 
     const status = this.getDriftStatus()
-    const availability = this.getAvailabilityStatus()
 
     // Simplified logging - only key information
     if (status.hasData) {
