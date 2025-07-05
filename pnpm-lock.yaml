@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@tresjs/post-processing':
-        specifier: 1.0.0-next.1
-        version: 1.0.0-next.1(@tresjs/core@4.3.6(three@0.175.0)(typescript@5.8.3)(vue@3.5.14(typescript@5.8.3)))(three@0.175.0)(vue@3.5.14(typescript@5.8.3))
+        specifier: 1.0.0
+        version: 1.0.0(@tresjs/core@4.3.6(three@0.175.0)(typescript@5.8.3)(vue@3.5.14(typescript@5.8.3)))(three@0.175.0)(vue@3.5.14(typescript@5.8.3))
       fontfaceobserver:
         specifier: ^2.3.0
         version: 2.3.0
@@ -1180,11 +1180,11 @@ packages:
     peerDependencies:
       three: '>=0.133'
 
-  '@tresjs/post-processing@1.0.0-next.1':
-    resolution: {integrity: sha512-ZjhA+pQO+hehHoGXzZKSXWB+CPjNoHoxiXE+H1d56/dXHP2CXMooMmXG4a9Cy4G6XNC9jibZpuJ+oHPKAiU4Nw==}
+  '@tresjs/post-processing@1.0.0':
+    resolution: {integrity: sha512-SGRdr9NL+w06JwcR9nGIUuPFAHUyD9wg3KlKeK/ITp7933+Phb60bCIe2B/N574gc3O5/vejMttnMp6B2pxTRg==}
     peerDependencies:
       '@tresjs/core': '>=4.0'
-      three: '>=0.133'
+      three: '>=0.169'
       vue: '>=3.4'
 
   '@trysound/sax@0.2.0':
@@ -7487,13 +7487,12 @@ snapshots:
       - yup
       - zod
 
-  '@tresjs/post-processing@1.0.0-next.1(@tresjs/core@4.3.6(three@0.175.0)(typescript@5.8.3)(vue@3.5.14(typescript@5.8.3)))(three@0.175.0)(vue@3.5.14(typescript@5.8.3))':
+  '@tresjs/post-processing@1.0.0(@tresjs/core@4.3.6(three@0.175.0)(typescript@5.8.3)(vue@3.5.14(typescript@5.8.3)))(three@0.175.0)(vue@3.5.14(typescript@5.8.3))':
     dependencies:
       '@tresjs/core': 4.3.6(three@0.175.0)(typescript@5.8.3)(vue@3.5.14(typescript@5.8.3))
-      '@vueuse/core': 10.11.1(vue@3.5.14(typescript@5.8.3))
+      '@vueuse/core': 11.3.0(vue@3.5.14(typescript@5.8.3))
       postprocessing: 6.37.2(three@0.175.0)
       three: 0.175.0
-      three-stdlib: 2.36.0(three@0.175.0)
       vue: 3.5.14(typescript@5.8.3)
     transitivePeerDependencies:
       - '@vue/composition-api'
