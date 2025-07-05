@@ -33,13 +33,13 @@ function handleMenuBtnClick() {
     </div>
     <div v-if="activePanel" class="panel-wrapper">
       <div class="panel-close" @click="closePanel">×</div>
-      <clientonly>
+      <client-only>
         <PerformanceMonitor v-if="activePanel === 'performance'">
           <template #close>
             <button class="close-btn" @click="closePanel">×</button>
           </template>
         </PerformanceMonitor>
-      </clientonly>
+      </client-only>
       <DriftMonitor v-if="activePanel === 'drift'">
         <template #close>
           <button class="close-btn" @click="closePanel">×</button>

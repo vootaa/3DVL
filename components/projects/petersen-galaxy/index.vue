@@ -25,11 +25,14 @@ const gl = {
   toneMapping: NoToneMapping,
 }
 
-const starControlRef = ref()
-const trailControlRef = ref()
+const starClusterRef = ref()
 const cameraRef = ref()
 const orbitControlsRef = ref()
 const showGridAfterCameraMove = ref(false)
+
+const gridOn = ref(false)
+const trailOn = ref(false)
+const starOn = ref(true)
 
 // Star evolution state - track if evolution has already happened
 const hasEvolutionOccurred = ref(false)
@@ -112,7 +115,7 @@ async function startTrailReview(trailPoints: any[]) {
 // Watch trail point count and trail control state to automatically determine whether to show TrailReviewTimeline or start playback directly
 watch(
   [
-    () => trailControlRef.value?.showDriftTrails,
+    () => trailOn.value,
     () => trailRendererRef.value?.getTrailStats?.().pointCount,
     () => currentPresetId.value
   ],
@@ -159,10 +162,6 @@ onMounted(() => {
 const isTrailStopped = ref(false)
 provide('isTrailStopped', isTrailStopped)
 
-const gridOn = ref(false)
-const trailOn = ref(false)
-const starOn = ref(false)
-
 function handleToggleGrid() {
   gridOn.value = !gridOn.value
 
@@ -182,12 +181,14 @@ function handleToggleGrid() {
 }
 function handleToggleTrail() {
   trailOn.value = !trailOn.value
-
 }
 
 function handleToggleStar() {
   starOn.value = !starOn.value
 
+  if (starOn.value && starClusterRef.value?.resetStarsPosition) {
+    starClusterRef.value.resetStarsPosition()
+  }
 }
 </script>
 
@@ -205,11 +206,11 @@ function handleToggleStar() {
       <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
       <!-- Subtle ambient lighting for better 3D perception -->
       <TresAmbientLight :intensity="0.08" color="#004488" />
-      <!-- Star cluster component - conditional display with ref -->
-      <StarCluster v-if="starOn" :ref="(el) => starControlRef && (starControlRef.starClusterRef = el)"
-        :skip-evolution="hasEvolutionOccurred" @evolution-complete="hasEvolutionOccurred = true" />
+      <!-- Star cluster component -->
+      <StarCluster v-if="starOn" ref="starClusterRef" :skip-evolution="hasEvolutionOccurred"
+        @evolution-complete="hasEvolutionOccurred = true" />
       <!-- TrailRenderer needs a ref -->
-      <TrailRenderer ref="trailRendererRef" :enabled="trailControlRef?.showDriftTrails" />
+      <TrailRenderer ref="trailRendererRef" :enabled="trailOn" />
       <OrbitalSystem />
       <!-- OrbitControls with zoom and angle limits -->
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
