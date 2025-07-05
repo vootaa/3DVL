@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, defineEmits } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 
 const isVisible = ref(false)
 

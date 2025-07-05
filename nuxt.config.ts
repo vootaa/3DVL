@@ -1,4 +1,4 @@
-import { presetUno, presetAttributify, presetIcons, presetTypography, presetWebFonts, transformerDirectives } from 'unocss'
+import { presetUno, presetAttributify, presetIcons, presetTypography, transformerDirectives } from 'unocss'
 import svgLoader from 'vite-svg-loader'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -25,7 +25,7 @@ export default defineNuxtConfig({
     '@nuxtjs/color-mode',
   ],
 
-  css: ['./assets/css/fonts.css','./assets/css/main.css', '@unocss/reset/tailwind-compat.css', '@tresjs/leches/styles'],
+  css: ['./assets/css/fonts.css','./assets/css/main.css', '@unocss/reset/tailwind-compat.css'],
 
   tres: {
     devtools: true,
