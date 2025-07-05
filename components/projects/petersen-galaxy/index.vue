@@ -217,6 +217,7 @@ function handleToggleStar() {
       <!-- Grid Helper - shown only after camera adjustment -->
       <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[16, 16, '#003366', '#002244']"
         :position="[0, -4.2, 0]" />
+      <TresAxesHelper v-if="gridOn" :args="[1]" :position="[0, 0, 0]" />
     </TresCanvas>
     <!-- Control panels -->
     <SwitchMenuBar :grid-on="gridOn" :trail-on="trailOn" :star-on="starOn" :on-toggle-grid="handleToggleGrid"
