@@ -35,6 +35,7 @@ const orbitFactors = new Float32Array(totalCount)
 const targetRadii = new Float32Array(totalCount)
 const rotationSpeedsArray = new Float32Array(totalCount)
 const initialChaoticPositions = new Float32Array(totalCount * 3)
+const initialAngles = new Float32Array(totalCount)
 
 // Generate orbital particles (stateless initialization)
 for (let i = 0; i < totalCount; i++) {
@@ -72,6 +73,8 @@ for (let i = 0; i < totalCount; i++) {
     targetRadii[i] = targetRadius
     rotationSpeedsArray[i] = rotationSpeed
 
+    initialAngles[i] = Math.random() * Math.PI * 2
+
     // Generate initial chaotic positions for evolution animation
     const initialRadius = Math.random() * maxSpaceRadius
     const initialAngle = Math.random() * Math.PI * 2
@@ -108,6 +111,7 @@ for (let i = 0; i < totalCount; i++) {
     scales[i] = baseScale * (0.3 + 0.7 * props.evolutionProgress)
   } else {
     // Scattered particles setup
+    initialAngles[i] = 0 // No rotation for scattered particles
     const distributionChoice = Math.random()
     let scatteredColor
 
@@ -203,8 +207,12 @@ onLoop(() => {
 
   // Update shader uniforms with current state
   const material = bufferRef.value.material as ShaderMaterial
-  material.uniforms.uTime.value = props.globalTime
-  material.uniforms.uEvolutionProgress.value = props.evolutionProgress
+  if (!material) return
+
+  if (material.uniforms) {
+    material.uniforms.uTime.value = props.globalTime
+    material.uniforms.uEvolutionProgress.value = props.evolutionProgress
+  }
 
   // Update position relative to galaxy center
   if (galaxyCenter.value) {
@@ -237,13 +245,15 @@ function updateParticlePositions() {
       const targetRadius = targetRadii[i]
       const rotationSpeed = rotationSpeedsArray[i]
 
-      // Calculate target orbital position with continuous rotation
-      const currentAngle = props.globalTime * rotationSpeed
-      const targetX = targetRadius * Math.cos(currentAngle)
-      const targetY = 0
-      const targetZ = targetRadius * Math.sin(currentAngle)
+
 
       if (props.evolutionProgress < 1.0) {
+        // Calculate target orbital position with continuous rotation
+        const currentAngle = initialAngles[i] + props.globalTime * rotationSpeed
+        const targetX = targetRadius * Math.cos(currentAngle)
+        const targetY = 0
+        const targetZ = targetRadius * Math.sin(currentAngle)
+
         // During evolution: interpolate from chaotic to orbital position
         const startX = initialChaoticPositions[i3]
         const startY = initialChaoticPositions[i3 + 1]
@@ -257,12 +267,13 @@ function updateParticlePositions() {
         const baseScale = targetRadius === innerRadius ? 1.125
           : targetRadius === middleRadius ? 0.975
             : 0.75
-        scaleArray[i] = baseScale * (0.3 + 0.7 * props.evolutionProgress)
+        scaleArray[i] = baseScale * Math.max(0.7, 0.7 + 0.3 * props.evolutionProgress)
       } else {
         // After evolution: continue orbital motion with rotation
-        positionArray[i3] = targetX
-        positionArray[i3 + 1] = targetY
-        positionArray[i3 + 2] = targetZ
+        const currentAngle = initialAngles[i] + props.globalTime * rotationSpeed
+        positionArray[i3] = targetRadius * Math.cos(currentAngle)
+        positionArray[i3 + 1] = 0
+        positionArray[i3 + 2] = targetRadius * Math.sin(currentAngle)
 
         // Full scale after evolution
         const fullScale = targetRadius === innerRadius ? 1.125
@@ -286,7 +297,45 @@ function updateParticlePositions() {
 
   positionAttribute.needsUpdate = true
   scaleAttribute.needsUpdate = true
+
+
+  const timeInSeconds = Math.floor(props.globalTime)
+  if (timeInSeconds % 1 === 0 && props.globalTime > 0) {
+    // Check multiple orbital particles
+    const orbitalIndices = []
+    for (let i = 0; i < Math.min(5, totalCount); i++) {
+      if (orbitFactors[i] > 0.5) {
+        orbitalIndices.push(i)
+      }
+    }
+
+    const timeInSeconds = Math.floor(props.globalTime)
+    if (timeInSeconds % 2 === 0 && props.globalTime > 0) {
+      const firstOrbitalIndex = orbitFactors.findIndex(f => f > 0.5)
+      if (firstOrbitalIndex >= 0) {
+        const i3 = firstOrbitalIndex * 3
+        const radius = Math.sqrt(positionArray[i3] ** 2 + positionArray[i3 + 2] ** 2)
+        const angle = Math.atan2(positionArray[i3 + 2], positionArray[i3])
+
+        console.log(`[ORBITAL_DEBUG] Time: ${props.globalTime.toFixed(2)}s, Evolution: ${(props.evolutionProgress * 100).toFixed(1)}%`)
+        console.log(`  Particle ${firstOrbitalIndex}: Radius: ${radius.toFixed(2)}, Angle: ${(angle * 180 / Math.PI).toFixed(1)}°, Scale: ${scaleArray[firstOrbitalIndex].toFixed(2)}`)
+        console.log(`  Initial Angle: ${(initialAngles[firstOrbitalIndex] * 180 / Math.PI).toFixed(1)}°, Target Radius: ${targetRadii[firstOrbitalIndex].toFixed(2)}`)
+      }
+    }
+  }
 }
+
+// Move these watchers and onMounted OUTSIDE the updateParticlePositions function
+
+watch(() => props.evolutionProgress, (progress) => {
+  Logger.throttle("OrbitalSystem", `OrbitalSystem evolutionProgress: ${(progress * 100).toFixed(1)}%`)
+})
+
+watch(() => props.globalTime, (time) => {
+  if (Math.floor(time) % 1 === 0) {
+    console.log(`OrbitalSystem globalTime: ${time.toFixed(2)}s`)
+  }
+})
 
 // Watch for galaxy center changes
 watch(galaxyCenter, (val) => {

@@ -9,7 +9,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   autoStart: false,
-  duration: 8,
+  duration: 13.8,
   enabled: true
 })
 
