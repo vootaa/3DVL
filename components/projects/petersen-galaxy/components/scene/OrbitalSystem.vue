@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { AdditiveBlending, Points, ShaderMaterial, Vector3 } from 'three'
-import { ref} from 'vue'
+import { ref, toRef } from 'vue'
 import { useRenderLoop } from '@tresjs/core'
 import { orbitalConfig, orbitalColorConfig } from '../../configs/orbital-config'
 
@@ -25,7 +25,6 @@ const galaxyCenter = toRef(props, 'galaxyCenter')
 
 const { totalCount, orbitParticleRatio, orbitDistribution, innerRadius, middleRadius, outerRadius, maxSpaceRadius, particleSize, rotationSpeed } = orbitalConfig
 
-// 一次性初始化
 const positions = new Float32Array(totalCount * 3)
 const colors = new Float32Array(totalCount * 3)
 const scales = new Float32Array(totalCount)
@@ -33,7 +32,6 @@ const randomnessArray = new Float32Array(totalCount * 3)
 const orbitFactors = new Float32Array(totalCount)
 const targetRadii = new Float32Array(totalCount)
 
-// 粒子生成逻辑
 for (let i = 0; i < totalCount; i++) {
   const i3 = i * 3
   const isOrbital = Math.random() < orbitParticleRatio

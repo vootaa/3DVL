@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Vector3 } from 'three'
-import { ref, provide, onMounted, nextTick} from 'vue'
+import { ref, provide, onMounted, nextTick } from 'vue'
 import OrbitalSystem from './components/scene/OrbitalSystem.vue'
 import StellarCore from './components/scene/StellarCore.vue'
 import EvolutionAnimator from './components/animation/EvolutionAnimator.vue'
@@ -11,7 +11,6 @@ import EvolutionTimeline from './components/hud/EvolutionTimeline.vue'
 import RendererStatsCollector from './components/utilities/RendererStatsCollector.vue'
 import { CameraController } from './utils/camera-controller'
 import { useEvolutionState } from './composables/useEvolutionState'
-
 
 const gl = {
   clearColor: '#000811',
@@ -27,26 +26,23 @@ const cameraRef = ref()
 const orbitControlsRef = ref()
 const evolutionAnimatorRef = ref()
 const showGridAfterCameraMove = ref(false)
-
 const gridOn = ref(false)
 
-// Use enhanced evolution state management
+
 const {
-  evolutionState,
+  state,
   timelineVisible,
   startEvolution,
   resetEvolution,
   toggleStellarCore,
   toggleOrbitalSystem,
-  onEvolutionProgress,
+  updateEvolutionProgress,
   onEvolutionComplete,
   controlsDisabled
 } = useEvolutionState()
 
-// Camera controller instance
 let cameraController: CameraController
 
-// Provide refs immediately (they will be reactive)
 provide('camera', cameraRef)
 provide('orbitControls', orbitControlsRef)
 
@@ -61,22 +57,17 @@ const orbitControlsConfig = {
 }
 
 const currentPresetId = ref<string | null>(null)
+const galaxyCenter = ref(new Vector3(0, 0, 0))
 
-// Provide for CameraPresets to record the current preset
 function setCurrentPresetId(id: string | null) {
   currentPresetId.value = id
 }
 provide('setCurrentPresetId', setCurrentPresetId)
 
-const galaxyCenter = ref(new Vector3(0, 0, 0))
-
 onMounted(() => {
-  // Use nextTick to ensure TresCanvas components are ready
   nextTick(() => {
-    // Initialize camera controller
     cameraController = new CameraController(cameraRef, orbitControlsRef)
-    
-    // Start evolution animation on mount
+
     setTimeout(() => {
       startEvolution()
       evolutionAnimatorRef.value?.start()
@@ -84,9 +75,8 @@ onMounted(() => {
   })
 })
 
-// Handle evolution animation events
 function handleEvolutionProgress(progress: number) {
-  onEvolutionProgress(progress)
+  updateEvolutionProgress(progress)
 }
 
 function handleEvolutionComplete() {
@@ -99,6 +89,9 @@ function handleEvolutionStart() {
 
 function handleEvolutionReset() {
   resetEvolution()
+  setTimeout(() => {
+    evolutionAnimatorRef.value?.start()
+  }, 100)
 }
 
 function handleToggleGrid() {
@@ -111,7 +104,6 @@ function handleToggleGrid() {
       showGridAfterCameraMove.value = true
     })
   } else {
-    // If grid is disabled, hide it immediately
     showGridAfterCameraMove.value = false
   }
 }
@@ -124,8 +116,7 @@ function handleToggleOrbitalSystem() {
   toggleOrbitalSystem()
 }
 
-// Handle evolution timeline events (fixed duplicate)
-function handleEvolutionTimelineVisible(val: boolean) {
+function handleEvolutionTimelineVisible(_val: boolean) {
   // Timeline visibility is managed by evolution state
 }
 </script>
@@ -136,63 +127,33 @@ function handleEvolutionTimelineVisible(val: boolean) {
       <RendererStatsCollector />
       <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
       <TresAmbientLight :intensity="0.08" color="#004488" />
-      
-      <!-- Stellar Core: State-driving component -->
-      <StellarCore
-        ref="stellarCoreRef"
-        :galaxy-center="galaxyCenter"
-        :global-time="evolutionState.globalTime"
-        :evolution-progress="evolutionState.evolutionProgress"
-        :enabled="evolutionState.stellarCoreEnabled"
-      />
-      
-      <!-- Orbital System: Stateless follower component -->
-      <OrbitalSystem
-        :galaxy-center="galaxyCenter"
-        :global-time="evolutionState.globalTime"
-        :evolution-progress="evolutionState.evolutionProgress"
-        :enabled="evolutionState.orbitalSystemEnabled"
-      />
-      
+
+      <StellarCore ref="stellarCoreRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
+        :evolution-progress="state.evolutionProgress" :enabled="state.stellarCoreEnabled" />
+
+      <OrbitalSystem :galaxy-center="galaxyCenter" :global-time="state.globalTime"
+        :evolution-progress="state.evolutionProgress" :enabled="state.orbitalSystemEnabled" />
+
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
-      <TresGridHelper 
-        v-if="gridOn && showGridAfterCameraMove" 
-        :args="[16, 16, '#003366', '#002244']"
-        :position="[0, -4.2, 0]" 
-      />
+      <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[16, 16, '#003366', '#002244']"
+        :position="[0, -4.2, 0]" />
       <TresAxesHelper v-if="gridOn" :args="[1]" :position="[0, 0, 0]" />
     </TresCanvas>
-    
-    <!-- Evolution Animation Controller -->
-    <EvolutionAnimator
-      ref="evolutionAnimatorRef"
-      :enabled="evolutionState.stellarCoreEnabled && evolutionState.orbitalSystemEnabled"
-      :duration="13.8"
-      @progress="handleEvolutionProgress"
-      @complete="handleEvolutionComplete"
-      @start="handleEvolutionStart"
-      @reset="handleEvolutionReset"
-    />
-    
-    <!-- UI Components -->
-    <SwitchMenuBar 
-      :grid-on="gridOn" 
-      :stellar-core-on="evolutionState.stellarCoreEnabled" 
-      :orbital-system-on="evolutionState.orbitalSystemEnabled" 
-      :on-toggle-grid="handleToggleGrid"
-      :on-toggle-stellar-core="handleToggleStellarCore" 
-      :on-toggle-orbital-system="handleToggleOrbitalSystem"
-      :disabled="controlsDisabled" 
-    />
-    
+
+    <EvolutionAnimator ref="evolutionAnimatorRef" :enabled="state.stellarCoreEnabled && state.orbitalSystemEnabled"
+      :duration="13.8" :global-time="state.globalTime" @progress="handleEvolutionProgress"
+      @complete="handleEvolutionComplete" @start="handleEvolutionStart" @reset="handleEvolutionReset" />
+
+    <SwitchMenuBar :grid-on="gridOn" :stellar-core-on="state.stellarCoreEnabled"
+      :orbital-system-on="state.orbitalSystemEnabled" :on-toggle-grid="handleToggleGrid"
+      :on-toggle-stellar-core="handleToggleStellarCore" :on-toggle-orbital-system="handleToggleOrbitalSystem"
+      :disabled="controlsDisabled" />
+
     <ToolsMenuBar />
     <CameraInfo />
-    
-    <EvolutionTimeline 
-      :visible="timelineVisible"
-      :evolution-progress="evolutionState.evolutionProgress"
-      @visible-change="handleEvolutionTimelineVisible" 
-    />
+
+    <EvolutionTimeline :visible="timelineVisible" :evolution-progress="state.evolutionProgress"
+      @visible-change="handleEvolutionTimelineVisible" />
   </div>
 </template>
 

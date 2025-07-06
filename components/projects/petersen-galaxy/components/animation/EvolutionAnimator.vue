@@ -3,14 +3,16 @@ import { ref, onMounted, onUnmounted, watch, readonly } from 'vue'
 
 interface Props {
   autoStart?: boolean
-  duration?: number // Animation duration in seconds
+  duration?: number
   enabled?: boolean
+  globalTime?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
   autoStart: false,
   duration: 13.8,
-  enabled: true
+  enabled: true,
+  globalTime: 0
 })
 
 const emit = defineEmits<{
@@ -20,11 +22,14 @@ const emit = defineEmits<{
   'reset': []
 }>()
 
-// Animation state
 const isAnimating = ref(false)
 const animationProgress = ref(0)
 const startTime = ref(0)
 let animationId: number | undefined
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+}
 
 function startAnimation() {
   if (!props.enabled || isAnimating.value) return
@@ -55,7 +60,9 @@ function animate() {
   if (!isAnimating.value) return
 
   const elapsed = (performance.now() - startTime.value) / 1000
-  const progress = Math.min(elapsed / props.duration, 1)
+  let progress = Math.min(elapsed / props.duration, 1)
+  
+  progress = easeInOutCubic(progress)
   
   animationProgress.value = progress
   emit('progress', progress)
@@ -69,7 +76,6 @@ function animate() {
   animationId = requestAnimationFrame(animate)
 }
 
-// Auto-start if enabled
 onMounted(() => {
   if (props.autoStart) {
     setTimeout(startAnimation, 1000)
@@ -80,14 +86,12 @@ onUnmounted(() => {
   stopAnimation()
 })
 
-// Watch for enabled changes
 watch(() => props.enabled, (enabled) => {
   if (!enabled) {
     stopAnimation()
   }
 })
 
-// Expose control methods
 defineExpose({
   start: startAnimation,
   stop: stopAnimation,
@@ -99,5 +103,4 @@ defineExpose({
 
 <template>
   <!-- This component has no visual output, it's purely functional -->
-  <div style="display: none;"></div>
 </template>
