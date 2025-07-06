@@ -110,7 +110,7 @@ for (let i = 0; i < totalCount; i++) {
       : targetRadius === middleRadius ? 0.75 + Math.random() * 0.45
         : 0.6 + Math.random() * 0.3
 
-    scales[i] = baseScale * (0.3 + 0.7 * props.evolutionProgress)
+    scales[i] = baseScale * (0.7 + 0.3 * props.evolutionProgress)
   } else {
     // Scattered particles setup
     initialAngles[i] = 0 // No rotation for scattered particles
@@ -170,7 +170,7 @@ for (let i = 0; i < totalCount; i++) {
 
     // Set scattered particle scales with evolution effect
     const scatteredScale = 1.35 + Math.random() * 0.75
-    scales[i] = scatteredScale * (0.5 + 0.5 * props.evolutionProgress)
+    scales[i] = scatteredScale * Math.max(0.8, 0.5 + 0.5 * props.evolutionProgress)
   }
 
   // Add randomness for natural distribution
@@ -286,7 +286,7 @@ function updateParticlePositions() {
       if (props.evolutionProgress < 1.0) {
         // During evolution: gradually become more visible
         const baseScale = 1.6
-        scaleArray[i] = baseScale * (0.5 + 0.5 * props.evolutionProgress)
+        scaleArray[i] = baseScale * Math.max(0.8, 0.5 + 0.5 * props.evolutionProgress)
       } else {
         // After evolution: full visibility
         scaleArray[i] = 1.6
