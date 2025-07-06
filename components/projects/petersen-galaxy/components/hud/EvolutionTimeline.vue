@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 
-const isVisible = ref(false)
+interface Props {
+  visible?: boolean
+  evolutionProgress?: number
+}
 
-const maxAge = 13.8 // 13.8 billion years
-const currentAge = ref(maxAge)
-const animationDuration = 13800 // ms
-
-let startTime: number | null = null
-let animationId: number | null = null
+const props = withDefaults(defineProps<Props>(), {
+  visible: false,
+  evolutionProgress: 0
+})
 
 const emit = defineEmits(['visible-change'])
+
+const maxAge = 13.8 // 13.8 billion years
 
 /**
  * Format age as a fixed-width full number in years with thousands separator and 'ago'
@@ -26,60 +29,30 @@ function formatFullAge(ageInBillions: number): string {
   return `${withCommas} Years Ago`
 }
 
-const progress = ref(0)
-
-const startEvolutionAnimation = () => {
-  const animate = (currentTime: number) => {
-    if (startTime === null) {
-      startTime = currentTime
-    }
-    const elapsed = currentTime - startTime
-    const prog = Math.min(elapsed / animationDuration, 1)
-    progress.value = prog
-    currentAge.value = maxAge * (1 - prog)
-    if (prog < 1) {
-      animationId = requestAnimationFrame(animate)
-    } else {
-      // Animation finished, keep at 0 for 2 seconds, then disappear
-      currentAge.value = 0
-      setTimeout(() => {
-        isVisible.value = false
-      }, 2000)
-    }
-  }
-  animationId = requestAnimationFrame(animate)
-}
-
-onMounted(() => {
-  isVisible.value = true
-  emit('visible-change', true) // Immediately notify parent component
-  setTimeout(() => {
-    startEvolutionAnimation()
-  }, 1000)
+const currentAge = computed(() => {
+  return maxAge * (1 - props.evolutionProgress)
 })
 
-onUnmounted(() => {
-  if (animationId) {
-    cancelAnimationFrame(animationId)
-  }
+const formattedAge = computed(() => {
+  return formatFullAge(currentAge.value)
 })
 
-watch(isVisible, (val) => {
+watch(() => props.visible, (val) => {
   emit('visible-change', val)
 })
 </script>
 
 <template>
-  <div v-if="isVisible" class="evolution-timeline">
+  <div v-if="visible" class="evolution-timeline">
     <div class="timeline-content">
       <div class="timeline-text timeline-center">
         <span class="timeline-title">Petersen Galaxy Evolution Timeline</span>
         <span class="timeline-age">
-          {{ formatFullAge(currentAge) }}
+          {{ formattedAge }}
         </span>
       </div>
       <div class="timeline-progress">
-        <div class="progress-bar" :style="{ width: `${progress * 100}%` }"></div>
+        <div class="progress-bar" :style="{ width: `${evolutionProgress * 100}%` }"></div>
       </div>
     </div>
   </div>
@@ -163,6 +136,33 @@ watch(isVisible, (val) => {
 }
 
 .progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #0088cc, #66ddff);
+  border-radius: 2px;
+  transition: width 0.1s ease;
+}
+
+/* Responsive design */
+@media only screen and (max-width: 768px) {
+  .timeline-content {
+    min-width: 280px;
+    padding: 10px 16px;
+    gap: 10px;
+  }
+
+  .timeline-title {
+    font-size: 16px;
+  }
+
+  .timeline-age {
+    font-size: 11px;
+  }
+
+  .timeline-progress {
+    width: 60px;
+  }
+}
+</style>
   height: 100%;
   background: linear-gradient(90deg, #0088cc, #66ddff);
   border-radius: 2px;
