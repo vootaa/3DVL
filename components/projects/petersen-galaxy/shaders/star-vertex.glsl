@@ -3,8 +3,14 @@ attribute vec3 customColor;
 attribute float alpha;
 attribute float time;
 attribute float pulseOffset;
+attribute float targetRadius;
+attribute float initialAngle;
+attribute vec3 chaoticPosition;
 
 uniform float cameraDistance;
+uniform float globalTime;
+uniform float evolutionProgress;
+uniform float baseRotationSpeed;
 
 varying vec3 vColor;
 varying float vAlpha;
@@ -12,27 +18,35 @@ varying float vTime;
 
 void main() {
   vColor = customColor;
-  vAlpha = alpha;
   vTime = time + pulseOffset;
   
-  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+  float smoothProgress = smoothstep(0.0, 1.0, evolutionProgress);
   
-  // Minimal twinkling effect: very subtle variation
-  float twinkle1 = sin(vTime * 2.0 + position.x * 5.0) * 0.03;
-  float twinkle2 = sin(vTime * 3.5 + position.z * 7.0) * 0.02;
-  float twinkle3 = sin(vTime * 1.2 + position.y * 3.0) * 0.015;
+  float currentAngle = initialAngle + globalTime * baseRotationSpeed;
+  vec3 orbitalPos = vec3(
+    targetRadius * cos(currentAngle),
+    0.0,
+    targetRadius * sin(currentAngle)
+  );
   
+  vec3 finalPos = mix(chaoticPosition, orbitalPos, smoothProgress);
+  
+  vec4 mvPosition = modelViewMatrix * vec4(finalPos, 1.0);
+  
+  float twinkle1 = sin(vTime * 2.0 + finalPos.x * 5.0) * 0.03;
+  float twinkle2 = sin(vTime * 3.5 + finalPos.z * 7.0) * 0.02;
+  float twinkle3 = sin(vTime * 1.2 + finalPos.y * 3.0) * 0.015;
   float totalTwinkle = 0.96 + twinkle1 + twinkle2 + twinkle3;
   
-  // Enhanced distance-based size scaling for 3D depth effect
+  float evolutionAlpha = mix(0.1, alpha, smoothProgress);
+  float evolutionSize = mix(0.3, 1.0, smoothProgress);
+  
+  vAlpha = evolutionAlpha;
+  
   float distance = length(mvPosition.xyz);
-  float distanceScale = 300.0 / distance; // Reduced from 400.0 for smaller halos
+  float distanceScale = 300.0 / distance;
+  float cameraScale = 2.0 / cameraDistance;
   
-  // Camera distance scaling - inverse relationship for zoom
-  // When camera distance = 2, scale = 1.0 (normal size)
-  // When camera distance = 10, scale = 0.2 (1/5 size)
-  float cameraScale = 2.0 / cameraDistance; // Inverse scaling
-  
-  gl_PointSize = size * totalTwinkle * distanceScale * cameraScale;
+  gl_PointSize = size * totalTwinkle * distanceScale * cameraScale * evolutionSize;
   gl_Position = projectionMatrix * mvPosition;
 }
