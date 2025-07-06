@@ -23,14 +23,12 @@ export const orbitalConfig = {
   
   // Particle properties
   particleSize: 12,
-  
+
   // Rotation speeds - synchronized base speed with random oscillations for stable relative structure
-  rotationSpeeds: {
-    inner: 0.240,  // Same base speed for all orbits
-    middle: 0.240, // Same base speed for all orbits
-    outer: 0.240   // Same base speed for all orbits
-    // Random ±2.5% oscillation applied in shader for natural variation
-  }
+  // Base rotation speed for all orbits (0.24 rad/s)
+  // Random ±2.5% oscillation applied in shader for natural variation
+
+  rotationSpeed: 0.24
 }
 
 // Orbital color scheme - consistent blue/cyan tones

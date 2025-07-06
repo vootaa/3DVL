@@ -9,6 +9,7 @@ import {
 } from 'three'
 import { orbitalConfig } from '../../configs/orbital-config'
 import { starClusterConfig } from '../../configs/star-cluster-config'
+
 import starVertexShader from '../../shaders/star-vertex.glsl'
 import starFragmentShader from '../../shaders/star-fragment.glsl'
 
@@ -64,22 +65,22 @@ function initStellarCore() {
 
   stars.forEach((star, index) => {
     const i3 = index * 3
-    
+
     // Generate initial chaotic positions for evolution animation
     const initialRadius = Math.random() * 6.24
     const initialAngle = Math.random() * Math.PI * 2
     const initialHeight = (Math.random() - 0.5) * 1.5
-    
+
     initialChaoticPositions[i3] = Math.cos(initialAngle) * initialRadius
     initialChaoticPositions[i3 + 1] = initialHeight
     initialChaoticPositions[i3 + 2] = Math.sin(initialAngle) * initialRadius
-    
+
     // Calculate target orbital positions
     const targetAngle = star.theta * Math.PI / 180
     const targetX = star.r * Math.cos(targetAngle)
     const targetY = 0
     const targetZ = star.r * Math.sin(targetAngle)
-    
+
     // Set positions based on evolution progress
     if (props.evolutionProgress >= 1.0) {
       positions[i3] = targetX
@@ -91,35 +92,35 @@ function initStellarCore() {
       positions[i3 + 1] = initialChaoticPositions[i3 + 1] + (targetY - initialChaoticPositions[i3 + 1]) * props.evolutionProgress
       positions[i3 + 2] = initialChaoticPositions[i3 + 2] + (targetZ - initialChaoticPositions[i3 + 2]) * props.evolutionProgress
     }
-    
+
     // Store orbital parameters
     targetRadii[index] = star.r
     initialAngles[index] = star.theta * Math.PI / 180
-    
+
     // Set rotation speeds based on orbital radius
     if (star.r === innerRadius) {
-      rotationSpeeds[index] = orbitalConfig.rotationSpeeds.inner
+      rotationSpeeds[index] = orbitalConfig.rotationSpeed
     } else if (star.r === middleRadius) {
-      rotationSpeeds[index] = orbitalConfig.rotationSpeeds.middle
+      rotationSpeeds[index] = orbitalConfig.rotationSpeed
     } else {
-      rotationSpeeds[index] = orbitalConfig.rotationSpeeds.outer
+      rotationSpeeds[index] = orbitalConfig.rotationSpeed
     }
-    
+
     // Set stellar core visual properties
     const color = stellarCoreColors[star.type as StellarType]
     colors[i3] = color.r
     colors[i3 + 1] = color.g
     colors[i3 + 2] = color.b
-    
+
     const sizeConfig = stellarCoreSizes[star.type as StellarType]
-    sizes[index] = props.evolutionProgress >= 1.0 
-      ? sizeConfig.base 
+    sizes[index] = props.evolutionProgress >= 1.0
+      ? sizeConfig.base
       : sizeConfig.base * (0.3 + 0.7 * props.evolutionProgress)
-    
-    alphas[index] = props.evolutionProgress >= 1.0 
-      ? 0.85 
+
+    alphas[index] = props.evolutionProgress >= 1.0
+      ? 0.85
       : 0.1 + 0.75 * props.evolutionProgress
-    
+
     times[index] = Math.random() * Math.PI * 2
     pulseOffsets[index] = Math.random() * Math.PI * 2
   })
@@ -173,7 +174,7 @@ function animate() {
 
   // Update stellar core positions during evolution and orbital motion
   updateStellarCorePositions()
-  
+
   // Update individual star timing
   updateStarTiming()
 
@@ -199,7 +200,7 @@ function updateStellarCorePositions() {
   for (let i = 0; i < stars.length; i++) {
     const i3 = i * 3
     const star = stars[i]
-    
+
     // Calculate current orbital position with rotation - ALWAYS apply rotation
     const currentAngle = initialAnglesArray[i] + props.globalTime * rotationSpeedsArray[i]
     const targetRadius = targetRadiiArray[i]
@@ -212,7 +213,7 @@ function updateStellarCorePositions() {
       const startX = initialChaoticPositions[i3]
       const startY = initialChaoticPositions[i3 + 1]
       const startZ = initialChaoticPositions[i3 + 2]
-      
+
       positionArray[i3] = startX + (targetX - startX) * props.evolutionProgress
       positionArray[i3 + 1] = startY + (targetY - startY) * props.evolutionProgress
       positionArray[i3 + 2] = startZ + (targetZ - startZ) * props.evolutionProgress
@@ -229,13 +230,13 @@ function updateStellarCorePositions() {
     const amplitude = sizeConfig.amplitude
     const timeOffset = props.globalTime + i * 0.5
     const amplitudeVariation = 1.0 + amplitude * Math.sin(timeOffset * 2.0)
-    
+
     if (props.evolutionProgress < 1.0) {
       // During evolution: gradual size and alpha increase
       const currentSize = (baseSize * amplitudeVariation * 0.3) +
         (baseSize * amplitudeVariation - baseSize * amplitudeVariation * 0.3) * props.evolutionProgress
       sizesArray[i] = currentSize
-      
+
       const targetAlpha = 0.85
       const currentAlpha = 0.1 + (targetAlpha - 0.1) * props.evolutionProgress
       alphasArray[i] = currentAlpha
@@ -245,7 +246,7 @@ function updateStellarCorePositions() {
       alphasArray[i] = 0.85
     }
   }
-  
+
   // Mark attributes for update
   positions.needsUpdate = true
   sizes.needsUpdate = true
@@ -264,7 +265,7 @@ function updateStellarCorePositions() {
 function updateStarTiming() {
   const times = stellarCoreGeometry.value!.getAttribute('time')
   const timesArray = times.array as Float32Array
-  
+
   for (let i = 0; i < times.count; i++) {
     timesArray[i] += 0.005 + Math.random() * 0.002
   }
@@ -306,7 +307,7 @@ const emit = defineEmits<{
 // Reset stellar core to final evolved position (for debugging/testing)
 const resetStellarCorePosition = () => {
   if (!isInitialized || !stellarCoreGeometry.value) return
-  
+
   const positions = stellarCoreGeometry.value.getAttribute('position')
   const sizes = stellarCoreGeometry.value.getAttribute('size')
   const alphas = stellarCoreGeometry.value.getAttribute('alpha')
@@ -320,22 +321,22 @@ const resetStellarCorePosition = () => {
   const targetRadiiArray = targetRadii.array as Float32Array
   const initialAnglesArray = initialAngles.array as Float32Array
   const rotationSpeedsArray = rotationSpeeds.array as Float32Array
-  
+
   for (let i = 0; i < stars.length; i++) {
     const i3 = i * 3
     const star = stars[i]
     const angle = initialAnglesArray[i] + 30.0 * rotationSpeedsArray[i]
     const radius = targetRadiiArray[i]
-    
+
     positionArray[i3] = radius * Math.cos(angle)
     positionArray[i3 + 1] = 0
     positionArray[i3 + 2] = radius * Math.sin(angle)
-    
+
     const sizeConfig = stellarCoreSizes[star.type as StellarType]
     sizesArray[i] = sizeConfig.base
     alphasArray[i] = 0.85
   }
-  
+
   positions.needsUpdate = true
   sizes.needsUpdate = true
   alphas.needsUpdate = true
@@ -346,28 +347,18 @@ defineExpose({ resetStellarCorePosition })
 
 <template>
   <TresGroup v-if="enabled" ref="stellarCoreClusterRef">
-    <TresPoints
-      v-if="stellarCoreGeometry && stellarCoreMaterial"
-      ref="stellarCorePoints"
-      :geometry="stellarCoreGeometry"
-      :material="stellarCoreMaterial"
-    />
+    <TresPoints v-if="stellarCoreGeometry && stellarCoreMaterial" ref="stellarCorePoints"
+      :geometry="stellarCoreGeometry" :material="stellarCoreMaterial" />
     <!-- Debug spheres for stellar core positions (hidden by default) -->
     <template v-for="star in stars" :key="`core-${star.id}`">
-      <TresMesh
-        :position="[
-          star.r * Math.cos(star.theta * Math.PI / 180),
-          (Math.random() - 0.5) * 0.1,
-          star.r * Math.sin(star.theta * Math.PI / 180)
-        ]"
-        :visible="false"
-      >
+      <TresMesh :position="[
+        star.r * Math.cos(star.theta * Math.PI / 180),
+        (Math.random() - 0.5) * 0.1,
+        star.r * Math.sin(star.theta * Math.PI / 180)
+      ]" :visible="false">
         <TresSphereGeometry :args="[0.02, 8, 8]" />
-        <TresMeshBasicMaterial
-          :color="stellarCoreColors[star.type as StellarType]"
-          :transparent="true"
-          :opacity="0.8"
-        />
+        <TresMeshBasicMaterial :color="stellarCoreColors[star.type as StellarType]" :transparent="true"
+          :opacity="0.8" />
       </TresMesh>
     </template>
   </TresGroup>

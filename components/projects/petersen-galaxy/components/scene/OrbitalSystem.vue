@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { AdditiveBlending, Points, ShaderMaterial, Vector3, BufferAttribute } from 'three'
-import { ref, watch, toRef, onMounted } from 'vue'
+import { AdditiveBlending, Points, ShaderMaterial, Vector3 } from 'three'
+import { ref} from 'vue'
 import { useRenderLoop } from '@tresjs/core'
 import { orbitalConfig, orbitalColorConfig } from '../../configs/orbital-config'
 
 import vertexShader from '../../shaders/orbital-vertex.glsl'
 import fragmentShader from '../../shaders/orbital-fragment.glsl'
-
-import {Logger} from '../../../../utils/logger'
 
 interface Props {
   galaxyCenter?: Vector3
@@ -17,108 +15,74 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  galaxyCenter: () => new Vector3(0, 0, 0),
+  galaxyCenter: () => new Vector3(1, 1, 0),
   globalTime: 0,
-  evolutionProgress: 1,
+  evolutionProgress: 0,
   enabled: true
 })
 
 const galaxyCenter = toRef(props, 'galaxyCenter')
 
-// Use orbital configuration (stateless, driven by props)
-const { totalCount, orbitParticleRatio, orbitDistribution, innerRadius, middleRadius, outerRadius, maxSpaceRadius, particleSize, rotationSpeeds } = orbitalConfig
+const { totalCount, orbitParticleRatio, orbitDistribution, innerRadius, middleRadius, outerRadius, maxSpaceRadius, particleSize, rotationSpeed } = orbitalConfig
 
-// Initialize particle arrays (stateless data)
+// 一次性初始化
 const positions = new Float32Array(totalCount * 3)
 const colors = new Float32Array(totalCount * 3)
 const scales = new Float32Array(totalCount)
 const randomnessArray = new Float32Array(totalCount * 3)
 const orbitFactors = new Float32Array(totalCount)
 const targetRadii = new Float32Array(totalCount)
-const rotationSpeedsArray = new Float32Array(totalCount)
-const initialChaoticPositions = new Float32Array(totalCount * 3)
-const initialAngles = new Float32Array(totalCount)
 
-// Generate orbital particles (stateless initialization)
+// 粒子生成逻辑
 for (let i = 0; i < totalCount; i++) {
   const i3 = i * 3
-
-  // Determine particle type: orbital (70%) or scattered (30%)
   const isOrbital = Math.random() < orbitParticleRatio
   orbitFactors[i] = isOrbital ? 1.0 : 0.0
 
   if (isOrbital) {
-    // Orbital particle distribution setup
     const orbitChoice = Math.random()
-    let targetRadius, particleColor, rotationSpeed
+    let targetRadius, particleColor
 
     if (orbitChoice < orbitDistribution.inner) {
-      // Inner orbital ring
       targetRadius = innerRadius
       particleColor = orbitalColorConfig.innerRing.clone()
       particleColor.multiplyScalar(orbitalColorConfig.brightness.inner)
-      rotationSpeed = rotationSpeeds.inner
     } else if (orbitChoice < orbitDistribution.inner + orbitDistribution.middle) {
-      // Middle orbital ring  
       targetRadius = middleRadius
       particleColor = orbitalColorConfig.middleRing.clone()
       particleColor.multiplyScalar(orbitalColorConfig.brightness.middle)
-      rotationSpeed = rotationSpeeds.middle
     } else {
-      // Outer orbital ring
       targetRadius = outerRadius
       particleColor = orbitalColorConfig.outerRing.clone()
       particleColor.multiplyScalar(orbitalColorConfig.brightness.outer)
-      rotationSpeed = rotationSpeeds.outer
     }
 
     targetRadii[i] = targetRadius
-    rotationSpeedsArray[i] = rotationSpeed
 
-    initialAngles[i] = Math.random() * Math.PI * 2
-
-    // Generate initial chaotic positions for evolution animation
     const initialRadius = Math.random() * maxSpaceRadius
     const initialAngle = Math.random() * Math.PI * 2
-    const initialHeight = Math.random() * 0.2 - 0.1 // Random height variation
+    const initialHeight = (Math.random() - 0.5) * 2.25
 
-    initialChaoticPositions[i3] = Math.cos(initialAngle) * initialRadius
-    initialChaoticPositions[i3 + 1] = Math.sin(initialAngle) * initialRadius
-    initialChaoticPositions[i3 + 2] = initialHeight
+    positions[i3] = Math.cos(initialAngle) * initialRadius
+    positions[i3 + 1] = initialHeight
+    positions[i3 + 2] = Math.sin(initialAngle) * initialRadius
 
-    // Set initial positions based on evolution progress
-    if (props.evolutionProgress >= 1.0) {
-      // Fully evolved - orbital position
-      const orbitAngle = Math.random() * Math.PI * 2
-      positions[i3] = Math.cos(orbitAngle) * targetRadius
-      positions[i3 + 1] = 0
-      positions[i3 + 2] = Math.sin(orbitAngle) * targetRadius
-    } else {
-      // Evolving - chaotic position
-      positions[i3] = initialChaoticPositions[i3]
-      positions[i3 + 1] = initialChaoticPositions[i3 + 1]
-      positions[i3 + 2] = initialChaoticPositions[i3 + 2]
-    }
-
-    // Set orbital particle colors
     colors[i3] = particleColor.r
     colors[i3 + 1] = particleColor.g
     colors[i3 + 2] = particleColor.b
 
-    // Set orbital particle scales based on ring
-    const baseScale = targetRadius === innerRadius ? 0.9 + Math.random() * 0.45
-      : targetRadius === middleRadius ? 0.75 + Math.random() * 0.45
-        : 0.6 + Math.random() * 0.3
-
-    scales[i] = baseScale * (0.7 + 0.3 * props.evolutionProgress)
+    if (targetRadius === innerRadius) {
+      scales[i] = 0.9 + Math.random() * 0.45
+    } else if (targetRadius === middleRadius) {
+      scales[i] = 0.75 + Math.random() * 0.45
+    } else {
+      scales[i] = 0.6 + Math.random() * 0.3
+    }
   } else {
-    // Scattered particles setup
-    initialAngles[i] = 0 // No rotation for scattered particles
     const distributionChoice = Math.random()
     let scatteredColor
 
     if (distributionChoice < 0.4) {
-      // Scattered near inner ring
       const baseRadius = innerRadius
       const radiusVariation = (Math.random() - 0.5) * 0.8
       const radius = Math.max(0.3, baseRadius + radiusVariation)
@@ -128,10 +92,8 @@ for (let i = 0; i < totalCount; i++) {
       positions[i3] = Math.cos(angle) * radius
       positions[i3 + 1] = height
       positions[i3 + 2] = Math.sin(angle) * radius
-
       scatteredColor = orbitalColorConfig.scatteredInner.clone()
     } else if (distributionChoice < 0.7) {
-      // Scattered near middle ring
       const baseRadius = middleRadius
       const radiusVariation = (Math.random() - 0.5) * 1.0
       const radius = Math.max(0.5, baseRadius + radiusVariation)
@@ -141,10 +103,8 @@ for (let i = 0; i < totalCount; i++) {
       positions[i3] = Math.cos(angle) * radius
       positions[i3 + 1] = height
       positions[i3 + 2] = Math.sin(angle) * radius
-
       scatteredColor = orbitalColorConfig.scatteredMiddle.clone()
     } else {
-      // Scattered near outer ring and beyond
       const baseRadius = outerRadius
       const radiusVariation = (Math.random() - 0.5) * 1.2
       const radius = Math.max(1.0, baseRadius + radiusVariation)
@@ -154,26 +114,20 @@ for (let i = 0; i < totalCount; i++) {
       positions[i3] = Math.cos(angle) * radius
       positions[i3 + 1] = height
       positions[i3 + 2] = Math.sin(angle) * radius
-
       scatteredColor = orbitalColorConfig.scatteredOuter.clone()
     }
 
-    targetRadii[i] = 0.0 // No orbital motion for scattered particles
-    rotationSpeedsArray[i] = 0.0
+    targetRadii[i] = 0.0
 
-    // Set scattered particle colors
     const brightnessVariation = 0.8 + Math.random() * 0.4
     scatteredColor.multiplyScalar(orbitalColorConfig.brightness.scattered * brightnessVariation)
     colors[i3] = scatteredColor.r
     colors[i3 + 1] = scatteredColor.g
     colors[i3 + 2] = scatteredColor.b
 
-    // Set scattered particle scales with evolution effect
-    const scatteredScale = 1.35 + Math.random() * 0.75
-    scales[i] = scatteredScale * Math.max(0.8, 0.5 + 0.5 * props.evolutionProgress)
+    scales[i] = 1.35 + Math.random() * 0.75
   }
 
-  // Add randomness for natural distribution
   const randomStrength = 1.8
   const randomX = (Math.random() - 0.5) * randomStrength
   const randomY = (Math.random() - 0.5) * (randomStrength * 0.45)
@@ -184,7 +138,6 @@ for (let i = 0; i < totalCount; i++) {
   randomnessArray[i3 + 2] = randomZ
 }
 
-// Shader configuration for orbital particles
 const shader = {
   transparent: true,
   depthWrite: false,
@@ -194,132 +147,39 @@ const shader = {
   fragmentShader,
   uniforms: {
     uTime: { value: 0 },
-    uEvolutionProgress: { value: props.evolutionProgress },
+    uEvolutionProgress: { value: 0 },
     uSize: { value: particleSize },
+    uBaseRotationSpeed: { value: rotationSpeed },
   },
 }
 
 const bufferRef = ref<InstanceType<typeof Points> | null>(null)
 
-// Render loop for orbital system (stateless updates)
 const { onLoop } = useRenderLoop()
-
 onLoop(() => {
   if (!props.enabled || !bufferRef.value) return
 
-  // Update shader uniforms with current state
   const material = bufferRef.value.material as ShaderMaterial
-  if (!material) return
+  
+  material.uniforms.uTime.value = props.globalTime
+  material.uniforms.uEvolutionProgress.value = props.evolutionProgress
 
-  if (material.uniforms) {
-    material.uniforms.uTime.value = props.globalTime
-    material.uniforms.uEvolutionProgress.value = props.evolutionProgress
-  }
-
-  // Update position relative to galaxy center
-  if (galaxyCenter.value) {
+  if (galaxyCenter?.value) {
     bufferRef.value.position.set(galaxyCenter.value.x, galaxyCenter.value.y, galaxyCenter.value.z)
-  }
-
-  // Always update particle positions - both during evolution and after completion
-  updateParticlePositions()
-})
-
-// Update particle positions based on evolution progress (stateless function)
-function updateParticlePositions() {
-  if (!bufferRef.value) return
-
-  const positionAttribute = bufferRef.value.geometry.getAttribute('position')
-  const scaleAttribute = bufferRef.value.geometry.getAttribute('aScale')
-
-  if (!(positionAttribute instanceof BufferAttribute) || !(scaleAttribute instanceof BufferAttribute)) {
-    Logger.warn('OrbitalSystem', 'BufferAttribute not found')
-    return
-  }
-
-  const positionArray = positionAttribute.array as Float32Array
-  const scaleArray = scaleAttribute.array as Float32Array
-
-  for (let i = 0; i < totalCount; i++) {
-    const i3 = i * 3
-
-    if (orbitFactors[i] > 0.5) { // Orbital particle
-      const targetRadius = targetRadii[i]
-      const rotationSpeed = rotationSpeedsArray[i]
-      const currentAngle = initialAngles[i]
-
-      if (props.evolutionProgress < 1.0) {
-        // Calculate target orbital position with continuous rotation
-        const targetX = targetRadius * Math.cos(currentAngle)
-        const targetY = Math.random() * 0.5 - 0.25 // Random height variation during evolution
-        const targetZ = targetRadius * Math.sin(currentAngle)
-
-        // During evolution: interpolate from chaotic to orbital position
-        const startX = initialChaoticPositions[i3]
-        const startY = initialChaoticPositions[i3 + 1]
-        const startZ = initialChaoticPositions[i3 + 2]
-
-        positionArray[i3] = startX + (targetX - startX) * props.evolutionProgress
-        positionArray[i3 + 1] = startY + (targetY - startY) * props.evolutionProgress
-        positionArray[i3 + 2] = startZ + (targetZ - startZ) * props.evolutionProgress
-
-        // Scale during evolution
-        const baseScale = targetRadius === innerRadius ? 1.125
-          : targetRadius === middleRadius ? 0.975
-            : 0.75
-        scaleArray[i] = baseScale * Math.max(0.7, 0.7 + 0.3 * props.evolutionProgress)
-      } else {
-        // After evolution: continue orbital motion with rotation
-        
-        positionArray[i3] = targetRadius * Math.cos(currentAngle)
-        positionArray[i3 + 1] = Math.random() * 0.5 - 0.25 
-        positionArray[i3 + 2] = targetRadius * Math.sin(currentAngle)
-
-        // Full scale after evolution
-        const fullScale = targetRadius === innerRadius ? 1.125
-          : targetRadius === middleRadius ? 0.975
-            : 0.75
-        scaleArray[i] = fullScale
-      }
-    } else {
-      // Scattered particles - maintain their positions but update visibility
-      if (props.evolutionProgress < 1.0) {
-        // During evolution: gradually become more visible
-        const baseScale = 1.6
-        scaleArray[i] = baseScale * Math.max(0.8, 0.5 + 0.5 * props.evolutionProgress)
-      } else {
-        // After evolution: full visibility
-        scaleArray[i] = 1.6
-      }
-      // Position stays the same for scattered particles (no orbital motion)
-    }
-  }
-
-  positionAttribute.needsUpdate = true
-  scaleAttribute.needsUpdate = true
-}
-
-// Watch for galaxy center changes
-watch(galaxyCenter, (val) => {
-  if (bufferRef.value && val) {
-    bufferRef.value.position.set(val.x, val.y, val.z)
-  }
-})
-
-onMounted(() => {
-  // Ensure proper initialization when component mounts
-  if (props.evolutionProgress >= 1.0) {
-    // If already evolved, set final positions immediately
-    updateParticlePositions()
   }
 })
 </script>
 
 <template>
   <TresPoints v-if="enabled" ref="bufferRef">
-    <TresBufferGeometry :position="[positions, 3]" :a-scale="[scales, 1]" :color="[colors, 3]"
-      :a-randomness="[randomnessArray, 3]" :a-orbit-factor="[orbitFactors, 1]" :a-target-radius="[targetRadii, 1]"
-      :a-rotation-speed="[rotationSpeedsArray, 1]" />
+    <TresBufferGeometry 
+      :position="[positions, 3]" 
+      :a-scale="[scales, 1]" 
+      :color="[colors, 3]"
+      :a-randomness="[randomnessArray, 3]" 
+      :a-orbit-factor="[orbitFactors, 1]" 
+      :a-target-radius="[targetRadii, 1]"
+    />
     <TresShaderMaterial v-bind="shader" />
   </TresPoints>
 </template>
