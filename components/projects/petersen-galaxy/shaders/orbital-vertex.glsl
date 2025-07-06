@@ -1,5 +1,6 @@
 uniform float uSize;
 uniform float uTime;
+uniform float uEvolutionProgress;
 
 attribute float aScale;
 attribute vec3 aRandomness;
@@ -12,9 +13,8 @@ varying vec3 vColor;
 void main() {
     vec4 modelPosition = modelMatrix * vec4(position, 1.0);
 
-    // Evolution progress (faster transition for clear demonstration)
-    float timeProgress = min(uTime * 0.15, 1.0);
-    float smoothProgress = smoothstep(0.0, 1.0, timeProgress);
+    // Use evolution progress from uniform instead of time-based calculation
+    float smoothProgress = smoothstep(0.0, 1.0, uEvolutionProgress);
     float orbitInfluence = aOrbitFactor * smoothProgress;
     
     if (aOrbitFactor > 0.5) {
@@ -22,7 +22,7 @@ void main() {
         float distanceToCenter = length(modelPosition.xz);
         float angle = atan(modelPosition.x, modelPosition.z);
         
-        // Gradually move to target orbit radius
+        // Gradually move to target orbit radius based on evolution progress
         float radiusProgress = smoothstep(0.0, 1.0, orbitInfluence);
         float currentRadius = mix(distanceToCenter, aTargetRadius, radiusProgress);
         
@@ -32,29 +32,30 @@ void main() {
         float oscillation = sin(uTime * 0.8 + randomSeed) * 0.025; // ±2.5% oscillation
         float finalSpeed = baseSpeed * (1.0 + oscillation);
         
+        // Apply rotation only after evolution progress
         float angleOffset = finalSpeed * uTime * orbitInfluence;
         angle += angleOffset;
         
         // Calculate orbital position
         vec3 orbitalPosition = vec3(
             currentRadius * cos(angle),
-            modelPosition.y * (1.0 - orbitInfluence * 0.985), // Slightly less flattening for thicker disk (+50% height)
+            modelPosition.y * (1.0 - orbitInfluence * 0.985), // Slightly less flattening for thicker disk
             currentRadius * sin(angle)
         );
         
-        // Smooth transition from chaos to order
+        // Smooth transition from chaos to order based on evolution progress
         modelPosition.xyz = mix(modelPosition.xyz, orbitalPosition, radiusProgress);
     } else {
-        // For scattered particles - synchronized rotation with slight delay and disturbances
+        // For scattered particles - synchronized rotation with evolution progress
         float distanceToCenter = length(modelPosition.xz);
         float angle = atan(modelPosition.x, modelPosition.z);
         
-        // Determine which orbit this particle is near and sync rotation with delay
+        // Determine which orbit this particle is near and sync rotation
         float nearestOrbitSpeed = 0.240; // Same base speed for all orbits
         if (distanceToCenter < 2.25) { // Between inner and middle
-            nearestOrbitSpeed = 0.240; // Same base speed
+            nearestOrbitSpeed = 0.240;
         } else if (distanceToCenter < 3.9) { // Between middle and outer
-            nearestOrbitSpeed = 0.240; // Same base speed
+            nearestOrbitSpeed = 0.240;
         }
         
         // Add same random oscillations as orbital particles
@@ -62,15 +63,16 @@ void main() {
         float oscillation = sin(uTime * 0.8 + randomSeed) * 0.025; // ±2.5% oscillation
         nearestOrbitSpeed *= (1.0 + oscillation);
         
-        // Synchronized rotation with delay (gravitational attraction effect)
+        // Synchronized rotation with delay, influenced by evolution progress
         float delayFactor = 0.7; // 70% of orbital speed
-        float syncedRotation = nearestOrbitSpeed * uTime * delayFactor;
+        float syncedRotation = nearestOrbitSpeed * uTime * delayFactor * smoothProgress;
         
-        // Add random disturbances in all directions
+        // Add random disturbances that decrease with evolution progress
         float timeVariation = uTime * 0.3;
-        float xDisturbance = sin(timeVariation + distanceToCenter * 2.0) * 0.23; // Increased for thicker ring (+50%)
-        float zDisturbance = cos(timeVariation + angle * 3.0) * 0.23; // Increased for thicker ring (+50%)
-        float yDisturbance = sin(timeVariation * 1.5 + distanceToCenter) * 0.12; // Increased Y disturbance (+50%)
+        float disturbanceStrength = 1.0 - smoothProgress * 0.5; // Reduce disturbances as evolution progresses
+        float xDisturbance = sin(timeVariation + distanceToCenter * 2.0) * 0.23 * disturbanceStrength;
+        float zDisturbance = cos(timeVariation + angle * 3.0) * 0.23 * disturbanceStrength;
+        float yDisturbance = sin(timeVariation * 1.5 + distanceToCenter) * 0.12 * disturbanceStrength;
         
         // Apply synchronized rotation
         angle += syncedRotation;
@@ -81,7 +83,7 @@ void main() {
         modelPosition.y += yDisturbance;
     }
     
-    // Slightly increased randomness for thicker ring formation (+50%)
+    // Randomness strength decreases with evolution progress
     float randomnessStrength = mix(1.0, 0.03, smoothstep(0.0, 1.0, orbitInfluence));
     modelPosition.xyz += aRandomness * randomnessStrength;
 

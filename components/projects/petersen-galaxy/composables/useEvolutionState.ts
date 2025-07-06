@@ -77,6 +77,9 @@ export function useEvolutionState() {
     state.isEvolutionAnimating = false
     state.evolutionComplete = true
     timelineVisible.value = false
+    
+    // Keep global time running after evolution completion
+    // Do NOT stop global time here - orbital motion should continue
   }
   
   function resetEvolution() {

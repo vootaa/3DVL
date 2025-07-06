@@ -211,6 +211,7 @@ onLoop(() => {
     bufferRef.value.position.set(galaxyCenter.value.x, galaxyCenter.value.y, galaxyCenter.value.z)
   }
 
+  // Always update particle positions - both during evolution and after completion
   updateParticlePositions()
 })
 
@@ -258,6 +259,7 @@ function updateParticlePositions() {
             : 0.75
         scaleArray[i] = baseScale * (0.3 + 0.7 * props.evolutionProgress)
       } else {
+        // After evolution: continue orbital motion with rotation
         positionArray[i3] = targetX
         positionArray[i3 + 1] = targetY
         positionArray[i3 + 2] = targetZ
@@ -269,7 +271,7 @@ function updateParticlePositions() {
         scaleArray[i] = fullScale
       }
     } else {
-      // Scattered particles - no orbital motion, just visibility changes
+      // Scattered particles - maintain their positions but update visibility
       if (props.evolutionProgress < 1.0) {
         // During evolution: gradually become more visible
         const baseScale = 1.6
@@ -278,7 +280,7 @@ function updateParticlePositions() {
         // After evolution: full visibility
         scaleArray[i] = 1.6
       }
-      // Position stays the same for scattered particles
+      // Position stays the same for scattered particles (no orbital motion)
     }
   }
 

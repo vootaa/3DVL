@@ -1,3 +1,5 @@
+uniform float uEvolutionProgress;
+
 varying vec3 vColor;
 
 void main()
@@ -15,6 +17,9 @@ void main()
     // Combine for precise, thin bright lines
     float finalStrength = strength + core * 4.0; // Much brighter concentrated core
     finalStrength = min(finalStrength, 1.0);
+    
+    // Apply evolution progress to particle visibility
+    finalStrength *= smoothstep(0.0, 1.0, uEvolutionProgress);
     
     // Boost color intensity for brilliant ring effect
     vec3 color = vColor * (1.0 + finalStrength * 2.0);

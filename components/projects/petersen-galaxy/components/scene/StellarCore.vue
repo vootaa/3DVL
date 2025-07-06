@@ -200,7 +200,7 @@ function updateStellarCorePositions() {
     const i3 = i * 3
     const star = stars[i]
     
-    // Calculate current orbital position with rotation
+    // Calculate current orbital position with rotation - ALWAYS apply rotation
     const currentAngle = initialAnglesArray[i] + props.globalTime * rotationSpeedsArray[i]
     const targetRadius = targetRadiiArray[i]
     const targetX = targetRadius * Math.cos(currentAngle)
@@ -217,7 +217,7 @@ function updateStellarCorePositions() {
       positionArray[i3 + 1] = startY + (targetY - startY) * props.evolutionProgress
       positionArray[i3 + 2] = startZ + (targetZ - startZ) * props.evolutionProgress
     } else {
-      // Fully evolved: orbital motion
+      // Fully evolved: continue orbital motion with rotation
       positionArray[i3] = targetX
       positionArray[i3 + 1] = targetY
       positionArray[i3 + 2] = targetZ
@@ -240,7 +240,7 @@ function updateStellarCorePositions() {
       const currentAlpha = 0.1 + (targetAlpha - 0.1) * props.evolutionProgress
       alphasArray[i] = currentAlpha
     } else {
-      // Fully evolved: full size and alpha with pulsing
+      // Fully evolved: full size and alpha with pulsing - continue animation
       sizesArray[i] = baseSize * amplitudeVariation
       alphasArray[i] = 0.85
     }
@@ -251,10 +251,13 @@ function updateStellarCorePositions() {
   sizes.needsUpdate = true
   alphas.needsUpdate = true
 
-  emit('sync-state', {
-    rotationAngle: props.globalTime * rotationSpeeds.array[0],
-    globalTime: props.globalTime
-  })
+  // Emit synchronization state for other components
+  if (props.evolutionProgress >= 1.0) {
+    emit('sync-state', {
+      rotationAngle: props.globalTime * rotationSpeedsArray[0],
+      globalTime: props.globalTime
+    })
+  }
 }
 
 // Update individual star timing for animation variety
