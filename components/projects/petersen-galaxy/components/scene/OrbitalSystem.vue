@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { AdditiveBlending, Points, ShaderMaterial, Vector3 } from 'three'
-import { ref, watch, toRef } from 'vue'
+import { AdditiveBlending, Points, ShaderMaterial, Vector3, BufferAttribute } from 'three'
+import { ref, watch, toRef, onMounted } from 'vue'
 import { useRenderLoop } from '@tresjs/core'
 import { orbitalConfig, orbitalColorConfig } from '../../configs/orbital-config'
 
@@ -103,8 +103,8 @@ for (let i = 0; i < totalCount; i++) {
     // Set orbital particle scales based on ring
     const baseScale = targetRadius === innerRadius ? 0.9 + Math.random() * 0.45
       : targetRadius === middleRadius ? 0.75 + Math.random() * 0.45
-      : 0.6 + Math.random() * 0.3
-    
+        : 0.6 + Math.random() * 0.3
+
     scales[i] = baseScale * (0.3 + 0.7 * props.evolutionProgress)
   } else {
     // Scattered particles setup
@@ -198,9 +198,9 @@ const bufferRef = ref<InstanceType<typeof Points> | null>(null)
 // Render loop for orbital system (stateless updates)
 const { onLoop } = useRenderLoop()
 
-onLoop(({ elapsed }) => {
+onLoop(() => {
   if (!props.enabled || !bufferRef.value) return
-  
+
   // Update shader uniforms with current state
   const material = bufferRef.value.material as ShaderMaterial
   material.uniforms.uTime.value = props.globalTime
@@ -211,56 +211,77 @@ onLoop(({ elapsed }) => {
     bufferRef.value.position.set(galaxyCenter.value.x, galaxyCenter.value.y, galaxyCenter.value.z)
   }
 
-  // Update particle positions during evolution (stateless response to props)
-  if (props.evolutionProgress < 1.0) {
-    updateParticlePositions()
-  }
+  updateParticlePositions()
 })
 
 // Update particle positions based on evolution progress (stateless function)
 function updateParticlePositions() {
   if (!bufferRef.value) return
-  
+
   const positionAttribute = bufferRef.value.geometry.getAttribute('position')
   const scaleAttribute = bufferRef.value.geometry.getAttribute('aScale')
 
+  if (!(positionAttribute instanceof BufferAttribute) || !(scaleAttribute instanceof BufferAttribute)) {
+    console.warn('BufferAttribute not found')
+    return
+  }
+
   const positionArray = positionAttribute.array as Float32Array
   const scaleArray = scaleAttribute.array as Float32Array
-  
+
   for (let i = 0; i < totalCount; i++) {
     const i3 = i * 3
-    
+
     if (orbitFactors[i] > 0.5) { // Orbital particle
       const targetRadius = targetRadii[i]
       const rotationSpeed = rotationSpeedsArray[i]
-      
-      // Calculate target orbital position
+
+      // Calculate target orbital position with continuous rotation
       const currentAngle = props.globalTime * rotationSpeed
       const targetX = targetRadius * Math.cos(currentAngle)
       const targetY = 0
       const targetZ = targetRadius * Math.sin(currentAngle)
-      
-      // Interpolate from chaotic to orbital position based on evolution progress
-      const startX = initialChaoticPositions[i3]
-      const startY = initialChaoticPositions[i3 + 1]
-      const startZ = initialChaoticPositions[i3 + 2]
-      
-      positionArray[i3] = startX + (targetX - startX) * props.evolutionProgress
-      positionArray[i3 + 1] = startY + (targetY - startY) * props.evolutionProgress
-      positionArray[i3 + 2] = startZ + (targetZ - startZ) * props.evolutionProgress
-      
-      // Update scale during evolution
-      const baseScale = targetRadius === innerRadius ? 1.125
-        : targetRadius === middleRadius ? 0.975
-        : 0.75
+
+      if (props.evolutionProgress < 1.0) {
+        // During evolution: interpolate from chaotic to orbital position
+        const startX = initialChaoticPositions[i3]
+        const startY = initialChaoticPositions[i3 + 1]
+        const startZ = initialChaoticPositions[i3 + 2]
+
+        positionArray[i3] = startX + (targetX - startX) * props.evolutionProgress
+        positionArray[i3 + 1] = startY + (targetY - startY) * props.evolutionProgress
+        positionArray[i3 + 2] = startZ + (targetZ - startZ) * props.evolutionProgress
+
+        // Scale during evolution
+        const baseScale = targetRadius === innerRadius ? 1.125
+          : targetRadius === middleRadius ? 0.975
+            : 0.75
         scaleArray[i] = baseScale * (0.3 + 0.7 * props.evolutionProgress)
+      } else {
+        positionArray[i3] = targetX
+        positionArray[i3 + 1] = targetY
+        positionArray[i3 + 2] = targetZ
+
+        // Full scale after evolution
+        const fullScale = targetRadius === innerRadius ? 1.125
+          : targetRadius === middleRadius ? 0.975
+            : 0.75
+        scaleArray[i] = fullScale
+      }
     } else {
-      // Scattered particles gradually become more visible
-      const baseScale = 1.6
-      scaleArray[i] = baseScale * (0.5 + 0.5 * props.evolutionProgress)
+      // Scattered particles - no orbital motion, just visibility changes
+      if (props.evolutionProgress < 1.0) {
+        // During evolution: gradually become more visible
+        const baseScale = 1.6
+        scaleArray[i] = baseScale * (0.5 + 0.5 * props.evolutionProgress)
+      } else {
+        // After evolution: full visibility
+        scaleArray[i] = 1.6
+      }
+      // Position stays the same for scattered particles
     }
   }
-  
+
   positionAttribute.needsUpdate = true
   scaleAttribute.needsUpdate = true
 }
@@ -271,19 +292,21 @@ watch(galaxyCenter, (val) => {
     bufferRef.value.position.set(val.x, val.y, val.z)
   }
 })
+
+onMounted(() => {
+  // Ensure proper initialization when component mounts
+  if (props.evolutionProgress >= 1.0) {
+    // If already evolved, set final positions immediately
+    updateParticlePositions()
+  }
+})
 </script>
 
 <template>
   <TresPoints v-if="enabled" ref="bufferRef">
-    <TresBufferGeometry 
-      :position="[positions, 3]" 
-      :a-scale="[scales, 1]" 
-      :color="[colors, 3]"
-      :a-randomness="[randomnessArray, 3]" 
-      :a-orbit-factor="[orbitFactors, 1]" 
-      :a-target-radius="[targetRadii, 1]"
-      :a-rotation-speed="[rotationSpeedsArray, 1]" 
-    />
+    <TresBufferGeometry :position="[positions, 3]" :a-scale="[scales, 1]" :color="[colors, 3]"
+      :a-randomness="[randomnessArray, 3]" :a-orbit-factor="[orbitFactors, 1]" :a-target-radius="[targetRadii, 1]"
+      :a-rotation-speed="[rotationSpeedsArray, 1]" />
     <TresShaderMaterial v-bind="shader" />
   </TresPoints>
 </template>
