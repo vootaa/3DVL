@@ -57,13 +57,8 @@ function animate() {
   const elapsed = (performance.now() - startTime.value) / 1000
   const progress = Math.min(elapsed / props.duration, 1)
   
-  // Smooth easing function for natural evolution feel
-  const easedProgress = progress < 0.5 
-    ? 2 * progress * progress 
-    : 1 - Math.pow(-2 * progress + 2, 3) / 2
-
-  animationProgress.value = easedProgress
-  emit('progress', easedProgress)
+  animationProgress.value = progress
+  emit('progress', progress)
 
   if (progress >= 1) {
     isAnimating.value = false

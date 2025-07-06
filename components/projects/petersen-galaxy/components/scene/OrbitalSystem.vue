@@ -246,14 +246,12 @@ function updateParticlePositions() {
     if (orbitFactors[i] > 0.5) { // Orbital particle
       const targetRadius = targetRadii[i]
       const rotationSpeed = rotationSpeedsArray[i]
-
-
+      const currentAngle = initialAngles[i]
 
       if (props.evolutionProgress < 1.0) {
         // Calculate target orbital position with continuous rotation
-        const currentAngle = initialAngles[i] + props.globalTime * rotationSpeed
         const targetX = targetRadius * Math.cos(currentAngle)
-        const targetY = 0
+        const targetY = Math.random() * 0.5 - 0.25 // Random height variation during evolution
         const targetZ = targetRadius * Math.sin(currentAngle)
 
         // During evolution: interpolate from chaotic to orbital position
@@ -272,9 +270,9 @@ function updateParticlePositions() {
         scaleArray[i] = baseScale * Math.max(0.7, 0.7 + 0.3 * props.evolutionProgress)
       } else {
         // After evolution: continue orbital motion with rotation
-        const currentAngle = initialAngles[i] + props.globalTime * rotationSpeed
+        
         positionArray[i3] = targetRadius * Math.cos(currentAngle)
-        positionArray[i3 + 1] = 0
+        positionArray[i3 + 1] = Math.random() * 0.5 - 0.25 
         positionArray[i3 + 2] = targetRadius * Math.sin(currentAngle)
 
         // Full scale after evolution
