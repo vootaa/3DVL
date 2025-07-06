@@ -1,318 +1,64 @@
 <script setup lang="ts">
-import { ref, inject, computed, onMounted, onUnmounted, watch } from 'vue'
-import { Logger } from '../../../../utils/logger'
-import { LoggingConfig } from '../../configs/logging-config'
-import { formatWithUnit } from '../../configs/astronomical-units'
-import { useGalaxyDriftData } from '../../services/galaxy-drift-data'
+// Static test data
+import { computed, ref } from 'vue'
 
-// Use the unified drift data service
-const driftDataService = useGalaxyDriftData()
-
-// Type definitions for injected data (for backward compatibility)
-interface GalaxyDriftData {
-  position: { value: { x: string; y: string; z: string } }
-  velocity: { value: string }
-  distance: { value: string }
-  duration: { value: number }
-}
-
-interface GalaxyCenter {
-  value: { x: number; y: number; z: number }
-}
-
-// Inject data and pass to service
-const galaxyDriftData = inject<GalaxyDriftData>('galaxyDriftData', null as any)
-const galaxyCenter = inject<GalaxyCenter>('galaxyCenter', null as any)
-
-// Inject data into service for unified access
-if (galaxyDriftData || galaxyCenter) {
-  driftDataService.injectData(galaxyDriftData, galaxyCenter)
-}
-
-// Watch for data changes and update service
-watch([
-  () => galaxyDriftData?.position?.value,
-  () => galaxyDriftData?.velocity?.value,
-  () => galaxyDriftData?.distance?.value,
-  () => galaxyDriftData?.duration?.value,
-  () => galaxyCenter?.value
-], ([newPos, newVel, newDist, newDuration, newCenter]) => {
-  if (galaxyDriftData || galaxyCenter) {
-    driftDataService.injectData(galaxyDriftData, galaxyCenter)
-    Logger.throttle('DRIFT_MONITOR', 'Data injected into service', {
-      hasDriftData: !!galaxyDriftData,
-      hasGalaxyCenter: !!galaxyCenter,
-      // Safe logging without circular references
-      positionValue: newPos ? 'available' : 'none',
-      velocityValue: newVel ? 'available' : 'none',
-      distanceValue: newDist ? 'available' : 'none',
-      durationValue: newDuration ? 'available' : 'none',
-      centerValue: newCenter ? 'available' : 'none'
-    }, 10000)
-  }
-}, { immediate: true, deep: true })
-
-
-// Debug state
 const debugInfo = ref({
   isDrifting: false,
-  velocityMagnitude: 0,
-  positionChange: 0,
-  diagnosis: 'INITIALIZING',
+  diagnosis: 'STATIC_TEST',
+  injectionStatus: 'STATIC',
   statistics: {
-    averageVelocity: 0,
-    maxVelocity: 0,
-    totalDistance: 0,
-    duration: 0,
-    samplesCollected: 0,
-    currentPosition: { x: 0, y: 0, z: 0 }
+    averageVelocity: 0.1234,
+    maxVelocity: 0.2345,
+    totalDistance: 1.2345,
+    duration: 12.34,
+    samplesCollected: 10,
+    currentPosition: { x: 1.0, y: 2.0, z: 3.0 }
   },
-  injectionStatus: 'CHECKING',
-  lastUpdate: ''
+  lastUpdate: '12:34:56'
 })
 
-let updateInterval: NodeJS.Timeout | null = null
-
-// Formatted display values using fixed GU units
-const formattedVelocity = computed(() => {
-  const value = debugInfo.value.velocityMagnitude
-  return formatWithUnit(value, 'GU', 'distance', 8) + '/s'
-})
-
-const formattedPositionChange = computed(() => {
-  const value = debugInfo.value.positionChange
-  return formatWithUnit(value, 'GU', 'distance', 8)
-})
-
-const formattedPosition = computed(() => {
-  const pos = debugInfo.value.statistics.currentPosition
-  return {
-    x: formatWithUnit(pos.x, 'GU', 'distance', 3),
-    y: formatWithUnit(pos.y, 'GU', 'distance', 3),
-    z: formatWithUnit(pos.z, 'GU', 'distance', 3),
-    unit: 'GU'
-  }
-})
-
-const formattedTotalDistance = computed(() => {
-  const value = debugInfo.value.statistics.totalDistance
-  return formatWithUnit(value, 'GU', 'distance', 6)
-})
-
-const formattedAvgVelocity = computed(() => {
-  const value = debugInfo.value.statistics.averageVelocity
-  return formatWithUnit(value, 'GU', 'distance', 8) + '/s'
-})
-
-const formattedMaxVelocity = computed(() => {
-  const value = debugInfo.value.statistics.maxVelocity
-  return formatWithUnit(value, 'GU', 'distance', 8) + '/s'
-})
-
-// Track previous position for velocity calculation
-let lastPosition = ref<{ x: number; y: number; z: number } | null>(null)
-let lastUpdateTime = Date.now()
-
-// Update debug information
-const updateDebugInfo = () => {
-  try {
-    // Get data from the unified service
-    const driftStatus = driftDataService.getDriftStatus()
-    const availability = driftDataService.getAvailabilityStatus()
-
-    // Log availability status with throttling
-    Logger.throttle('DRIFT_MONITOR_DEBUG', 'Checking data sources', {
-      availability,
-      driftStatus: driftStatus.hasData,
-      formatted: driftStatus.formatted
-    }, LoggingConfig.DRIFT_MONITOR_UPDATE)
-
-    if (!driftStatus.hasData) {
-      debugInfo.value = {
-        ...debugInfo.value,
-        isDrifting: false,
-        velocityMagnitude: 0,
-        positionChange: 0,
-        diagnosis: 'NO_DATA',
-        injectionStatus: availability.isAvailable ? 'PENDING' : 'FAILED',
-        lastUpdate: new Date().toLocaleTimeString()
-        // Keep existing statistics
-      }
-      return
-    }
-
-    const currentTime = Date.now()
-    const deltaTime = (currentTime - lastUpdateTime) / 1000 // seconds
-
-    // Get current position from service
-    const center = driftDataService.getGalaxyCenter()
-    const currentPosition = center ? {
-      x: parseFloat(center.x.toFixed(8)),
-      y: parseFloat(center.y.toFixed(8)),
-      z: parseFloat(center.z.toFixed(8))
-    } : { x: 0, y: 0, z: 0 }
-
-    let currentVelocity = 0
-    let positionChange = 0
-
-    // Try to get velocity from service first
-    const velocityString = driftDataService.getVelocity()
-    if (velocityString !== 'N/A') {
-      const velocityMatch = velocityString.match(/([\d.e-]+)/)
-      if (velocityMatch) {
-        // Velocity from GalaxyDriftController is in mGU/s, convert to GU/s for calculations
-        currentVelocity = parseFloat(velocityMatch[1]) / 1000
-      }
-    }
-
-    // Calculate velocity from position changes if not available
-    if (currentVelocity === 0 && lastPosition.value && deltaTime > 0 && center) {
-      const dx = center.x - lastPosition.value.x
-      const dy = center.y - lastPosition.value.y
-      const dz = center.z - lastPosition.value.z
-      positionChange = Math.sqrt(dx * dx + dy * dy + dz * dz)
-      currentVelocity = positionChange / deltaTime  // This is in GU/s
-    } else if (lastPosition.value && center) {
-      // Always calculate position change for statistics
-      const dx = center.x - lastPosition.value.x
-      const dy = center.y - lastPosition.value.y
-      const dz = center.z - lastPosition.value.z
-      positionChange = Math.sqrt(dx * dx + dy * dy + dz * dz)
-    }
-
-    // Update statistics
-    const isDrifting = currentVelocity > 0.0001 // Lower threshold for better detection
-
-    debugInfo.value = {
-      isDrifting,
-      velocityMagnitude: currentVelocity,
-      positionChange,
-      diagnosis: isDrifting ? 'ACTIVE_DRIFT' : (currentVelocity > 0 ? 'MINIMAL_DRIFT' : 'NO_MOVEMENT'),
-      statistics: {
-        averageVelocity: debugInfo.value.statistics.samplesCollected > 0
-          ? ((debugInfo.value.statistics.averageVelocity * debugInfo.value.statistics.samplesCollected) + currentVelocity) / (debugInfo.value.statistics.samplesCollected + 1)
-          : currentVelocity,
-        maxVelocity: Math.max(debugInfo.value.statistics.maxVelocity, currentVelocity),
-        totalDistance: debugInfo.value.statistics.totalDistance + (positionChange || 0),
-        duration: debugInfo.value.statistics.duration + deltaTime,
-        samplesCollected: debugInfo.value.statistics.samplesCollected + 1,
-        currentPosition
-      },
-      injectionStatus: 'SUCCESS',
-      lastUpdate: new Date().toLocaleTimeString()
-    }
-
-    // Store for next calculation
-    lastPosition.value = { ...currentPosition }
-    lastUpdateTime = currentTime
-
-    Logger.throttle('DRIFT_MONITOR_UPDATE', 'Monitor updated via service', {
-      position: currentPosition,
-      velocity: currentVelocity,
-      positionChange,
-      isDrifting,
-      diagnosis: debugInfo.value.diagnosis,
-      serviceStatus: availability,
-      statistics: debugInfo.value.statistics
-    }, LoggingConfig.DRIFT_MONITOR_UPDATE)
-
-    // Update chart data
-    updateChartData()
-
-  } catch (error) {
-    Logger.error('DRIFT_MONITOR', 'Error updating debug info', error)
-    debugInfo.value.diagnosis = 'UPDATE_ERROR'
-    debugInfo.value.injectionStatus = 'ERROR'
-
-    // Fallback: try to get from window config
-    if (typeof window !== 'undefined' && (window as any).__DRIFT_CONFIG__) {
-      debugInfo.value.diagnosis = 'CONFIG_ONLY'
-      debugInfo.value.injectionStatus = 'PARTIAL'
-      Logger.throttle('DRIFT_MONITOR_FALLBACK', 'Using config fallback', {}, LoggingConfig.DRIFT_MONITOR_UPDATE)
-    } else {
-      debugInfo.value.diagnosis = 'INJECTION_FAILED'
-      debugInfo.value.injectionStatus = 'FAILED'
-    }
-  }
+// Fake RAW Drift Data
+const galaxyDriftData = {
+  position: { value: { x: 1.0, y: 2.0, z: 3.0 } },
+  velocity: { value: 0.1234 },
+  distance: { value: 1.2345 }
 }
 
-// Computed values for display
-const driftStatusColor = computed(() => {
-  switch (debugInfo.value.diagnosis) {
-    case 'ACTIVE_DRIFT': return '#00ccff'
-    case 'NO_VELOCITY': return '#6699ff'
-    case 'NO_MOVEMENT': return '#4477ff'
-    case 'INJECTION_FAILED': return '#2255bb'
-    default: return '#99bbff'
-  }
-})
-
-const injectionStatusColor = computed(() => {
-  return debugInfo.value.injectionStatus === 'SUCCESS' ? '#00ccff' : '#4477ff'
-})
-
-// Lightweight chart data for velocity and position change (last 50 points)
-const velocityHistory = ref<number[]>([])
-const positionChangeHistory = ref<number[]>([])
-const maxHistoryLength = 50
-
-// Update chart data
-const updateChartData = () => {
-  // Add current values to history
-  velocityHistory.value.push(debugInfo.value.velocityMagnitude)
-  positionChangeHistory.value.push(debugInfo.value.positionChange)
-
-  // Keep only last N points
-  if (velocityHistory.value.length > maxHistoryLength) {
-    velocityHistory.value.shift()
-  }
-  if (positionChangeHistory.value.length > maxHistoryLength) {
-    positionChangeHistory.value.shift()
-  }
-}
-
-// Generate SVG path for chart
-const generateChartPath = (data: number[], width: number = 200, height: number = 40) => {
-  if (data.length < 2) return ''
-
-  const maxValue = Math.max(...data, 0.0001) // Prevent division by zero
-  const stepX = width / (data.length - 1)
-
-  let path = `M 0 ${height - (data[0] / maxValue) * height}`
-
-  for (let i = 1; i < data.length; i++) {
-    const x = i * stepX
-    const y = height - (data[i] / maxValue) * height
-    path += ` L ${x} ${y}`
-  }
-
-  return path
-}
-
-// Chart paths for velocity and position change
-const velocityChartPath = computed(() =>
-  generateChartPath(velocityHistory.value, 180, 30)
+// Status colors
+const driftStatusColor = computed(() =>
+  debugInfo.value.diagnosis === 'STATIC_TEST' ? '#ffaa00' : '#00ccff'
+)
+const injectionStatusColor = computed(() =>
+  debugInfo.value.injectionStatus === 'STATIC' ? '#ffaa00' : '#00ccff'
 )
 
-const positionChangeChartPath = computed(() =>
-  generateChartPath(positionChangeHistory.value, 180, 30)
-)
+// Format data
+const formattedVelocity = computed(() => galaxyDriftData.velocity.value.toFixed(4) + ' GU/s')
+const formattedPositionChange = computed(() => '0.0123 GU')
+const formattedPosition = computed(() => ({
+  x: galaxyDriftData.position.value.x.toFixed(3),
+  y: galaxyDriftData.position.value.y.toFixed(3),
+  z: galaxyDriftData.position.value.z.toFixed(3)
+}))
+const formattedTotalDistance = computed(() => galaxyDriftData.distance.value.toFixed(4) + ' GU')
+const formattedAvgVelocity = computed(() => debugInfo.value.statistics.averageVelocity.toFixed(4) + ' GU/s')
+const formattedMaxVelocity = computed(() => debugInfo.value.statistics.maxVelocity.toFixed(4) + ' GU/s')
 
-onMounted(() => {
-  // Update debug info every 2 seconds for more responsive display
-  updateInterval = setInterval(updateDebugInfo, 2000)
-  updateDebugInfo() // Initial update
+// Fake history data for chart
+const velocityHistory = ref([0.1, 0.12, 0.13, 0.11, 0.1234])
+const positionChangeHistory = ref([0.01, 0.011, 0.012, 0.0115, 0.0123])
 
-  Logger.log('DRIFT_MONITOR', 'Drift monitor component mounted')
-})
-
-onUnmounted(() => {
-  if (updateInterval) {
-    clearInterval(updateInterval)
-  }
-
-  Logger.log('DRIFT_MONITOR', 'Drift monitor component unmounted')
-})
+function genChartPath(history: number[], max = 0.15, min = 0) {
+  if (!history.length) return ''
+  const w = 180, h = 30
+  const step = w / (history.length - 1)
+  return history.map((v, i) => {
+    const y = h - ((v - min) / (max - min)) * h
+    return `${i === 0 ? 'M' : 'L'} ${i * step} ${y.toFixed(2)}`
+  }).join(' ')
+}
+const velocityChartPath = computed(() => genChartPath(velocityHistory.value))
+const positionChangeChartPath = computed(() => genChartPath(positionChangeHistory.value, 0.013, 0.01))
 </script>
 
 <template>

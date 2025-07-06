@@ -3,11 +3,9 @@ import { ref } from 'vue'
 
 const props = defineProps<{
   gridOn: boolean
-  trailOn: boolean
   starOn: boolean
   disabled?: boolean
   onToggleGrid: () => void
-  onToggleTrail: () => void
   onToggleStar: () => void
 }>()
 
@@ -32,14 +30,6 @@ function handleMenuBtnClick() {
           <i v-else class="i-carbon-close"></i>
         </span>
         Grid Helper
-      </div>
-      <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
-        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleTrail()">
-        <span class="menu-status">
-          <i v-if="props.trailOn" class="i-carbon-checkmark-filled"></i>
-          <i v-else class="i-carbon-close"></i>
-        </span>
-        Drift Trails
       </div>
       <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
         :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleStar()">
@@ -150,5 +140,4 @@ function handleMenuBtnClick() {
   display: flex;
   align-items: center;
 }
-
 </style>
