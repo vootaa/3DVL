@@ -80,11 +80,11 @@ for (let i = 0; i < totalCount; i++) {
     // Generate initial chaotic positions for evolution animation
     const initialRadius = Math.random() * maxSpaceRadius
     const initialAngle = Math.random() * Math.PI * 2
-    const initialHeight = Math.random() * 10 - 5 // Random height variation
+    const initialHeight = Math.random() * 0.2 - 0.1 // Random height variation
 
     initialChaoticPositions[i3] = Math.cos(initialAngle) * initialRadius
-    initialChaoticPositions[i3 + 1] = initialHeight
-    initialChaoticPositions[i3 + 2] = Math.sin(initialAngle) * initialRadius
+    initialChaoticPositions[i3 + 1] = Math.sin(initialAngle) * initialRadius
+    initialChaoticPositions[i3 + 2] = initialHeight
 
     // Set initial positions based on evolution progress
     if (props.evolutionProgress >= 1.0) {
