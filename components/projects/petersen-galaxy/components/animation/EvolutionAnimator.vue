@@ -78,7 +78,7 @@ function animate() {
 
 onMounted(() => {
   if (props.autoStart) {
-    setTimeout(startAnimation, 1000)
+    startAnimation()
   }
 })
 
