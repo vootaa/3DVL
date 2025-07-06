@@ -27,9 +27,11 @@ const showGridAfterCameraMove = ref(false)
 
 const gridOn = ref(false)
 const starOn = ref(true)
-
-// Star evolution state - track if evolution has already happened
 const hasEvolutionOccurred = ref(false)
+
+function handleStarClusterEvolutionComplete() {
+  hasEvolutionOccurred.value = true
+}
 
 // Camera controller instance
 let cameraController: CameraController
@@ -98,10 +100,6 @@ function handleToggleGrid() {
 
 function handleToggleStar() {
   starOn.value = !starOn.value
-
-  if (starOn.value && starClusterRef.value?.resetStarsPosition) {
-    starClusterRef.value.resetStarsPosition()
-  }
 }
 </script>
 
@@ -112,7 +110,7 @@ function handleToggleStar() {
       <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
       <TresAmbientLight :intensity="0.08" color="#004488" />
       <StarCluster v-if="starOn" ref="starClusterRef" :skip-evolution="hasEvolutionOccurred"
-        :galaxy-center="galaxyCenter" @evolution-complete="hasEvolutionOccurred = true" />
+        :galaxy-center="galaxyCenter" @evolution-complete="handleStarClusterEvolutionComplete" />
       <OrbitalSystem :galaxy-center="galaxyCenter" />
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
       <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[16, 16, '#003366', '#002244']"
