@@ -3,10 +3,10 @@ import { ref } from 'vue'
 
 const props = defineProps<{
   gridOn: boolean
-  starOn: boolean
+  stellarCoreOn: boolean
   disabled?: boolean
   onToggleGrid: () => void
-  onToggleStar: () => void
+  onToggleStellarCore: () => void
 }>()
 
 const menuOpen = ref(false)
@@ -32,12 +32,12 @@ function handleMenuBtnClick() {
         Grid Helper
       </div>
       <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
-        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleStar()">
+        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleStellarCore()">
         <span class="menu-status">
-          <i v-if="props.starOn" class="i-carbon-checkmark-filled"></i>
+          <i v-if="props.stellarCoreOn" class="i-carbon-checkmark-filled"></i>
           <i v-else class="i-carbon-close"></i>
         </span>
-        Star Cluster
+        Stellar Core
       </div>
     </div>
   </div>

@@ -20,16 +20,16 @@ const gl = {
   toneMapping: NoToneMapping,
 }
 
-const starClusterRef = ref()
+const stellarCoreRef = ref()
 const cameraRef = ref()
 const orbitControlsRef = ref()
 const showGridAfterCameraMove = ref(false)
 
 const gridOn = ref(false)
-const starOn = ref(true)
+const stellarCoreOn = ref(true)
 const hasEvolutionOccurred = ref(false)
 
-function handleStarClusterEvolutionComplete() {
+function handleStellarCoreEvolutionComplete() {
   hasEvolutionOccurred.value = true
 }
 
@@ -98,8 +98,8 @@ function handleToggleGrid() {
 
 }
 
-function handleToggleStar() {
-  starOn.value = !starOn.value
+function handleToggleStellarCore() {
+  stellarCoreOn.value = !stellarCoreOn.value
 }
 </script>
 
@@ -109,16 +109,16 @@ function handleToggleStar() {
       <RendererStatsCollector />
       <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
       <TresAmbientLight :intensity="0.08" color="#004488" />
-      <StarCluster v-if="starOn" ref="starClusterRef" :skip-evolution="hasEvolutionOccurred"
-        :galaxy-center="galaxyCenter" @evolution-complete="handleStarClusterEvolutionComplete" />
+      <StarCluster v-if="stellarCoreOn" ref="stellarCoreRef" :skip-evolution="hasEvolutionOccurred"
+        :galaxy-center="galaxyCenter" @evolution-complete="handleStellarCoreEvolutionComplete" />
       <OrbitalSystem :galaxy-center="galaxyCenter" />
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
       <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[16, 16, '#003366', '#002244']"
         :position="[0, -4.2, 0]" />
       <TresAxesHelper v-if="gridOn" :args="[1]" :position="[0, 0, 0]" />
     </TresCanvas>
-    <SwitchMenuBar :grid-on="gridOn" :star-on="starOn" :on-toggle-grid="handleToggleGrid"
-      :on-toggle-star="handleToggleStar" :disabled="controlsDisabled" />
+    <SwitchMenuBar :grid-on="gridOn" :stellar-core-on="stellarCoreOn" :on-toggle-grid="handleToggleGrid"
+      :on-toggle-stellar-core="handleToggleStellarCore" :disabled="controlsDisabled" />
     <ToolsMenuBar />
     <CameraInfo />
     <EvolutionTimeline @visible-change="handleEvolutionTimelineVisible" />

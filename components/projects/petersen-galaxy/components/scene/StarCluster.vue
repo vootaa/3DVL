@@ -27,17 +27,17 @@ const emit = defineEmits<{ 'evolution-complete': [] }>()
 
 const { innerRadius, middleRadius } = orbitalConfig
 const { stars } = starClusterConfig
-const starColors = starClusterConfig.visual.colors
-const starSizes = {
+const stellarCoreColors = starClusterConfig.visual.colors
+const stellarCoreSizes = {
   'green-star': { base: 14, amplitude: 0.05 },
   'golden-star': { base: 18, amplitude: 0.10 },
   'blue-star': { base: 28, amplitude: 0.15 }
 }
 type StellarType = 'green-star' | 'golden-star' | 'blue-star'
 
-const starGeometry = ref<BufferGeometry>()
-const starMaterial = ref<ShaderMaterial>()
-const starClusterRef = ref()
+const stellarCoreGeometry = ref<BufferGeometry>()
+const stellarCoreMaterial = ref<ShaderMaterial>()
+const stellarCoreClusterRef = ref()
 
 let animationTime = 0
 let animationId: number | undefined
@@ -86,11 +86,11 @@ function initStars() {
     } else {
       rotationSpeeds[index] = orbitalConfig.rotationSpeeds.outer
     }
-    const color = starColors[star.type as StellarType]
+    const color = stellarCoreColors[star.type as StellarType]
     colors[i3] = color.r
     colors[i3 + 1] = color.g
     colors[i3 + 2] = color.b
-    const sizeConfig = starSizes[star.type as StellarType]
+    const sizeConfig = stellarCoreSizes[star.type as StellarType]
     sizes[index] = !props.skipEvolution ? sizeConfig.base * 0.3 : sizeConfig.base
     alphas[index] = !props.skipEvolution ? 0.1 + Math.random() * 0.1 : 0.85
     times[index] = Math.random() * Math.PI * 2
@@ -121,27 +121,27 @@ function initStars() {
     transparent: true
   })
 
-  starGeometry.value = geometry
-  starMaterial.value = material
+  stellarCoreGeometry.value = geometry
+  stellarCoreMaterial.value = material
   isInitialized = true
 }
 
 function animate() {
   animationTime += 0.016
-  if (starMaterial.value && starGeometry.value) {
-    starMaterial.value.uniforms.time.value = animationTime
-    starMaterial.value.uniforms.evolutionTime.value = animationTime * 0.1
+  if (stellarCoreMaterial.value && stellarCoreGeometry.value) {
+    stellarCoreMaterial.value.uniforms.time.value = animationTime
+    stellarCoreMaterial.value.uniforms.evolutionTime.value = animationTime * 0.1
 
-    if (starClusterRef.value && galaxyCenter.value) {
-      starClusterRef.value.position.set(galaxyCenter.value.x, galaxyCenter.value.y, galaxyCenter.value.z)
+    if (stellarCoreClusterRef.value && galaxyCenter.value) {
+      stellarCoreClusterRef.value.position.set(galaxyCenter.value.x, galaxyCenter.value.y, galaxyCenter.value.z)
     }
 
-    const positions = starGeometry.value.getAttribute('position')
-    const targetRadii = starGeometry.value.getAttribute('targetRadius')
-    const rotationSpeeds = starGeometry.value.getAttribute('rotationSpeed')
-    const initialAngles = starGeometry.value.getAttribute('initialAngle')
-    const sizes = starGeometry.value.getAttribute('size')
-    const alphas = starGeometry.value.getAttribute('alpha')
+    const positions = stellarCoreGeometry.value.getAttribute('position')
+    const targetRadii = stellarCoreGeometry.value.getAttribute('targetRadius')
+    const rotationSpeeds = stellarCoreGeometry.value.getAttribute('rotationSpeed')
+    const initialAngles = stellarCoreGeometry.value.getAttribute('initialAngle')
+    const sizes = stellarCoreGeometry.value.getAttribute('size')
+    const alphas = stellarCoreGeometry.value.getAttribute('alpha')
 
     if (positions && targetRadii && rotationSpeeds && initialAngles) {
       for (let i = 0; i < stars.length; i++) {
@@ -183,7 +183,7 @@ function animate() {
           positions.array[i3 + 2] = targetZ
         }
 
-        const sizeConfig = starSizes[star.type as StellarType]
+        const sizeConfig = stellarCoreSizes[star.type as StellarType]
         const baseSize = sizeConfig.base
         const amplitude = sizeConfig.amplitude
         const timeOffset = animationTime + i * 0.5
@@ -210,7 +210,7 @@ function animate() {
       alphas.needsUpdate = true
     }
 
-    const times = starGeometry.value.getAttribute('time')
+    const times = stellarCoreGeometry.value.getAttribute('time')
     if (times) {
       for (let i = 0; i < times.count; i++) {
         times.array[i] += 0.005 + Math.random() * 0.002
@@ -222,8 +222,8 @@ function animate() {
 }
 
 watch(galaxyCenter, (val) => {
-  if (starClusterRef.value && val) {
-    starClusterRef.value.position.set(val.x, val.y, val.z)
+  if (stellarCoreClusterRef.value && val) {
+    stellarCoreClusterRef.value.position.set(val.x, val.y, val.z)
   }
 })
 
@@ -242,15 +242,15 @@ onUnmounted(() => {
   }
 })
 
-const resetStarsPosition = () => {
-  if (!isInitialized || !starGeometry.value) return
+const resetStellarCorePosition = () => {
+  if (!isInitialized || !stellarCoreGeometry.value) return
   animationTime = 30.0
-  const positions = starGeometry.value.getAttribute('position')
-  const sizes = starGeometry.value.getAttribute('size')
-  const alphas = starGeometry.value.getAttribute('alpha')
-  const targetRadii = starGeometry.value.getAttribute('targetRadius')
-  const initialAngles = starGeometry.value.getAttribute('initialAngle')
-  const rotationSpeeds = starGeometry.value.getAttribute('rotationSpeed')
+  const positions = stellarCoreGeometry.value.getAttribute('position')
+  const sizes = stellarCoreGeometry.value.getAttribute('size')
+  const alphas = stellarCoreGeometry.value.getAttribute('alpha')
+  const targetRadii = stellarCoreGeometry.value.getAttribute('targetRadius')
+  const initialAngles = stellarCoreGeometry.value.getAttribute('initialAngle')
+  const rotationSpeeds = stellarCoreGeometry.value.getAttribute('rotationSpeed')
   for (let i = 0; i < stars.length; i++) {
     const i3 = i * 3
     const star = stars[i]
@@ -259,7 +259,7 @@ const resetStarsPosition = () => {
     positions.array[i3] = radius * Math.cos(angle)
     positions.array[i3 + 1] = 0
     positions.array[i3 + 2] = radius * Math.sin(angle)
-    const sizeConfig = starSizes[star.type as StellarType]
+    const sizeConfig = stellarCoreSizes[star.type as StellarType]
     sizes.array[i] = sizeConfig.base
     alphas.array[i] = 0.85
   }
@@ -268,16 +268,16 @@ const resetStarsPosition = () => {
   alphas.needsUpdate = true
 }
 
-defineExpose({ resetStarsPosition })
+defineExpose({ resetStellarCorePosition })
 </script>
 
 <template>
-  <TresGroup ref="starClusterRef">
+  <TresGroup ref="stellarCoreClusterRef">
     <TresPoints
-      v-if="starGeometry && starMaterial"
-      ref="starPoints"
-      :geometry="starGeometry"
-      :material="starMaterial"
+      v-if="stellarCoreGeometry && stellarCoreMaterial"
+      ref="stellarCorePoints"
+      :geometry="stellarCoreGeometry"
+      :material="stellarCoreMaterial"
     />
     <template v-for="star in stars" :key="`core-${star.id}`">
       <TresMesh
@@ -290,7 +290,7 @@ defineExpose({ resetStarsPosition })
       >
         <TresSphereGeometry :args="[0.02, 8, 8]" />
         <TresMeshBasicMaterial
-          :color="starColors[star.type as StellarType]"
+          :color="stellarCoreColors[star.type as StellarType]"
           :transparent="true"
           :opacity="0.8"
         />
