@@ -4,9 +4,11 @@ import { ref } from 'vue'
 const props = defineProps<{
   gridOn: boolean
   stellarCoreOn: boolean
+  orbitalSystemOn: boolean
   disabled?: boolean
   onToggleGrid: () => void
   onToggleStellarCore: () => void
+  onToggleOrbitalSystem: () => void
 }>()
 
 const menuOpen = ref(false)
@@ -38,6 +40,14 @@ function handleMenuBtnClick() {
           <i v-else class="i-carbon-close"></i>
         </span>
         Stellar Core
+      </div>
+      <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
+        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleOrbitalSystem()">
+        <span class="menu-status">
+          <i v-if="props.orbitalSystemOn" class="i-carbon-checkmark-filled"></i>
+          <i v-else class="i-carbon-close"></i>
+        </span>
+        Orbital System
       </div>
     </div>
   </div>

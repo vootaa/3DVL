@@ -243,6 +243,11 @@ function updateStellarCorePositions() {
   positions.needsUpdate = true
   sizes.needsUpdate = true
   alphas.needsUpdate = true
+
+  emit('sync-state', {
+    rotationAngle: props.globalTime * rotationSpeeds.array[0],
+    globalTime: props.globalTime
+  })
 }
 
 // Update individual star timing for animation variety
@@ -277,6 +282,13 @@ onUnmounted(() => {
     cancelAnimationFrame(animationId)
   }
 })
+
+const emit = defineEmits<{
+  'sync-state': [{
+    rotationAngle: number
+    globalTime: number
+  }]
+}>()
 
 // Reset stellar core to final evolved position (for debugging/testing)
 const resetStellarCorePosition = () => {
@@ -339,5 +351,4 @@ defineExpose({ resetStellarCorePosition })
       </TresMesh>
     </template>
   </TresGroup>
-</template>
 </template>

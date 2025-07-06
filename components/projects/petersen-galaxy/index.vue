@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Vector3 } from 'three'
-import { ref, provide, onMounted, nextTick, computed } from 'vue'
+import { ref, provide, onMounted, nextTick} from 'vue'
 import OrbitalSystem from './components/scene/OrbitalSystem.vue'
 import StellarCore from './components/scene/StellarCore.vue'
 import EvolutionAnimator from './components/animation/EvolutionAnimator.vue'
@@ -178,8 +178,10 @@ function handleEvolutionTimelineVisible(val: boolean) {
     <SwitchMenuBar 
       :grid-on="gridOn" 
       :stellar-core-on="evolutionState.stellarCoreEnabled" 
+      :orbital-system-on="evolutionState.orbitalSystemEnabled" 
       :on-toggle-grid="handleToggleGrid"
       :on-toggle-stellar-core="handleToggleStellarCore" 
+      :on-toggle-orbital-system="handleToggleOrbitalSystem"
       :disabled="controlsDisabled" 
     />
     
@@ -196,11 +198,6 @@ function handleEvolutionTimelineVisible(val: boolean) {
 
 <style scoped>
 .galaxy-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-</style>
   position: relative;
   width: 100%;
   height: 100%;

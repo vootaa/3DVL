@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { computed, watch } from 'vue'
 
 interface Props {
   visible?: boolean
@@ -136,33 +136,6 @@ watch(() => props.visible, (val) => {
 }
 
 .progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #0088cc, #66ddff);
-  border-radius: 2px;
-  transition: width 0.1s ease;
-}
-
-/* Responsive design */
-@media only screen and (max-width: 768px) {
-  .timeline-content {
-    min-width: 280px;
-    padding: 10px 16px;
-    gap: 10px;
-  }
-
-  .timeline-title {
-    font-size: 16px;
-  }
-
-  .timeline-age {
-    font-size: 11px;
-  }
-
-  .timeline-progress {
-    width: 60px;
-  }
-}
-</style>
   height: 100%;
   background: linear-gradient(90deg, #0088cc, #66ddff);
   border-radius: 2px;
