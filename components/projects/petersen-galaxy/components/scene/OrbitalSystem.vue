@@ -7,6 +7,8 @@ import { orbitalConfig, orbitalColorConfig } from '../../configs/orbital-config'
 import vertexShader from '../../shaders/orbital-vertex.glsl'
 import fragmentShader from '../../shaders/orbital-fragment.glsl'
 
+import {Logger} from '../../../../utils/logger'
+
 interface Props {
   galaxyCenter?: Vector3
   globalTime?: number
@@ -231,7 +233,7 @@ function updateParticlePositions() {
   const scaleAttribute = bufferRef.value.geometry.getAttribute('aScale')
 
   if (!(positionAttribute instanceof BufferAttribute) || !(scaleAttribute instanceof BufferAttribute)) {
-    console.warn('BufferAttribute not found')
+    Logger.warn('OrbitalSystem', 'BufferAttribute not found')
     return
   }
 
@@ -297,45 +299,7 @@ function updateParticlePositions() {
 
   positionAttribute.needsUpdate = true
   scaleAttribute.needsUpdate = true
-
-
-  const timeInSeconds = Math.floor(props.globalTime)
-  if (timeInSeconds % 1 === 0 && props.globalTime > 0) {
-    // Check multiple orbital particles
-    const orbitalIndices = []
-    for (let i = 0; i < Math.min(5, totalCount); i++) {
-      if (orbitFactors[i] > 0.5) {
-        orbitalIndices.push(i)
-      }
-    }
-
-    const timeInSeconds = Math.floor(props.globalTime)
-    if (timeInSeconds % 2 === 0 && props.globalTime > 0) {
-      const firstOrbitalIndex = orbitFactors.findIndex(f => f > 0.5)
-      if (firstOrbitalIndex >= 0) {
-        const i3 = firstOrbitalIndex * 3
-        const radius = Math.sqrt(positionArray[i3] ** 2 + positionArray[i3 + 2] ** 2)
-        const angle = Math.atan2(positionArray[i3 + 2], positionArray[i3])
-
-        console.log(`[ORBITAL_DEBUG] Time: ${props.globalTime.toFixed(2)}s, Evolution: ${(props.evolutionProgress * 100).toFixed(1)}%`)
-        console.log(`  Particle ${firstOrbitalIndex}: Radius: ${radius.toFixed(2)}, Angle: ${(angle * 180 / Math.PI).toFixed(1)}°, Scale: ${scaleArray[firstOrbitalIndex].toFixed(2)}`)
-        console.log(`  Initial Angle: ${(initialAngles[firstOrbitalIndex] * 180 / Math.PI).toFixed(1)}°, Target Radius: ${targetRadii[firstOrbitalIndex].toFixed(2)}`)
-      }
-    }
-  }
 }
-
-// Move these watchers and onMounted OUTSIDE the updateParticlePositions function
-
-watch(() => props.evolutionProgress, (progress) => {
-  Logger.throttle("OrbitalSystem", `OrbitalSystem evolutionProgress: ${(progress * 100).toFixed(1)}%`)
-})
-
-watch(() => props.globalTime, (time) => {
-  if (Math.floor(time) % 1 === 0) {
-    console.log(`OrbitalSystem globalTime: ${time.toFixed(2)}s`)
-  }
-})
 
 // Watch for galaxy center changes
 watch(galaxyCenter, (val) => {
