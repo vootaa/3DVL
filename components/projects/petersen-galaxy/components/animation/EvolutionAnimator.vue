@@ -27,10 +27,6 @@ const animationProgress = ref(0)
 const startTime = ref(0)
 let animationId: number | undefined
 
-function easeInOutCubic(t: number): number {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-}
-
 function startAnimation() {
   if (!props.enabled || isAnimating.value) return
   
@@ -61,9 +57,7 @@ function animate() {
 
   const elapsed = (performance.now() - startTime.value) / 1000
   let progress = Math.min(elapsed / props.duration, 1)
-  
-  progress = easeInOutCubic(progress)
-  
+    
   animationProgress.value = progress
   emit('progress', progress)
 
