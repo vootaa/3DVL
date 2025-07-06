@@ -167,7 +167,7 @@ function handleEvolutionTimelineVisible(val: boolean) {
     <EvolutionAnimator
       ref="evolutionAnimatorRef"
       :enabled="evolutionState.stellarCoreEnabled && evolutionState.orbitalSystemEnabled"
-      :duration="8"
+      :duration="13.8"
       @progress="handleEvolutionProgress"
       @complete="handleEvolutionComplete"
       @start="handleEvolutionStart"

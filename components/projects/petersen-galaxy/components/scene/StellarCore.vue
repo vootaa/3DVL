@@ -189,13 +189,20 @@ function updateStellarCorePositions() {
   const sizes = stellarCoreGeometry.value!.getAttribute('size')
   const alphas = stellarCoreGeometry.value!.getAttribute('alpha')
 
+  const positionArray = positions.array as Float32Array
+  const targetRadiiArray = targetRadii.array as Float32Array
+  const rotationSpeedsArray = rotationSpeeds.array as Float32Array
+  const initialAnglesArray = initialAngles.array as Float32Array
+  const sizesArray = sizes.array as Float32Array
+  const alphasArray = alphas.array as Float32Array
+
   for (let i = 0; i < stars.length; i++) {
     const i3 = i * 3
     const star = stars[i]
     
     // Calculate current orbital position with rotation
-    const currentAngle = initialAngles.array[i] + props.globalTime * rotationSpeeds.array[i]
-    const targetRadius = targetRadii.array[i]
+    const currentAngle = initialAnglesArray[i] + props.globalTime * rotationSpeedsArray[i]
+    const targetRadius = targetRadiiArray[i]
     const targetX = targetRadius * Math.cos(currentAngle)
     const targetZ = targetRadius * Math.sin(currentAngle)
     const targetY = 0
@@ -206,14 +213,14 @@ function updateStellarCorePositions() {
       const startY = initialChaoticPositions[i3 + 1]
       const startZ = initialChaoticPositions[i3 + 2]
       
-      positions.array[i3] = startX + (targetX - startX) * props.evolutionProgress
-      positions.array[i3 + 1] = startY + (targetY - startY) * props.evolutionProgress
-      positions.array[i3 + 2] = startZ + (targetZ - startZ) * props.evolutionProgress
+      positionArray[i3] = startX + (targetX - startX) * props.evolutionProgress
+      positionArray[i3 + 1] = startY + (targetY - startY) * props.evolutionProgress
+      positionArray[i3 + 2] = startZ + (targetZ - startZ) * props.evolutionProgress
     } else {
       // Fully evolved: orbital motion
-      positions.array[i3] = targetX
-      positions.array[i3 + 1] = targetY
-      positions.array[i3 + 2] = targetZ
+      positionArray[i3] = targetX
+      positionArray[i3 + 1] = targetY
+      positionArray[i3 + 2] = targetZ
     }
 
     // Update size and alpha based on evolution progress and pulsing
@@ -227,15 +234,15 @@ function updateStellarCorePositions() {
       // During evolution: gradual size and alpha increase
       const currentSize = (baseSize * amplitudeVariation * 0.3) +
         (baseSize * amplitudeVariation - baseSize * amplitudeVariation * 0.3) * props.evolutionProgress
-      sizes.array[i] = currentSize
+      sizesArray[i] = currentSize
       
       const targetAlpha = 0.85
       const currentAlpha = 0.1 + (targetAlpha - 0.1) * props.evolutionProgress
-      alphas.array[i] = currentAlpha
+      alphasArray[i] = currentAlpha
     } else {
       // Fully evolved: full size and alpha with pulsing
-      sizes.array[i] = baseSize * amplitudeVariation
-      alphas.array[i] = 0.85
+      sizesArray[i] = baseSize * amplitudeVariation
+      alphasArray[i] = 0.85
     }
   }
   
@@ -253,9 +260,10 @@ function updateStellarCorePositions() {
 // Update individual star timing for animation variety
 function updateStarTiming() {
   const times = stellarCoreGeometry.value!.getAttribute('time')
+  const timesArray = times.array as Float32Array
   
   for (let i = 0; i < times.count; i++) {
-    times.array[i] += 0.005 + Math.random() * 0.002
+    timesArray[i] += 0.005 + Math.random() * 0.002
   }
   times.needsUpdate = true
 }
@@ -270,7 +278,9 @@ watch(() => props.evolutionProgress, () => {
 // Initialize and start animation on mount
 onMounted(() => {
   if (props.evolutionProgress === 1) {
-    stellarCoreMaterial.value?.uniforms.time.set(30.0)
+    if (stellarCoreMaterial.value?.uniforms.time) {
+      stellarCoreMaterial.value.uniforms.time.value = 30.0
+    }
   }
   initStellarCore()
   animate()
@@ -300,20 +310,27 @@ const resetStellarCorePosition = () => {
   const targetRadii = stellarCoreGeometry.value.getAttribute('targetRadius')
   const initialAngles = stellarCoreGeometry.value.getAttribute('initialAngle')
   const rotationSpeeds = stellarCoreGeometry.value.getAttribute('rotationSpeed')
+
+  const positionArray = positions.array as Float32Array
+  const sizesArray = sizes.array as Float32Array
+  const alphasArray = alphas.array as Float32Array
+  const targetRadiiArray = targetRadii.array as Float32Array
+  const initialAnglesArray = initialAngles.array as Float32Array
+  const rotationSpeedsArray = rotationSpeeds.array as Float32Array
   
   for (let i = 0; i < stars.length; i++) {
     const i3 = i * 3
     const star = stars[i]
-    const angle = initialAngles.array[i] + 30.0 * rotationSpeeds.array[i]
-    const radius = targetRadii.array[i]
+    const angle = initialAnglesArray[i] + 30.0 * rotationSpeedsArray[i]
+    const radius = targetRadiiArray[i]
     
-    positions.array[i3] = radius * Math.cos(angle)
-    positions.array[i3 + 1] = 0
-    positions.array[i3 + 2] = radius * Math.sin(angle)
+    positionArray[i3] = radius * Math.cos(angle)
+    positionArray[i3 + 1] = 0
+    positionArray[i3 + 2] = radius * Math.sin(angle)
     
     const sizeConfig = stellarCoreSizes[star.type as StellarType]
-    sizes.array[i] = sizeConfig.base
-    alphas.array[i] = 0.85
+    sizesArray[i] = sizeConfig.base
+    alphasArray[i] = 0.85
   }
   
   positions.needsUpdate = true

@@ -223,6 +223,9 @@ function updateParticlePositions() {
   
   const positionAttribute = bufferRef.value.geometry.getAttribute('position')
   const scaleAttribute = bufferRef.value.geometry.getAttribute('aScale')
+
+  const positionArray = positionAttribute.array as Float32Array
+  const scaleArray = scaleAttribute.array as Float32Array
   
   for (let i = 0; i < totalCount; i++) {
     const i3 = i * 3
@@ -242,19 +245,19 @@ function updateParticlePositions() {
       const startY = initialChaoticPositions[i3 + 1]
       const startZ = initialChaoticPositions[i3 + 2]
       
-      positionAttribute.array[i3] = startX + (targetX - startX) * props.evolutionProgress
-      positionAttribute.array[i3 + 1] = startY + (targetY - startY) * props.evolutionProgress
-      positionAttribute.array[i3 + 2] = startZ + (targetZ - startZ) * props.evolutionProgress
+      positionArray[i3] = startX + (targetX - startX) * props.evolutionProgress
+      positionArray[i3 + 1] = startY + (targetY - startY) * props.evolutionProgress
+      positionArray[i3 + 2] = startZ + (targetZ - startZ) * props.evolutionProgress
       
       // Update scale during evolution
       const baseScale = targetRadius === innerRadius ? 1.125
         : targetRadius === middleRadius ? 0.975
         : 0.75
-      scaleAttribute.array[i] = baseScale * (0.3 + 0.7 * props.evolutionProgress)
+        scaleArray[i] = baseScale * (0.3 + 0.7 * props.evolutionProgress)
     } else {
       // Scattered particles gradually become more visible
       const baseScale = 1.6
-      scaleAttribute.array[i] = baseScale * (0.5 + 0.5 * props.evolutionProgress)
+      scaleArray[i] = baseScale * (0.5 + 0.5 * props.evolutionProgress)
     }
   }
   
