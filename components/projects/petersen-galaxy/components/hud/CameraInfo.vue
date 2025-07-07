@@ -51,7 +51,7 @@ const switchToNextMode = () => {
   const available = availableModes.value
   const currentIndex = available.indexOf(current)
   const nextIndex = (currentIndex + 1) % available.length
-  manualMode.value = available[nextIndex] as 'ultra' | 'compact' | 'full'
+  manualMode.value = available[nextIndex]
 }
 
 const switchToPrevMode = () => {
@@ -59,47 +59,86 @@ const switchToPrevMode = () => {
   const available = availableModes.value
   const currentIndex = available.indexOf(current)
   const prevIndex = (currentIndex - 1 + available.length) % available.length
-  manualMode.value = available[prevIndex] as 'ultra' | 'compact' | 'full'
+  manualMode.value = available[prevIndex]
 }
 
-// Get mode switch button info
+// Get mode switch button info with + and - symbols
 const getModeSwitchInfo = computed(() => {
   const current = displayMode.value
   const available = availableModes.value
   
+  // For ultra mode, we need special handling to show expand button
+  if (current === 'ultra' && available.length > 1) {
+    // Ultra mode only shows expand (+) button
+    return {
+      canSwitch: true,
+      showExpand: true,
+      showCollapse: false,
+      expandIcon: '+',
+      expandTooltip: 'Expand to larger view'
+    }
+  }
+  
   if (available.length <= 1) {
-    return { canSwitch: false, expandIcon: '', collapseIcon: '', expandTooltip: '', collapseTooltip: '' }
+    return { 
+      canSwitch: false, 
+      showExpand: false, 
+      showCollapse: false,
+      expandIcon: '', 
+      expandTooltip: '' 
+    }
   }
   
-  const currentIndex = available.indexOf(current)
-  const nextIndex = (currentIndex + 1) % available.length
-  const prevIndex = (currentIndex - 1 + available.length) % available.length
+  // For compact and full modes, show both buttons
+  const hasLargerMode = available.some(mode => 
+    (current === 'compact' && mode === 'full') ||
+    (current === 'ultra' && (mode === 'compact' || mode === 'full'))
+  )
   
-  const nextMode = available[nextIndex]
-  const prevMode = available[prevIndex]
+  const hasSmallerMode = available.some(mode => 
+    (current === 'full' && (mode === 'compact' || mode === 'ultra')) ||
+    (current === 'compact' && mode === 'ultra')
+  )
   
-  // Icons and tooltips based on mode transitions
-  const modeIcons: Record<'ultra' | 'compact' | 'full', { icon: string; name: string }> = {
-    ultra: { icon: '⚫', name: 'Ultra Compact' },
-    compact: { icon: '🔹', name: 'Compact' },
-    full: { icon: '🔲', name: 'Full' }
-  }
-
-  // Ensure nextMode and prevMode are typed correctly
-  type Mode = 'ultra' | 'compact' | 'full'
-  const nextModeTyped = nextMode as Mode
-  const prevModeTyped = prevMode as Mode
-
   return {
     canSwitch: true,
-    expandIcon: modeIcons[nextModeTyped].icon,
-    collapseIcon: modeIcons[prevModeTyped].icon,
-    expandTooltip: `Switch to ${modeIcons[nextModeTyped].name}`,
-    collapseTooltip: `Switch to ${modeIcons[prevModeTyped].name}`,
-    nextMode,
-    prevMode
+    showExpand: hasLargerMode,
+    showCollapse: hasSmallerMode,
+    expandIcon: '+',
+    collapseIcon: '-',
+    expandTooltip: 'Expand to larger view',
+    collapseTooltip: 'Collapse to smaller view'
   }
 })
+
+// Mode switching with proper direction
+const expandMode = () => {
+  const current = displayMode.value
+  const available = availableModes.value
+  
+  // Find the next larger mode
+  if (current === 'ultra' && available.includes('compact')) {
+    manualMode.value = 'compact'
+  } else if (current === 'ultra' && available.includes('full')) {
+    manualMode.value = 'full'
+  } else if (current === 'compact' && available.includes('full')) {
+    manualMode.value = 'full'
+  }
+}
+
+const collapseMode = () => {
+  const current = displayMode.value
+  const available = availableModes.value
+  
+  // Find the next smaller mode
+  if (current === 'full' && available.includes('compact')) {
+    manualMode.value = 'compact'
+  } else if (current === 'full' && available.includes('ultra')) {
+    manualMode.value = 'ultra'
+  } else if (current === 'compact' && available.includes('ultra')) {
+    manualMode.value = 'ultra'
+  }
+}
 
 // Handle window resize
 const handleResize = () => {
@@ -217,6 +256,17 @@ onUnmounted(() => {
     <!-- Ultra Compact Mode -->
     <template v-if="displayMode === 'ultra'">
       <div class="ultra-content">
+        <!-- Mode Switch Button for Ultra Mode -->
+        <div v-if="getModeSwitchInfo.canSwitch && getModeSwitchInfo.showExpand" class="ultra-expand-btn">
+          <button 
+            class="mode-btn ultra-btn"
+            @click="expandMode"
+            :title="getModeSwitchInfo.expandTooltip"
+          >
+            {{ getModeSwitchInfo.expandIcon }}
+          </button>
+        </div>
+        
         <div class="ultra-row">
           <span class="ultra-icon">📏</span>
           <span class="ultra-value">{{ compactDistance }}</span>
@@ -242,15 +292,17 @@ onUnmounted(() => {
         <!-- Mode Switch Buttons for Compact -->
         <div v-if="getModeSwitchInfo.canSwitch" class="mode-switches">
           <button 
+            v-if="getModeSwitchInfo.showCollapse"
             class="mode-btn"
-            @click="switchToPrevMode"
+            @click="collapseMode"
             :title="getModeSwitchInfo.collapseTooltip"
           >
             {{ getModeSwitchInfo.collapseIcon }}
           </button>
           <button 
+            v-if="getModeSwitchInfo.showExpand"
             class="mode-btn"
-            @click="switchToNextMode"
+            @click="expandMode"
             :title="getModeSwitchInfo.expandTooltip"
           >
             {{ getModeSwitchInfo.expandIcon }}
@@ -292,15 +344,17 @@ onUnmounted(() => {
         <!-- Mode Switch Buttons for Full -->
         <div v-if="getModeSwitchInfo.canSwitch" class="mode-switches">
           <button 
+            v-if="getModeSwitchInfo.showCollapse"
             class="mode-btn"
-            @click="switchToPrevMode"
+            @click="collapseMode"
             :title="getModeSwitchInfo.collapseTooltip"
           >
             {{ getModeSwitchInfo.collapseIcon }}
           </button>
           <button 
+            v-if="getModeSwitchInfo.showExpand"
             class="mode-btn"
-            @click="switchToNextMode"
+            @click="expandMode"
             :title="getModeSwitchInfo.expandTooltip"
           >
             {{ getModeSwitchInfo.expandIcon }}
@@ -410,12 +464,35 @@ onUnmounted(() => {
   bottom: 10px;
   left: 10px;
   border-radius: 6px;
+  position: relative;
 }
 
 .ultra-content {
   display: flex;
   flex-direction: column;
   gap: 3px;
+}
+
+/* Ultra mode expand button */
+.ultra-expand-btn {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  z-index: 1;
+}
+
+.ultra-btn {
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 10px !important;
+  border-radius: 50% !important;
+  background: rgba(0, 204, 255, 0.15) !important;
+  border: 1px solid rgba(0, 204, 255, 0.4) !important;
+}
+
+.ultra-btn:hover {
+  background: rgba(0, 204, 255, 0.25) !important;
+  transform: scale(1.2) !important;
 }
 
 .ultra-row {
@@ -500,7 +577,8 @@ onUnmounted(() => {
   border: 1px solid rgba(0, 204, 255, 0.3);
   border-radius: 4px;
   color: #66ddff;
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 700;
   width: 24px;
   height: 24px;
   display: flex;
@@ -515,7 +593,7 @@ onUnmounted(() => {
 .compact .mode-btn {
   width: 20px;
   height: 20px;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .mode-btn:hover {
@@ -707,6 +785,12 @@ onUnmounted(() => {
   .ultra-value {
     font-size: 8px;
   }
+
+  .ultra-btn {
+    width: 14px !important;
+    height: 14px !important;
+    font-size: 9px !important;
+  }
 }
 
 @media only screen and (max-width: 360px) {
@@ -721,6 +805,12 @@ onUnmounted(() => {
 
   .ultra-value {
     font-size: 7px;
+  }
+
+  .ultra-btn {
+    width: 12px !important;
+    height: 12px !important;
+    font-size: 8px !important;
   }
 }
 
