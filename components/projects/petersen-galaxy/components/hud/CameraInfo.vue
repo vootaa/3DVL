@@ -11,6 +11,11 @@ const cameraDistance = ref(20)
 const azimuthAngle = ref(0)
 const elevationAngle = ref(0)
 
+// Responsive state
+const isCompactMode = ref(false)
+const windowWidth = ref(window.innerWidth)
+const windowHeight = ref(window.innerHeight)
+
 // Animation frame for updating camera info
 let animationFrameId: number | null = null
 
@@ -26,6 +31,20 @@ if (!cameraRef) {
 
 // Grid center reference point
 const gridCenter = new Vector3(0, 0, 0)
+
+// Check if should use compact mode based on screen size
+const checkCompactMode = () => {
+  // Use compact mode if width < 768px or height < 600px
+  const shouldBeCompact = windowWidth.value < 768 || windowHeight.value < 600
+  isCompactMode.value = shouldBeCompact
+}
+
+// Handle window resize
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+  windowHeight.value = window.innerHeight
+  checkCompactMode()
+}
 
 // Update camera information using injected camera reference
 const updateCameraInfo = () => {
@@ -79,63 +98,97 @@ const stopTracking = () => {
 // Computed values for display with astronomical units
 const displayDistance = computed(() => {
   const unit = getBestUnit(cameraDistance.value, 'distance')
-  return formatWithUnit(cameraDistance.value, unit, 'distance', 2)
+  return formatWithUnit(cameraDistance.value, unit, 'distance', isCompactMode.value ? 1 : 2)
 })
 
 const displayAzimuth = computed(() => {
-  return azimuthAngle.value.toFixed(1) + '°'
+  return azimuthAngle.value.toFixed(isCompactMode.value ? 0 : 1) + '°'
 })
 
 const displayElevation = computed(() => {
-  return elevationAngle.value.toFixed(1) + '°'
+  return elevationAngle.value.toFixed(isCompactMode.value ? 0 : 1) + '°'
+})
+
+// Compact display for distance (shorter format)
+const compactDistance = computed(() => {
+  const unit = getBestUnit(cameraDistance.value, 'distance')
+  return formatWithUnit(cameraDistance.value, unit, 'distance', 1).replace(' ', '')
 })
 
 onMounted(() => {
+  // Check initial compact mode
+  checkCompactMode()
+  
+  // Add resize listener
+  window.addEventListener('resize', handleResize)
+  
   // Start tracking immediately since TresJS camera should be available
   startTracking()
 })
 
 onUnmounted(() => {
   stopTracking()
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
 <template>
-  <div class="camera-info">
-    <div class="info-header">Camera Control Info</div>
-    
-    <div class="info-content">
-      <!-- Zoom control hint - top -->
-      <div class="control-hint top-hint">Scroll to zoom</div>
+  <div class="camera-info" :class="{ 'compact': isCompactMode }">
+    <!-- Full mode layout -->
+    <template v-if="!isCompactMode">
+      <div class="info-header">Camera Control Info</div>
       
-      <!-- Distance row -->
-      <div class="control-row">
-        <span class="control-label">
-          <i class="control-icon">📏</i> Distance
-        </span>
-        <span class="control-value">{{ displayDistance }}</span>
+      <div class="info-content">
+        <!-- Zoom control hint - top -->
+        <div class="control-hint top-hint">Scroll to zoom</div>
+        
+        <!-- Distance row -->
+        <div class="control-row">
+          <span class="control-label">
+            <i class="control-icon">📏</i> Distance
+          </span>
+          <span class="control-value">{{ displayDistance }}</span>
+        </div>
+        
+        <!-- Unit hint - separate line -->
+        <div class="unit-hint">GU = Galaxy Unit</div>
+        
+        <!-- Angles - two separate rows -->
+        <div class="angle-row">
+          <span class="angle-label">
+            <i class="control-icon">🧭</i> Azimuth
+          </span>
+          <span class="angle-value">{{ displayAzimuth }}</span>
+        </div>
+        <div class="angle-row">
+          <span class="angle-label">
+            <i class="control-icon">📐</i> Elevation
+          </span>
+          <span class="angle-value">{{ displayElevation }}</span>
+        </div>
+        
+        <!-- Orbit control hint - bottom -->
+        <div class="control-hint bottom-hint">Drag to orbit</div>
       </div>
-      
-      <!-- Unit hint - separate line -->
-      <div class="unit-hint">GU = Galaxy Unit</div>
-      
-      <!-- Angles - two separate rows -->
-      <div class="angle-row">
-        <span class="angle-label">
-          <i class="control-icon">🧭</i> Azimuth
-        </span>
-        <span class="angle-value">{{ displayAzimuth }}</span>
+    </template>
+
+    <!-- Compact mode layout -->
+    <template v-else>
+      <div class="compact-content">
+        <div class="compact-row">
+          <span class="compact-icon">📏</span>
+          <span class="compact-value">{{ compactDistance }}</span>
+        </div>
+        <div class="compact-row">
+          <span class="compact-icon">🧭</span>
+          <span class="compact-value">{{ displayAzimuth }}</span>
+        </div>
+        <div class="compact-row">
+          <span class="compact-icon">📐</span>
+          <span class="compact-value">{{ displayElevation }}</span>
+        </div>
       </div>
-      <div class="angle-row">
-        <span class="angle-label">
-          <i class="control-icon">📐</i> Elevation
-        </span>
-        <span class="angle-value">{{ displayElevation }}</span>
-      </div>
-      
-      <!-- Orbit control hint - bottom -->
-      <div class="control-hint bottom-hint">Drag to orbit</div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -149,7 +202,7 @@ onUnmounted(() => {
   border-radius: 8px;
   padding: 12px;
   color: #00ccff;
-  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-family: 'Kodo Mono', monospace;
   font-weight: 500;
   font-size: 12px;
   width: 200px;
@@ -168,6 +221,44 @@ onUnmounted(() => {
     inset 0 1px 0 rgba(0, 180, 255, 0.3);
 }
 
+/* Compact mode styles */
+.camera-info.compact {
+  width: auto;
+  min-width: 80px;
+  padding: 8px;
+  bottom: 15px;
+  left: 15px;
+}
+
+.compact-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.compact-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 60px;
+}
+
+.compact-icon {
+  font-size: 10px;
+  filter: hue-rotate(200deg);
+  flex-shrink: 0;
+}
+
+.compact-value {
+  color: #00ff88;
+  font-weight: 600;
+  font-size: 10px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Full mode styles */
 .info-header {
   font-size: 11px;
   font-weight: 600;
@@ -252,10 +343,10 @@ onUnmounted(() => {
   padding-bottom: 4px;
 }
 
-/* Responsive design */
-@media only screen and (max-width: 900px) {
-  .camera-info {
-    width: 200px;
+/* Responsive breakpoints */
+@media only screen and (max-width: 900px) and (min-width: 768px) and (min-height: 600px) {
+  .camera-info:not(.compact) {
+    width: 180px;
     padding: 10px;
     font-size: 11px;
   }
@@ -266,6 +357,31 @@ onUnmounted(() => {
   
   .control-hint {
     font-size: 8px;
+  }
+}
+
+/* Very small screens - force compact mode with additional constraints */
+@media only screen and (max-width: 480px) {
+  .camera-info {
+    bottom: 10px;
+    left: 10px;
+    padding: 6px;
+  }
+  
+  .compact-value {
+    font-size: 9px;
+  }
+  
+  .compact-icon {
+    font-size: 9px;
+  }
+}
+
+/* Landscape phones */
+@media only screen and (max-height: 480px) and (orientation: landscape) {
+  .camera-info {
+    bottom: 8px;
+    left: 8px;
   }
 }
 </style>

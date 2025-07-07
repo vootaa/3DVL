@@ -448,7 +448,7 @@ onUnmounted(() => {
 
 .value {
   color: #ffffff;
-  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
+  font-family: 'Kodo Mono', monospace;
   text-align: right;
   flex-grow: 1;
   word-break: break-all;

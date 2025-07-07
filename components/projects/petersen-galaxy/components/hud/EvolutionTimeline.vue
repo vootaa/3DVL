@@ -111,7 +111,7 @@ watch(() => props.visible, (val) => {
 
 .timeline-title {
   color: #66ddff;
-  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  font-family: 'Kode Mono', monospace;
   font-size: 16px;
   font-weight: 700;
   text-transform: uppercase;
@@ -120,7 +120,7 @@ watch(() => props.visible, (val) => {
 
 .timeline-age {
   color: #00ccff;
-  font-family: 'Kode Mono', 'Teko', monospace, sans-serif;
+  font-family: 'Kode Mono', monospace;
   font-size: 16px;
   font-weight: 700;
   margin-top: 4px;
