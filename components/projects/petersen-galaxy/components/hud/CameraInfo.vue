@@ -15,17 +15,101 @@ const elevationAngle = ref(0)
 const windowWidth = ref(window.innerWidth)
 const windowHeight = ref(window.innerHeight)
 
-// Display mode
-const displayMode = computed(() => {
+// Manual mode override - null means use auto-detection
+const manualMode = ref<'ultra' | 'compact' | 'full' | null>(null)
+
+// Natural display mode based on screen size
+const naturalDisplayMode = computed(() => {
   if (windowWidth.value < 480 || windowHeight.value < 400) return 'ultra'
   if (windowWidth.value < 768 || windowHeight.value < 600) return 'compact'
   return 'full'
+})
+
+// Actual display mode (manual override or natural)
+const displayMode = computed(() => {
+  return manualMode.value || naturalDisplayMode.value
+})
+
+// Available modes for current screen size
+const availableModes = computed(() => {
+  const natural = naturalDisplayMode.value
+  switch (natural) {
+    case 'ultra':
+      return ['ultra'] // Ultra screens can only use ultra mode
+    case 'compact':
+      return ['compact', 'ultra'] // Compact screens can use compact or ultra
+    case 'full':
+      return ['full', 'compact', 'ultra'] // Full screens can use all modes
+    default:
+      return ['full']
+  }
+})
+
+// Mode switching functions
+const switchToNextMode = () => {
+  const current = displayMode.value
+  const available = availableModes.value
+  const currentIndex = available.indexOf(current)
+  const nextIndex = (currentIndex + 1) % available.length
+  manualMode.value = available[nextIndex] as 'ultra' | 'compact' | 'full'
+}
+
+const switchToPrevMode = () => {
+  const current = displayMode.value
+  const available = availableModes.value
+  const currentIndex = available.indexOf(current)
+  const prevIndex = (currentIndex - 1 + available.length) % available.length
+  manualMode.value = available[prevIndex] as 'ultra' | 'compact' | 'full'
+}
+
+// Get mode switch button info
+const getModeSwitchInfo = computed(() => {
+  const current = displayMode.value
+  const available = availableModes.value
+  
+  if (available.length <= 1) {
+    return { canSwitch: false, expandIcon: '', collapseIcon: '', expandTooltip: '', collapseTooltip: '' }
+  }
+  
+  const currentIndex = available.indexOf(current)
+  const nextIndex = (currentIndex + 1) % available.length
+  const prevIndex = (currentIndex - 1 + available.length) % available.length
+  
+  const nextMode = available[nextIndex]
+  const prevMode = available[prevIndex]
+  
+  // Icons and tooltips based on mode transitions
+  const modeIcons: Record<'ultra' | 'compact' | 'full', { icon: string; name: string }> = {
+    ultra: { icon: '⚫', name: 'Ultra Compact' },
+    compact: { icon: '🔹', name: 'Compact' },
+    full: { icon: '🔲', name: 'Full' }
+  }
+
+  // Ensure nextMode and prevMode are typed correctly
+  type Mode = 'ultra' | 'compact' | 'full'
+  const nextModeTyped = nextMode as Mode
+  const prevModeTyped = prevMode as Mode
+
+  return {
+    canSwitch: true,
+    expandIcon: modeIcons[nextModeTyped].icon,
+    collapseIcon: modeIcons[prevModeTyped].icon,
+    expandTooltip: `Switch to ${modeIcons[nextModeTyped].name}`,
+    collapseTooltip: `Switch to ${modeIcons[prevModeTyped].name}`,
+    nextMode,
+    prevMode
+  }
 })
 
 // Handle window resize
 const handleResize = () => {
   windowWidth.value = window.innerWidth
   windowHeight.value = window.innerHeight
+  
+  // Reset manual mode if current mode is no longer available
+  if (manualMode.value && !availableModes.value.includes(manualMode.value)) {
+    manualMode.value = null
+  }
 }
 
 // Animation frame for updating camera info
@@ -155,6 +239,23 @@ onUnmounted(() => {
           <i class="i-carbon-camera header-icon" />
           Camera
         </h3>
+        <!-- Mode Switch Buttons for Compact -->
+        <div v-if="getModeSwitchInfo.canSwitch" class="mode-switches">
+          <button 
+            class="mode-btn"
+            @click="switchToPrevMode"
+            :title="getModeSwitchInfo.collapseTooltip"
+          >
+            {{ getModeSwitchInfo.collapseIcon }}
+          </button>
+          <button 
+            class="mode-btn"
+            @click="switchToNextMode"
+            :title="getModeSwitchInfo.expandTooltip"
+          >
+            {{ getModeSwitchInfo.expandIcon }}
+          </button>
+        </div>
       </div>
       
       <div class="content">
@@ -188,6 +289,23 @@ onUnmounted(() => {
           <i class="i-carbon-camera header-icon" />
           Camera Information
         </h3>
+        <!-- Mode Switch Buttons for Full -->
+        <div v-if="getModeSwitchInfo.canSwitch" class="mode-switches">
+          <button 
+            class="mode-btn"
+            @click="switchToPrevMode"
+            :title="getModeSwitchInfo.collapseTooltip"
+          >
+            {{ getModeSwitchInfo.collapseIcon }}
+          </button>
+          <button 
+            class="mode-btn"
+            @click="switchToNextMode"
+            :title="getModeSwitchInfo.expandTooltip"
+          >
+            {{ getModeSwitchInfo.expandIcon }}
+          </button>
+        </div>
       </div>
       
       <div class="content">
@@ -241,7 +359,7 @@ onUnmounted(() => {
           <div class="controls">
             <div class="control">
               <i class="i-carbon-cursor-1 control-icon" />
-              <span>Drag to orbit around galaxy center</span>
+              <span>Drag to orbit</span>
             </div>
             <div class="control">
               <i class="i-carbon-zoom-in control-icon" />
@@ -323,9 +441,9 @@ onUnmounted(() => {
   font-family: 'Kodo Mono', monospace;
 }
 
-/* Compact Mode - 宽度调小 */
+/* Compact Mode */
 .camera-info.compact {
-  width: 180px; /* 从 200px 调整到 180px */
+  width: 180px;
   bottom: 15px;
   left: 15px;
 }
@@ -369,6 +487,45 @@ onUnmounted(() => {
 
 .compact .header-icon {
   font-size: 12px;
+}
+
+/* Mode Switch Buttons */
+.mode-switches {
+  display: flex;
+  gap: 4px;
+}
+
+.mode-btn {
+  background: rgba(0, 204, 255, 0.1);
+  border: 1px solid rgba(0, 204, 255, 0.3);
+  border-radius: 4px;
+  color: #66ddff;
+  font-size: 12px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Kodo Mono', monospace;
+  padding: 0;
+}
+
+.compact .mode-btn {
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+}
+
+.mode-btn:hover {
+  background: rgba(0, 204, 255, 0.2);
+  border-color: rgba(0, 204, 255, 0.5);
+  transform: scale(1.1);
+}
+
+.mode-btn:active {
+  transform: scale(0.95);
 }
 
 /* Content */
@@ -493,7 +650,6 @@ onUnmounted(() => {
   font-family: 'Kodo Mono', monospace;
 }
 
-/* Angles - 修改为垂直布局，每个角度单独一行并居中 */
 .angles-vertical {
   display: flex;
   flex-direction: column;
