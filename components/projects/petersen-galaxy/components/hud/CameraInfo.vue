@@ -218,15 +218,15 @@ onUnmounted(() => {
             </div>
           </div>
           
-          <!-- Angles -->
-          <div class="angles">
-            <div class="info-row">
+          <!-- Angles - 改为两行显示，分别居中 -->
+          <div class="angles-vertical">
+            <div class="angle-item">
               <span class="label">
                 <i class="icon">🧭</i> Azimuth
               </span>
               <span class="value">{{ displayAzimuth }}</span>
             </div>
-            <div class="info-row">
+            <div class="angle-item">
               <span class="label">
                 <i class="icon">📐</i> Elevation
               </span>
@@ -320,11 +320,12 @@ onUnmounted(() => {
   font-size: 9px;
   text-align: right;
   white-space: nowrap;
+  font-family: 'Kodo Mono', monospace;
 }
 
-/* Compact Mode */
+/* Compact Mode - 宽度调小 */
 .camera-info.compact {
-  width: 200px;
+  width: 180px; /* 从 200px 调整到 180px */
   bottom: 15px;
   left: 15px;
 }
@@ -352,6 +353,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-family: 'Kodo Mono', monospace;
 }
 
 .compact .header h3 {
@@ -402,6 +404,7 @@ onUnmounted(() => {
   text-shadow: 0 0 6px rgba(0, 204, 255, 0.4);
   border-left: 3px solid #00ccff;
   padding-left: 8px;
+  font-family: 'Kodo Mono', monospace;
 }
 
 /* Info Rows */
@@ -429,6 +432,7 @@ onUnmounted(() => {
   align-items: center;
   color: #99ddff;
   font-weight: 500;
+  font-family: 'Kodo Mono', monospace;
 }
 
 .icon {
@@ -447,6 +451,7 @@ onUnmounted(() => {
   font-weight: 600;
   text-align: right;
   min-width: 60px;
+  font-family: 'Kodo Mono', monospace;
 }
 
 .value.highlighted {
@@ -478,20 +483,32 @@ onUnmounted(() => {
   color: #99ddff;
   font-size: 9px;
   font-weight: 600;
+  font-family: 'Kodo Mono', monospace;
 }
 
 .coord-value {
   color: #66ddff;
   font-weight: 500;
   font-size: 10px;
+  font-family: 'Kodo Mono', monospace;
 }
 
-/* Angles Grid */
-.angles {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+/* Angles - 修改为垂直布局，每个角度单独一行并居中 */
+.angles-vertical {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-top: 8px;
+}
+
+.angle-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  background: rgba(0, 204, 255, 0.03);
+  border-radius: 4px;
+  border: 1px solid rgba(0, 204, 255, 0.15);
 }
 
 /* Controls */
@@ -509,6 +526,7 @@ onUnmounted(() => {
   background: rgba(0, 204, 255, 0.05);
   border-radius: 4px;
   border: 1px solid rgba(0, 204, 255, 0.1);
+  font-family: 'Kodo Mono', monospace;
 }
 
 .control-icon {
