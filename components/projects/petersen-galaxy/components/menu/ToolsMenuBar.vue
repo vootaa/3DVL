@@ -70,7 +70,6 @@ onUnmounted(() => {
       </div>
     </div>
     <div v-if="activePanel" class="panel-wrapper" :class="{ 'compact': isCompactMode }">
-      <div class="panel-close" @click="closePanel">×</div>
       <client-only>
         <PerformanceMonitor v-if="activePanel === 'performance'">
           <template #close>
@@ -230,25 +229,6 @@ onUnmounted(() => {
   height: 320px;
 }
 
-.panel-close {
-  position: absolute;
-  top: 10px;
-  right: 18px;
-  z-index: 2;
-  color: #00ccff;
-  font-size: 22px;
-  cursor: pointer;
-  background: none;
-  border: none;
-  font-weight: bold;
-}
-
-.compact .panel-close {
-  top: 8px;
-  right: 12px;
-  font-size: 18px;
-}
-
 .close-btn {
   background: none;
   border: none;
@@ -258,12 +238,26 @@ onUnmounted(() => {
   position: absolute;
   top: 10px;
   right: 10px;
+  transition: all 0.2s ease;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .compact .close-btn {
   font-size: 18px;
   top: 8px;
   right: 8px;
+  width: 24px;
+  height: 24px;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
 }
 
 /* Very small screens */
@@ -295,6 +289,14 @@ onUnmounted(() => {
   .panel-wrapper {
     width: 280px;
     height: 280px;
+  }
+
+  .close-btn {
+    font-size: 16px;
+    width: 20px;
+    height: 20px;
+    top: 6px;
+    right: 6px;
   }
 }
 </style>

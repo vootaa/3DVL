@@ -413,7 +413,7 @@ onUnmounted(() => {
 
 .performance-panel.compact {
   max-width: 320px;
-  height: 300px;
+  height: 240px;
   max-height: 70vh;
 }
 
@@ -485,32 +485,6 @@ onUnmounted(() => {
 
 .ultra-compact .header-icon {
   font-size: 12px;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: #00ccff;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background 0.2s ease;
-}
-
-.ultra-compact .close-btn {
-  font-size: 16px;
-  width: 20px;
-  height: 20px;
-}
-
-.close-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
 }
 
 .performance-content {
