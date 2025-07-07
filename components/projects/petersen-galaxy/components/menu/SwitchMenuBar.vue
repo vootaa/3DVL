@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps<{
   gridOn: boolean
@@ -12,17 +12,38 @@ const props = defineProps<{
 }>()
 
 const menuOpen = ref(false)
+const windowWidth = ref(window.innerWidth)
+const windowHeight = ref(window.innerHeight)
+
+// Check if should use compact mode based on screen size
+const isCompactMode = computed(() => {
+  return windowWidth.value < 768 || windowHeight.value < 600
+})
+
+// Handle window resize
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+  windowHeight.value = window.innerHeight
+}
 
 function handleMenuBtnClick() {
   menuOpen.value = !menuOpen.value
 }
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 </script>
 
 <template>
-  <div class="switch-menu-bar">
+  <div class="switch-menu-bar" :class="{ 'compact': isCompactMode }">
     <button class="menu-btn" @click="handleMenuBtnClick" :disabled="props.disabled">
       <i class="i-carbon-switcher w-4 h-4" aria-hidden="true" />
-      <span class="menu-btn-label">Switcher</span>
+      <span class="menu-btn-label" v-if="!isCompactMode">Switcher</span>
     </button>
     <div v-if="menuOpen" class="menu-dropdown">
       <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
@@ -31,7 +52,7 @@ function handleMenuBtnClick() {
           <i v-if="props.gridOn" class="i-carbon-checkmark-filled"></i>
           <i v-else class="i-carbon-close"></i>
         </span>
-        Grid Helper
+        <span class="menu-text">{{ isCompactMode ? 'Grid' : 'Grid Helper' }}</span>
       </div>
       <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
         :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleStellarCore()">
@@ -39,7 +60,7 @@ function handleMenuBtnClick() {
           <i v-if="props.stellarCoreOn" class="i-carbon-checkmark-filled"></i>
           <i v-else class="i-carbon-close"></i>
         </span>
-        Stellar Core
+        <span class="menu-text">{{ isCompactMode ? 'Core' : 'Stellar Core' }}</span>
       </div>
       <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
         :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleOrbitalSystem()">
@@ -47,7 +68,7 @@ function handleMenuBtnClick() {
           <i v-if="props.orbitalSystemOn" class="i-carbon-checkmark-filled"></i>
           <i v-else class="i-carbon-close"></i>
         </span>
-        Orbital System
+        <span class="menu-text">{{ isCompactMode ? 'Orbit' : 'Orbital System' }}</span>
       </div>
     </div>
   </div>
@@ -62,6 +83,11 @@ function handleMenuBtnClick() {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+}
+
+.switch-menu-bar.compact {
+  top: 15px;
+  left: 15px;
 }
 
 .menu-btn {
@@ -84,6 +110,17 @@ function handleMenuBtnClick() {
   padding: 0 18px;
 }
 
+.compact .menu-btn {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
+  gap: 0.3em;
+}
+
+.compact .menu-btn i {
+  font-size: 1.1em;
+}
+
 .menu-btn i {
   font-size: 1.3em;
   vertical-align: middle;
@@ -95,6 +132,11 @@ function handleMenuBtnClick() {
   font-weight: 600;
   letter-spacing: 0.02em;
   color: #00ccff;
+}
+
+.compact .menu-btn-label {
+  font-size: 12px;
+  margin-left: 0.3em;
 }
 
 .menu-btn:hover {
@@ -123,6 +165,12 @@ function handleMenuBtnClick() {
   flex-direction: column;
 }
 
+.compact .menu-dropdown {
+  margin-top: 6px;
+  min-width: 120px;
+  border-radius: 6px;
+}
+
 .menu-item {
   display: flex;
   align-items: center;
@@ -131,6 +179,11 @@ function handleMenuBtnClick() {
   font-size: 14px;
   cursor: pointer;
   transition: background 0.2s;
+}
+
+.compact .menu-item {
+  padding: 8px 12px;
+  font-size: 12px;
 }
 
 .menu-item:hover {
@@ -149,5 +202,41 @@ function handleMenuBtnClick() {
   vertical-align: middle;
   display: flex;
   align-items: center;
+}
+
+.compact .menu-status {
+  margin-right: 6px;
+  font-size: 1em;
+}
+
+.menu-text {
+  flex: 1;
+}
+
+/* Very small screens */
+@media only screen and (max-width: 480px) {
+  .switch-menu-bar {
+    top: 10px;
+    left: 10px;
+  }
+  
+  .menu-btn {
+    height: 28px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+  
+  .menu-btn i {
+    font-size: 1em;
+  }
+  
+  .menu-dropdown {
+    min-width: 100px;
+  }
+  
+  .menu-item {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
 }
 </style>

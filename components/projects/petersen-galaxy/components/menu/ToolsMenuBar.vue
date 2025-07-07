@@ -1,37 +1,66 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import PerformanceMonitor from '../hud/PerformanceMonitor.vue'
 import DriftMonitor from '../hud/DriftMonitor.vue'
 import CameraPresets from '../hud/CameraPresets.vue'
 
 const menuOpen = ref(false)
 const activePanel = ref<'performance' | 'drift' | 'camera' | null>(null)
+const windowWidth = ref(window.innerWidth)
+const windowHeight = ref(window.innerHeight)
+
+// Check if should use compact mode based on screen size
+const isCompactMode = computed(() => {
+  return windowWidth.value < 768 || windowHeight.value < 600
+})
+
+// Handle window resize
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+  windowHeight.value = window.innerHeight
+}
 
 function openPanel(panel: 'performance' | 'drift' | 'camera') {
   activePanel.value = panel
   menuOpen.value = false
 }
+
 function closePanel() {
   activePanel.value = null
 }
+
 function handleMenuBtnClick() {
   activePanel.value = null
   menuOpen.value = !menuOpen.value
 }
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 </script>
 
 <template>
-  <div class="tools-menu-bar">
+  <div class="tools-menu-bar" :class="{ 'compact': isCompactMode }">
     <button class="menu-btn" @click="handleMenuBtnClick">
       <i class="i-carbon-tools w-4 h-4" aria-hidden="true" />
-      <span class="menu-btn-label">Tools</span>
+      <span class="menu-btn-label" v-if="!isCompactMode">Tools</span>
     </button>
     <div v-if="menuOpen" class="menu-dropdown">
-      <div class="menu-item" @click="openPanel('performance')">Performance</div>
-      <div class="menu-item" @click="openPanel('drift')">Drift Monitor</div>
-      <div class="menu-item" @click="openPanel('camera')">Camera Presets</div>
+      <div class="menu-item" @click="openPanel('performance')">
+        <span class="menu-text">{{ isCompactMode ? 'Perf' : 'Performance' }}</span>
+      </div>
+      <div class="menu-item" @click="openPanel('drift')">
+        <span class="menu-text">{{ isCompactMode ? 'Drift' : 'Drift Monitor' }}</span>
+      </div>
+      <div class="menu-item" @click="openPanel('camera')">
+        <span class="menu-text">{{ isCompactMode ? 'Cam' : 'Camera Presets' }}</span>
+      </div>
     </div>
-    <div v-if="activePanel" class="panel-wrapper">
+    <div v-if="activePanel" class="panel-wrapper" :class="{ 'compact': isCompactMode }">
       <div class="panel-close" @click="closePanel">×</div>
       <client-only>
         <PerformanceMonitor v-if="activePanel === 'performance'">
@@ -65,6 +94,11 @@ function handleMenuBtnClick() {
   align-items: flex-end;
 }
 
+.tools-menu-bar.compact {
+  top: 15px;
+  right: 15px;
+}
+
 .menu-btn {
   background: rgba(0, 12, 20, 0.9);
   border: 1px solid #00ccff;
@@ -85,6 +119,17 @@ function handleMenuBtnClick() {
   padding: 0 18px;
 }
 
+.compact .menu-btn {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
+  gap: 0.3em;
+}
+
+.compact .menu-btn i {
+  font-size: 1.1em;
+}
+
 .menu-btn i {
   font-size: 1.3em;
   vertical-align: middle;
@@ -96,6 +141,11 @@ function handleMenuBtnClick() {
   font-weight: 600;
   letter-spacing: 0.02em;
   color: #00ccff;
+}
+
+.compact .menu-btn-label {
+  font-size: 12px;
+  margin-left: 0.3em;
 }
 
 .menu-btn:hover {
@@ -113,6 +163,12 @@ function handleMenuBtnClick() {
   overflow: hidden;
 }
 
+.compact .menu-dropdown {
+  margin-top: 6px;
+  min-width: 100px;
+  border-radius: 6px;
+}
+
 .menu-item {
   padding: 12px 20px;
   color: #00ccff;
@@ -121,8 +177,17 @@ function handleMenuBtnClick() {
   transition: background 0.2s;
 }
 
+.compact .menu-item {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
 .menu-item:hover {
   background: rgba(0, 204, 255, 0.15);
+}
+
+.menu-text {
+  display: block;
 }
 
 .panel-wrapper {
@@ -131,6 +196,12 @@ function handleMenuBtnClick() {
   width: 400px;
   height: 400px;
   background: none;
+}
+
+.panel-wrapper.compact {
+  margin-top: 8px;
+  width: 320px;
+  height: 320px;
 }
 
 .panel-close {
@@ -146,6 +217,12 @@ function handleMenuBtnClick() {
   font-weight: bold;
 }
 
+.compact .panel-close {
+  top: 8px;
+  right: 12px;
+  font-size: 18px;
+}
+
 .close-btn {
   background: none;
   border: none;
@@ -155,5 +232,43 @@ function handleMenuBtnClick() {
   position: absolute;
   top: 10px;
   right: 10px;
+}
+
+.compact .close-btn {
+  font-size: 18px;
+  top: 8px;
+  right: 8px;
+}
+
+/* Very small screens */
+@media only screen and (max-width: 480px) {
+  .tools-menu-bar {
+    top: 10px;
+    right: 10px;
+  }
+  
+  .menu-btn {
+    height: 28px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+  
+  .menu-btn i {
+    font-size: 1em;
+  }
+  
+  .menu-dropdown {
+    min-width: 80px;
+  }
+  
+  .menu-item {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  
+  .panel-wrapper {
+    width: 280px;
+    height: 280px;
+  }
 }
 </style>
