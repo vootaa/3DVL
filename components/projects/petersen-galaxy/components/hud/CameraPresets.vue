@@ -292,8 +292,8 @@ const resetCamera = () => {
           </button>
         </div>
 
-        <!-- Reset button - compact -->
-        <div class="reset-section">
+        <!-- Reset button - compact with proper spacing -->
+        <div class="reset-section compact">
           <button class="reset-btn compact" :disabled="!canUsePresets" @click="resetCamera">
             <i class="i-carbon-home" />
           </button>
@@ -386,7 +386,7 @@ const resetCamera = () => {
 
 .presets-panel.compact {
   max-width: 320px;
-  height: 300px;
+  height: 350px;
   max-height: 70vh;
 }
 
@@ -394,71 +394,6 @@ const resetCamera = () => {
   max-width: 160px;
   height: 110px;
   max-height: 50vh;
-}
-
-/* Ultra Compact Layout - 3x2 grid design */
-.ultra-compact-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  gap: 3px;
-  margin-bottom: 0;
-  height: 100%;
-}
-
-.preset-card-minimal {
-  background: rgba(0, 204, 255, 0.08);
-  border: 1px solid rgba(0, 204, 255, 0.2);
-  border-radius: 3px;
-  padding: 0;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 24px;
-  max-width: 32px;
-  font-family: inherit;
-}
-
-.preset-card-minimal:hover:not(:disabled) {
-  background: rgba(0, 204, 255, 0.15);
-  border-color: rgba(0, 204, 255, 0.4);
-  transform: scale(1.05);
-}
-
-.preset-card-minimal.active {
-  background: rgba(0, 204, 255, 0.25);
-  border-color: rgba(0, 204, 255, 0.6);
-  box-shadow: 0 0 4px rgba(0, 204, 255, 0.4);
-}
-
-.preset-card-minimal:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.preset-number {
-  font-size: 12px;
-  font-weight: 700;
-  color: #66ddff;
-  text-shadow: 0 0 3px rgba(0, 204, 255, 0.3);
-}
-
-/* Reset card styling */
-.reset-card {
-  background: rgba(0, 12, 20, 0.8) !important;
-  border-color: rgba(0, 204, 255, 0.3) !important;
-}
-
-.reset-card:hover:not(:disabled) {
-  background: rgba(0, 204, 255, 0.1) !important;
-  border-color: rgba(0, 204, 255, 0.5) !important;
-}
-
-.reset-icon {
-  font-size: 10px;
-  color: #66ddff;
 }
 
 @keyframes slideDown {
@@ -536,91 +471,69 @@ const resetCamera = () => {
   padding: 8px;
 }
 
-/* Ultra Compact Layout */
+/* Ultra Compact Layout - 3x2 grid design */
 .ultra-compact-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-  margin-bottom: 8px;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 3px;
+  margin-bottom: 0;
+  height: calc(100% - 16px); /* Account for padding */
 }
 
-.preset-card {
+.preset-card-minimal {
   background: rgba(0, 204, 255, 0.08);
   border: 1px solid rgba(0, 204, 255, 0.2);
-  border-radius: 6px;
-  padding: 8px 4px;
+  border-radius: 3px;
+  padding: 0;
   cursor: pointer;
   transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  min-height: 50px;
-  position: relative;
-}
-
-.preset-card:hover:not(:disabled) {
-  background: rgba(0, 204, 255, 0.15);
-  border-color: rgba(0, 204, 255, 0.4);
-}
-
-.preset-card.active {
-  background: rgba(0, 204, 255, 0.25);
-  border-color: rgba(0, 204, 255, 0.6);
-  box-shadow: 0 0 8px rgba(0, 204, 255, 0.4);
-}
-
-.preset-icon-small {
-  font-size: 16px;
-  margin-bottom: 2px;
-}
-
-.preset-name-small {
-  font-size: 9px;
-  color: #66ddff;
-  font-weight: 600;
-  text-align: center;
-}
-
-.preset-shortcut-small {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  background: rgba(0, 204, 255, 0.3);
-  color: #ffffff;
-  font-size: 8px;
-  font-weight: 700;
-  padding: 1px 3px;
-  border-radius: 2px;
-  min-width: 10px;
-  text-align: center;
-}
-
-.reset-btn-ultra {
-  background: rgba(0, 12, 20, 0.8);
-  border: 1px solid rgba(0, 204, 255, 0.4);
-  color: #66ddff;
-  padding: 4px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 10px;
-  min-height: 24px;
-  min-width: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: inherit;
+  min-width: 0; /* Allow shrinking */
+  min-height: 0; /* Allow shrinking */
 }
 
-.reset-btn-ultra:hover:not(:disabled) {
-  background: rgba(0, 204, 255, 0.1);
-  border-color: rgba(0, 204, 255, 0.6);
+.preset-card-minimal:hover:not(:disabled) {
+  background: rgba(0, 204, 255, 0.15);
+  border-color: rgba(0, 204, 255, 0.4);
   transform: scale(1.05);
 }
 
-.reset-btn-ultra:disabled {
+.preset-card-minimal.active {
+  background: rgba(0, 204, 255, 0.25);
+  border-color: rgba(0, 204, 255, 0.6);
+  box-shadow: 0 0 4px rgba(0, 204, 255, 0.4);
+}
+
+.preset-card-minimal:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.preset-number {
+  font-size: 12px;
+  font-weight: 700;
+  color: #66ddff;
+  text-shadow: 0 0 3px rgba(0, 204, 255, 0.3);
+}
+
+/* Reset card styling */
+.reset-card {
+  background: rgba(0, 12, 20, 0.8) !important;
+  border-color: rgba(0, 204, 255, 0.3) !important;
+}
+
+.reset-card:hover:not(:disabled) {
+  background: rgba(0, 204, 255, 0.1) !important;
+  border-color: rgba(0, 204, 255, 0.5) !important;
+}
+
+.reset-icon {
+  font-size: 10px;
+  color: #66ddff;
 }
 
 /* Compact Mode Status */
@@ -643,7 +556,7 @@ const resetCamera = () => {
 
 .status-value {
   color: #ffffff;
-  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-family: 'Kodo Mono', monospace;
   font-size: 11px;
   font-weight: 500;
 }
@@ -819,6 +732,12 @@ const resetCamera = () => {
   text-align: center;
 }
 
+/* Fix compact mode reset spacing */
+.reset-section.compact {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
 .reset-btn {
   background: rgba(0, 12, 20, 0.8);
   border: 1px solid rgba(0, 204, 255, 0.4);
@@ -909,12 +828,6 @@ const resetCamera = () => {
     gap: 2px;
   }
 
-  .preset-card-minimal {
-    min-height: 20px;
-    max-width: 24px;
-    border-radius: 2px;
-  }
-
   .preset-number {
     font-size: 10px;
   }
@@ -929,11 +842,6 @@ const resetCamera = () => {
   .presets-panel.ultra-compact {
     max-width: 100px;
     height: 75px;
-  }
-
-  .preset-card-minimal {
-    min-height: 18px;
-    max-width: 20px;
   }
 
   .preset-number {
