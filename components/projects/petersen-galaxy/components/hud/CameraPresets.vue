@@ -5,6 +5,21 @@ import type { Ref } from 'vue'
 import { Logger } from '../../../../utils/logger'
 import { OrbitControlsAccessTest } from '../../utils/orbit-controls-test'
 
+// Responsive state
+const windowWidth = ref(window.innerWidth)
+const windowHeight = ref(window.innerHeight)
+
+// Check if should use compact mode based on screen size
+const isCompactMode = computed(() => {
+  return windowWidth.value < 768 || windowHeight.value < 600
+})
+
+// Handle window resize
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+  windowHeight.value = window.innerHeight
+}
+
 // Camera presets configuration
 interface CameraPreset {
   id: string
@@ -94,26 +109,6 @@ const canUsePresets = computed(() => {
   return !!(camera && controls)
 })
 
-// Debug status for template
-const debugStatus = computed(() => {
-  const camera = cameraRef?.value
-  const controlsComponent = orbitControlsRef?.value
-
-  let accessTest = null
-  if (controlsComponent) {
-    accessTest = OrbitControlsAccessTest.testControlsAccess(controlsComponent)
-  }
-
-  return {
-    cameraReady: !!camera,
-    controlsReady: !!controlsComponent,
-    targetReady: accessTest?.success || false,
-    cameraRef: !!cameraRef,
-    orbitControlsRef: !!orbitControlsRef,
-    accessMethod: accessTest?.method || 'none'
-  }
-})
-
 // Keyboard shortcuts support
 const handleKeyPress = (event: KeyboardEvent) => {
   // Only handle shortcuts when panel is open
@@ -138,10 +133,12 @@ const handleKeyPress = (event: KeyboardEvent) => {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyPress)
+  window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyPress)
+  window.removeEventListener('resize', handleResize)
 })
 
 // Apply camera preset - DIRECT SWITCH ONLY
@@ -212,17 +209,18 @@ const resetCamera = () => {
 </script>
 
 <template>
-  <div class="presets-panel unified-panel">
+  <div class="presets-panel unified-panel" :class="{ 'compact': isCompactMode }">
     <div class="presets-header">
       <h3>
         <i class="i-carbon-camera header-icon" aria-hidden="true" />
-        Camera Presets
+        <span v-if="!isCompactMode">Camera Presets</span>
+        <span v-else>Presets</span>
       </h3>
       <slot name="close"></slot>
     </div>
     <div class="presets-content">
-      <!-- Current Status -->
-      <div class="current-status">
+      <!-- Current Status - hide in compact mode -->
+      <div v-if="!isCompactMode" class="current-status">
         <div class="status-item">
           <span class="label">Current Preset:</span>
           <span class="value">{{ currentPreset || 'Default' }}</span>
@@ -233,39 +231,27 @@ const resetCamera = () => {
             {{ canUsePresets ? 'Ready' : 'Not Available' }}
           </span>
         </div>
-        <div class="status-item">
-          <span class="label">Debug:</span>
-          <span class="value">
-            Target: {{ debugStatus.targetReady ? '✅' : '❌' }} |
-            Method: {{ debugStatus.accessMethod }}<br>
-            Camera: {{ debugStatus.cameraReady ? '✅' : '❌' }} |
-            Control: {{ debugStatus.controlsReady ? '✅' : '❌' }}
-          </span>
-        </div>
-        <div class="status-item">
-          <span class="label">Refs:</span>
-          <span class="value">
-            CamRef: {{ debugStatus.cameraRef ? '✅' : '❌' }} |
-            CtrlRef: {{ debugStatus.orbitControlsRef ? '✅' : '❌' }}
-          </span>
-        </div>
       </div>
 
       <!-- Preset Buttons -->
       <div class="presets-section">
-        <div class="section-title">Quick Presets</div>
-        <div class="presets-grid">
+        <div class="section-title" v-if="!isCompactMode">Quick Presets</div>
+        <div class="presets-grid" :class="{ 'compact-grid': isCompactMode }">
           <button v-for="(preset, index) in availablePresets" :key="preset.id" class="preset-btn" :class="{
-            active: currentPreset === preset.id
+            active: currentPreset === preset.id,
+            compact: isCompactMode
           }" :disabled="!canUsePresets" @click="applyPreset(preset)">
             <div class="preset-header">
               <div class="preset-icon">{{ preset.icon }}</div>
               <div class="preset-shortcut">{{ index + 1 }}</div>
             </div>
-            <div class="preset-info">
+            <div class="preset-info" v-if="!isCompactMode">
               <div class="preset-name">{{ preset.name }}</div>
               <div class="preset-description">{{ preset.description }}</div>
               <div class="preset-duration">{{ preset.transition }}ms</div>
+            </div>
+            <div class="preset-info-compact" v-else>
+              <div class="preset-name">{{ preset.name }}</div>
             </div>
           </button>
         </div>
@@ -273,13 +259,14 @@ const resetCamera = () => {
 
       <!-- Reset Button -->
       <div class="reset-section">
-        <button class="reset-btn" :disabled="!canUsePresets" @click="resetCamera">
-          🏠 Reset to Default
+        <button class="reset-btn" :class="{ compact: isCompactMode }" :disabled="!canUsePresets" @click="resetCamera">
+          <i class="i-carbon-home" v-if="isCompactMode" />
+          <span v-else>🏠 Reset to Default</span>
         </button>
       </div>
 
-      <!-- Usage Instructions -->
-      <div class="instructions-section">
+      <!-- Usage Instructions - hide in compact mode -->
+      <div v-if="!isCompactMode" class="instructions-section">
         <div class="section-title">Controls & Shortcuts</div>
         <div class="instructions">
           <div class="instruction-item">
@@ -317,6 +304,12 @@ const resetCamera = () => {
   z-index: 1001;
 }
 
+.presets-panel.compact {
+  max-width: 320px;
+  height: 300px;
+  max-height: 70vh;
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -349,10 +342,19 @@ const resetCamera = () => {
   gap: 8px;
 }
 
+.compact .presets-header h3 {
+  font-size: 13px;
+  gap: 6px;
+}
+
 .header-icon {
   font-size: 16px;
   color: #00ccff;
   filter: drop-shadow(0 0 4px rgba(0, 204, 255, 0.5));
+}
+
+.compact .header-icon {
+  font-size: 14px;
 }
 
 .close-btn {
@@ -377,6 +379,10 @@ const resetCamera = () => {
 
 .presets-content {
   padding: 18px;
+}
+
+.compact .presets-content {
+  padding: 12px;
 }
 
 /* Current Status */
@@ -433,6 +439,11 @@ const resetCamera = () => {
   gap: 10px;
 }
 
+.compact-grid {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
 .preset-btn {
   display: flex;
   flex-direction: column;
@@ -445,6 +456,12 @@ const resetCamera = () => {
   font-family: inherit;
   text-align: left;
   min-height: 100px;
+}
+
+.preset-btn.compact {
+  padding: 8px;
+  min-height: 60px;
+  border-radius: 6px;
 }
 
 .preset-btn:hover:not(:disabled) {
@@ -472,8 +489,16 @@ const resetCamera = () => {
   margin-bottom: 8px;
 }
 
+.compact .preset-header {
+  margin-bottom: 4px;
+}
+
 .preset-icon {
   font-size: 22px;
+}
+
+.compact .preset-icon {
+  font-size: 18px;
 }
 
 .preset-shortcut {
@@ -487,6 +512,12 @@ const resetCamera = () => {
   text-align: center;
 }
 
+.compact .preset-shortcut {
+  font-size: 9px;
+  padding: 1px 4px;
+  min-width: 12px;
+}
+
 .preset-info {
   flex-grow: 1;
 }
@@ -496,6 +527,12 @@ const resetCamera = () => {
   font-weight: 600;
   font-size: 13px;
   margin-bottom: 4px;
+}
+
+.preset-info-compact .preset-name {
+  font-size: 10px;
+  margin-bottom: 0;
+  text-align: center;
 }
 
 .preset-description {
@@ -532,6 +569,11 @@ const resetCamera = () => {
   transition: all 0.3s ease;
 }
 
+.reset-btn.compact {
+  padding: 8px 12px;
+  font-size: 10px;
+}
+
 .reset-btn:hover:not(:disabled) {
   background: rgba(0, 204, 255, 0.1);
   border-color: rgba(0, 204, 255, 0.6);
@@ -540,6 +582,32 @@ const resetCamera = () => {
 .reset-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Very small screens */
+@media only screen and (max-width: 480px) {
+  .presets-panel.compact {
+    max-width: 280px;
+    height: 350px;
+  }
+
+  .compact-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+  }
+
+  .preset-btn.compact {
+    padding: 6px;
+    min-height: 50px;
+  }
+
+  .compact .preset-icon {
+    font-size: 16px;
+  }
+
+  .preset-info-compact .preset-name {
+    font-size: 9px;
+  }
 }
 
 /* Instructions */
