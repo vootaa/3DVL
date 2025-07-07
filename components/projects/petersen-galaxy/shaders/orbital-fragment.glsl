@@ -15,11 +15,11 @@ void main()
     core = pow(core, 6.0); // Very sharp core
     
     // Combine for precise, thin bright lines
-    float finalStrength = strength + core * 4.0; // Much brighter concentrated core
+    float finalStrength = strength + core * 5.0; // Much brighter concentrated core
     finalStrength = min(finalStrength, 1.0);
     
     // Apply evolution progress to particle visibility
-    finalStrength *= smoothstep(0.0, 1.0, uEvolutionProgress);
+    finalStrength *= mix(0.2, 1.0, sqrt(uEvolutionProgress));
     
     // Boost color intensity for brilliant ring effect
     vec3 color = vColor * (1.0 + finalStrength * 2.0);
