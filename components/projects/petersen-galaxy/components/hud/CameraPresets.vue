@@ -214,7 +214,10 @@ const resetCamera = () => {
 <template>
   <div class="presets-panel unified-panel">
     <div class="presets-header">
-      <h3>📷 Camera Presets</h3>
+      <h3>
+        <i class="i-carbon-camera header-icon" aria-hidden="true" />
+        Camera Presets
+      </h3>
       <slot name="close"></slot>
     </div>
     <div class="presets-content">
@@ -341,6 +344,15 @@ const resetCamera = () => {
   font-size: 15px;
   font-weight: 700;
   text-shadow: 0 0 8px rgba(0, 204, 255, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-icon {
+  font-size: 16px;
+  color: #00ccff;
+  filter: drop-shadow(0 0 4px rgba(0, 204, 255, 0.5));
 }
 
 .close-btn {

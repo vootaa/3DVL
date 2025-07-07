@@ -64,7 +64,10 @@ const positionChangeChartPath = computed(() => genChartPath(positionChangeHistor
 <template>
   <div class="drift-panel unified-panel">
     <div class="debug-header">
-      <h3>🔍 Petersen Galaxy Drift Monitor</h3>
+      <h3>
+        <i class="i-carbon-search header-icon" aria-hidden="true" />
+        Petersen Galaxy Drift Monitor
+      </h3>
       <slot name="close"></slot>
     </div>
     <div class="debug-content">
@@ -242,6 +245,15 @@ const positionChangeChartPath = computed(() => genChartPath(positionChangeHistor
   font-size: 15px;
   font-weight: 700;
   text-shadow: 0 0 8px rgba(0, 204, 255, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-icon {
+  font-size: 16px;
+  color: #00ccff;
+  filter: drop-shadow(0 0 4px rgba(0, 204, 255, 0.5));
 }
 
 .close-btn {

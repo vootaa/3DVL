@@ -52,13 +52,13 @@ onUnmounted(() => {
     <div v-if="menuOpen" class="menu-dropdown">
       <div class="menu-item" @click="openPanel('performance')">
         <span class="menu-icon">
-          <i class="i-carbon-dashboard" aria-hidden="true" />
+          <i class="i-carbon-flash" aria-hidden="true" />
         </span>
         <span class="menu-text" v-if="!isCompactMode">Performance</span>
       </div>
       <div class="menu-item" @click="openPanel('drift')">
         <span class="menu-icon">
-          <i class="i-carbon-direction-curve" aria-hidden="true" />
+          <i class="i-carbon-search" aria-hidden="true" />
         </span>
         <span class="menu-text" v-if="!isCompactMode">Drift Monitor</span>
       </div>

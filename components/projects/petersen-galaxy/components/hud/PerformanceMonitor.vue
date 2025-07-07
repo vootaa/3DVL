@@ -107,34 +107,34 @@ const performanceStatus = computed(() => {
 const updateFPS = () => {
   const now = performance.now()
   frameCount++
-  
+
   // Calculate current frame time
   const currentFrameTime = now - lastFrameTime
   lastFrameTime = now
-  
+
   // Add to frame time history for smoothing
   frameTimeHistory.push(currentFrameTime)
   frameTimeSum += currentFrameTime
-  
+
   // Keep history size limited
   if (frameTimeHistory.length > FRAME_TIME_HISTORY_SIZE) {
     const removed = frameTimeHistory.shift()!
     frameTimeSum -= removed
   }
-  
+
   // Update smoothed frame time (only update every few frames to reduce flicker)
   if (frameCount % 10 === 0) { // Update every 10 frames, approximately every 167ms
     const smoothedFrameTime = frameTimeSum / frameTimeHistory.length
     performanceData.value.frameTime = smoothedFrameTime
   }
-  
+
   // Update FPS every second
   if (now - fpsUpdateTime >= 1000) {
     performanceData.value.fps = Math.round((frameCount * 1000) / (now - fpsUpdateTime))
     frameCount = 0
     fpsUpdateTime = now
   }
-  
+
   requestAnimationFrame(updateFPS)
 }
 
@@ -150,7 +150,7 @@ const updatePerformanceData = () => {
         limit: memory.jsHeapSizeLimit || 0
       }
     }
-    
+
     // Try to get renderer info from Three.js if available
     if (typeof window !== 'undefined' && (window as any).__THREE_RENDERER_INFO__) {
       const rendererInfo = (window as any).__THREE_RENDERER_INFO__
@@ -161,16 +161,16 @@ const updatePerformanceData = () => {
       performanceData.value.textures = rendererInfo.memory?.textures || 0
       performanceData.value.geometries = rendererInfo.memory?.geometries || 0
     }
-    
+
     performanceData.value.lastUpdate = new Date().toLocaleTimeString()
-    
+
     Logger.throttle('PERFORMANCE_MONITOR_UPDATE', 'Performance metrics updated', {
       fps: performanceData.value.fps,
       frameTime: performanceData.value.frameTime.toFixed(2),
       memory: formattedMemory.value,
       status: performanceStatus.value
     }, LoggingConfig.DRIFT_MONITOR_UPDATE)
-    
+
   } catch (error) {
     Logger.error('PERFORMANCE_MONITOR', 'Error updating performance data', error)
   }
@@ -179,11 +179,11 @@ const updatePerformanceData = () => {
 onMounted(() => {
   // Start FPS monitoring
   updateFPS()
-  
+
   // Update performance data every 3 seconds (reduced frequency to minimize flicker)
   updateInterval = setInterval(updatePerformanceData, 3000)
   updatePerformanceData() // Initial update
-  
+
   Logger.log('PERFORMANCE_MONITOR', 'Performance monitor component mounted')
 })
 
@@ -191,7 +191,7 @@ onUnmounted(() => {
   if (updateInterval) {
     clearInterval(updateInterval)
   }
-  
+
   Logger.log('PERFORMANCE_MONITOR', 'Performance monitor component unmounted')
 })
 </script>
@@ -199,7 +199,10 @@ onUnmounted(() => {
 <template>
   <div class="performance-panel unified-panel">
     <div class="performance-header">
-      <h3>⚡ Performance Monitor</h3>
+      <h3>
+        <i class="i-carbon-flash header-icon" aria-hidden="true" />
+        Performance Monitor
+      </h3>
       <slot name="close"></slot>
     </div>
     <div class="performance-content">
@@ -248,22 +251,22 @@ onUnmounted(() => {
           <span class="label">Draw Calls:</span>
           <span class="value">{{ performanceData.renderCalls }}</span>
         </div>
-        
+
         <div class="status-item highlight" v-if="performanceData.points > 0">
           <span class="label">Points:</span>
           <span class="value">{{ formattedPoints }}</span>
         </div>
-        
+
         <div class="status-item" v-if="performanceData.lines > 0">
           <span class="label">Lines:</span>
           <span class="value">{{ formattedLines }}</span>
         </div>
-        
+
         <div class="status-item">
           <span class="label">Geometries:</span>
           <span class="value">{{ performanceData.geometries }}</span>
         </div>
-        
+
         <div class="status-item secondary">
           <span class="label">Triangles:</span>
           <span class="value">{{ formattedTriangles }}</span>
@@ -332,6 +335,15 @@ onUnmounted(() => {
   font-size: 15px;
   font-weight: 700;
   text-shadow: 0 0 8px rgba(0, 204, 255, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-icon {
+  font-size: 16px;
+  color: #00ccff;
+  filter: drop-shadow(0 0 4px rgba(0, 204, 255, 0.5));
 }
 
 .close-btn {
@@ -407,11 +419,14 @@ onUnmounted(() => {
 }
 
 @keyframes highlightPulse {
-  0%, 100% { 
+
+  0%,
+  100% {
     background: rgba(0, 255, 255, 0.1);
     border-color: #00ccff;
   }
-  50% { 
+
+  50% {
     background: rgba(0, 255, 255, 0.15);
     border-color: #66ddff;
   }
@@ -484,11 +499,14 @@ onUnmounted(() => {
 }
 
 @keyframes tipPulse {
-  0%, 100% { 
-    box-shadow: 0 0 0 rgba(0, 204, 255, 0.3); 
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(0, 204, 255, 0.3);
   }
-  50% { 
-    box-shadow: 0 0 10px rgba(0, 204, 255, 0.3); 
+
+  50% {
+    box-shadow: 0 0 10px rgba(0, 204, 255, 0.3);
   }
 }
 
