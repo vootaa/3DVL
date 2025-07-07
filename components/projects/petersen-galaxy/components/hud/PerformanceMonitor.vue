@@ -770,7 +770,7 @@ onUnmounted(() => {
   }
 
   .performance-panel.ultra-compact {
-    height: 100px;
+    height: 110px;
     max-height: 80vh;
   }
 }
