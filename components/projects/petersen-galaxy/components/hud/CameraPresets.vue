@@ -391,8 +391,8 @@ const resetCamera = () => {
 }
 
 .presets-panel.ultra-compact {
-  max-width: 160px;
-  height: 110px;
+  max-width: 240px;
+  height: 150px;
   max-height: 50vh;
 }
 
@@ -820,8 +820,8 @@ const resetCamera = () => {
 /* Very small screens - ultra compact adjustments */
 @media only screen and (max-width: 480px) {
   .presets-panel.ultra-compact {
-    max-width: 120px;
-    height: 90px;
+    max-width: 200px;
+    height: 120px;
   }
 
   .ultra-compact-grid {
@@ -841,7 +841,7 @@ const resetCamera = () => {
 @media only screen and (max-width: 360px) {
   .presets-panel.ultra-compact {
     max-width: 100px;
-    height: 75px;
+    height: 100px;
   }
 
   .preset-number {
@@ -856,7 +856,7 @@ const resetCamera = () => {
 /* Landscape phones */
 @media only screen and (max-height: 480px) and (orientation: landscape) {
   .presets-panel.ultra-compact {
-    height: 70px;
+    height: 100px;
     max-height: 60vh;
   }
 }
