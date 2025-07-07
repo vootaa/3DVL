@@ -117,9 +117,9 @@ const setCurrentPresetId = inject('setCurrentPresetId', (_id: string | null) => 
 
 // Computed properties
 const availablePresets = computed(() => {
-  // In ultra-compact mode, show only the first 4 presets
+  // In ultra-compact mode, show only the first 5 presets
   if (displayMode.value === 'ultra') {
-    return cameraPresets.slice(0, 4)
+    return cameraPresets.slice(0, 5)
   }
   return cameraPresets
 })
@@ -249,20 +249,20 @@ const resetCamera = () => {
       <slot name="close"></slot>
     </div>
     <div class="presets-content">
-      <!-- Ultra Compact Mode - Only numbers -->
+      <!-- Ultra Compact Mode - 3x2 grid with 5 presets + reset -->
       <template v-if="displayMode === 'ultra'">
         <div class="ultra-compact-grid">
+          <!-- Preset buttons 1-5 -->
           <button v-for="(preset, index) in availablePresets" :key="preset.id" class="preset-card-minimal" :class="{
             active: currentPreset === preset.id
           }" :disabled="!canUsePresets" @click="applyPreset(preset)" :title="preset.name">
             <span class="preset-number">{{ index + 1 }}</span>
           </button>
-        </div>
 
-        <!-- Ultra compact reset button -->
-        <div class="reset-section-ultra">
-          <button class="reset-btn-ultra" :disabled="!canUsePresets" @click="resetCamera" title="Reset Camera">
-            <i class="i-carbon-home" />
+          <!-- Reset button in the 6th position -->
+          <button class="preset-card-minimal reset-card" :disabled="!canUsePresets" @click="resetCamera"
+            title="Reset Camera">
+            <i class="i-carbon-home reset-icon" />
           </button>
         </div>
       </template>
@@ -391,31 +391,33 @@ const resetCamera = () => {
 }
 
 .presets-panel.ultra-compact {
-  max-width: 180px;
-  height: 120px;
+  max-width: 160px;
+  height: 110px;
   max-height: 50vh;
 }
 
-/* Ultra Compact Layout - Minimalist number-only design */
+/* Ultra Compact Layout - 3x2 grid design */
 .ultra-compact-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
-  margin-bottom: 8px;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 3px;
+  margin-bottom: 0;
+  height: 100%;
 }
 
 .preset-card-minimal {
   background: rgba(0, 204, 255, 0.08);
   border: 1px solid rgba(0, 204, 255, 0.2);
-  border-radius: 4px;
+  border-radius: 3px;
   padding: 0;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 28px;
-  min-width: 28px;
+  min-height: 24px;
+  max-width: 32px;
   font-family: inherit;
 }
 
@@ -428,7 +430,7 @@ const resetCamera = () => {
 .preset-card-minimal.active {
   background: rgba(0, 204, 255, 0.25);
   border-color: rgba(0, 204, 255, 0.6);
-  box-shadow: 0 0 6px rgba(0, 204, 255, 0.4);
+  box-shadow: 0 0 4px rgba(0, 204, 255, 0.4);
 }
 
 .preset-card-minimal:disabled {
@@ -437,10 +439,26 @@ const resetCamera = () => {
 }
 
 .preset-number {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: #66ddff;
-  text-shadow: 0 0 4px rgba(0, 204, 255, 0.3);
+  text-shadow: 0 0 3px rgba(0, 204, 255, 0.3);
+}
+
+/* Reset card styling */
+.reset-card {
+  background: rgba(0, 12, 20, 0.8) !important;
+  border-color: rgba(0, 204, 255, 0.3) !important;
+}
+
+.reset-card:hover:not(:disabled) {
+  background: rgba(0, 204, 255, 0.1) !important;
+  border-color: rgba(0, 204, 255, 0.5) !important;
+}
+
+.reset-icon {
+  font-size: 10px;
+  color: #66ddff;
 }
 
 @keyframes slideDown {
@@ -575,10 +593,6 @@ const resetCamera = () => {
   padding: 1px 3px;
   border-radius: 2px;
   min-width: 10px;
-  text-align: center;
-}
-
-.reset-section-ultra {
   text-align: center;
 }
 
@@ -887,60 +901,55 @@ const resetCamera = () => {
 /* Very small screens - ultra compact adjustments */
 @media only screen and (max-width: 480px) {
   .presets-panel.ultra-compact {
-    max-width: 140px;
-    height: 100px;
-  }
-
-  .ultra-compact-grid {
-    gap: 3px;
-  }
-
-  .preset-card-minimal {
-    min-height: 24px;
-    min-width: 24px;
-    border-radius: 3px;
-  }
-
-  .preset-number {
-    font-size: 12px;
-  }
-
-  .reset-btn-ultra {
-    min-height: 20px;
-    min-width: 20px;
-    font-size: 9px;
-    padding: 3px;
-  }
-}
-
-/* Extra small screens */
-@media only screen and (max-width: 360px) {
-  .presets-panel.ultra-compact {
     max-width: 120px;
     height: 90px;
   }
 
+  .ultra-compact-grid {
+    gap: 2px;
+  }
+
   .preset-card-minimal {
     min-height: 20px;
-    min-width: 20px;
+    max-width: 24px;
+    border-radius: 2px;
   }
 
   .preset-number {
     font-size: 10px;
   }
 
-  .reset-btn-ultra {
-    min-height: 18px;
-    min-width: 18px;
+  .reset-icon {
     font-size: 8px;
+  }
+}
+
+/* Extra small screens */
+@media only screen and (max-width: 360px) {
+  .presets-panel.ultra-compact {
+    max-width: 100px;
+    height: 75px;
+  }
+
+  .preset-card-minimal {
+    min-height: 18px;
+    max-width: 20px;
+  }
+
+  .preset-number {
+    font-size: 9px;
+  }
+
+  .reset-icon {
+    font-size: 7px;
   }
 }
 
 /* Landscape phones */
 @media only screen and (max-height: 480px) and (orientation: landscape) {
   .presets-panel.ultra-compact {
-    height: 80px;
-    max-height: 70vh;
+    height: 70px;
+    max-height: 60vh;
   }
 }
 
