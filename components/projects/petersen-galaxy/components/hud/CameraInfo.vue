@@ -45,28 +45,11 @@ const availableModes = computed(() => {
   }
 })
 
-// Mode switching functions
-const switchToNextMode = () => {
-  const current = displayMode.value
-  const available = availableModes.value
-  const currentIndex = available.indexOf(current)
-  const nextIndex = (currentIndex + 1) % available.length
-  manualMode.value = available[nextIndex]
-}
-
-const switchToPrevMode = () => {
-  const current = displayMode.value
-  const available = availableModes.value
-  const currentIndex = available.indexOf(current)
-  const prevIndex = (currentIndex - 1 + available.length) % available.length
-  manualMode.value = available[prevIndex]
-}
-
 // Get mode switch button info with + and - symbols
 const getModeSwitchInfo = computed(() => {
   const current = displayMode.value
   const available = availableModes.value
-  
+
   // For ultra mode, we need special handling to show expand button
   if (current === 'ultra' && available.length > 1) {
     // Ultra mode only shows expand (+) button
@@ -78,28 +61,28 @@ const getModeSwitchInfo = computed(() => {
       expandTooltip: 'Expand to larger view'
     }
   }
-  
+
   if (available.length <= 1) {
-    return { 
-      canSwitch: false, 
-      showExpand: false, 
+    return {
+      canSwitch: false,
+      showExpand: false,
       showCollapse: false,
-      expandIcon: '', 
-      expandTooltip: '' 
+      expandIcon: '',
+      expandTooltip: ''
     }
   }
-  
+
   // For compact and full modes, show both buttons
-  const hasLargerMode = available.some(mode => 
+  const hasLargerMode = available.some(mode =>
     (current === 'compact' && mode === 'full') ||
     (current === 'ultra' && (mode === 'compact' || mode === 'full'))
   )
-  
-  const hasSmallerMode = available.some(mode => 
+
+  const hasSmallerMode = available.some(mode =>
     (current === 'full' && (mode === 'compact' || mode === 'ultra')) ||
     (current === 'compact' && mode === 'ultra')
   )
-  
+
   return {
     canSwitch: true,
     showExpand: hasLargerMode,
@@ -115,7 +98,7 @@ const getModeSwitchInfo = computed(() => {
 const expandMode = () => {
   const current = displayMode.value
   const available = availableModes.value
-  
+
   // Find the next larger mode
   if (current === 'ultra' && available.includes('compact')) {
     manualMode.value = 'compact'
@@ -129,7 +112,7 @@ const expandMode = () => {
 const collapseMode = () => {
   const current = displayMode.value
   const available = availableModes.value
-  
+
   // Find the next smaller mode
   if (current === 'full' && available.includes('compact')) {
     manualMode.value = 'compact'
@@ -144,7 +127,7 @@ const collapseMode = () => {
 const handleResize = () => {
   windowWidth.value = window.innerWidth
   windowHeight.value = window.innerHeight
-  
+
   // Reset manual mode if current mode is no longer available
   if (manualMode.value && !availableModes.value.includes(manualMode.value)) {
     manualMode.value = null
@@ -166,7 +149,7 @@ const updateCameraInfo = () => {
     if (cameraRef?.value) {
       const camera = cameraRef.value
       const cameraPosition = camera.position
-      
+
       // Calculate distance from camera to grid center
       cameraDistance.value = cameraPosition.distanceTo(gridCenter)
 
@@ -174,18 +157,18 @@ const updateCameraInfo = () => {
       const dx = cameraPosition.x - gridCenter.x
       const dy = cameraPosition.y - gridCenter.y
       const dz = cameraPosition.z - gridCenter.z
-      
+
       azimuthAngle.value = (Math.atan2(dx, dz) * 180 / Math.PI)
-      
+
       const horizontalDistance = Math.sqrt(dx * dx + dz * dz)
       elevationAngle.value = (Math.atan2(dy, horizontalDistance) * 180 / Math.PI)
-      
+
       return
     }
   } catch (error) {
     Logger.error('CAMERA_INFO', 'Error accessing camera for position calculation', error)
   }
-  
+
   // Fallback values
   cameraDistance.value = 17.3
   azimuthAngle.value = 45
@@ -226,7 +209,7 @@ const displayElevation = computed(() => {
 
 const displayPosition = computed(() => {
   if (!cameraRef?.value) return { x: '0.0', y: '0.0', z: '0.0' }
-  
+
   const pos = cameraRef.value.position
   return {
     x: pos.x.toFixed(1),
@@ -255,18 +238,13 @@ onUnmounted(() => {
   <div class="camera-info unified-panel" :class="displayMode">
     <!-- Ultra Compact Mode -->
     <template v-if="displayMode === 'ultra'">
+      <!-- Mode Switch Button for Ultra Mode -->
+      <div v-if="getModeSwitchInfo.canSwitch && getModeSwitchInfo.showExpand" class="ultra-expand-btn">
+        <button class="mode-btn ultra-btn" @click="expandMode" :title="getModeSwitchInfo.expandTooltip">
+          {{ getModeSwitchInfo.expandIcon }}
+        </button>
+      </div>
       <div class="ultra-content">
-        <!-- Mode Switch Button for Ultra Mode -->
-        <div v-if="getModeSwitchInfo.canSwitch && getModeSwitchInfo.showExpand" class="ultra-expand-btn">
-          <button 
-            class="mode-btn ultra-btn"
-            @click="expandMode"
-            :title="getModeSwitchInfo.expandTooltip"
-          >
-            {{ getModeSwitchInfo.expandIcon }}
-          </button>
-        </div>
-        
         <div class="ultra-row">
           <span class="ultra-icon">📏</span>
           <span class="ultra-value">{{ compactDistance }}</span>
@@ -291,25 +269,17 @@ onUnmounted(() => {
         </h3>
         <!-- Mode Switch Buttons for Compact -->
         <div v-if="getModeSwitchInfo.canSwitch" class="mode-switches">
-          <button 
-            v-if="getModeSwitchInfo.showCollapse"
-            class="mode-btn"
-            @click="collapseMode"
-            :title="getModeSwitchInfo.collapseTooltip"
-          >
+          <button v-if="getModeSwitchInfo.showCollapse" class="mode-btn" @click="collapseMode"
+            :title="getModeSwitchInfo.collapseTooltip">
             {{ getModeSwitchInfo.collapseIcon }}
           </button>
-          <button 
-            v-if="getModeSwitchInfo.showExpand"
-            class="mode-btn"
-            @click="expandMode"
-            :title="getModeSwitchInfo.expandTooltip"
-          >
+          <button v-if="getModeSwitchInfo.showExpand" class="mode-btn" @click="expandMode"
+            :title="getModeSwitchInfo.expandTooltip">
             {{ getModeSwitchInfo.expandIcon }}
           </button>
         </div>
       </div>
-      
+
       <div class="content">
         <div class="info-row">
           <span class="label">
@@ -317,14 +287,14 @@ onUnmounted(() => {
           </span>
           <span class="value">{{ displayDistance }}</span>
         </div>
-        
+
         <div class="info-row">
           <span class="label">
             <i class="icon">🧭</i> Azimuth
           </span>
           <span class="value">{{ displayAzimuth }}</span>
         </div>
-        
+
         <div class="info-row">
           <span class="label">
             <i class="icon">📐</i> Elevation
@@ -343,29 +313,21 @@ onUnmounted(() => {
         </h3>
         <!-- Mode Switch Buttons for Full -->
         <div v-if="getModeSwitchInfo.canSwitch" class="mode-switches">
-          <button 
-            v-if="getModeSwitchInfo.showCollapse"
-            class="mode-btn"
-            @click="collapseMode"
-            :title="getModeSwitchInfo.collapseTooltip"
-          >
+          <button v-if="getModeSwitchInfo.showCollapse" class="mode-btn" @click="collapseMode"
+            :title="getModeSwitchInfo.collapseTooltip">
             {{ getModeSwitchInfo.collapseIcon }}
           </button>
-          <button 
-            v-if="getModeSwitchInfo.showExpand"
-            class="mode-btn"
-            @click="expandMode"
-            :title="getModeSwitchInfo.expandTooltip"
-          >
+          <button v-if="getModeSwitchInfo.showExpand" class="mode-btn" @click="expandMode"
+            :title="getModeSwitchInfo.expandTooltip">
             {{ getModeSwitchInfo.expandIcon }}
           </button>
         </div>
       </div>
-      
+
       <div class="content">
         <div class="section">
           <div class="section-title">Position & Orientation</div>
-          
+
           <!-- Distance -->
           <div class="major-info">
             <span class="label">
@@ -373,7 +335,7 @@ onUnmounted(() => {
             </span>
             <span class="value highlighted">{{ displayDistance }}</span>
           </div>
-          
+
           <!-- Position coordinates -->
           <div class="coordinates">
             <div class="coord">
@@ -389,7 +351,7 @@ onUnmounted(() => {
               <span class="coord-value">{{ displayPosition.z }}</span>
             </div>
           </div>
-          
+
           <!-- Angles - 改为两行显示，分别居中 -->
           <div class="angles-vertical">
             <div class="angle-item">
@@ -435,10 +397,10 @@ onUnmounted(() => {
   border: 1px solid rgba(0, 204, 255, 0.6);
   border-radius: 10px;
   color: #00ccff;
-  font-family: 'Kodo Mono', monospace;
+  font-family: 'Kode Mono', monospace;
   font-weight: 500;
   backdrop-filter: blur(8px);
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(0, 204, 255, 0.15),
     inset 0 1px 0 rgba(0, 204, 255, 0.2);
   z-index: 100;
@@ -449,7 +411,7 @@ onUnmounted(() => {
 
 .camera-info:hover {
   border-color: rgba(0, 200, 255, 0.8);
-  box-shadow: 
+  box-shadow:
     0 10px 35px rgba(0, 204, 255, 0.25),
     inset 0 1px 0 rgba(0, 204, 255, 0.3);
 }
@@ -461,23 +423,23 @@ onUnmounted(() => {
   max-width: 100px;
   height: auto;
   padding: 6px;
-  bottom: 10px;
-  left: 10px;
+  bottom: 20px;
+  left: 20px;
   border-radius: 6px;
-  position: relative;
+  position: absolute;
 }
 
 .ultra-content {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 5px;
 }
 
 /* Ultra mode expand button */
 .ultra-expand-btn {
   position: absolute;
-  top: -2px;
-  right: -2px;
+  left: 22px;
+  bottom: 18px;
   z-index: 1;
 }
 
@@ -515,7 +477,7 @@ onUnmounted(() => {
   font-size: 9px;
   text-align: right;
   white-space: nowrap;
-  font-family: 'Kodo Mono', monospace;
+  font-family: 'Kode Mono', monospace;
 }
 
 /* Compact Mode */
@@ -548,7 +510,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Kodo Mono', monospace;
+  font-family: 'Kode Mono', monospace;
 }
 
 .compact .header h3 {
@@ -586,7 +548,7 @@ onUnmounted(() => {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Kodo Mono', monospace;
+  font-family: 'Kode Mono', monospace;
   padding: 0;
 }
 
@@ -639,7 +601,7 @@ onUnmounted(() => {
   text-shadow: 0 0 6px rgba(0, 204, 255, 0.4);
   border-left: 3px solid #00ccff;
   padding-left: 8px;
-  font-family: 'Kodo Mono', monospace;
+  font-family: 'Kode Mono', monospace;
 }
 
 /* Info Rows */
@@ -667,7 +629,7 @@ onUnmounted(() => {
   align-items: center;
   color: #99ddff;
   font-weight: 500;
-  font-family: 'Kodo Mono', monospace;
+  font-family: 'Kode Mono', monospace;
 }
 
 .icon {
@@ -686,7 +648,7 @@ onUnmounted(() => {
   font-weight: 600;
   text-align: right;
   min-width: 60px;
-  font-family: 'Kodo Mono', monospace;
+  font-family: 'Kode Mono', monospace;
 }
 
 .value.highlighted {
@@ -716,16 +678,16 @@ onUnmounted(() => {
 
 .coord-label {
   color: #99ddff;
-  font-size: 9px;
-  font-weight: 600;
-  font-family: 'Kodo Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  font-family: 'Kode Mono', monospace;
 }
 
 .coord-value {
   color: #66ddff;
   font-weight: 500;
   font-size: 10px;
-  font-family: 'Kodo Mono', monospace;
+  font-family: 'Kode Mono', monospace;
 }
 
 .angles-vertical {
@@ -760,7 +722,7 @@ onUnmounted(() => {
   background: rgba(0, 204, 255, 0.05);
   border-radius: 4px;
   border: 1px solid rgba(0, 204, 255, 0.1);
-  font-family: 'Kodo Mono', monospace;
+  font-family: 'Kode Mono', monospace;
 }
 
 .control-icon {
