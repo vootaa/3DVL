@@ -260,8 +260,8 @@ const resetCamera = () => {
       <!-- Reset Button -->
       <div class="reset-section">
         <button class="reset-btn" :class="{ compact: isCompactMode }" :disabled="!canUsePresets" @click="resetCamera">
-          <i class="i-carbon-home" v-if="isCompactMode" />
-          <span v-else>🏠 Reset to Default</span>
+          <i class="i-carbon-home" />
+          <span v-if="!isCompactMode" class="reset-text">Reset to Default</span>
         </button>
       </div>
 
@@ -270,15 +270,15 @@ const resetCamera = () => {
         <div class="section-title">Controls & Shortcuts</div>
         <div class="instructions">
           <div class="instruction-item">
-            <span class="instruction-icon">🖱️</span>
+            <i class="i-carbon-cursor-1 instruction-icon" aria-hidden="true" />
             <span class="instruction-text">Click any preset to switch camera view</span>
           </div>
           <div class="instruction-item">
-            <span class="instruction-icon">⌨️</span>
+            <i class="i-carbon-keyboard instruction-icon" aria-hidden="true" />
             <span class="instruction-text">Press 1-6 for quick preset selection</span>
           </div>
           <div class="instruction-item">
-            <span class="instruction-icon">🔄</span>
+            <i class="i-carbon-reset instruction-icon" aria-hidden="true" />
             <span class="instruction-text">Press R to reset to default view</span>
           </div>
         </div>
@@ -567,11 +567,28 @@ const resetCamera = () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .reset-btn.compact {
   padding: 8px 12px;
   font-size: 10px;
+  gap: 0;
+}
+
+.reset-btn i {
+  font-size: 14px;
+}
+
+.reset-btn.compact i {
+  font-size: 12px;
+}
+
+.reset-text {
+  margin-left: 4px;
 }
 
 .reset-btn:hover:not(:disabled) {
@@ -588,7 +605,7 @@ const resetCamera = () => {
 @media only screen and (max-width: 480px) {
   .presets-panel.compact {
     max-width: 280px;
-    height: 350px;
+    height: 320px;
   }
 
   .compact-grid {
@@ -598,15 +615,28 @@ const resetCamera = () => {
 
   .preset-btn.compact {
     padding: 6px;
-    min-height: 50px;
+    min-height: 45px;
   }
 
   .compact .preset-icon {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .preset-info-compact .preset-name {
-    font-size: 9px;
+    font-size: 8px;
+  }
+
+  .compact .preset-shortcut {
+    font-size: 8px;
+    padding: 1px 3px;
+    min-width: 10px;
+  }
+}
+
+@media only screen and (max-height: 480px) and (orientation: landscape) {
+  .presets-panel.compact {
+    height: 300px;
+    max-height: 90vh;
   }
 }
 
@@ -635,6 +665,8 @@ const resetCamera = () => {
 .instruction-icon {
   margin-right: 8px;
   font-size: 12px;
+  color: #66ddff;
+  flex-shrink: 0;
 }
 
 .instruction-text {
