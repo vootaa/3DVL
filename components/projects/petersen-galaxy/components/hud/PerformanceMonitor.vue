@@ -3,6 +3,26 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Logger } from '../../../../utils/logger'
 import { LoggingConfig } from '../../configs/logging-config'
 
+// Responsive state
+const windowWidth = ref(window.innerWidth)
+const windowHeight = ref(window.innerHeight)
+
+// Check if should use compact mode based on screen size
+const isCompactMode = computed(() => {
+  return windowWidth.value < 768 || windowHeight.value < 600
+})
+
+// Check for ultra-compact mode (very small screens)
+const isUltraCompactMode = computed(() => {
+  return windowWidth.value < 480 || windowHeight.value < 400
+})
+
+// Handle window resize
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+  windowHeight.value = window.innerHeight
+}
+
 // Performance metrics
 const performanceData = ref({
   fps: 0,
@@ -103,6 +123,13 @@ const performanceStatus = computed(() => {
   return 'CRITICAL'
 })
 
+// Compact display modes
+const displayMode = computed(() => {
+  if (isUltraCompactMode.value) return 'ultra'
+  if (isCompactMode.value) return 'compact'
+  return 'full'
+})
+
 // Update FPS calculation
 const updateFPS = () => {
   const now = performance.now()
@@ -185,6 +212,7 @@ onMounted(() => {
   updatePerformanceData() // Initial update
 
   Logger.log('PERFORMANCE_MONITOR', 'Performance monitor component mounted')
+  window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
@@ -193,112 +221,175 @@ onUnmounted(() => {
   }
 
   Logger.log('PERFORMANCE_MONITOR', 'Performance monitor component unmounted')
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
 <template>
-  <div class="performance-panel unified-panel">
+  <div class="performance-panel unified-panel" :class="{
+    'compact': isCompactMode,
+    'ultra-compact': isUltraCompactMode
+  }">
     <div class="performance-header">
       <h3>
         <i class="i-carbon-flash header-icon" aria-hidden="true" />
-        Performance Monitor
+        <span v-if="displayMode === 'full'">Performance Monitor</span>
+        <span v-else-if="displayMode === 'compact'">Performance</span>
+        <span v-else>Perf</span>
       </h3>
       <slot name="close"></slot>
     </div>
     <div class="performance-content">
-      <!-- FPS & Frame Time -->
-      <div class="performance-section">
-        <div class="section-title">Rendering Performance</div>
-        <div class="status-item">
-          <span class="label">FPS:</span>
-          <span class="value" :style="{ color: performanceStatusColor }">
-            {{ performanceData.fps }}
-          </span>
+      <!-- Ultra Compact Mode - Only essential metrics -->
+      <template v-if="displayMode === 'ultra'">
+        <div class="ultra-compact-grid">
+          <div class="metric-card fps">
+            <div class="metric-label">FPS</div>
+            <div class="metric-value" :style="{ color: performanceStatusColor }">
+              {{ performanceData.fps }}
+            </div>
+          </div>
+          <div class="metric-card memory">
+            <div class="metric-label">MEM</div>
+            <div class="metric-value" :style="{ color: memoryStatusColor }">
+              {{ ((performanceData.memory.used / performanceData.memory.total) * 100).toFixed(0) }}%
+            </div>
+          </div>
+          <div class="metric-card frame-time">
+            <div class="metric-label">MS</div>
+            <div class="metric-value">
+              {{ formattedFrameTime.replace('ms', '') }}
+            </div>
+          </div>
         </div>
-        <div class="status-item">
-          <span class="label">Frame Time:</span>
-          <span class="value">{{ formattedFrameTime }}</span>
-        </div>
-        <div class="status-item">
-          <span class="label">Status:</span>
-          <span class="value" :style="{ color: performanceStatusColor }">
-            {{ performanceStatus }}
-          </span>
-        </div>
-      </div>
+      </template>
 
-      <!-- Memory Usage -->
-      <div class="performance-section">
-        <div class="section-title">Memory Usage</div>
-        <div class="status-item">
-          <span class="label">JS Heap:</span>
-          <span class="value" :style="{ color: memoryStatusColor }">
-            {{ formattedMemory }}
-          </span>
-        </div>
-        <div class="status-item">
-          <span class="label">Usage:</span>
-          <span class="value" :style="{ color: memoryStatusColor }">
-            {{ ((performanceData.memory.used / performanceData.memory.total) * 100).toFixed(1) }}%
-          </span>
-        </div>
-      </div>
-
-      <!-- Rendering Statistics -->
-      <div class="performance-section">
-        <div class="section-title">Render Statistics</div>
-        <div class="status-item">
-          <span class="label">Draw Calls:</span>
-          <span class="value">{{ performanceData.renderCalls }}</span>
-        </div>
-
-        <div class="status-item highlight" v-if="performanceData.points > 0">
-          <span class="label">Points:</span>
-          <span class="value">{{ formattedPoints }}</span>
+      <!-- Compact Mode - Core metrics only -->
+      <template v-else-if="displayMode === 'compact'">
+        <div class="performance-section">
+          <div class="status-item highlight">
+            <span class="label">FPS:</span>
+            <span class="value" :style="{ color: performanceStatusColor }">
+              {{ performanceData.fps.toFixed(0) }}
+            </span>
+          </div>
+          <div class="status-item">
+            <span class="label">Frame Time:</span>
+            <span class="value">{{ formattedFrameTime }}</span>
+          </div>
+          <div class="status-item">
+            <span class="label">Status:</span>
+            <span class="value" :style="{ color: performanceStatusColor }">
+              {{ performanceStatus }}
+            </span>
+          </div>
         </div>
 
-        <div class="status-item" v-if="performanceData.lines > 0">
-          <span class="label">Lines:</span>
-          <span class="value">{{ formattedLines }}</span>
+        <div class="performance-section">
+          <div class="section-title">Memory</div>
+          <div class="status-item">
+            <span class="label">Usage:</span>
+            <span class="value" :style="{ color: memoryStatusColor }">
+              {{ ((performanceData.memory.used / performanceData.memory.total) * 100).toFixed(1) }}%
+            </span>
+          </div>
+        </div>
+      </template>
+
+      <!-- Full Mode - All metrics -->
+      <template v-else>
+        <!-- Core metrics -->
+        <div class="performance-section">
+          <div class="section-title">Performance Metrics</div>
+          <div class="status-item highlight">
+            <span class="label">FPS:</span>
+            <span class="value" :style="{ color: performanceStatusColor }">
+              {{ performanceData.fps.toFixed(0) }}
+            </span>
+          </div>
+          <div class="status-item">
+            <span class="label">Frame Time:</span>
+            <span class="value">{{ formattedFrameTime }}</span>
+          </div>
+          <div class="status-item">
+            <span class="label">Status:</span>
+            <span class="value" :style="{ color: performanceStatusColor }">
+              {{ performanceStatus }}
+            </span>
+          </div>
         </div>
 
-        <div class="status-item">
-          <span class="label">Geometries:</span>
-          <span class="value">{{ performanceData.geometries }}</span>
+        <!-- Memory Usage -->
+        <div class="performance-section">
+          <div class="section-title">Memory Usage</div>
+          <div class="status-item">
+            <span class="label">Memory:</span>
+            <span class="value" :style="{ color: memoryStatusColor }">
+              {{ formattedMemory }}
+            </span>
+          </div>
+          <div class="status-item">
+            <span class="label">Usage:</span>
+            <span class="value" :style="{ color: memoryStatusColor }">
+              {{ ((performanceData.memory.used / performanceData.memory.total) * 100).toFixed(1) }}%
+            </span>
+          </div>
         </div>
 
-        <div class="status-item secondary">
-          <span class="label">Triangles:</span>
-          <span class="value">{{ formattedTriangles }}</span>
-        </div>
-        <div class="status-item secondary">
-          <span class="label">Textures:</span>
-          <span class="value">{{ formattedTextures }}</span>
-        </div>
-      </div>
+        <!-- Render Statistics -->
+        <div class="performance-section">
+          <div class="section-title">Render Statistics</div>
+          <div class="status-item secondary">
+            <span class="label">Render Calls:</span>
+            <span class="value">{{ performanceData.renderCalls }}</span>
+          </div>
 
-      <!-- Performance Tips -->
-      <div class="performance-section">
-        <div class="section-title">Performance Tips</div>
+          <div class="status-item highlight" v-if="performanceData.points > 0">
+            <span class="label">Points:</span>
+            <span class="value">{{ formattedPoints }}</span>
+          </div>
+
+          <div class="status-item" v-if="performanceData.lines > 0">
+            <span class="label">Lines:</span>
+            <span class="value">{{ formattedLines }}</span>
+          </div>
+
+          <div class="status-item">
+            <span class="label">Geometries:</span>
+            <span class="value">{{ performanceData.geometries }}</span>
+          </div>
+
+          <div class="status-item secondary">
+            <span class="label">Triangles:</span>
+            <span class="value">{{ formattedTriangles }}</span>
+          </div>
+          <div class="status-item secondary">
+            <span class="label">Textures:</span>
+            <span class="value">{{ formattedTextures }}</span>
+          </div>
+        </div>
+
+        <!-- Performance Tips -->
         <div class="performance-tips">
+          <div class="section-title">Performance Tips</div>
           <div class="tip-item" :class="{ active: performanceData.fps < 30 }">
-            <span class="tip-icon">⚠️</span>
-            <span class="tip-text">FPS below 30: Consider reducing visual effects</span>
+            <i class="i-carbon-idea tip-icon" aria-hidden="true" />
+            <span class="tip-text">Reduce particle count if FPS drops below 30</span>
           </div>
           <div class="tip-item" :class="{ active: (performanceData.memory.used / performanceData.memory.total) > 0.8 }">
-            <span class="tip-icon">💾</span>
+            <i class="i-carbon-data-table tip-icon" aria-hidden="true" />
             <span class="tip-text">High memory usage: Monitor for memory leaks</span>
           </div>
           <div class="tip-item" :class="{ active: performanceData.renderCalls > 100 }">
-            <span class="tip-icon">🎨</span>
+            <i class="i-carbon-paint-brush tip-icon" aria-hidden="true" />
             <span class="tip-text">Many draw calls: Consider geometry merging</span>
           </div>
         </div>
-      </div>
 
-      <div class="performance-footer">
-        <span class="timestamp">Last Update: {{ performanceData.lastUpdate }}</span>
-      </div>
+        <div class="performance-footer">
+          <span class="timestamp">Last Update: {{ performanceData.lastUpdate }}</span>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -308,7 +399,7 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   max-width: 400px;
-  height: 700px;
+  height: 600px;
   max-height: 80vh;
   background: rgba(0, 8, 16, 0.97);
   border: 1px solid rgba(0, 204, 255, 0.6);
@@ -320,6 +411,30 @@ onUnmounted(() => {
   z-index: 1001;
 }
 
+.performance-panel.compact {
+  max-width: 320px;
+  height: 300px;
+  max-height: 70vh;
+}
+
+.performance-panel.ultra-compact {
+  max-width: 240px;
+  height: 150px;
+  max-height: 50vh;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .performance-header {
   display: flex;
   justify-content: space-between;
@@ -327,6 +442,14 @@ onUnmounted(() => {
   padding: 14px 18px;
   border-bottom: 1px solid rgba(0, 204, 255, 0.4);
   background: linear-gradient(135deg, rgba(0, 204, 255, 0.15), rgba(0, 150, 200, 0.1));
+}
+
+.compact .performance-header {
+  padding: 10px 14px;
+}
+
+.ultra-compact .performance-header {
+  padding: 8px 12px;
 }
 
 .performance-header h3 {
@@ -340,10 +463,28 @@ onUnmounted(() => {
   gap: 8px;
 }
 
+.compact .performance-header h3 {
+  font-size: 13px;
+  gap: 6px;
+}
+
+.ultra-compact .performance-header h3 {
+  font-size: 11px;
+  gap: 4px;
+}
+
 .header-icon {
   font-size: 16px;
   color: #00ccff;
   filter: drop-shadow(0 0 4px rgba(0, 204, 255, 0.5));
+}
+
+.compact .header-icon {
+  font-size: 14px;
+}
+
+.ultra-compact .header-icon {
+  font-size: 12px;
 }
 
 .close-btn {
@@ -362,6 +503,12 @@ onUnmounted(() => {
   transition: background 0.2s ease;
 }
 
+.ultra-compact .close-btn {
+  font-size: 16px;
+  width: 20px;
+  height: 20px;
+}
+
 .close-btn:hover {
   background: rgba(255, 255, 255, 0.1);
 }
@@ -370,10 +517,63 @@ onUnmounted(() => {
   padding: 18px;
 }
 
+.compact .performance-content {
+  padding: 12px;
+}
+
+.ultra-compact .performance-content {
+  padding: 8px;
+}
+
+/* Ultra Compact Grid Layout */
+.ultra-compact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+
+.metric-card {
+  background: rgba(0, 204, 255, 0.08);
+  border: 1px solid rgba(0, 204, 255, 0.2);
+  border-radius: 6px;
+  padding: 8px 4px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+  background: rgba(0, 204, 255, 0.15);
+  border-color: rgba(0, 204, 255, 0.4);
+}
+
+.metric-label {
+  font-size: 9px;
+  color: #99ddff;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.metric-value {
+  font-size: 11px;
+  color: #ffffff;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-weight: 700;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
+}
+
+/* Performance Section Styles */
 .performance-section {
   margin-bottom: 18px;
   padding-bottom: 14px;
   border-bottom: 1px solid rgba(0, 204, 255, 0.25);
+}
+
+.compact .performance-section {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
 }
 
 .performance-section:last-child {
@@ -385,12 +585,18 @@ onUnmounted(() => {
   color: #00ccff;
   font-weight: 700;
   font-size: 13px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 1px;
   text-shadow: 0 0 6px rgba(0, 204, 255, 0.4);
   border-left: 3px solid #00ccff;
   padding-left: 8px;
+}
+
+.compact .section-title {
+  font-size: 11px;
+  margin-bottom: 8px;
+  padding-left: 6px;
 }
 
 .status-item {
@@ -399,8 +605,13 @@ onUnmounted(() => {
   align-items: center;
   margin-bottom: 8px;
   font-size: 12px;
-  padding: 4px 0;
+  padding: 2px 0;
   transition: all 0.2s ease;
+}
+
+.compact .status-item {
+  margin-bottom: 6px;
+  font-size: 11px;
 }
 
 .status-item:hover {
@@ -461,9 +672,14 @@ onUnmounted(() => {
   font-size: 12px;
 }
 
+.compact .label {
+  font-size: 11px;
+  margin-right: 12px;
+}
+
 .value {
   color: #ffffff;
-  font-family: 'Kodo Mono', monospace;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
   text-align: right;
   flex-grow: 1;
   word-break: break-all;
@@ -472,11 +688,15 @@ onUnmounted(() => {
   text-shadow: 0 0 4px rgba(255, 255, 255, 0.1);
 }
 
+.compact .value {
+  font-size: 11px;
+}
+
 /* Performance Tips */
 .performance-tips {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .tip-item {
@@ -513,6 +733,7 @@ onUnmounted(() => {
 .tip-icon {
   margin-right: 8px;
   font-size: 12px;
+  color: #66ddff;
 }
 
 .tip-text {
@@ -536,6 +757,48 @@ onUnmounted(() => {
   padding: 4px 8px;
   border-radius: 4px;
   display: inline-block;
+}
+
+/* Very small screens */
+@media only screen and (max-width: 480px) {
+  .performance-panel.compact {
+    max-width: 280px;
+    height: 250px;
+  }
+
+  .performance-panel.ultra-compact {
+    max-width: 200px;
+    height: 120px;
+  }
+
+  .ultra-compact-grid {
+    gap: 4px;
+  }
+
+  .metric-card {
+    padding: 6px 2px;
+  }
+
+  .metric-label {
+    font-size: 8px;
+  }
+
+  .metric-value {
+    font-size: 10px;
+  }
+}
+
+/* Landscape phones */
+@media only screen and (max-height: 480px) and (orientation: landscape) {
+  .performance-panel.compact {
+    height: 220px;
+    max-height: 90vh;
+  }
+
+  .performance-panel.ultra-compact {
+    height: 100px;
+    max-height: 80vh;
+  }
 }
 
 /* Scrollbar styling */
