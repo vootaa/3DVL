@@ -51,13 +51,22 @@ onUnmounted(() => {
     </button>
     <div v-if="menuOpen" class="menu-dropdown">
       <div class="menu-item" @click="openPanel('performance')">
-        <span class="menu-text">{{ isCompactMode ? 'Perf' : 'Performance' }}</span>
+        <span class="menu-icon">
+          <i class="i-carbon-dashboard" aria-hidden="true" />
+        </span>
+        <span class="menu-text" v-if="!isCompactMode">Performance</span>
       </div>
       <div class="menu-item" @click="openPanel('drift')">
-        <span class="menu-text">{{ isCompactMode ? 'Drift' : 'Drift Monitor' }}</span>
+        <span class="menu-icon">
+          <i class="i-carbon-direction-curve" aria-hidden="true" />
+        </span>
+        <span class="menu-text" v-if="!isCompactMode">Drift Monitor</span>
       </div>
       <div class="menu-item" @click="openPanel('camera')">
-        <span class="menu-text">{{ isCompactMode ? 'Cam' : 'Camera Presets' }}</span>
+        <span class="menu-icon">
+          <i class="i-carbon-camera" aria-hidden="true" />
+        </span>
+        <span class="menu-text" v-if="!isCompactMode">Camera Presets</span>
       </div>
     </div>
     <div v-if="activePanel" class="panel-wrapper" :class="{ 'compact': isCompactMode }">
@@ -165,7 +174,7 @@ onUnmounted(() => {
 
 .compact .menu-dropdown {
   margin-top: 6px;
-  min-width: 100px;
+  min-width: 40px;
   border-radius: 6px;
 }
 
@@ -175,19 +184,36 @@ onUnmounted(() => {
   font-size: 14px;
   cursor: pointer;
   transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .compact .menu-item {
-  padding: 8px 12px;
+  padding: 8px;
   font-size: 12px;
+  justify-content: center;
+  gap: 0;
 }
 
 .menu-item:hover {
   background: rgba(0, 204, 255, 0.15);
 }
 
+.menu-icon {
+  display: flex;
+  align-items: center;
+  font-size: 1.1em;
+  flex-shrink: 0;
+}
+
+.compact .menu-icon {
+  font-size: 1.2em;
+}
+
 .menu-text {
   display: block;
+  flex: 1;
 }
 
 .panel-wrapper {
@@ -258,11 +284,11 @@ onUnmounted(() => {
   }
   
   .menu-dropdown {
-    min-width: 80px;
+    min-width: 36px;
   }
   
   .menu-item {
-    padding: 6px 8px;
+    padding: 6px;
     font-size: 11px;
   }
   
