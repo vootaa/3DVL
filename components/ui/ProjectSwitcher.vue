@@ -12,10 +12,18 @@ const currentProject = computed(() => {
 });
 
 const projectsToList = computed(() => {
-  // If on a project page, show other projects. Otherwise (on homepage), show all.
-  return currentProject.value
-    ? projects.filter(p => p.path !== route.path)
-    : projects;
+  // If on a project page, show homepage first then other projects. Otherwise (on homepage), show all.
+  if (currentProject.value) {
+    // On a project page: show homepage first, then other projects
+    const otherProjects = projects.filter(p => p.path !== route.path);
+    return [
+      { id: 'homepage', name: 'Homepage', path: '/' },
+      ...otherProjects
+    ];
+  } else {
+    // On homepage: show all projects except the current one
+    return projects;
+  }
 });
 
 // Close panel when clicking outside
