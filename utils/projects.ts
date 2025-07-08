@@ -10,7 +10,7 @@ export interface Project {
 
 export const projects: Project[] = [
   {
-    id: 'petersen-Expanse',
+    id: 'petersen-expanse',
     name: ' Petersen Expanse',
     description: 'Where the Origins Pulse in Silent Harmony',
     path: '/petersen-expanse',

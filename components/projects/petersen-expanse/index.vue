@@ -8,8 +8,8 @@ import SwitchMenuBar from './components/menu/SwitchMenuBar.vue'
 import ToolsMenuBar from './components/menu/ToolsMenuBar.vue'
 import CameraInfo from './components/hud/CameraInfo.vue'
 import EvolutionTimeline from './components/hud/EvolutionTimeline.vue'
-import RendererStatsCollector from './components/utilities/RendererStatsCollector.vue'
-import { CameraController } from './utils/camera-controller'
+import RendererStatsCollector from '../../utils/RendererStatsCollector.vue'
+import { CameraController } from '../../utils/camera-controller'
 import { useEvolutionState } from './composables/useEvolutionState'
 
 const gl = {

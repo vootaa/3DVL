@@ -36,25 +36,20 @@ onUnmounted(() => {
 
 <template>
   <div ref="containerRef" class="relative kode-mono-font">
-    <button
-      @click="showPanel = !showPanel"
-      class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-gray-800/50 backdrop-blur-sm rounded-md hover:bg-gray-700/70 transition-colors border border-gray-700 hover:border-gray-600"
-    >
+    <button @click="showPanel = !showPanel"
+      class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-gray-800/50 backdrop-blur-sm rounded-md hover:bg-gray-700/70 transition-colors border border-gray-700 hover:border-gray-600">
       <i class="i-carbon-grid w-4 h-4" />
       <span>{{ currentProject ? currentProject.name : 'Projects' }}</span>
     </button>
-    <Transition
-      enter-active-class="transition duration-100 ease-out"
-      enter-from-class="transform scale-95 opacity-0"
-      enter-to-class="transform scale-100 opacity-100"
-      leave-active-class="transition duration-75 ease-in"
-      leave-from-class="transform scale-100 opacity-100"
-      leave-to-class="transform scale-95 opacity-0"
-    >
-      <div v-if="showPanel" class="absolute bottom-full right-0 mb-2 w-36 origin-bottom-right bg-gray-900/80 backdrop-blur-md border border-gray-700 rounded-lg shadow-lg">
+    <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0"
+      enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in"
+      leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
+      <div v-if="showPanel"
+        class="absolute bottom-full right-0 mb-2 w-max min-w-36 max-w-64 origin-bottom-right bg-gray-900/80 backdrop-blur-md border border-gray-700 rounded-lg shadow-lg">
         <ul class="p-1">
           <li v-for="project in projectsToList" :key="project.id">
-            <NuxtLink :to="project.path" @click="showPanel = false" class="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-md text-center">
+            <NuxtLink :to="project.path" @click="showPanel = false"
+              class="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-md text-center">
               {{ project.name }}
             </NuxtLink>
           </li>

@@ -3,7 +3,7 @@ import { ref, inject, computed, onMounted, onUnmounted } from 'vue'
 import type { PerspectiveCamera } from 'three'
 import type { Ref } from 'vue'
 import { Logger } from '../../../../utils/logger'
-import { OrbitControlsAccessTest } from '../../utils/orbit-controls-test'
+import { OrbitControlsAccessTest } from '../../../../utils/orbit-controls-test'
 
 // Responsive state
 const windowWidth = ref(window.innerWidth)
