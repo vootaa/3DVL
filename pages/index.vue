@@ -233,17 +233,17 @@ onUnmounted(() => {
 }
 
 .card-title {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: bold;
   color: var(--text);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.8rem;
 }
 
 .card-description {
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--text);
   opacity: 0.8;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   flex-grow: 1;
   overflow: hidden;
 }
@@ -278,11 +278,11 @@ onUnmounted(() => {
   text-align: center;
   max-width: 400px;
   margin: 0 auto;
-  padding-bottom: 2rem;
+  padding-bottom: 1rem;
 }
 
 .team-name {
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: bold;
   color: var(--text);
   margin-bottom: 0.5rem;
@@ -306,18 +306,18 @@ onUnmounted(() => {
 
 @media (max-width: 1024px) {
   .showcase-container {
-    padding-top: 2rem;
+    padding-top: 1.2rem;
   }
   
   .projects-section {
-    margin-bottom: 2rem;
+    margin-bottom: 1.2rem;
   }
 }
 
 @media (max-width: 768px) {
   .showcase-container {
     padding: 0 1rem;
-    padding-top: 2rem;
+    padding-top: 1.2rem;
   }
   
   .project-card {
