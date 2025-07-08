@@ -1,5 +1,3 @@
-import type { DEV_Config } from "../../core/constants";
-
 // Ship control parameters - Centralized management of all constants for easy adjustment
 export const SHIP_CONTROLS = {
   // Flight position control
