@@ -1,0 +1,51 @@
+<script setup lang="ts">
+import { extend, useLoop, useTres } from '@tresjs/core'
+import { shallowRef } from 'vue'
+
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
+
+extend({ EffectComposer, RenderPass, UnrealBloomPass, OutputPass })
+
+interface Props {
+  bloomStrength?: number
+  bloomRadius?: number
+  bloomThreshold?: number
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  bloomStrength: 0.3,
+  bloomRadius: 0.4,
+  bloomThreshold: 0.1
+})
+
+const { renderer, scene, camera, sizes } = useTres()
+const composer = shallowRef<EffectComposer>()
+
+useLoop().render(() => {
+  try {
+    if (composer.value) {
+      composer.value.render()
+    }
+  }
+  catch (error) {
+    console.error('Render Error:', error)
+    if (renderer.value && scene.value && camera.value) {
+      renderer.value.render(scene.value, camera.value)
+    }
+  }
+})
+</script>
+
+<template>
+  <TresEffectComposer ref="composer" :args="[renderer]" :set-size="[sizes.width.value, sizes.height.value]">
+    <TresRenderPass :args="[scene, camera]" attach="passes-0" />
+    <TresUnrealBloomPass 
+      :args="[undefined, bloomStrength, bloomRadius, bloomThreshold]" 
+      attach="passes-1" 
+    />
+    <TresOutputPass attach="passes-2" />
+  </TresEffectComposer>
+</template>

@@ -2,8 +2,13 @@
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from 'three'
 import { ref, provide, onMounted, nextTick } from 'vue'
 
+import ShaderEffect from './components/scene/ShaderEffect.vue'
+import DynamicLights from './components/scene/DynamicLights.vue'
+import PostEffects from './components/scene/PostEffects.vue'
+
 import SwitchMenuBar from './components/menu/SwitchMenuBar.vue'
 import ToolsMenuBar from './components/menu/ToolsMenuBar.vue'
+
 import RendererStatsCollector from '../../utils/RendererStatsCollector.vue'
 import { CameraController } from '../../utils/camera-controller'
 
@@ -36,13 +41,6 @@ const orbitControlsConfig = {
   enablePan: false,
 }
 
-const currentPresetId = ref<string | null>(null)
-
-function setCurrentPresetId(id: string | null) {
-  currentPresetId.value = id
-}
-provide('setCurrentPresetId', setCurrentPresetId)
-
 onMounted(() => {
   nextTick(() => {
     cameraController = new CameraController(cameraRef, orbitControlsRef)
@@ -66,26 +64,37 @@ function handleToggleGrid() {
 </script>
 
 <template>
-  <div class="galaxy-container">
+  <div class="shader-container">
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
-      <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
-      <TresAmbientLight :intensity="0.08" color="#004488" />
+      <TresPerspectiveCamera ref="cameraRef" :position="[5, 3, 5]" :fov="75" />
+      <TresAmbientLight :intensity="0.1" color="#002244" />
 
+      <!-- Main shader effect -->
+      <ShaderEffect :position="[0, 0, 0]" :scale="[1, 1, 1]" :rotation="[0, 0, 0]" :cylinder-args="[1.5, 3, 32, 1]" />
+
+      <!-- Dynamic lighting -->
+      <DynamicLights :light-count="4" :light-intensity="1.5" :light-distance="8" />
+
+      <!-- Camera controls -->
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
-      <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[16, 16, '#003366', '#002244']"
-        :position="[0, -4.2, 0]" />
-      <TresAxesHelper v-if="gridOn" :args="[1]" :position="[0, 0, 0]" />
+
+      <!-- Debug helpers -->
+      <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[10, 10, '#003366', '#002244']"
+        :position="[0, -2, 0]" />
+      <TresAxesHelper v-if="gridOn" :args="[2]" :position="[0, 0, 0]" />
+
+      <!-- Post-processing effects -->
+      <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />
     </TresCanvas>
 
     <SwitchMenuBar :grid-on="gridOn" :on-toggle-grid="handleToggleGrid" :disabled="false" />
-
     <ToolsMenuBar />
   </div>
 </template>
 
 <style scoped>
-.galaxy-container {
+.shader-container {
   position: relative;
   width: 100%;
   height: 100%;
