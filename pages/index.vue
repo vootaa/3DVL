@@ -376,31 +376,24 @@ onUnmounted(() => {
 .team-section {
   flex: 0 0 auto;
   text-align: center;
-  max-width: 600px;
+  max-width: 400px;
   margin: 0 auto;
   padding-bottom: 2rem;
 }
 
 .team-name {
-  font-size: 1.5rem;
+  font-size: 0.9rem;
   font-weight: bold;
   color: var(--text);
   margin-bottom: 0.5rem;
 }
 
 .team-vision {
-  font-size: 1rem;
+  font-size: 0.8rem;
   color: var(--text);
   opacity: 0.8;
   margin-bottom: 0.5rem;
   font-weight: 500;
-}
-
-.team-description {
-  font-size: 0.875rem;
-  color: var(--text);
-  opacity: 0.6;
-  line-height: 1.5;
 }
 
 /* Responsive Design */

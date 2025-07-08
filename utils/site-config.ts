@@ -37,13 +37,13 @@ export const siteConfig = {
   hero: {
     titles: [
       'Vootaa: Vibrations Of Origins, Tethers And Auroras',
-      'Petersen Expanse: Where the Origins Pulse in Silent Harmony',
-      'Echo Missions: Following the Vibrations that Awaken Memory',
-      'City of Auroras: Where Tethers Converge, and Lights Remember'
+      'Petersen Expanse',
+      'Echo Missions',
+      'City of Auroras'
     ]
   },
   team: {
-    name: '3D Vision Lab',
-    vision: 'Visualizing Kadena\'s ChainWeb and its graph structure through immersive, gamified 3D experiences'
+    name: '3D Vision Lab\'s Mission',
+    vision: 'Visualizing Kadena\'s Chainweb and Petersen Graph structure through immersive, gamified 3D experiences'
   }
 }
