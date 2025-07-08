@@ -35,12 +35,15 @@ export const siteConfig = {
     twitterHandle: '@KadenaSpaceman'
   },
   hero: {
-    main: {
-      titles: ['Vootaa: Vibrations Of Origins, Tethers And Auroras', 'Petersen Expanse: Where the Origins Pulse in Silent Harmony', 'Echo Missions: Following the Vibrations that Awaken Memory','City of Auroras: Where Tethers Converge, and Lights Remember'],
-    },
-    secondary: {
-      title: '3D Vision Lab',
-      subtitle: 'Visualizing Kadena\'s ChainWeb and its graph structure through immersive, gamified 3D experiences'
-    }
+    titles: [
+      'Vootaa: Vibrations Of Origins, Tethers And Auroras',
+      'Petersen Expanse: Where the Origins Pulse in Silent Harmony',
+      'Echo Missions: Following the Vibrations that Awaken Memory',
+      'City of Auroras: Where Tethers Converge, and Lights Remember'
+    ]
+  },
+  team: {
+    name: '3D Vision Lab',
+    vision: 'Visualizing Kadena\'s ChainWeb and its graph structure through immersive, gamified 3D experiences'
   }
 }
