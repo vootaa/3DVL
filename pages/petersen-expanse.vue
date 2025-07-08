@@ -7,15 +7,12 @@ const project = projects.find(p => p.id === 'petersen-expanse');
 definePageMeta({
   layout: 'experiment'
 });
-
-useHead({
-  title: project?.title || 'Petersen Expanse - VOOTAA: Vibrations Of Origins, Tethers And Auroras',
-  meta: [
-    { name: 'description', content: project?.metaDescription || 'A Web3D gaming & visualization of the Kadena Chainweb braided structure.' },
-  ],
-});
 </script>
 
 <template>
+  <SeoHead :title="project?.title || 'Petersen Expanse'"
+    :description="project?.metaDescription || 'Explore the Petersen Expanse, a 3D visualization of the Petersen Graph and Kadena ChainWeb.'"
+    :keywords="['galaxy']" />
+
   <PetersenExpanse />
 </template>

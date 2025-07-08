@@ -8,14 +8,12 @@ definePageMeta({
   layout: 'experiment'
 });
 
-useHead({
-  title: project?.title || 'Echo Mission - VOOTAA: Vibrations Of Origins, Tethers And Auroras',
-  meta: [
-    { name: 'description', content: project?.metaDescription || 'A space exploration game where you pilot a spacecraft through a procedurally generated universe, collecting resources and avoiding dangers.' },
-  ],
-});
 </script>
 
 <template>
+  <SeoHead :title="project?.title || 'Echo Mission'"
+    :description="project?.metaDescription || 'A space exploration game where you pilot a spacecraft through a procedurally generated universe, collecting resources and avoiding dangers.'"
+    :keywords="['space exploration', '3D gaming']" />
+
   <EchoMission />
 </template>

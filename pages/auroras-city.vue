@@ -8,14 +8,12 @@ definePageMeta({
   layout: 'experiment'
 });
 
-useHead({
-  title: project?.title,
-  meta: [
-    { name: 'description', content: project?.metaDescription },
-  ],
-});
 </script>
 
 <template>
+  <SeoHead :title="project?.title || 'Auroras City'"
+    :description="project?.metaDescription || 'Immersive 3D city visualization with aurora effects.'"
+    :keywords="['3D city', 'aurora effects', 'immersive visualization']" />
+
   <AurorasCity />
 </template>
