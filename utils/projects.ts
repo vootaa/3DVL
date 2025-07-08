@@ -30,11 +30,11 @@ export const projects: Project[] = [
   {
     id: 'auroras-city',
     name: 'City of Auroras',
-    description: 'A curated collection of interactive and mesmerizing GLSL shader art.',
+    description: 'Where Tethers Converge, and Lights Remember',
     path: '/auroras-city',
     heroImage: '/auroras-city.png',
     title: 'City of Auroras - VOOTAA: Vibrations Of Origins, Tethers And Auroras',
-    metaDescription: 'A curated collection of interactive and mesmerizing GLSL shader art.',
+    metaDescription: 'A 3D visualization of the Kadena Chainweb and Petersen Graph topology',
   },
 
 ];
