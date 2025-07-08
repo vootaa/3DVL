@@ -85,7 +85,7 @@ onUnmounted(() => {
             <p class="card-description">{{ project.description }}</p>
             <div class="card-footer">
               <NuxtLink :to="project.path" class="card-button">
-                <span>Launch</span>
+                <span>{{ project.buttonText }}</span>
                 <i class="i-carbon-launch w-4 h-4" />
               </NuxtLink>
             </div>
@@ -104,7 +104,7 @@ onUnmounted(() => {
             <p class="card-description">{{ project.description }}</p>
             <div class="card-footer">
               <NuxtLink :to="project.path" class="card-button">
-                <span>Launch</span>
+                <span>{{ project.buttonText }}</span>
                 <i class="i-carbon-launch w-4 h-4" />
               </NuxtLink>
             </div>
@@ -136,13 +136,13 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 15vh;
+  min-height: 25vh;
   margin-bottom: 2rem;
 }
 
 .typewriter-container {
   text-align: center;
-  max-width: 800px;
+  max-width: 900px;
 }
 
 .hero-title {

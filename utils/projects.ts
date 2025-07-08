@@ -6,6 +6,7 @@ export interface Project {
   heroImage: string;
   title: string;
   metaDescription: string;
+  buttonText?: string; // Optional button text for project links
 }
 
 export const projects: Project[] = [
@@ -17,6 +18,7 @@ export const projects: Project[] = [
     heroImage: '/images/petersen-expanse.png',
     title: 'Petersen Expanse - VOOTAA: Vibrations Of Origins, Tethers And Auroras',
     metaDescription: 'An evolutionary galaxy simulation showing the transition from chaos to orbital structure.',
+    buttonText: 'Explore',
   },
   {
     id: 'echo-mission',
@@ -26,6 +28,7 @@ export const projects: Project[] = [
     heroImage: '/images/echo-mission.png',
     title: 'Echo Mission - VOOTAA: Vibrations Of Origins, Tethers And Auroras',
     metaDescription: 'A Web3D gaming & visualization of the Kadena Chainweb braided structure.',
+    buttonText: 'Play Now',
   },
   {
     id: 'auroras-city',
@@ -34,7 +37,8 @@ export const projects: Project[] = [
     path: '/auroras-city',
     heroImage: '/images/auroras-city.png',
     title: 'City of Auroras - VOOTAA: Vibrations Of Origins, Tethers And Auroras',
-    metaDescription: 'A 3D visualization of the Kadena Chainweb and Petersen Graph topology',
+    metaDescription: 'A 3D visualization of the Kadena Chainweb and Petersen Graph topology.',
+    buttonText: 'Discover',
   },
 
 ];

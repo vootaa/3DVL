@@ -40,7 +40,7 @@ export const siteConfig = {
       'Petersen Expanse: Navigate the Celestial Harmonics',
       'Echo Missions: Embark on Resonant Quests',
       'City of Auroras: Build Your Conscious Sanctuary',
-      'VOOTAA: V.ibrations O.f O.rigins, T.ethers A.nd A.uroras',
+      'VOOTAA: V\'ibrations O\'f O\'rigins, T\'ethers A\'nd A\'uroras',
       'Petersen Expanse: Discover 20 Mythic Stellar Cores',
       'Echo Missions: Gather Memory Shards to Strengthen the Expanse’s Rhythm',
       'City of Auroras: Connect with Temples, Fuse Shards, and Illuminate the Auroras'
