@@ -2,11 +2,11 @@ export const siteConfig = {
   title: 'Vootaa - Vibrations Of Origins, Tethers And Auroras',
   description: 'A cutting-edge 3D visualization and gaming platform exploring Kadena\'s ChainWeb and Peterson Graph topology.',
   url: 'https://www.vootaa.com',
-  image: '/images/og-vootaa-1200x630.jpg', 
+  image: '/images/og-vootaa-1200x630.png', 
   images: {
-    og: '/images/og-vootaa-1200x630.jpg',      // Todo: Main OG image
-    twitter: '/images/twitter-vootaa-1200x600.jpg', // Todo: Optimized for Twitter
-    icon: '/images/vootaa-icon-512x512.png'     // Todo: Website icon
+    og: '/images/og-vootaa-1200x630.jpg',
+    twitter: '/images/twitter-vootaa-1200x600.jpg',
+    icon: '/images/vootaa-icon-500x500.png'
   },
   keywords: [
     '3D visualization',
@@ -36,10 +36,14 @@ export const siteConfig = {
   },
   hero: {
     titles: [
-      'Vootaa: Vibrations Of Origins, Tethers And Auroras',
-      'Petersen Expanse',
-      'Echo Missions',
-      'City of Auroras'
+      'VOOTAA: Vibrations Of Origins, Tethers And Auroras',
+      'Petersen Expanse: Navigate the Celestial Harmonics',
+      'Echo Missions: Embark on Resonant Quests',
+      'City of Auroras: Build Your Conscious Sanctuary',
+      'VOOTAA: V.ibrations O.f O.rigins, T.ethers A.nd A.uroras',
+      'Petersen Expanse: Discover 20 Mythic Stellar Cores',
+      'Echo Missions: Gather Memory Shards to Strengthen the Expanse’s Rhythm',
+      'City of Auroras: Connect with Temples, Fuse Shards, and Illuminate the Auroras'
     ]
   },
   team: {

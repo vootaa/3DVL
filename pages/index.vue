@@ -136,23 +136,23 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 25vh;
-  margin-bottom: 4rem;
+  min-height: 15vh;
+  margin-bottom: 2rem;
 }
 
 .typewriter-container {
   text-align: center;
-  max-width: 900px;
+  max-width: 800px;
 }
 
 .hero-title {
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: bold;
   background: linear-gradient(135deg, var(--accent), var(--text));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  line-height: 1.2;
+  line-height: 1.0;
 }
 
 .cursor {
@@ -171,7 +171,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 4rem;
+  margin-bottom: 1.6rem;
 }
 
 /* Desktop Grid Layout */

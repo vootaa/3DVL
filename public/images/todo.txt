@@ -1,5 +1,0 @@
-  image: '/og-image.jpg', 
-  images: {
-    og: '/images/og-vootaa-1200x630.jpg',
-    twitter: '/images/twitter-vootaa-1200x600.jpg',
-    icon: '/images/vootaa-icon-512x512.png'
