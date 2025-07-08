@@ -39,7 +39,7 @@ const modelData = ref<PodModelData>({
 
 onMounted(async () => {
   try {
-    const result = await ResourceLoader.registerModel('PodModel', '/models/space-game/Pod.glb')
+    const result = await ResourceLoader.registerModel('PodModel', '/models/echo-mission/Pod.glb')
     if (result?.nodes) {
       modelData.value = {
         props_pod_1: result.nodes.Props_Pod_1 as GLTFNode | undefined || null,

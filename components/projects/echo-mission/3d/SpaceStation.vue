@@ -52,7 +52,7 @@ onMounted(async () => {
 
   try {
     const result = await ResourceLoader.registerModel('SpaceStationModel',
-      '/models/space-game/InternationalSpaceStation.glb')
+      '/models/echo-mission/InternationalSpaceStation.glb')
     
     if (result?.nodes?.InternationalSpaceStation_mesh) {
       modelData.value.stationNode = result.nodes.InternationalSpaceStation_mesh as GLTFNode
@@ -74,7 +74,7 @@ onMounted(async () => {
   } catch (error) {
     Logger.error('SPACE_STATION', 'Failed to load space station model', {
       modelName: 'SpaceStationModel',
-      modelPath: '/models/space-game/InternationalSpaceStation.glb',
+      modelPath: '/models/echo-mission/InternationalSpaceStation.glb',
       error
     })
   }

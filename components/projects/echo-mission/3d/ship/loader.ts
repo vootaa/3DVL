@@ -7,12 +7,12 @@ import type { ShipModelData } from './types'
 export class ShipModelLoader {
   static async loadModel(modelData: Ref<ShipModelData>): Promise<void> {
     Logger.log('SHIP_LOADER', 'Starting ship model load', {
-      modelPath: '/models/space-game/Ship.glb',
+      modelPath: '/models/echo-mission/Ship.glb',
       modelName: 'ShipModel'
     })
 
     try {
-      const result = await ResourceLoader.registerModel('ShipModel', '/models/space-game/Ship.glb')
+      const result = await ResourceLoader.registerModel('ShipModel', '/models/echo-mission/Ship.glb')
       if (result?.nodes) {
         modelData.value = {
           Renault_0: result.nodes.Renault_0 || null,
@@ -51,7 +51,7 @@ export class ShipModelLoader {
     }
     catch (error) {
       Logger.error('SHIP_LOADER', 'Failed to load ship model', {
-        modelPath: '/models/space-game/Ship.glb',
+        modelPath: '/models/echo-mission/Ship.glb',
         modelName: 'ShipModel',
         error: error
       })

@@ -13,13 +13,13 @@ const audioObjects: Record<string, ThreeAudio> = {}
 
 // Audio resource mapping table
 const AUDIO_RESOURCES = {
-  bg: { resourceName: 'BgAudio', path: '/audio/space-game/bg.mp3' },
-  click: { resourceName: 'ClickAudio', path: '/audio/space-game/click.mp3' },
-  engine: { resourceName: 'EngineAudio', path: '/audio/space-game/engine.mp3' },
-  engine2: { resourceName: 'Engine2Audio', path: '/audio/space-game/engine2.mp3' },
-  explosion: { resourceName: 'ExplosionAudio', path: '/audio/space-game/explosion.mp3' },
-  zap: { resourceName: 'LaserAudio', path: '/audio/space-game/laser.mp3' },
-  warp: { resourceName: 'WarpAudio', path: '/audio/space-game/warp.mp3' },
+  bg: { resourceName: 'BgAudio', path: '/audio/echo-mission/bg.mp3' },
+  click: { resourceName: 'ClickAudio', path: '/audio/echo-mission/click.mp3' },
+  engine: { resourceName: 'EngineAudio', path: '/audio/echo-mission/engine.mp3' },
+  engine2: { resourceName: 'Engine2Audio', path: '/audio/echo-mission/engine2.mp3' },
+  explosion: { resourceName: 'ExplosionAudio', path: '/audio/echo-mission/explosion.mp3' },
+  zap: { resourceName: 'LaserAudio', path: '/audio/echo-mission/laser.mp3' },
+  warp: { resourceName: 'WarpAudio', path: '/audio/echo-mission/warp.mp3' },
 }
 
 /**

@@ -2,8 +2,8 @@
 import { type Texture } from 'three'
 import { ResourceLoader } from '../utils/ResourceLoader'
 
-const earth = await ResourceLoader.registerTexture('EarthTexture', '/textures/space-game/earth.jpg') as Texture
-const moon = await ResourceLoader.registerTexture('MoonTexture', '/textures/space-game/moon.png') as Texture
+const earth = await ResourceLoader.registerTexture('EarthTexture', '/textures/echo-mission/earth.jpg') as Texture
+const moon = await ResourceLoader.registerTexture('MoonTexture', '/textures/echo-mission/moon.png') as Texture
 </script>
 
 <template>

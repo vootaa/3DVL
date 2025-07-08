@@ -172,7 +172,7 @@ onMounted(async () => {
   Logger.log('ROCKS', 'Initializing rocks component')
   
   try {
-    const result = await ResourceLoader.registerModel('RockModel', '/models/space-game/Stone.glb')
+    const result = await ResourceLoader.registerModel('RockModel', '/models/echo-mission/Stone.glb')
     if (result?.nodes?.Stone) {
       modelData.value.stoneNode = result.nodes.Stone as GLTFNode
       modelData.value.isLoaded = true
@@ -196,7 +196,7 @@ onMounted(async () => {
   } catch (error) {
     Logger.error('ROCKS', 'Failed to load rock model', {
       modelName: 'RockModel',
-      modelPath: '/models/space-game/Stone.glb',
+      modelPath: '/models/echo-mission/Stone.glb',
       error
     })
   }

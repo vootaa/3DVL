@@ -358,26 +358,26 @@ export const ResourceLoader = reactive({
     ])
 
     await Promise.all([
-      this.registerModel('ShipModel', '/models/space-game/Ship.glb'),
-      this.registerModel('RockModel', '/models/space-game/Stone.glb'),
-      this.registerModel('PodModel', '/models/space-game/Pod.glb'),
-      this.registerModel('SpaceStationModel', '/models/space-game/InternationalSpaceStation.glb'),
-      this.registerModel('SpaceProbeModel', '/models/space-game/SpaceProbe.glb'),
+      this.registerModel('ShipModel', '/models/echo-mission/Ship.glb'),
+      this.registerModel('RockModel', '/models/echo-mission/Stone.glb'),
+      this.registerModel('PodModel', '/models/echo-mission/Pod.glb'),
+      this.registerModel('SpaceStationModel', '/models/echo-mission/InternationalSpaceStation.glb'),
+      this.registerModel('SpaceProbeModel', '/models/echo-mission/SpaceProbe.glb'),
     ])
 
     await Promise.all([
-      this.registerTexture('EarthTexture', '/textures/space-game/earth.jpg'),
-      this.registerTexture('MoonTexture', '/textures/space-game/moon.png'),
+      this.registerTexture('EarthTexture', '/textures/echo-mission/earth.jpg'),
+      this.registerTexture('MoonTexture', '/textures/echo-mission/moon.png'),
     ])
 
     await Promise.all([
-      this.registerAudio('BgAudio', '/audio/space-game/bg.mp3'),
-      this.registerAudio('ClickAudio', '/audio/space-game/click.mp3'),
-      this.registerAudio('EngineAudio', '/audio/space-game/engine.mp3'),
-      this.registerAudio('Engine2Audio', '/audio/space-game/engine2.mp3'),
-      this.registerAudio('ExplosionAudio', '/audio/space-game/explosion.mp3'),
-      this.registerAudio('LaserAudio', '/audio/space-game/laser.mp3'),
-      this.registerAudio('WarpAudio', '/audio/space-game/warp.mp3'),
+      this.registerAudio('BgAudio', '/audio/echo-mission/bg.mp3'),
+      this.registerAudio('ClickAudio', '/audio/echo-mission/click.mp3'),
+      this.registerAudio('EngineAudio', '/audio/echo-mission/engine.mp3'),
+      this.registerAudio('Engine2Audio', '/audio/echo-mission/engine2.mp3'),
+      this.registerAudio('ExplosionAudio', '/audio/echo-mission/explosion.mp3'),
+      this.registerAudio('LaserAudio', '/audio/echo-mission/laser.mp3'),
+      this.registerAudio('WarpAudio', '/audio/echo-mission/warp.mp3'),
     ])
 
     const loadPromises = this.resources.map(async (resource) => {

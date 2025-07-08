@@ -51,7 +51,7 @@ onMounted(async () => {
   })
 
   try {
-    const result = await ResourceLoader.registerModel('SpaceProbeModel', '/models/space-game/SpaceProbe.glb')
+    const result = await ResourceLoader.registerModel('SpaceProbeModel', '/models/echo-mission/SpaceProbe.glb')
     
     if (result?.nodes?.SpaceProbe_mesh) {
       modelData.value.spaceProbeNode = result.nodes.SpaceProbe_mesh as GLTFNode
@@ -73,7 +73,7 @@ onMounted(async () => {
   } catch (error) {
     Logger.error('SPACE_PROBE', 'Failed to load space probe model', {
       modelName: 'SpaceProbeModel',
-      modelPath: '/models/space-game/SpaceProbe.glb',
+      modelPath: '/models/echo-mission/SpaceProbe.glb',
       error
     })
   }

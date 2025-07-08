@@ -1,8 +1,8 @@
 <script setup>
-import SpaceGame from '~/components/projects/space-game/index.vue';
+import AurorasCity from '~/components/projects/auroras-city/index.vue';
 import { projects } from '~/utils/projects';
 
-const project = projects.find(p => p.id === 'space-game');
+const project = projects.find(p => p.id === 'auroras-city');
 
 definePageMeta({
   layout: 'experiment'
@@ -17,5 +17,5 @@ useHead({
 </script>
 
 <template>
-  <SpaceGame />
+  <AurorasCity />
 </template>
