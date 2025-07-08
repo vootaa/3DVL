@@ -119,7 +119,7 @@ const launchMode = (mode: 'battle' | 'explore') => {
 <template>
   <div class="launch-screen">
     <div class="content" :class="{ 'all-collapsed': allSectionsCollapsed }">
-      <h1>Space Game</h1>
+      <h1>Echo Mission</h1>
       <h2 class="subtitle">
         A Web3D gaming & visualization of the Kadena Chainweb braided structure
         <span class="fold-button" @click.stop="toggleLoadingSection">

@@ -36,29 +36,8 @@ const nextHero = () => {
   }, 500);
 };
 
-// Project carousel logic - mobile view
-const currentProjectIndex = ref(0);
+// Screen size detection
 const isMobile = ref(false);
-
-const nextProject = () => {
-  if (currentProjectIndex.value < projects.length - 1) {
-    currentProjectIndex.value++;
-  } else {
-    currentProjectIndex.value = 0; // first project
-  }
-};
-
-const prevProject = () => {
-  if (currentProjectIndex.value > 0) {
-    currentProjectIndex.value--;
-  } else {
-    currentProjectIndex.value = projects.length - 1; // last project
-  }
-};
-
-const goToProject = (index: number) => {
-  currentProjectIndex.value = index;
-};
 
 const checkScreenSize = () => {
   isMobile.value = window.innerWidth < 1024; // lg breakpoint
@@ -83,8 +62,8 @@ onUnmounted(() => {
   <SeoHead />
 
   <div class="showcase-container">
-    <!-- Main Hero Section with Typewriter Effect -->
-    <div class="hero-section">
+    <!-- Main Hero Section with Typewriter Effect - Only on Desktop -->
+    <div v-if="!isMobile" class="hero-section">
       <div class="typewriter-container">
         <h1 class="hero-title">
           {{ displayedText }}
@@ -114,46 +93,28 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Mobile: loop  -->
-      <div v-else class="projects-carousel">
-        <button @click="prevProject" class="carousel-button carousel-button-left">
-          <i class="i-carbon-chevron-left w-6 h-6" />
-        </button>
-
-        <div class="carousel-container">
-          <div class="carousel-track" :style="{ transform: `translateX(-${currentProjectIndex * 100}%)` }">
-            <div v-for="project in projects" :key="project.id" class="project-card">
-              <div class="card-image-container">
-                <img :src="project.heroImage" :alt="`${project.name} preview`" class="card-image" loading="lazy" />
-              </div>
-              <div class="card-content">
-                <h3 class="card-title">{{ project.name }}</h3>
-                <p class="card-description">{{ project.description }}</p>
-                <div class="card-footer">
-                  <NuxtLink :to="project.path" class="card-button">
-                    <span>Launch</span>
-                    <i class="i-carbon-launch w-4 h-4" />
-                  </NuxtLink>
-                </div>
-              </div>
+      <!-- Mobile: Vertical Stack -->
+      <div v-else class="projects-stack">
+        <div v-for="project in projects" :key="project.id" class="project-card">
+          <div class="card-image-container">
+            <img :src="project.heroImage" :alt="`${project.name} preview`" class="card-image" loading="lazy" />
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">{{ project.name }}</h3>
+            <p class="card-description">{{ project.description }}</p>
+            <div class="card-footer">
+              <NuxtLink :to="project.path" class="card-button">
+                <span>Launch</span>
+                <i class="i-carbon-launch w-4 h-4" />
+              </NuxtLink>
             </div>
           </div>
-        </div>
-
-        <button @click="nextProject" class="carousel-button carousel-button-right">
-          <i class="i-carbon-chevron-right w-6 h-6" />
-        </button>
-
-        <!-- Carousel indicators -->
-        <div class="carousel-indicators">
-          <button v-for="(project, index) in projects" :key="index" @click="goToProject(index)"
-            :class="['indicator', { active: index === currentProjectIndex }]" />
         </div>
       </div>
     </div>
 
-    <!-- Team Info Section -->
-    <div class="team-section">
+    <!-- Team Info Section - Only on Desktop -->
+    <div v-if="!isMobile" class="team-section">
       <h2 class="team-name">{{ siteConfig.team.name }}</h2>
       <p class="team-vision">{{ siteConfig.team.vision }}</p>
     </div>
@@ -222,75 +183,14 @@ onUnmounted(() => {
   width: 100%;
 }
 
-/* Mobile Carousel Layout */
-.projects-carousel {
-  position: relative;
+/* Mobile Stack Layout */
+.projects-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
   width: 100%;
   max-width: 400px;
-}
-
-.carousel-container {
-  overflow: hidden;
-  border-radius: 1rem;
-  margin: 0 3rem;
-}
-
-.carousel-track {
-  display: flex;
-  transition: transform 0.5s ease;
-  width: calc(100% * 3); /* 假设有3个项目 */
-}
-
-.carousel-button {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background-color: var(--bg);
-  border: 2px solid var(--border);
-  display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 10;
-}
-
-.carousel-button-left {
-  left: 0;
-}
-
-.carousel-button-right {
-  right: 0;
-}
-
-.carousel-button:hover {
-  background-color: var(--accent);
-  border-color: var(--accent);
-  color: var(--bg);
-}
-
-.carousel-indicators {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: none;
-  background-color: var(--border);
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.indicator.active {
-  background-color: var(--accent);
 }
 
 /* Project Cards */
@@ -372,7 +272,7 @@ onUnmounted(() => {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* team Section */
+/* Team Section */
 .team-section {
   flex: 0 0 auto;
   text-align: center;
@@ -404,42 +304,44 @@ onUnmounted(() => {
   }
 }
 
+@media (max-width: 1024px) {
+  .showcase-container {
+    padding-top: 2rem;
+  }
+  
+  .projects-section {
+    margin-bottom: 2rem;
+  }
+}
+
 @media (max-width: 768px) {
   .showcase-container {
     padding: 0 1rem;
-    padding-top: 5rem;
-  }
-  
-  .hero-title {
-    font-size: 2.5rem;
-  }
-  
-  .hero-section {
-    margin-bottom: 3rem;
+    padding-top: 2rem;
   }
   
   .project-card {
-    width: 300px;
-    height: 350px;
+    width: 100%;
+    max-width: 350px;
+    height: 380px;
   }
   
   .card-image-container {
-    height: 150px;
+    height: 160px;
   }
 }
 
 @media (max-width: 480px) {
-  .hero-title {
-    font-size: 1.8rem;
-  }
-  
   .project-card {
-    width: 280px;
-    height: 320px;
+    height: 360px;
   }
   
-  .carousel-container {
-    margin: 0 2.5rem;
+  .card-image-container {
+    height: 140px;
+  }
+  
+  .card-content {
+    padding: 1rem;
   }
 }
 </style>
