@@ -3,6 +3,7 @@ import { BasicShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
 import { ref, provide, onMounted, nextTick } from 'vue'
 
 import Stars from '../echo-mission/3d/Stars.vue'
+import PetersenGraphPlane from '../echo-mission/3d/PetersenGraphPlane.vue'
 
 import BandedCylinder from './components/scene/BandedCylinder.vue'
 import ConcentricBase from './components/scene/ConcentricBase.vue'
@@ -42,7 +43,7 @@ const orbitControlsConfig = {
   enableDamping: true,
   dampingFactor: 0.05,
   minDistance: 0,
-  maxDistance: 25,
+  maxDistance: 20,
   minPolarAngle: Math.PI * 0.05,
   maxPolarAngle: Math.PI * 0.9,
   enablePan: true,
@@ -78,25 +79,24 @@ function handleToggleGrid() {
       <TresAmbientLight :intensity="0.3" color="#ffffff" />
 
       <!-- BandedCylinder shader effect -->
-      <BandedCylinder :position="[0.2, 5, -0.2]" :rotation-speed="-0.45"
-        :cylinder-args="[0.5, 4.5, 48, 0.45, 0.15]" />
-      <BandedCylinder :position="[-0.2, 5, 0.2]" :rotation-speed="0.45"
-        :cylinder-args="[0.5, 4.5, 48, 0.45, -0.15]" />
+      <BandedCylinder :position="[0.2, 5, -0.2]" :rotation-speed="-0.45" :cylinder-args="[0.5, 4.5, 48, 0.45, 0.15]" />
+      <BandedCylinder :position="[-0.2, 5, 0.2]" :rotation-speed="0.45" :cylinder-args="[0.5, 4.5, 48, 0.45, -0.15]" />
 
-      <ConcentricBase :position="[0, -1.5, 0]" :scale="[2.5, 1.0, 2.5]" :rotation-speed="0.1" />
+      <ConcentricBase :position="[0, -1.5, 0]" :scale="[1.5, 1.0, 1.5]" :rotation-speed="0.1" />
 
       <Stars />
-
+      <PetersenGraphPlane :position="[0, 15, -20]" :rotation="[0, 0, 0]" :scale="1" />
+      
       <!-- Camera controls -->
-      <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
+        <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
 
-      <!-- Post-processing effects -->
-      <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />
+        <!-- Post-processing effects -->
+        <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />
 
-      <!-- Debug helpers -->
-      <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[25, 25, '#113366', '#224488']"
-        :position="[0, -3, 0]" />
-      <TresAxesHelper v-if="gridOn" :args="[2]" :position="[0, 0, 0]" />
+        <!-- Debug helpers -->
+        <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[25, 25, '#113366', '#224488']"
+          :position="[0, -3, 0]" />
+        <TresAxesHelper v-if="gridOn" :args="[2]" :position="[0, 0, 0]" />
     </TresCanvas>
 
     <SwitchMenuBar :grid-on="gridOn" :on-toggle-grid="handleToggleGrid" :disabled="false" />
