@@ -2,6 +2,8 @@
 import { BasicShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
 import { ref, provide, onMounted, nextTick } from 'vue'
 
+import Stars from '../echo-mission/3d/Stars.vue'
+
 import BandedCylinder from './components/scene/BandedCylinder.vue'
 import ConcentricBase from './components/scene/ConcentricBase.vue'
 import DynamicLights from './components/scene/DynamicLights.vue'
@@ -14,8 +16,10 @@ import RendererStatsCollector from '../../utils/RendererStatsCollector.vue'
 import { CameraController } from '../../utils/camera-controller'
 
 const gl = {
-  clearColor: '#070707',
-  antiAlias: "true",
+  clearColor: '#010104',
+  linear: true,
+  flat: true,
+  antiAlias: "false",
   shadows: true,
   alpha: true,
   windowSize: true,
@@ -73,7 +77,7 @@ function handleToggleGrid() {
   <div class="shader-container">
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
-      <TresPerspectiveCamera ref="cameraRef" :position="[5, 3, 5]" :fov="75" :near="0.1" :far="1000" />
+      <TresPerspectiveCamera ref="cameraRef" :position="[0, 0, 2000]" :fov="75" :near="0.01" :far="10000" />
       <TresAmbientLight :intensity="0.8" color="#ffffff" />
 
       <!-- Dynamic lighting -->
@@ -86,11 +90,12 @@ function handleToggleGrid() {
         :cylinder-args="[0.5, 4.5, 48, 0.45, -0.15]" />
 
 
-      <TresDirectionalLight :target="spotTarget" :intensity="0.2" color="#ffffff" :position="[5, 2, 5]"
-        cast-shadow />
+      <TresDirectionalLight :target="spotTarget" :intensity="0.2" color="#ffffff" :position="[5, 2, 5]" cast-shadow />
       <TresObject3D ref="spotTarget" :position="[5, -1, 5]" />
 
       <ConcentricBase :position="[0, -2, 0]" :scale="[1.5, 1.0, 1.5]" :rotation-speed="0.1" />
+
+      <Stars />
 
       <!-- Camera controls -->
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />

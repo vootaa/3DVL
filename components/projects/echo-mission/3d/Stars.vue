@@ -2,7 +2,7 @@
 import { BufferAttribute, BufferGeometry } from 'three'
 
 interface Props {
-  count: number
+  count?: number
 }
 
 const props = withDefaults(defineProps<Props>(), { count: 500 })

@@ -1,13 +1,20 @@
 <script setup lang="ts">
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Vector3 } from 'three'
 import { ref, provide, onMounted, nextTick } from 'vue'
+
+import Stars from '../echo-mission/3d/Stars.vue'
+
 import OrbitalSystem from './components/scene/OrbitalSystem.vue'
 import StellarCore from './components/scene/StellarCore.vue'
+
 import EvolutionAnimator from './components/animation/EvolutionAnimator.vue'
+
 import SwitchMenuBar from './components/menu/SwitchMenuBar.vue'
 import ToolsMenuBar from './components/menu/ToolsMenuBar.vue'
+
 import CameraInfo from './components/hud/CameraInfo.vue'
 import EvolutionTimeline from './components/hud/EvolutionTimeline.vue'
+
 import RendererStatsCollector from '../../utils/RendererStatsCollector.vue'
 import { CameraController } from '../../utils/camera-controller'
 import { useEvolutionState } from './composables/useEvolutionState'
@@ -125,7 +132,7 @@ function handleEvolutionTimelineVisible(_val: boolean) {
   <div class="galaxy-container">
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
-      <TresPerspectiveCamera ref="cameraRef" :position="[10, 8, 10]" :fov="60" />
+      <TresPerspectiveCamera ref="cameraRef" :position="[0, 0, 2000]" :fov="75" :near="0.01" :far="10000" />
       <TresAmbientLight :intensity="0.08" color="#004488" />
 
       <StellarCore ref="stellarCoreRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
@@ -133,6 +140,8 @@ function handleEvolutionTimelineVisible(_val: boolean) {
 
       <OrbitalSystem :galaxy-center="galaxyCenter" :global-time="state.globalTime"
         :evolution-progress="state.evolutionProgress" :enabled="state.orbitalSystemEnabled" />
+
+      <Stars />
 
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
       <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[16, 16, '#003366', '#002244']"
