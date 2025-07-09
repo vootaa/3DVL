@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
   position: () => [0, 0, 0],
   scale: () => [1, 1, 1],
   rotationSpeed: 0,
-  baseArgs: () => [[1.5, 3.0, 4.8], [0.25, 1.0, 1.5]], // [inner radius, middle radius, outer radius], [inner height, middle height, outer height]
+  baseArgs: () => [[1.5, 3.0, 4.8], [0.1, 1.0, 1.5]], // [inner radius, middle radius, outer radius], [inner height, middle height, outer height]
 })
 
 const material = shallowRef()
@@ -39,7 +39,7 @@ const shaderMaterial = new ShaderMaterial({
   uniforms,
   side: DoubleSide,
   transparent: true,
-  wireframe: false,
+  wireframe: true,
 })
 
 material.value = shaderMaterial
