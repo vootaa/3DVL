@@ -159,28 +159,25 @@ function createConcentricBase(radii: number[], heights: number[]) {
     }
   }
   
-  // 1. Outer top ring face (from middle to outer radius at outer height) - Fixed: ring instead of full circle
+  // 1. Outer top ring face (from middle to outer radius at outer height)
   addRing(middleRadius, outerRadius, outerTop, 1)
   
   // 2. Outer cylinder side (from outer top to outer bottom)
   addCylinderSide(outerRadius, outerTop, outerBottom)
   
-  // 3. Ring face from outer to middle (at middle height)
-  addRing(middleRadius, outerRadius, middleTop, 1)
-  
-  // 4. Step side from outer to middle
+  // 3. Outer step side (vertical face from outer to middle height)
   addCylinderSide(middleRadius, outerTop, middleTop)
   
-  // 5. Ring face from middle to inner (at middle height)
+  // 4. Middle ring face (from inner to middle radius at middle height) - Fixed: ring instead of outer to middle
   addRing(innerRadius, middleRadius, middleTop, 1)
   
-  // 6. Step side from middle to inner
+  // 5. Middle step side (vertical face from middle to inner height)
   addCylinderSide(innerRadius, middleTop, innerTop)
   
-  // 7. Inner top face - full circle (from center to inner radius)
+  // 6. Inner top face - full circle (from center to inner radius)
   addCircle(innerRadius, innerTop, 1)
   
-  // 8. Bottom face (full circle from center to outer radius)
+  // 7. Bottom face (full circle from center to outer radius)
   addCircle(outerRadius, outerBottom, -1, true)
   
   geo.setIndex(indices)
