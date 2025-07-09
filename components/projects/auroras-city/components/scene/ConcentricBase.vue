@@ -15,7 +15,7 @@ const props = withDefaults(defineProps<Props>(), {
   position: () => [0, 0, 0],
   scale: () => [1, 1, 1],
   rotationSpeed: 0,
-  baseArgs: () => [[1.5, 3.0, 4.8], [2.0, 1.5, 1.0], 5, 32], // radii, heights, stepCount, segments
+  baseArgs: () => [[1.5, 3.0, 4.8], [2.0, 1.5, 1.0], 7, 32], // radii, heights, stepCount, segments
   materials: () => [
     new MeshStandardMaterial({ color: 0x888888 }),
     new MeshStandardMaterial({ color: 0x666666 }),

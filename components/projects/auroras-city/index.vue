@@ -32,7 +32,7 @@ const gridOn = ref(false)
 
 const spotTarget = ref()
 
-const concentricBasePosition = ref<[number, number, number]>([0, -2, 0])
+const concentricBasePosition = ref<[number, number, number]>([0, -1, 0])
 
 let cameraController: CameraController
 
