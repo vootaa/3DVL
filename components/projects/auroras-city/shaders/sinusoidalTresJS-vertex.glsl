@@ -23,6 +23,10 @@ void main() {
   gl_Position = projectionMatrix * viewPosition;
 }
 
+/*
+  Modified from TresJS shader example: 
+*/
+
 /** SHADERDATA
 {
 	"title": "Sinusoidal for TresJS",
