@@ -93,6 +93,11 @@ function handleToggleGrid() {
       <TresDirectionalLight :target="spotTarget" :intensity="0.2" color="#ffffff" :position="[5, 2, 5]" cast-shadow />
       <TresObject3D ref="spotTarget" :position="[5, -1, 5]" />
 
+
+      <!-- Dynamic lighting -->
+      <DynamicLights :position="[0, -2.5, 0]" :light-count="3" :light-intensity="0.8" :light-distance="5"
+        :light-function="'sinusoidalLightFn_TresJS2'" />
+
       <ConcentricBase :position="[0, -2, 0]" :scale="[1.5, 1.0, 1.5]" :rotation-speed="0.1" />
 
       <Stars />

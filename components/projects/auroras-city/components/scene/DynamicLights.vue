@@ -8,13 +8,15 @@ interface Props {
   lightIntensity?: number
   lightDistance?: number
   position?: [number, number, number]
+  lightFunction?: 'sinusoidalLightFn_TresJS' | 'sinusoidalLightFn_TresJS2'
 }
 
 const props = withDefaults(defineProps<Props>(), {
   lightCount: 3,
   lightIntensity: 2,
   lightDistance: 5,
-  position: () => [0, 0, 0] as [number, number, number]
+  position: () => [0, 0, 0] as [number, number, number],
+  lightFunction: 'sinusoidalLightFn_TresJS'
 })
 
 const lightsGroup = shallowRef(new Group())
@@ -27,11 +29,21 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
 }
 
-function sinusoidalLightFn(light: PointLight, uv: Vector2, iTime: number) {
+/*
+  Modified sinusoidal light function to create a dynamic lighting effect from TresJS example.
+*/
+function sinusoidalLightFn_TresJS(light: PointLight, uv: Vector2, iTime: number) {
   color.g = 0.5 * clamp((1.0 - Math.sqrt(Math.abs(Math.cos(uv.y + uv.x + iTime)))) ** (Math.sin(iTime) + 2.0), 0.2, 1.0)
   color.b = 0.5 * clamp((1.0 - Math.sin(uv.y + iTime)) ** (Math.cos(iTime) + 2.0), 0.2, 1.0)
   color.r = 0.5 * clamp(Math.sin(iTime + uv.x + Math.sin(uv.y + iTime)), 0.2, 1.0)
   light.color.lerp(color, 0.6) // Smoothly interpolate color
+}
+
+function sinusoidalLightFn_TresJS2(light: PointLight, uv: Vector2, iTime: number) {
+  color.g = (1.0 - Math.sqrt(Math.abs(Math.cos(uv.y + iTime * 0.1)))) ** (Math.sin(iTime) + 2.0)
+  color.b = (1.0 - Math.sin(uv.y + iTime)) ** (Math.cos(iTime) + 2.0)
+  color.r = Math.sin(iTime + uv.y + Math.sin(uv.y + iTime))
+  light.color.lerp(color, 0.1)
 }
 
 onMounted(() => {
@@ -63,7 +75,11 @@ onBeforeRender(() => {
       0.5 + Math.sin(angle) * 0.35
     )
 
-    sinusoidalLightFn(light, uv, elapsed)
+    if (props.lightFunction === 'sinusoidalLightFn_TresJS2') {
+      sinusoidalLightFn_TresJS2(light, uv, elapsed)
+    } else {
+      sinusoidalLightFn_TresJS(light, uv, elapsed)
+    }
   })
 })
 
