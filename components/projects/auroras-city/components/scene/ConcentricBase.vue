@@ -10,16 +10,14 @@ interface Props {
   position?: [number, number, number]
   scale?: [number, number, number]
   rotationSpeed?: number
-  baseArgs?: [[number, number, number], number]// [radii, sinkDepth], sinkDepth cannot exceed outerHeight/2
-  outerHeight?: number
+  baseArgs?: [[number, number, number], number, number]// [radii, sinkDepth], sinkDepth cannot exceed outerHeight/2,outerHeight
 }
 
 const props = withDefaults(defineProps<Props>(), {
   position: () => [0, 0, 0],
   scale: () => [1, 1, 1],
   rotationSpeed: 0,
-  baseArgs: () => [[1.5, 3.0, 4.8], 0.6], // [inner radius, middle radius, outer radius], sink depth
-  outerHeight: 2.0 // outer ring height
+  baseArgs: () => [[1.5, 3.0, 4.8], 0.5, 1.5], // [inner radius, middle radius, outer radius], sink depth, outer ring height
 })
 
 const material = shallowRef()
@@ -159,12 +157,12 @@ function createConcentricBase(radii: number[], sinkDepth: number, outerHeight: n
 
 onMounted(() => {
   clock.start()
-  const [radii, sinkDepth] = props.baseArgs
+  const [radii, sinkDepth, outerHeight] = props.baseArgs
 
   // Validate sinkDepth doesn't exceed outerHeight/2
-  const validSinkDepth = Math.min(sinkDepth, props.outerHeight / 2)
+  const validSinkDepth = Math.min(sinkDepth, outerHeight / 2)
 
-  geometry.value = createConcentricBase(radii, validSinkDepth, props.outerHeight)
+  geometry.value = createConcentricBase(radii, validSinkDepth, outerHeight)
 })
 
 const { onBeforeRender } = useLoop()

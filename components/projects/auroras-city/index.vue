@@ -6,7 +6,6 @@ import Stars from '../echo-mission/3d/Stars.vue'
 
 import BandedCylinder from './components/scene/BandedCylinder.vue'
 import ConcentricBase from './components/scene/ConcentricBase.vue'
-import DynamicLights from './components/scene/DynamicLights.vue'
 import PostEffects from './components/scene/PostEffects.vue'
 
 import SwitchMenuBar from './components/menu/SwitchMenuBar.vue'
@@ -33,8 +32,6 @@ const cameraRef = ref()
 const orbitControlsRef = ref()
 const showGridAfterCameraMove = ref(false)
 const gridOn = ref(false)
-
-const spotTarget = ref()
 
 let cameraController: CameraController
 
@@ -78,27 +75,15 @@ function handleToggleGrid() {
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
       <TresPerspectiveCamera ref="cameraRef" :position="[0, 0, 2000]" :fov="75" :near="0.01" :far="10000" />
-      <TresAmbientLight :intensity="0.8" color="#ffffff" />
-
-      <!-- Dynamic lighting -->
-      <DynamicLights :position="[0, 2.5, 0]" :light-count="5" :light-intensity="0.8" :light-distance="8" />
+      <TresAmbientLight :intensity="0.3" color="#ffffff" />
 
       <!-- BandedCylinder shader effect -->
-      <BandedCylinder :position="[0.2, 2.5, -0.2]" :rotation-speed="-0.45"
+      <BandedCylinder :position="[0.2, 5, -0.2]" :rotation-speed="-0.45"
         :cylinder-args="[0.5, 4.5, 48, 0.45, 0.15]" />
-      <BandedCylinder :position="[-0.2, 2.5, 0.2]" :rotation-speed="0.45"
+      <BandedCylinder :position="[-0.2, 5, 0.2]" :rotation-speed="0.45"
         :cylinder-args="[0.5, 4.5, 48, 0.45, -0.15]" />
 
-
-      <TresDirectionalLight :target="spotTarget" :intensity="0.2" color="#ffffff" :position="[5, 2, 5]" cast-shadow />
-      <TresObject3D ref="spotTarget" :position="[5, -1, 5]" />
-
-
-      <!-- Dynamic lighting -->
-      <DynamicLights :position="[0, -2, 0]" :light-count="4" :light-intensity="0.8" :light-distance="5"
-        :light-function="'sinusoidalLightFn_TresJS2'" />
-
-      <ConcentricBase :position="[0, -2, 0]" :scale="[1.5, 1.0, 1.5]" :rotation-speed="0.1"/>
+      <ConcentricBase :position="[0, -1.5, 0]" :scale="[1.2, 1.0, 1.2]" :rotation-speed="0.1" />
 
       <Stars />
 
@@ -109,7 +94,7 @@ function handleToggleGrid() {
       <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />
 
       <!-- Debug helpers -->
-      <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[10, 10, '#003366', '#002244']"
+      <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[15, 20, '#113366', '#224488']"
         :position="[0, -2, 0]" />
       <TresAxesHelper v-if="gridOn" :args="[2]" :position="[0, 0, 0]" />
     </TresCanvas>
