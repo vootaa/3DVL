@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BasicShadowMap, SRGBColorSpace, ACESFilmicToneMapping, MeshStandardMaterial } from 'three'
+import { BasicShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
 import { ref, provide, onMounted, nextTick } from 'vue'
 
 import BandedCylinder from './components/scene/BandedCylinder.vue'
@@ -14,7 +14,7 @@ import RendererStatsCollector from '../../utils/RendererStatsCollector.vue'
 import { CameraController } from '../../utils/camera-controller'
 
 const gl = {
-  clearColor: '#171717',
+  clearColor: '#070707',
   antiAlias: "true",
   shadows: true,
   alpha: true,
@@ -31,8 +31,6 @@ const showGridAfterCameraMove = ref(false)
 const gridOn = ref(false)
 
 const spotTarget = ref()
-
-const concentricBasePosition = ref<[number, number, number]>([0, -2, 0])
 
 let cameraController: CameraController
 
@@ -68,6 +66,7 @@ function handleToggleGrid() {
     showGridAfterCameraMove.value = false
   }
 }
+
 </script>
 
 <template>
@@ -76,14 +75,6 @@ function handleToggleGrid() {
       <RendererStatsCollector />
       <TresPerspectiveCamera ref="cameraRef" :position="[5, 3, 5]" :fov="75" :near="0.1" :far="1000" />
       <TresAmbientLight :intensity="0.8" color="#ffffff" />
-
-      <TresSpotLight :position="[0, 8, 0]" :target="spotTarget" :intensity="2.0" color="#ffffff" :angle="Math.PI / 3"
-        :penumbra="0.1" :distance="15" :decay="0.5" cast-shadow />
-      <TresObject3D ref="spotTarget" :position="concentricBasePosition" />
-      :penumbra="0.1" :distance="15" :decay="0.5" cast-shadow />
-
-      <!-- Additional top light for better visibility -->
-      <TresPointLight :position="[0, 5, 0]" :intensity="1.5" color="#ffffff" :distance="10" :decay="0.3" />
 
       <!-- Dynamic lighting -->
       <DynamicLights :position="[0, 2.5, 0]" :light-count="4" :light-intensity="0.8" :light-distance="8" />
@@ -94,13 +85,18 @@ function handleToggleGrid() {
       <BandedCylinder :position="[-0.2, 2.5, 0.2]" :rotation-speed="0.45"
         :cylinder-args="[0.5, 4.5, 48, 0.45, -0.15]" />
 
-      <ConcentricBase :position="concentricBasePosition" :scale="[1, 1, 1]" :rotation-speed="0.1" />
 
-      <!-- Post-processing effects -->
-      <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />
+      <TresDirectionalLight :target="spotTarget" :intensity="0.2" color="#ffffff" :position="[5, 2, 5]"
+        cast-shadow />
+      <TresObject3D ref="spotTarget" :position="[5, -1, 5]" />
+
+      <ConcentricBase :position="[0, -2, 0]" :scale="[1.5, 1.0, 1.5]" :rotation-speed="0.1" />
 
       <!-- Camera controls -->
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
+
+      <!-- Post-processing effects -->
+      <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />
 
       <!-- Debug helpers -->
       <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[10, 10, '#003366', '#002244']"

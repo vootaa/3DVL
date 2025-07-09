@@ -15,8 +15,8 @@ const props = withDefaults(defineProps<Props>(), {
   position: () => [0, 0, 0],
   scale: () => [1, 1, 1],
   rotationSpeed: 0,
-  baseArgs: () => [[1.5, 3.0, 4.8], [0.25, 1.0, 1.5]], // [内层半径, 中层半径, 外层半径], [内层高度, 中层高度, 外层高度]
-  material: () => new MeshStandardMaterial({ color: 0x888888, roughness: 0.3, metalness: 0.2, wireframe: false })
+  baseArgs: () => [[1.5, 3.0, 4.8], [0.25, 1.0, 1.5]], // [inner radius, middle radius, outer radius], [inner height, middle height, outer height]
+  material: () => new MeshStandardMaterial({ color: 0x337788, roughness: 0.3, metalness: 0.2, wireframe: false })
 })
 
 const meshRef = shallowRef()
@@ -37,14 +37,14 @@ function createConcentricBase(radii: number[], heights: number[]) {
   const [innerRadius, middleRadius, outerRadius] = radii
   const [innerHeight, middleHeight, outerHeight] = heights
   
-  // 计算每层的Y位置（从外到内下沉）
-  const baseY = 0 // 基准高度
+  // Calculate Y position for each layer (outer to inner sinks down)
+  const baseY = 0 // base height
   const outerTop = baseY + outerHeight
   const outerBottom = baseY
   const middleTop = baseY + middleHeight
   const innerTop = baseY + innerHeight
   
-  // 添加顶点和面的辅助函数
+  // Helper function to add vertex and face
   function addVertex(x: number, y: number, z: number, nx: number, ny: number, nz: number, u: number, v: number) {
     vertices.push(x, y, z)
     normals.push(nx, ny, nz)
@@ -78,7 +78,7 @@ function createConcentricBase(radii: number[], heights: number[]) {
     const topRingStart = vertexIndex
     const bottomRingStart = vertexIndex + segments + 1
     
-    // 顶部环
+    // Top ring
     for (let i = 0; i <= segments; i++) {
       const angle = (i / segments) * Math.PI * 2
       const x = Math.cos(angle) * radius
@@ -86,7 +86,7 @@ function createConcentricBase(radii: number[], heights: number[]) {
       addVertex(x, topY, z, x / radius, 0, z / radius, i / segments, 1)
     }
     
-    // 底部环
+    // Bottom ring
     for (let i = 0; i <= segments; i++) {
       const angle = (i / segments) * Math.PI * 2
       const x = Math.cos(angle) * radius
@@ -94,7 +94,7 @@ function createConcentricBase(radii: number[], heights: number[]) {
       addVertex(x, bottomY, z, x / radius, 0, z / radius, i / segments, 0)
     }
     
-    // 侧面
+    // Side faces
     for (let i = 0; i < segments; i++) {
       const topCurrent = topRingStart + i
       const topNext = topRingStart + (i + 1)
@@ -111,17 +111,17 @@ function createConcentricBase(radii: number[], heights: number[]) {
     
     for (let i = 0; i <= segments; i++) {
       const angle = (i / segments) * Math.PI * 2
-      // 内环
+      // Inner ring
       const x1 = Math.cos(angle) * innerRadius
       const z1 = Math.sin(angle) * innerRadius
       addVertex(x1, y, z1, 0, normalY, 0, (x1 / outerRadius + 1) / 2, (z1 / outerRadius + 1) / 2)
-      // 外环
+      // Outer ring
       const x2 = Math.cos(angle) * outerRadius
       const z2 = Math.sin(angle) * outerRadius
       addVertex(x2, y, z2, 0, normalY, 0, (x2 / outerRadius + 1) / 2, (z2 / outerRadius + 1) / 2)
     }
     
-    // 环形面
+    // Ring faces
     for (let i = 0; i < segments; i++) {
       const innerCurrent = ringStart + i * 2
       const innerNext = ringStart + ((i + 1) % (segments + 1)) * 2
@@ -138,26 +138,26 @@ function createConcentricBase(radii: number[], heights: number[]) {
     }
   }
   
-  // 1. 外层圆柱体 - 最高
-  addCircle(outerRadius, outerTop, 1) // 外层顶面
-  addCylinderSide(outerRadius, outerTop, outerBottom) // 外层侧面
+  // 1. Outer cylinder - highest
+  addCircle(outerRadius, outerTop, 1) // Outer top face
+  addCylinderSide(outerRadius, outerTop, outerBottom) // Outer side
   
-  // 2. 外层到中层的环形面（在中层高度）
+  // 2. Ring face from outer to middle (at middle height)
   addRing(middleRadius, outerRadius, middleTop, 1)
   
-  // 3. 外层到中层的连接面（阶梯侧面）
+  // 3. Step side from outer to middle
   addCylinderSide(middleRadius, outerTop, middleTop)
   
-  // 4. 中层到内层的环形面（在中层高度，不是内层高度！）
+  // 4. Ring face from middle to inner (at middle height, not inner height!)
   addRing(innerRadius, middleRadius, middleTop, 1)
   
-  // 5. 中层到内层的连接面（阶梯侧面）
+  // 5. Step side from middle to inner
   addCylinderSide(innerRadius, middleTop, innerTop)
   
-  // 6. 内层顶面 - 最低
+  // 6. Inner top face - lowest
   addCircle(innerRadius, innerTop, 1)
   
-  // 7. 底面（整个基座的底部）
+  // 7. Bottom face (bottom of the whole base)
   addCircle(outerRadius, outerBottom, -1, true)
   
   geo.setIndex(indices)
