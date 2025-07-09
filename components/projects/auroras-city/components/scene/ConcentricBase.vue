@@ -58,14 +58,14 @@ function createConcentricBase(radii: number[], heights: number[]) {
   const [innerRadius, middleRadius, outerRadius] = radii
   const [innerHeight, middleHeight, outerHeight] = heights
   
-  // Calculate Y position for each layer (outer to inner sinks down)
-  const baseY = 0 // base height
+  // Calculate Y position for each layer
+  const baseY = 0
   const outerTop = baseY + outerHeight
   const outerBottom = baseY
   const middleTop = baseY + middleHeight
   const innerTop = baseY + innerHeight
   
-  // Helper function to add vertex and face
+  // Helper function to add vertex
   function addVertex(x: number, y: number, z: number, nx: number, ny: number, nz: number, u: number, v: number) {
     vertices.push(x, y, z)
     normals.push(nx, ny, nz)
@@ -73,112 +73,79 @@ function createConcentricBase(radii: number[], heights: number[]) {
     return vertexIndex++
   }
   
-  function addCircle(radius: number, y: number, normalY: number, reverse = false) {
-    const centerIndex = addVertex(0, y, 0, 0, normalY, 0, 0.5, 0.5)
-    const ringStart = vertexIndex
-    
-    for (let i = 0; i <= segments; i++) {
-      const angle = (i / segments) * Math.PI * 2
-      const x = Math.cos(angle) * radius
-      const z = Math.sin(angle) * radius
-      addVertex(x, y, z, 0, normalY, 0, (x / radius + 1) / 2, (z / radius + 1) / 2)
-      
-      if (i < segments) {
-        if (reverse) {
-          indices.push(centerIndex, ringStart + i + 1, ringStart + i)
-        } else {
-          indices.push(centerIndex, ringStart + i, ringStart + i + 1)
-        }
-      }
-    }
-    
-    return ringStart
+  // Store vertex indices for different rings at different heights
+  const rings = {
+    outerTop: [] as number[],
+    outerBottom: [] as number[],
+    middleTop: [] as number[],
+    middleBottom: [] as number[],
+    innerTop: [] as number[],
+    innerBottom: [] as number[]
   }
   
-  function addCylinderSide(radius: number, topY: number, bottomY: number) {
-    const topRingStart = vertexIndex
-    const bottomRingStart = vertexIndex + segments + 1
+  // Create all ring vertices first
+  for (let i = 0; i <= segments; i++) {
+    const angle = (i / segments) * Math.PI * 2
     
-    // Top ring
-    for (let i = 0; i <= segments; i++) {
-      const angle = (i / segments) * Math.PI * 2
-      const x = Math.cos(angle) * radius
-      const z = Math.sin(angle) * radius
-      addVertex(x, topY, z, x / radius, 0, z / radius, i / segments, 1)
-    }
+    // Outer ring at top
+    const outerX = Math.cos(angle) * outerRadius
+    const outerZ = Math.sin(angle) * outerRadius
+    rings.outerTop.push(addVertex(outerX, outerTop, outerZ, 0, 1, 0, (outerX / outerRadius + 1) / 2, (outerZ / outerRadius + 1) / 2))
     
-    // Bottom ring
-    for (let i = 0; i <= segments; i++) {
-      const angle = (i / segments) * Math.PI * 2
-      const x = Math.cos(angle) * radius
-      const z = Math.sin(angle) * radius
-      addVertex(x, bottomY, z, x / radius, 0, z / radius, i / segments, 0)
-    }
+    // Outer ring at bottom
+    rings.outerBottom.push(addVertex(outerX, outerBottom, outerZ, 0, -1, 0, (outerX / outerRadius + 1) / 2, (outerZ / outerRadius + 1) / 2))
     
-    // Side faces
-    for (let i = 0; i < segments; i++) {
-      const topCurrent = topRingStart + i
-      const topNext = topRingStart + (i + 1)
-      const bottomCurrent = bottomRingStart + i
-      const bottomNext = bottomRingStart + (i + 1)
-      
-      indices.push(topCurrent, bottomCurrent, topNext)
-      indices.push(topNext, bottomCurrent, bottomNext)
-    }
+    // Middle ring at top (outer level)
+    const middleX = Math.cos(angle) * middleRadius
+    const middleZ = Math.sin(angle) * middleRadius
+    rings.middleTop.push(addVertex(middleX, outerTop, middleZ, 0, 1, 0, (middleX / outerRadius + 1) / 2, (middleZ / outerRadius + 1) / 2))
+    
+    // Middle ring at middle level
+    rings.middleBottom.push(addVertex(middleX, middleTop, middleZ, 0, 1, 0, (middleX / outerRadius + 1) / 2, (middleZ / outerRadius + 1) / 2))
+    
+    // Inner ring at middle level
+    const innerX = Math.cos(angle) * innerRadius
+    const innerZ = Math.sin(angle) * innerRadius
+    rings.innerTop.push(addVertex(innerX, middleTop, innerZ, 0, 1, 0, (innerX / outerRadius + 1) / 2, (innerZ / outerRadius + 1) / 2))
+    
+    // Inner ring at inner level
+    rings.innerBottom.push(addVertex(innerX, innerTop, innerZ, 0, 1, 0, (innerX / outerRadius + 1) / 2, (innerZ / outerRadius + 1) / 2))
   }
   
-  function addRing(innerRadius: number, outerRadius: number, y: number, normalY: number, reverse = false) {
-    const ringStart = vertexIndex
+  // Add center vertices for circles
+  const centerBottom = addVertex(0, outerBottom, 0, 0, -1, 0, 0.5, 0.5)
+  const centerInnerTop = addVertex(0, innerTop, 0, 0, 1, 0, 0.5, 0.5)
+  
+  // Create faces
+  for (let i = 0; i < segments; i++) {
+    const next = (i + 1) % (segments + 1)
     
-    for (let i = 0; i <= segments; i++) {
-      const angle = (i / segments) * Math.PI * 2
-      // Inner ring
-      const x1 = Math.cos(angle) * innerRadius
-      const z1 = Math.sin(angle) * innerRadius
-      addVertex(x1, y, z1, 0, normalY, 0, (x1 / outerRadius + 1) / 2, (z1 / outerRadius + 1) / 2)
-      // Outer ring
-      const x2 = Math.cos(angle) * outerRadius
-      const z2 = Math.sin(angle) * outerRadius
-      addVertex(x2, y, z2, 0, normalY, 0, (x2 / outerRadius + 1) / 2, (z2 / outerRadius + 1) / 2)
-    }
+    // 1. Outer top ring face (middle to outer radius at outer height)
+    indices.push(rings.middleTop[i], rings.outerTop[i], rings.middleTop[next])
+    indices.push(rings.middleTop[next], rings.outerTop[i], rings.outerTop[next])
     
-    // Ring faces
-    for (let i = 0; i < segments; i++) {
-      const innerCurrent = ringStart + i * 2
-      const innerNext = ringStart + ((i + 1) % (segments + 1)) * 2
-      const outerCurrent = innerCurrent + 1
-      const outerNext = innerNext + 1
-      
-      if (reverse) {
-        indices.push(innerCurrent, innerNext, outerCurrent)
-        indices.push(outerCurrent, innerNext, outerNext)
-      } else {
-        indices.push(innerCurrent, outerCurrent, innerNext)
-        indices.push(innerNext, outerCurrent, outerNext)
-      }
-    }
+    // 2. Outer cylinder side (outer radius from top to bottom)
+    indices.push(rings.outerTop[i], rings.outerBottom[i], rings.outerTop[next])
+    indices.push(rings.outerTop[next], rings.outerBottom[i], rings.outerBottom[next])
+    
+    // 3. Middle step side (middle radius from outer to middle height)
+    indices.push(rings.middleTop[i], rings.middleBottom[next], rings.middleTop[next])
+    indices.push(rings.middleTop[i], rings.middleBottom[i], rings.middleBottom[next])
+    
+    // 4. Middle ring face (inner to middle radius at middle height)
+    indices.push(rings.innerTop[i], rings.middleBottom[i], rings.innerTop[next])
+    indices.push(rings.innerTop[next], rings.middleBottom[i], rings.middleBottom[next])
+    
+    // 5. Inner step side (inner radius from middle to inner height)
+    indices.push(rings.innerTop[i], rings.innerBottom[next], rings.innerTop[next])
+    indices.push(rings.innerTop[i], rings.innerBottom[i], rings.innerBottom[next])
+    
+    // 6. Inner top face (center to inner radius)
+    indices.push(centerInnerTop, rings.innerBottom[i], rings.innerBottom[next])
+    
+    // 7. Bottom face (center to outer radius)
+    indices.push(centerBottom, rings.outerBottom[next], rings.outerBottom[i])
   }
-  
-  // 1. Outer top ring face (from middle to outer radius at outer height)
-  addRing(middleRadius, outerRadius, outerTop, 1)
-  
-  // 2. Outer cylinder side (from outer top to outer bottom)
-  addCylinderSide(outerRadius, outerTop, outerBottom)
-  
-  // 3. Outer step side (vertical face from outer to middle height)
-  addCylinderSide(middleRadius, outerTop, middleTop)
-  
-  // 4. Middle ring face (from inner to middle radius at middle height) - Fixed: ring instead of outer to middle
-  addRing(innerRadius, middleRadius, middleTop, 1)
-  
-  // 5. Middle step side (vertical face from middle to inner height)
-  addCylinderSide(innerRadius, middleTop, innerTop)
-  
-  // 6. Inner top face - full circle (from center to inner radius)
-  addCircle(innerRadius, innerTop, 1)
-  
-  // 7. Bottom face (full circle from center to outer radius)
-  addCircle(outerRadius, outerBottom, -1, true)
   
   geo.setIndex(indices)
   geo.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3))
