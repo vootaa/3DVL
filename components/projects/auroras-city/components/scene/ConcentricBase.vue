@@ -16,7 +16,7 @@ const props = withDefaults(defineProps<Props>(), {
   scale: () => [1, 1, 1],
   rotationSpeed: 0,
   baseArgs: () => [[1.5, 3.0, 4.8], [0.25, 1.0, 1.5]], // [inner radius, middle radius, outer radius], [inner height, middle height, outer height]
-  material: () => new MeshStandardMaterial({ color: 0x337788, roughness: 0.3, metalness: 0.2, wireframe: false })
+  material: () => new MeshStandardMaterial({ color: 0x777777, roughness: 0.3, metalness: 0.2, wireframe: false })
 })
 
 const meshRef = shallowRef()
