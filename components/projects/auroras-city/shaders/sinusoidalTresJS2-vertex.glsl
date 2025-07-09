@@ -5,18 +5,17 @@ varying vec4 vFragColor;
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   vec2 uv = fragCoord / iResolution.xy;
-  // Convert to radial coordinates
+
+  // Directly use UV coordinates, add radial effect
   vec2 center = vec2(0.5, 0.5);
-  vec2 pos = uv - center;
-  float radius = length(pos);
-  float angle = atan(pos.y, pos.x);
+  float radius = length(uv - center);
 
-  // Modify for radial effect
-  float g = pow(1.0 - sqrt(abs(cos(radius * 6.0 + angle + iTime * 0.1))), sin(iTime) + 2.0);
+  // Modify color function to fit circular shape
+  float g = pow(1.0 - sqrt(abs(cos(radius * 8.0 + iTime * 0.2))), sin(iTime) + 2.0);
   float b = pow(1.0 - sin(radius * 4.0 + iTime), cos(iTime) + 2.0);
-  float r = sin(iTime + angle + sin(radius * 3.0 + iTime));
+  float r = sin(iTime + radius * 4.0 + sin(radius * 5.0 + iTime));
 
-  fragColor = vec4(r, g, b, 0.);
+  fragColor = vec4(r, g, b, 0.1);
 }
 
 void main() {

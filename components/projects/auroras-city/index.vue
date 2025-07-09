@@ -41,11 +41,11 @@ provide('orbitControls', orbitControlsRef)
 const orbitControlsConfig = {
   enableDamping: true,
   dampingFactor: 0.05,
-  minDistance: 2,
-  maxDistance: 10,
+  minDistance: 0,
+  maxDistance: 25,
   minPolarAngle: Math.PI * 0.05,
   maxPolarAngle: Math.PI * 0.9,
-  enablePan: false,
+  enablePan: true,
 }
 
 onMounted(() => {
@@ -83,7 +83,7 @@ function handleToggleGrid() {
       <BandedCylinder :position="[-0.2, 5, 0.2]" :rotation-speed="0.45"
         :cylinder-args="[0.5, 4.5, 48, 0.45, -0.15]" />
 
-      <ConcentricBase :position="[0, -1.5, 0]" :scale="[1.2, 1.0, 1.2]" :rotation-speed="0.1" />
+      <ConcentricBase :position="[0, -1.5, 0]" :scale="[2.5, 1.0, 2.5]" :rotation-speed="0.1" />
 
       <Stars />
 
@@ -94,8 +94,8 @@ function handleToggleGrid() {
       <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />
 
       <!-- Debug helpers -->
-      <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[15, 20, '#113366', '#224488']"
-        :position="[0, -2, 0]" />
+      <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[25, 25, '#113366', '#224488']"
+        :position="[0, -3, 0]" />
       <TresAxesHelper v-if="gridOn" :args="[2]" :position="[0, 0, 0]" />
     </TresCanvas>
 
