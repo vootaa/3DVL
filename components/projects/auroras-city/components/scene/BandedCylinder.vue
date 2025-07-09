@@ -4,20 +4,20 @@ import { BufferGeometry, BufferAttribute, DoubleSide, ShaderMaterial, Vector2, C
 import { useLoop } from '@tresjs/core'
 
 import sinusoidalVertexShader from '../../shaders/sinusoidalTresJS-vertex.glsl'
-import sinusoidalFragmentShader from '../../shaders/fragment.glsl'
+import fragmentShader from '../../shaders/fragment.glsl'
 
 interface Props {
   position?: [number, number, number]
   scale?: [number, number, number]
   rotation?: [number, number, number]
-  cylinderArgs?: [number, number, number, number]
+  cylinderArgs?: [number, number, number, number, number] // radius, height, bands, gapRatio, twist
 }
 
 const props = withDefaults(defineProps<Props>(), {
   position: () => [0, 0, 0],
   scale: () => [1, 1, 1],
   rotation: () => [0, 0, 0],
-  cylinderArgs: () => [0.75, 3.5, 25, 0.5], // radius, height, bands, gapRatio
+  cylinderArgs: () => [0.75, 3.5, 64, 0.45, 0.075], // radius, height, bands, gapRatio, twist
 })
 
 const material = shallowRef()
@@ -33,7 +33,7 @@ const uniforms = {
 
 const shaderMaterial = new ShaderMaterial({
   vertexShader: sinusoidalVertexShader,
-  fragmentShader: sinusoidalFragmentShader,
+  fragmentShader: fragmentShader,
   uniforms,
   side: DoubleSide,
   transparent: true,
@@ -42,7 +42,7 @@ const shaderMaterial = new ShaderMaterial({
 
 material.value = shaderMaterial
 
-function createBandedCylinder(radius = 1, height = 3, bands = 6, gapRatio = 0.3) {
+function createBandedCylinder(radius = 1, height = 3, bands = 6, gapRatio = 0.3, twist = 0) {
   const geo = new BufferGeometry()
 
   const vertices = []
@@ -50,7 +50,7 @@ function createBandedCylinder(radius = 1, height = 3, bands = 6, gapRatio = 0.3)
   const uvs = []
   const indices = []
 
-  const segmentsPerBand = 32 // Number of segments per band
+  const segmentsPerBand = 3 // Number of segments per band
   const bandAngle = (Math.PI * 2) / bands // Angle occupied by each band
   const activeAngle = bandAngle * (1 - gapRatio) // Actual angle after subtracting the gap
 
@@ -60,17 +60,28 @@ function createBandedCylinder(radius = 1, height = 3, bands = 6, gapRatio = 0.3)
     const startAngle = b * bandAngle
 
     for (let i = 0; i <= segmentsPerBand; i++) {
-      const angle = startAngle + (i / segmentsPerBand) * activeAngle
-      const x = Math.cos(angle) * radius
-      const z = Math.sin(angle) * radius
+      const baseAngle = startAngle + (i / segmentsPerBand) * activeAngle
+
       // Bottom vertex
-      vertices.push(x, -height / 2, z)
-      normals.push(x / radius, 0, z / radius)
+      const bottomY = -height / 2
+      const bottomTwist = (bottomY / height) * twist * Math.PI
+      const bottomAngle = baseAngle + bottomTwist
+      const bottomX = Math.cos(bottomAngle) * radius
+      const bottomZ = Math.sin(bottomAngle) * radius
+
+      vertices.push(bottomX, bottomY, bottomZ)
+      normals.push(bottomX / radius, 0, bottomZ / radius)
       uvs.push((b + i / segmentsPerBand) / bands, 0)
 
       // Top vertex
-      vertices.push(x, height / 2, z)
-      normals.push(x / radius, 0, z / radius)
+      const topY = height / 2
+      const topTwist = (topY / height) * twist * Math.PI
+      const topAngle = baseAngle + topTwist
+      const topX = Math.cos(topAngle) * radius
+      const topZ = Math.sin(topAngle) * radius
+
+      vertices.push(topX, topY, topZ)
+      normals.push(topX / radius, 0, topZ / radius)
       uvs.push((b + i / segmentsPerBand) / bands, 1)
 
       // Add face indices (two triangles form a rectangle)
@@ -94,8 +105,6 @@ function createBandedCylinder(radius = 1, height = 3, bands = 6, gapRatio = 0.3)
   geo.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3))
   geo.setAttribute('normal', new BufferAttribute(new Float32Array(normals), 3))
   geo.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), 2))
-
-  console.log(`Created banded cylinder: ${bands} bands, ${vertices.length/3} vertices, ${indices.length/3} faces`)
 
   return geo
 }

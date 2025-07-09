@@ -28,10 +28,10 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 function sinusoidalLightFn(light: PointLight, uv: Vector2, iTime: number) {
-  color.g = 0.5 * clamp((1.0 - Math.sqrt(Math.abs(Math.cos(uv.y + uv.x + iTime)))) ** (Math.sin(iTime) + 2.0), 0.2, 1)
-  color.b = 0.5 * clamp((1.0 - Math.sin(uv.y + iTime)) ** (Math.cos(iTime) + 2.0), 0.2, 1)
-  color.r = 0.5 * clamp(Math.sin(iTime + uv.x + Math.sin(uv.y + iTime)), 0.2, 1)
-  light.color.lerp(color, 0.075)
+  color.g = 0.5 * clamp((1.0 - Math.sqrt(Math.abs(Math.cos(uv.y + uv.x + iTime)))) ** (Math.sin(iTime) + 2.0), 0.2, 1.0)
+  color.b = 0.5 * clamp((1.0 - Math.sin(uv.y + iTime)) ** (Math.cos(iTime) + 2.0), 0.2, 1.0)
+  color.r = 0.5 * clamp(Math.sin(iTime + uv.x + Math.sin(uv.y + iTime)), 0.2, 1.0)
+  light.color.lerp(color, 0.6) // Smoothly interpolate color
 }
 
 onMounted(() => {
@@ -40,7 +40,7 @@ onMounted(() => {
     lights.value.push(light)
     lightsGroup.value.add(light)
   }
-  
+
   clock.start()
   console.log('Lights Clock started')
 })
@@ -49,15 +49,15 @@ const { onBeforeRender } = useLoop()
 
 onBeforeRender(() => {
   const elapsed = clock.getElapsedTime()
-  
+
   lights.value.forEach((light, index) => {
-    const angle = (index / props.lightCount) * Math.PI * 2 + elapsed * 0.5
+    const angle = (index / props.lightCount) * Math.PI * 2 + elapsed * 0.25 // Adjust speed of rotation
     light.position.set(
-      props.position[0] + Math.cos(angle) * 4,
-      props.position[1] + Math.sin(elapsed * 4 + index) * 1.2,
-      props.position[2] + Math.sin(angle) * 4
+      props.position[0] + Math.cos(angle) * 0.5, // Horizontal oscillation
+      props.position[1] + Math.sin(elapsed * 0.75 + index) * 2.5, // Vertical oscillation
+      props.position[2] + Math.sin(angle) * 0.5 // Depth oscillation
     )
-    
+
     const uv = new Vector2(
       0.5 + Math.cos(angle) * 0.35,
       0.5 + Math.sin(angle) * 0.35

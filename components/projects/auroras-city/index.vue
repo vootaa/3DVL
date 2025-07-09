@@ -2,7 +2,7 @@
 import { BasicShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
 import { ref, provide, onMounted, nextTick } from 'vue'
 
-import ShaderEffect from './components/scene/ShaderEffect.vue'
+import BandedCylinder from './components/scene/BandedCylinder.vue'
 import DynamicLights from './components/scene/DynamicLights.vue'
 import PostEffects from './components/scene/PostEffects.vue'
 
@@ -13,7 +13,7 @@ import RendererStatsCollector from '../../utils/RendererStatsCollector.vue'
 import { CameraController } from '../../utils/camera-controller'
 
 const gl = {
-  clearColor: '#000000',
+  clearColor: '#070707',
   antiAlias: "true",
   shadows: true,
   alpha: true,
@@ -70,13 +70,13 @@ function handleToggleGrid() {
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
       <TresPerspectiveCamera ref="cameraRef" :position="[5, 3, 5]" :fov="75" :near="0.1" :far="1000" />
-      <TresAmbientLight :intensity="0.3" color="#ffffff" />
+      <TresAmbientLight :intensity="0.25" color="#ffffff" />
 
       <!-- Dynamic lighting -->
-      <DynamicLights :position="[0.15, 0.35, 0.25]" :light-count="5" :light-intensity="1.2" :light-distance="5" />
+      <DynamicLights :position="[0, 0.5, 0]" :light-count="4" :light-intensity="0.8" :light-distance="8" />
 
       <!-- Main shader effect -->
-      <ShaderEffect :position="[0, 1, 0]"/>
+      <BandedCylinder :position="[0, 0.5, 0]" />
 
       <!-- Post-processing effects -->
       <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />

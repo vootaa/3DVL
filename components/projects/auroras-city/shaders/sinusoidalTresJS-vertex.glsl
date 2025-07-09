@@ -14,9 +14,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 }
 
 void main() {
-  mainImage(vFragColor, (position.xy + vec2(0.15, 0.25)) * iResolution);
+  mainImage(vFragColor, (position.xy + vec2(0.15, 0.15)) * iResolution *0.75);
 
-  vec3 offset = vec3(normal) * clamp(vFragColor.a, 0., 1.);
+  vec3 offset = vec3(normal) * clamp(vFragColor.a, 0.1, 1.);
   vec4 modelPosition = modelMatrix * vec4(position + offset, 1.0);
   vec4 viewPosition = viewMatrix * modelPosition;
 
