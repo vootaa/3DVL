@@ -32,7 +32,7 @@ const gridOn = ref(false)
 
 const spotTarget = ref()
 
-const concentricBasePosition = ref<[number, number, number]>([0, -1, 0])
+const concentricBasePosition = ref<[number, number, number]>([0, -2, 0])
 
 let cameraController: CameraController
 
@@ -94,12 +94,7 @@ function handleToggleGrid() {
       <BandedCylinder :position="[-0.2, 2.5, 0.2]" :rotation-speed="0.45"
         :cylinder-args="[0.5, 4.5, 48, 0.45, -0.15]" />
 
-      <ConcentricBase :position="concentricBasePosition" :scale="[0.6, 0.6, 0.6]" :rotation-speed="0.1" :materials="[
-        new MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3, metalness: 0.1 }),
-        new MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.4, metalness: 0.2 }),
-        new MeshStandardMaterial({ color: 0x888888, roughness: 0.5, metalness: 0.3 }),
-        new MeshStandardMaterial({ color: 0x999999, roughness: 0.2, metalness: 0.4 })
-      ]" />
+      <ConcentricBase :position="concentricBasePosition" :scale="[1, 1, 1]" :rotation-speed="0.1" />
 
       <!-- Post-processing effects -->
       <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />

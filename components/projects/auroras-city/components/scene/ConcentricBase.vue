@@ -1,450 +1,169 @@
 <script setup lang="ts">
 import { shallowRef, onUnmounted, onMounted } from 'vue'
-import { BufferGeometry, BufferAttribute, Material, MeshStandardMaterial } from 'three'
+import { BufferGeometry, BufferAttribute, MeshStandardMaterial } from 'three'
 import { useLoop } from '@tresjs/core'
 
 interface Props {
   position?: [number, number, number]
   scale?: [number, number, number]
   rotationSpeed?: number
-  baseArgs?: [number[], number[], number, number] // radii, heights, stepCount, segments
-  materials?: Material[] // External material array: [inner disk, middle disk, outer disk, connector]
+  baseArgs?: [number[], number[]] // radii, heights
+  material?: MeshStandardMaterial
 }
 
 const props = withDefaults(defineProps<Props>(), {
   position: () => [0, 0, 0],
   scale: () => [1, 1, 1],
   rotationSpeed: 0,
-  baseArgs: () => [[1.5, 3.0, 4.8], [2.0, 1.5, 1.0], 7, 32], // radii, heights, stepCount, segments
-  materials: () => [
-    new MeshStandardMaterial({ color: 0x888888 }),
-    new MeshStandardMaterial({ color: 0x666666 }),
-    new MeshStandardMaterial({ color: 0x444444 }),
-    new MeshStandardMaterial({ color: 0x999999 })
-  ]
+  baseArgs: () => [[1.5, 3.0, 4.8], [0.25, 1.0, 1.5]], // [内层半径, 中层半径, 外层半径], [内层高度, 中层高度, 外层高度]
+  material: () => new MeshStandardMaterial({ color: 0x888888, roughness: 0.3, metalness: 0.2, wireframe: false })
 })
 
 const meshRef = shallowRef()
 const geometry = shallowRef()
 const currentRotation = shallowRef<[number, number, number]>([0, 0, 0])
 
-function createConcentricBase(radii: number[], heights: number[], stepCount: number, segments: number) {
+function createConcentricBase(radii: number[], heights: number[]) {
   const geo = new BufferGeometry()
   
   const vertices: number[] = []
   const normals: number[] = []
   const uvs: number[] = []
   const indices: number[] = []
-  const groups: { start: number; count: number; materialIndex: number }[] = []
   
   let vertexIndex = 0
+  const segments = 32
   
   const [innerRadius, middleRadius, outerRadius] = radii
   const [innerHeight, middleHeight, outerHeight] = heights
   
-  // Calculate transition zones
-  const innerToMiddleGap = middleRadius - innerRadius
-  const innerStepZone = innerToMiddleGap * (1/3) // 1/3 for steps
+  // 计算每层的Y位置（从外到内下沉）
+  const baseY = 0 // 基准高度
+  const outerTop = baseY + outerHeight
+  const outerBottom = baseY
+  const middleTop = baseY + middleHeight
+  const innerTop = baseY + innerHeight
   
-  const middleToOuterGap = outerRadius - middleRadius
-  const outerStepZone = middleToOuterGap * (1/3) // 1/3 for steps
-  
-  // Effective radii after considering step zones
-  const innerDiskRadius = innerRadius
-  const middleDiskInnerRadius = innerRadius + innerStepZone
-  const middleDiskOuterRadius = middleRadius
-  const outerDiskInnerRadius = middleRadius + outerStepZone
-  const outerDiskOuterRadius = outerRadius
-  
-  // Calculate height levels
-  const innerTop = innerHeight / 2
-  const innerBottom = -innerHeight / 2
-  const middleTop = middleHeight / 2
-  const middleBottom = -middleHeight / 2
-  const outerTop = outerHeight / 2
-  const outerBottom = -outerHeight / 2
-  
-  // Step height calculations
-  const innerToMiddleStepHeight = (innerBottom - middleTop) / stepCount
-  const middleToOuterStepHeight = (middleBottom - outerTop) / stepCount
-  
-  // 1. Create top surface (inner disk)
-  const topSurfaceStart = indices.length
-  const topCenterIndex = vertexIndex
-  vertices.push(0, innerTop, 0)
-  normals.push(0, 1, 0)
-  uvs.push(0.5, 0.5)
-  vertexIndex++
-  
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2
-    const x = Math.cos(angle) * innerDiskRadius
-    const z = Math.sin(angle) * innerDiskRadius
-    
-    vertices.push(x, innerTop, z)
-    normals.push(0, 1, 0)
-    uvs.push((x / innerDiskRadius + 1) / 2, (z / innerDiskRadius + 1) / 2)
-    
-    if (i < segments) {
-      indices.push(topCenterIndex, vertexIndex, vertexIndex + 1)
-    }
-    vertexIndex++
+  // 添加顶点和面的辅助函数
+  function addVertex(x: number, y: number, z: number, nx: number, ny: number, nz: number, u: number, v: number) {
+    vertices.push(x, y, z)
+    normals.push(nx, ny, nz)
+    uvs.push(u, v)
+    return vertexIndex++
   }
   
-  groups.push({
-    start: topSurfaceStart,
-    count: indices.length - topSurfaceStart,
-    materialIndex: 0 // Inner disk material
-  })
-  
-  // 2. Create inner disk side surface
-  const innerSideStart = indices.length
-  const innerTopRingStart = vertexIndex
-  const innerBottomRingStart = vertexIndex + segments + 1
-  
-  // Inner disk top ring
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2
-    const x = Math.cos(angle) * innerDiskRadius
-    const z = Math.sin(angle) * innerDiskRadius
+  function addCircle(radius: number, y: number, normalY: number, reverse = false) {
+    const centerIndex = addVertex(0, y, 0, 0, normalY, 0, 0.5, 0.5)
+    const ringStart = vertexIndex
     
-    vertices.push(x, innerTop, z)
-    normals.push(x / innerDiskRadius, 0, z / innerDiskRadius)
-    uvs.push(i / segments, 1)
-    vertexIndex++
-  }
-  
-  // Inner disk bottom ring
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2
-    const x = Math.cos(angle) * innerDiskRadius
-    const z = Math.sin(angle) * innerDiskRadius
-    
-    vertices.push(x, innerBottom, z)
-    normals.push(x / innerDiskRadius, 0, z / innerDiskRadius)
-    uvs.push(i / segments, 0)
-    vertexIndex++
-  }
-  
-  // Create inner disk side faces
-  for (let i = 0; i < segments; i++) {
-    const topCurrent = innerTopRingStart + i
-    const topNext = innerTopRingStart + (i + 1)
-    const bottomCurrent = innerBottomRingStart + i
-    const bottomNext = innerBottomRingStart + (i + 1)
-    
-    indices.push(topCurrent, bottomCurrent, topNext)
-    indices.push(topNext, bottomCurrent, bottomNext)
-  }
-  
-  groups.push({
-    start: innerSideStart,
-    count: indices.length - innerSideStart,
-    materialIndex: 0 // Inner disk material
-  })
-  
-  // 3. Create middle disk top surface (ring shape)
-  const middleDiskStart = indices.length
-  
-  // Create ring surface between middleDiskInnerRadius and middleDiskOuterRadius
-  const middleRingSegments = 8 // Number of radial segments for the ring
-  for (let r = 0; r < middleRingSegments; r++) {
-    const r1 = middleDiskInnerRadius + (r / middleRingSegments) * (middleDiskOuterRadius - middleDiskInnerRadius)
-    const r2 = middleDiskInnerRadius + ((r + 1) / middleRingSegments) * (middleDiskOuterRadius - middleDiskInnerRadius)
-    
-    for (let i = 0; i < segments; i++) {
-      const angle1 = (i / segments) * Math.PI * 2
-      const angle2 = ((i + 1) / segments) * Math.PI * 2
+    for (let i = 0; i <= segments; i++) {
+      const angle = (i / segments) * Math.PI * 2
+      const x = Math.cos(angle) * radius
+      const z = Math.sin(angle) * radius
+      addVertex(x, y, z, 0, normalY, 0, (x / radius + 1) / 2, (z / radius + 1) / 2)
       
-      // Four vertices of the quad
-      const x1_1 = Math.cos(angle1) * r1
-      const z1_1 = Math.sin(angle1) * r1
-      const x1_2 = Math.cos(angle2) * r1
-      const z1_2 = Math.sin(angle2) * r1
-      const x2_1 = Math.cos(angle1) * r2
-      const z2_1 = Math.sin(angle1) * r2
-      const x2_2 = Math.cos(angle2) * r2
-      const z2_2 = Math.sin(angle2) * r2
-      
-      const baseVertex = vertexIndex
-      
-      vertices.push(x1_1, middleTop, z1_1)
-      vertices.push(x1_2, middleTop, z1_2)
-      vertices.push(x2_1, middleTop, z2_1)
-      vertices.push(x2_2, middleTop, z2_2)
-      
-      normals.push(0, 1, 0)
-      normals.push(0, 1, 0)
-      normals.push(0, 1, 0)
-      normals.push(0, 1, 0)
-      
-      uvs.push((x1_1 / middleDiskOuterRadius + 1) / 2, (z1_1 / middleDiskOuterRadius + 1) / 2)
-      uvs.push((x1_2 / middleDiskOuterRadius + 1) / 2, (z1_2 / middleDiskOuterRadius + 1) / 2)
-      uvs.push((x2_1 / middleDiskOuterRadius + 1) / 2, (z2_1 / middleDiskOuterRadius + 1) / 2)
-      uvs.push((x2_2 / middleDiskOuterRadius + 1) / 2, (z2_2 / middleDiskOuterRadius + 1) / 2)
-      
-      indices.push(baseVertex, baseVertex + 2, baseVertex + 1)
-      indices.push(baseVertex + 1, baseVertex + 2, baseVertex + 3)
-      
-      vertexIndex += 4
-    }
-  }
-  
-  groups.push({
-    start: middleDiskStart,
-    count: indices.length - middleDiskStart,
-    materialIndex: 1 // Middle disk material
-  })
-  
-  // 4. Create outer disk bottom surface (ring shape)
-  const outerDiskStart = indices.length
-  
-  // Create ring surface between outerDiskInnerRadius and outerDiskOuterRadius
-  const outerRingSegments = 8
-  for (let r = 0; r < outerRingSegments; r++) {
-    const r1 = outerDiskInnerRadius + (r / outerRingSegments) * (outerDiskOuterRadius - outerDiskInnerRadius)
-    const r2 = outerDiskInnerRadius + ((r + 1) / outerRingSegments) * (outerDiskOuterRadius - outerDiskInnerRadius)
-    
-    for (let i = 0; i < segments; i++) {
-      const angle1 = (i / segments) * Math.PI * 2
-      const angle2 = ((i + 1) / segments) * Math.PI * 2
-      
-      const x1_1 = Math.cos(angle1) * r1
-      const z1_1 = Math.sin(angle1) * r1
-      const x1_2 = Math.cos(angle2) * r1
-      const z1_2 = Math.sin(angle2) * r1
-      const x2_1 = Math.cos(angle1) * r2
-      const z2_1 = Math.sin(angle1) * r2
-      const x2_2 = Math.cos(angle2) * r2
-      const z2_2 = Math.sin(angle2) * r2
-      
-      const baseVertex = vertexIndex
-      
-      vertices.push(x1_1, outerTop, z1_1)
-      vertices.push(x1_2, outerTop, z1_2)
-      vertices.push(x2_1, outerTop, z2_1)
-      vertices.push(x2_2, outerTop, z2_2)
-      
-      normals.push(0, 1, 0)
-      normals.push(0, 1, 0)
-      normals.push(0, 1, 0)
-      normals.push(0, 1, 0)
-      
-      uvs.push((x1_1 / outerDiskOuterRadius + 1) / 2, (z1_1 / outerDiskOuterRadius + 1) / 2)
-      uvs.push((x1_2 / outerDiskOuterRadius + 1) / 2, (z1_2 / outerDiskOuterRadius + 1) / 2)
-      uvs.push((x2_1 / outerDiskOuterRadius + 1) / 2, (z2_1 / outerDiskOuterRadius + 1) / 2)
-      uvs.push((x2_2 / outerDiskOuterRadius + 1) / 2, (z2_2 / outerDiskOuterRadius + 1) / 2)
-      
-      // Note: reverse winding for bottom surface
-      indices.push(baseVertex, baseVertex + 1, baseVertex + 2)
-      indices.push(baseVertex + 1, baseVertex + 3, baseVertex + 2)
-      
-      vertexIndex += 4
-    }
-  }
-  
-  groups.push({
-    start: outerDiskStart,
-    count: indices.length - outerDiskStart,
-    materialIndex: 2 // Outer disk material
-  })
-  
-  // 5. Create bottom surface (full outer disk)
-  const bottomSurfaceStart = indices.length
-  const bottomCenterIndex = vertexIndex
-  vertices.push(0, outerBottom, 0)
-  normals.push(0, -1, 0)
-  uvs.push(0.5, 0.5)
-  vertexIndex++
-  
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2
-    const x = Math.cos(angle) * outerDiskOuterRadius
-    const z = Math.sin(angle) * outerDiskOuterRadius
-    
-    vertices.push(x, outerBottom, z)
-    normals.push(0, -1, 0)
-    uvs.push((x / outerDiskOuterRadius + 1) / 2, (z / outerDiskOuterRadius + 1) / 2)
-    
-    if (i < segments) {
-      indices.push(bottomCenterIndex, vertexIndex + 1, vertexIndex)
-    }
-    vertexIndex++
-  }
-  
-  groups.push({
-    start: bottomSurfaceStart,
-    count: indices.length - bottomSurfaceStart,
-    materialIndex: 2 // Outer disk material
-  })
-  
-  // 6. Create outer side surface
-  const outerSideStart = indices.length
-  const outerTopRingStart = vertexIndex
-  const outerBottomRingStart = vertexIndex + segments + 1
-  
-  // Outer top ring
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2
-    const x = Math.cos(angle) * outerDiskOuterRadius
-    const z = Math.sin(angle) * outerDiskOuterRadius
-    
-    vertices.push(x, outerTop, z)
-    normals.push(x / outerDiskOuterRadius, 0, z / outerDiskOuterRadius)
-    uvs.push(i / segments, 1)
-    vertexIndex++
-  }
-  
-  // Outer bottom ring
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2
-    const x = Math.cos(angle) * outerDiskOuterRadius
-    const z = Math.sin(angle) * outerDiskOuterRadius
-    
-    vertices.push(x, outerBottom, z)
-    normals.push(x / outerDiskOuterRadius, 0, z / outerDiskOuterRadius)
-    uvs.push(i / segments, 0)
-    vertexIndex++
-  }
-  
-  // Create outer side faces
-  for (let i = 0; i < segments; i++) {
-    const topCurrent = outerTopRingStart + i
-    const topNext = outerTopRingStart + (i + 1)
-    const bottomCurrent = outerBottomRingStart + i
-    const bottomNext = outerBottomRingStart + (i + 1)
-    
-    indices.push(topCurrent, bottomCurrent, topNext)
-    indices.push(topNext, bottomCurrent, bottomNext)
-  }
-  
-  groups.push({
-    start: outerSideStart,
-    count: indices.length - outerSideStart,
-    materialIndex: 2 // Outer disk material
-  })
-  
-  // 7. Create inner to middle stepped transitions
-  const innerToMiddleStepsStart = indices.length
-  
-  for (let step = 0; step < stepCount; step++) {
-    const t = step / stepCount
-    const radius = innerDiskRadius + t * innerStepZone
-    const stepTop = innerBottom - step * innerToMiddleStepHeight
-    const stepBottom = innerBottom - (step + 1) * innerToMiddleStepHeight
-    
-    for (let i = 0; i < segments; i++) {
-      const angle1 = (i / segments) * Math.PI * 2
-      const angle2 = ((i + 1) / segments) * Math.PI * 2
-      
-      const x1 = Math.cos(angle1) * radius
-      const z1 = Math.sin(angle1) * radius
-      const x2 = Math.cos(angle2) * radius
-      const z2 = Math.sin(angle2) * radius
-      
-      const baseVertex = vertexIndex
-      
-      // Step top surface
-      vertices.push(x1, stepTop, z1)
-      vertices.push(x2, stepTop, z2)
-      // Step side surface (vertical)
-      vertices.push(x1, stepBottom, z1)
-      vertices.push(x2, stepBottom, z2)
-      
-      normals.push(0, 1, 0) // Top surface normal
-      normals.push(0, 1, 0)
-      normals.push(x1 / radius, 0, z1 / radius) // Side surface normal
-      normals.push(x2 / radius, 0, z2 / radius)
-      
-      uvs.push(i / segments, 0)
-      uvs.push((i + 1) / segments, 0)
-      uvs.push(i / segments, 1)
-      uvs.push((i + 1) / segments, 1)
-      
-      // Top surface triangle
-      if (step === 0) {
-        indices.push(baseVertex, baseVertex + 2, baseVertex + 1)
-        indices.push(baseVertex + 1, baseVertex + 2, baseVertex + 3)
+      if (i < segments) {
+        if (reverse) {
+          indices.push(centerIndex, ringStart + i + 1, ringStart + i)
+        } else {
+          indices.push(centerIndex, ringStart + i, ringStart + i + 1)
+        }
       }
-      
-      // Side surface
-      indices.push(baseVertex, baseVertex + 1, baseVertex + 2)
-      indices.push(baseVertex + 1, baseVertex + 3, baseVertex + 2)
-      
-      vertexIndex += 4
     }
-  }
-  
-  groups.push({
-    start: innerToMiddleStepsStart,
-    count: indices.length - innerToMiddleStepsStart,
-    materialIndex: 3 // Step connector material
-  })
-  
-  // 8. Create middle to outer stepped transitions
-  const middleToOuterStepsStart = indices.length
-  
-  for (let step = 0; step < stepCount; step++) {
-    const t = step / stepCount
-    const radius = middleDiskOuterRadius + t * outerStepZone
-    const stepTop = middleBottom - step * middleToOuterStepHeight
-    const stepBottom = middleBottom - (step + 1) * middleToOuterStepHeight
     
+    return ringStart
+  }
+  
+  function addCylinderSide(radius: number, topY: number, bottomY: number) {
+    const topRingStart = vertexIndex
+    const bottomRingStart = vertexIndex + segments + 1
+    
+    // 顶部环
+    for (let i = 0; i <= segments; i++) {
+      const angle = (i / segments) * Math.PI * 2
+      const x = Math.cos(angle) * radius
+      const z = Math.sin(angle) * radius
+      addVertex(x, topY, z, x / radius, 0, z / radius, i / segments, 1)
+    }
+    
+    // 底部环
+    for (let i = 0; i <= segments; i++) {
+      const angle = (i / segments) * Math.PI * 2
+      const x = Math.cos(angle) * radius
+      const z = Math.sin(angle) * radius
+      addVertex(x, bottomY, z, x / radius, 0, z / radius, i / segments, 0)
+    }
+    
+    // 侧面
     for (let i = 0; i < segments; i++) {
-      const angle1 = (i / segments) * Math.PI * 2
-      const angle2 = ((i + 1) / segments) * Math.PI * 2
+      const topCurrent = topRingStart + i
+      const topNext = topRingStart + (i + 1)
+      const bottomCurrent = bottomRingStart + i
+      const bottomNext = bottomRingStart + (i + 1)
       
-      const x1 = Math.cos(angle1) * radius
-      const z1 = Math.sin(angle1) * radius
-      const x2 = Math.cos(angle2) * radius
-      const z2 = Math.sin(angle2) * radius
-      
-      const baseVertex = vertexIndex
-      
-      vertices.push(x1, stepTop, z1)
-      vertices.push(x2, stepTop, z2)
-      vertices.push(x1, stepBottom, z1)
-      vertices.push(x2, stepBottom, z2)
-      
-      normals.push(0, 1, 0)
-      normals.push(0, 1, 0)
-      normals.push(x1 / radius, 0, z1 / radius)
-      normals.push(x2 / radius, 0, z2 / radius)
-      
-      uvs.push(i / segments, 0)
-      uvs.push((i + 1) / segments, 0)
-      uvs.push(i / segments, 1)
-      uvs.push((i + 1) / segments, 1)
-      
-      // Top surface
-      if (step === 0) {
-        indices.push(baseVertex, baseVertex + 2, baseVertex + 1)
-        indices.push(baseVertex + 1, baseVertex + 2, baseVertex + 3)
-      }
-      
-      // Side surface
-      indices.push(baseVertex, baseVertex + 1, baseVertex + 2)
-      indices.push(baseVertex + 1, baseVertex + 3, baseVertex + 2)
-      
-      vertexIndex += 4
+      indices.push(topCurrent, bottomCurrent, topNext)
+      indices.push(topNext, bottomCurrent, bottomNext)
     }
   }
   
-  groups.push({
-    start: middleToOuterStepsStart,
-    count: indices.length - middleToOuterStepsStart,
-    materialIndex: 3 // Step connector material
-  })
+  function addRing(innerRadius: number, outerRadius: number, y: number, normalY: number, reverse = false) {
+    const ringStart = vertexIndex
+    
+    for (let i = 0; i <= segments; i++) {
+      const angle = (i / segments) * Math.PI * 2
+      // 内环
+      const x1 = Math.cos(angle) * innerRadius
+      const z1 = Math.sin(angle) * innerRadius
+      addVertex(x1, y, z1, 0, normalY, 0, (x1 / outerRadius + 1) / 2, (z1 / outerRadius + 1) / 2)
+      // 外环
+      const x2 = Math.cos(angle) * outerRadius
+      const z2 = Math.sin(angle) * outerRadius
+      addVertex(x2, y, z2, 0, normalY, 0, (x2 / outerRadius + 1) / 2, (z2 / outerRadius + 1) / 2)
+    }
+    
+    // 环形面
+    for (let i = 0; i < segments; i++) {
+      const innerCurrent = ringStart + i * 2
+      const innerNext = ringStart + ((i + 1) % (segments + 1)) * 2
+      const outerCurrent = innerCurrent + 1
+      const outerNext = innerNext + 1
+      
+      if (reverse) {
+        indices.push(innerCurrent, innerNext, outerCurrent)
+        indices.push(outerCurrent, innerNext, outerNext)
+      } else {
+        indices.push(innerCurrent, outerCurrent, innerNext)
+        indices.push(innerNext, outerCurrent, outerNext)
+      }
+    }
+  }
+  
+  // 1. 外层圆柱体 - 最高
+  addCircle(outerRadius, outerTop, 1) // 外层顶面
+  addCylinderSide(outerRadius, outerTop, outerBottom) // 外层侧面
+  
+  // 2. 外层到中层的环形面（在中层高度）
+  addRing(middleRadius, outerRadius, middleTop, 1)
+  
+  // 3. 外层到中层的连接面（阶梯侧面）
+  addCylinderSide(middleRadius, outerTop, middleTop)
+  
+  // 4. 中层到内层的环形面（在中层高度，不是内层高度！）
+  addRing(innerRadius, middleRadius, middleTop, 1)
+  
+  // 5. 中层到内层的连接面（阶梯侧面）
+  addCylinderSide(innerRadius, middleTop, innerTop)
+  
+  // 6. 内层顶面 - 最低
+  addCircle(innerRadius, innerTop, 1)
+  
+  // 7. 底面（整个基座的底部）
+  addCircle(outerRadius, outerBottom, -1, true)
   
   geo.setIndex(indices)
   geo.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3))
   geo.setAttribute('normal', new BufferAttribute(new Float32Array(normals), 3))
   geo.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), 2))
-  
-  // Set material groups
-  groups.forEach(group => {
-    geo.addGroup(group.start, group.count, group.materialIndex)
-  })
   
   geo.computeVertexNormals()
   
@@ -452,8 +171,8 @@ function createConcentricBase(radii: number[], heights: number[], stepCount: num
 }
 
 onMounted(() => {
-  const [radii, heights, stepCount, segments] = props.baseArgs
-  geometry.value = createConcentricBase(radii, heights, stepCount, segments)
+  const [radii, heights] = props.baseArgs
+  geometry.value = createConcentricBase(radii, heights)
 })
 
 const { onBeforeRender } = useLoop()
@@ -467,13 +186,7 @@ onBeforeRender(() => {
 
 onUnmounted(() => {
   if (geometry.value) geometry.value.dispose()
-  if (props.materials) {
-    props.materials.forEach(material => {
-      if (material && typeof material.dispose === 'function') {
-        material.dispose()
-      }
-    })
-  }
+  if (props.material) props.material.dispose()
 })
 </script>
 
@@ -484,7 +197,7 @@ onUnmounted(() => {
     :position="position" 
     :scale="scale" 
     :rotation="currentRotation"
-    :material="materials" 
+    :material="material" 
     :geometry="geometry" 
   />
 </template>
