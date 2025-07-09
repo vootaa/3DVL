@@ -73,10 +73,10 @@ function handleToggleGrid() {
       <TresAmbientLight :intensity="0.3" color="#ffffff" />
 
       <!-- Dynamic lighting -->
-      <DynamicLights :position="[0.5, 0.5, 0.5]" :light-count="5" :light-intensity="1.2" :light-distance="10" />
+      <DynamicLights :position="[0.15, 0.35, 0.25]" :light-count="5" :light-intensity="1.2" :light-distance="5" />
 
       <!-- Main shader effect -->
-      <ShaderEffect :position="[0, 0, 0]"/>
+      <ShaderEffect :position="[0, 1, 0]"/>
 
       <!-- Post-processing effects -->
       <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />

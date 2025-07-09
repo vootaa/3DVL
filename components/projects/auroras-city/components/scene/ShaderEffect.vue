@@ -17,7 +17,7 @@ const props = withDefaults(defineProps<Props>(), {
   position: () => [0, 0, 0],
   scale: () => [1, 1, 1],
   rotation: () => [0, 0, 0],
-  cylinderArgs: () => [1, 5, 20, 0.8], // radius, height, bands, gapRatio
+  cylinderArgs: () => [0.75, 3.5, 25, 0.5], // radius, height, bands, gapRatio
 })
 
 const material = shallowRef()
@@ -50,9 +50,9 @@ function createBandedCylinder(radius = 1, height = 3, bands = 6, gapRatio = 0.3)
   const uvs = []
   const indices = []
 
-  const segmentsPerBand = 32 // 每个带的分段数
-  const bandAngle = (Math.PI * 2) / bands // 每个带占用的角度
-  const activeAngle = bandAngle * (1 - gapRatio) // 减去间隙后的实际角度
+  const segmentsPerBand = 32 // Number of segments per band
+  const bandAngle = (Math.PI * 2) / bands // Angle occupied by each band
+  const activeAngle = bandAngle * (1 - gapRatio) // Actual angle after subtracting the gap
 
   let vertexIndex = 0
 
@@ -63,27 +63,26 @@ function createBandedCylinder(radius = 1, height = 3, bands = 6, gapRatio = 0.3)
       const angle = startAngle + (i / segmentsPerBand) * activeAngle
       const x = Math.cos(angle) * radius
       const z = Math.sin(angle) * radius
-
-      // 底部顶点
+      // Bottom vertex
       vertices.push(x, -height / 2, z)
       normals.push(x / radius, 0, z / radius)
       uvs.push((b + i / segmentsPerBand) / bands, 0)
 
-      // 顶部顶点
+      // Top vertex
       vertices.push(x, height / 2, z)
       normals.push(x / radius, 0, z / radius)
       uvs.push((b + i / segmentsPerBand) / bands, 1)
 
-      // 添加面索引 (两个三角形组成一个矩形)
+      // Add face indices (two triangles form a rectangle)
       if (i < segmentsPerBand) {
         const a = vertexIndex * 2
         const b = a + 1
         const c = a + 2
         const d = a + 3
 
-        // 第一个三角形
+        // First triangle
         indices.push(a, c, b)
-        // 第二个三角形
+        // Second triangle
         indices.push(b, c, d)
       }
 
@@ -103,7 +102,6 @@ function createBandedCylinder(radius = 1, height = 3, bands = 6, gapRatio = 0.3)
 
 onMounted(() => {
   clock.start()
-  // 创建自定义几何体
   geometry.value = createBandedCylinder(...props.cylinderArgs)
 })
 

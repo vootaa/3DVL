@@ -23,8 +23,6 @@ const lights = ref<PointLight[]>([])
 const clock = new Clock()
 const color = new Color()
 
-const center = new Vector2(0.5, 0.5)
-
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
 }
@@ -33,7 +31,7 @@ function sinusoidalLightFn(light: PointLight, uv: Vector2, iTime: number) {
   color.g = 0.5 * clamp((1.0 - Math.sqrt(Math.abs(Math.cos(uv.y + uv.x + iTime)))) ** (Math.sin(iTime) + 2.0), 0.2, 1)
   color.b = 0.5 * clamp((1.0 - Math.sin(uv.y + iTime)) ** (Math.cos(iTime) + 2.0), 0.2, 1)
   color.r = 0.5 * clamp(Math.sin(iTime + uv.x + Math.sin(uv.y + iTime)), 0.2, 1)
-  light.color.lerp(color, 0.06)
+  light.color.lerp(color, 0.075)
 }
 
 onMounted(() => {
