@@ -76,7 +76,7 @@ function handleToggleGrid() {
       <DynamicLights :position="[0, 0.5, 0]" :light-count="4" :light-intensity="0.8" :light-distance="8" />
 
       <!-- Main shader effect -->
-      <BandedCylinder :position="[0, 0.5, 0]" />
+      <BandedCylinder :position="[0, 0.5, 0]" :rotation-speed="-0.6"/>
 
       <!-- Post-processing effects -->
       <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />

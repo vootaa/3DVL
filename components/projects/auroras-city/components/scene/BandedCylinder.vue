@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { shallowRef, onUnmounted, onMounted } from 'vue'
+import { shallowRef, onUnmounted, onMounted, computed } from 'vue'
 import { BufferGeometry, BufferAttribute, DoubleSide, ShaderMaterial, Vector2, Clock } from 'three'
 import { useLoop } from '@tresjs/core'
 
@@ -9,15 +9,15 @@ import fragmentShader from '../../shaders/fragment.glsl'
 interface Props {
   position?: [number, number, number]
   scale?: [number, number, number]
-  rotation?: [number, number, number]
+  rotationSpeed?: number
   cylinderArgs?: [number, number, number, number, number] // radius, height, bands, gapRatio, twist
 }
 
 const props = withDefaults(defineProps<Props>(), {
   position: () => [0, 0, 0],
   scale: () => [1, 1, 1],
-  rotation: () => [0, 0, 0],
-  cylinderArgs: () => [0.75, 3.5, 64, 0.45, 0.075], // radius, height, bands, gapRatio, twist
+  rotationSpeed: 0.5,
+  cylinderArgs: () => [0.75, 3.5, 64, 0.45, -0.1], // radius, height, bands, gapRatio, twist
 })
 
 const material = shallowRef()
@@ -25,6 +25,8 @@ const meshRef = shallowRef()
 const geometry = shallowRef()
 
 const clock = new Clock()
+
+const currentRotation = shallowRef<[number, number, number]>([0, 0, 0])
 
 const uniforms = {
   iResolution: { value: new Vector2(100, 100) },
@@ -50,9 +52,9 @@ function createBandedCylinder(radius = 1, height = 3, bands = 6, gapRatio = 0.3,
   const uvs = []
   const indices = []
 
-  const segmentsPerBand = 3 // Number of segments per band
-  const bandAngle = (Math.PI * 2) / bands // Angle occupied by each band
-  const activeAngle = bandAngle * (1 - gapRatio) // Actual angle after subtracting the gap
+  const segmentsPerBand = 3
+  const bandAngle = (Math.PI * 2) / bands
+  const activeAngle = bandAngle * (1 - gapRatio)
 
   let vertexIndex = 0
 
@@ -84,16 +86,13 @@ function createBandedCylinder(radius = 1, height = 3, bands = 6, gapRatio = 0.3,
       normals.push(topX / radius, 0, topZ / radius)
       uvs.push((b + i / segmentsPerBand) / bands, 1)
 
-      // Add face indices (two triangles form a rectangle)
       if (i < segmentsPerBand) {
         const a = vertexIndex * 2
         const b = a + 1
         const c = a + 2
         const d = a + 3
 
-        // First triangle
         indices.push(a, c, b)
-        // Second triangle
         indices.push(b, c, d)
       }
 
@@ -117,7 +116,10 @@ onMounted(() => {
 const { onBeforeRender } = useLoop()
 
 onBeforeRender(() => {
-  uniforms.iTime.value = clock.getElapsedTime()
+  const elapsed = clock.getElapsedTime()
+  uniforms.iTime.value = elapsed
+
+  currentRotation.value = [0, elapsed * props.rotationSpeed, 0]
 })
 
 onUnmounted(() => {
@@ -128,13 +130,6 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <TresMesh 
-    v-if="geometry"
-    ref="meshRef" 
-    :position="position" 
-    :scale="scale" 
-    :rotation="rotation" 
-    :material="material"
-    :geometry="geometry"
-  />
+  <TresMesh v-if="geometry" ref="meshRef" :position="position" :scale="scale" :rotation="currentRotation"
+    :material="material" :geometry="geometry" />
 </template>
