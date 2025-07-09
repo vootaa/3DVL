@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from 'three'
+import { BasicShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
 import { ref, provide, onMounted, nextTick } from 'vue'
 
 import ShaderEffect from './components/scene/ShaderEffect.vue'
@@ -13,18 +13,24 @@ import RendererStatsCollector from '../../utils/RendererStatsCollector.vue'
 import { CameraController } from '../../utils/camera-controller'
 
 const gl = {
-  clearColor: '#000811',
+  clearColor: '#000000',
+  antiAlias: "true",
   shadows: true,
-  alpha: false,
+  alpha: true,
+  windowSize: true,
   shadowMapType: BasicShadowMap,
   outputColorSpace: SRGBColorSpace,
-  toneMapping: NoToneMapping,
+  toneMapping: ACESFilmicToneMapping,
+  toneMappingExposure: 1.0,
 }
 
 const cameraRef = ref()
 const orbitControlsRef = ref()
 const showGridAfterCameraMove = ref(false)
 const gridOn = ref(false)
+const showShader = ref(false)
+
+
 
 let cameraController: CameraController
 
@@ -61,20 +67,27 @@ function handleToggleGrid() {
   }
 }
 
+function handleToggleShader() {
+  showShader.value = !showShader.value
+}
+
 </script>
 
 <template>
   <div class="shader-container">
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
-      <TresPerspectiveCamera ref="cameraRef" :position="[5, 3, 5]" :fov="75" />
-      <TresAmbientLight :intensity="0.1" color="#002244" />
-
-      <!-- Main shader effect -->
-      <ShaderEffect :position="[0, 0, 0]" :scale="[1, 1, 1]" :rotation="[0, 0, 0]" :cylinder-args="[1.5, 3, 32, 1]" />
+      <TresPerspectiveCamera ref="cameraRef" :position="[5, 3, 5]" :fov="75" :near="0.1" :far="1000" />
+      <TresAmbientLight :intensity="0.3" color="#ffffff" />
 
       <!-- Dynamic lighting -->
-      <DynamicLights :light-count="4" :light-intensity="1.5" :light-distance="8" />
+      <DynamicLights :position="[0, 0, 0]" :light-count="4" :light-intensity="1.5" :light-distance="8" />
+
+      <!-- Main shader effect -->
+      <ShaderEffect :position="[0, 0, 0]" :scale="[1.3,1.5,1.2]" :cylinder-args="[1, 1, 2, 32]" />
+
+      <!-- Post-processing effects -->
+      <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />
 
       <!-- Camera controls -->
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
@@ -83,9 +96,6 @@ function handleToggleGrid() {
       <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[10, 10, '#003366', '#002244']"
         :position="[0, -2, 0]" />
       <TresAxesHelper v-if="gridOn" :args="[2]" :position="[0, 0, 0]" />
-
-      <!-- Post-processing effects -->
-      <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />
     </TresCanvas>
 
     <SwitchMenuBar :grid-on="gridOn" :on-toggle-grid="handleToggleGrid" :disabled="false" />

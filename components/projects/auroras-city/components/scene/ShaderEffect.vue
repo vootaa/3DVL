@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { shallowRef} from 'vue'
-import { DoubleSide, ShaderMaterial, Vector2 } from 'three'
+import { shallowRef, onUnmounted, onMounted } from 'vue'
+import { DoubleSide, ShaderMaterial, Vector2, Clock } from 'three'
 import { useLoop } from '@tresjs/core'
 
-import sinusoidalVertexShader from '../../shaders/sinusoidal-vertex.glsl'
-import sinusoidalFragmentShader from '../../shaders/sinusoidal-fragment.glsl'
+import sinusoidalVertexShader from '../../shaders/sinusoidalTresJS-vertex.glsl'
+import sinusoidalFragmentShader from '../../shaders/fragment.glsl'
 
 interface Props {
   position?: [number, number, number]
@@ -17,47 +17,48 @@ const props = withDefaults(defineProps<Props>(), {
   position: () => [0, 0, 0],
   scale: () => [1, 1, 1],
   rotation: () => [0, 0, 0],
-  cylinderArgs: () => [1, 2, 32, 1]
+  cylinderArgs: () => [1, 2, 2, 2],
 })
 
-const material = shallowRef<ShaderMaterial>()
-const clock = { getElapsedTime: () => Date.now() / 1000 }
+const material = shallowRef()
+const meshRef = shallowRef()
+
+const clock = new Clock()
 
 const uniforms = {
-  iResolution: { value: new Vector2(1000, 1280) },
+  iResolution: { value: new Vector2(100, 100) },
   iTime: { value: 0 },
 }
 
-// Initialize material
-material.value = new ShaderMaterial({
+const shaderMaterial = new ShaderMaterial({
   vertexShader: sinusoidalVertexShader,
   fragmentShader: sinusoidalFragmentShader,
   uniforms,
   side: DoubleSide,
-  transparent: true
+  transparent: true,
+  wireframe: false,
 })
 
-useLoop().onBeforeRender(() => {
-  if (uniforms.iTime) {
-    uniforms.iTime.value = clock.getElapsedTime()
-  }
+material.value = shaderMaterial
+
+onMounted(() => {
+  clock.start()
 })
 
-// Cleanup
+const { onBeforeRender } = useLoop()
+
+onBeforeRender(() => {
+  uniforms.iTime.value = clock.getElapsedTime()
+})
+
 onUnmounted(() => {
-  if (material.value) {
-    material.value.dispose()
-  }
+  if (shaderMaterial) shaderMaterial.dispose()
+  clock.stop()
 })
 </script>
 
 <template>
-  <TresMesh
-    :position="position"
-    :scale="scale"
-    :rotation="rotation"
-    :material="material"
-  >
+  <TresMesh ref="meshRef" :position="position" :scale="scale" :rotation="rotation" :material="material">
     <TresCylinderGeometry :args="cylinderArgs" />
   </TresMesh>
 </template>
