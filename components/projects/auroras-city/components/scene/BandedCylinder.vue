@@ -3,7 +3,7 @@ import { shallowRef, onUnmounted, onMounted, computed } from 'vue'
 import { BufferGeometry, BufferAttribute, DoubleSide, ShaderMaterial, Vector2, Clock } from 'three'
 import { useLoop } from '@tresjs/core'
 
-import sinusoidalVertexShader from '../../shaders/sinusoidalTresJS-vertex.glsl'
+import sinusoidalTresJSVertexShader from '../../shaders/sinusoidalTresJS-vertex.glsl'
 import fragmentShader from '../../shaders/fragment.glsl'
 
 interface Props {
@@ -29,12 +29,12 @@ const clock = new Clock()
 const currentRotation = shallowRef<[number, number, number]>([0, 0, 0])
 
 const uniforms = {
-  iResolution: { value: new Vector2(100, 100) },
+  iResolution: { value: new Vector2(400, 400) },
   iTime: { value: 0 },
 }
 
 const shaderMaterial = new ShaderMaterial({
-  vertexShader: sinusoidalVertexShader,
+  vertexShader: sinusoidalTresJSVertexShader,
   fragmentShader: fragmentShader,
   uniforms,
   side: DoubleSide,

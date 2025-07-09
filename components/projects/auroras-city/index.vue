@@ -98,7 +98,7 @@ function handleToggleGrid() {
       <DynamicLights :position="[0, -2.5, 0]" :light-count="3" :light-intensity="0.8" :light-distance="5"
         :light-function="'sinusoidalLightFn_TresJS2'" />
 
-      <ConcentricBase :position="[0, -2, 0]" :scale="[1.5, 1.0, 1.5]" :rotation-speed="0.1" />
+      <ConcentricBase :position="[0, -2, 0]" :scale="[1.5, 1.0, 1.5]" :rotation-speed="0.1"/>
 
       <Stars />
 

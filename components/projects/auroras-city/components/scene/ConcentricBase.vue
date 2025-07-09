@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { shallowRef, onUnmounted, onMounted } from 'vue'
-import { BufferGeometry, BufferAttribute, MeshStandardMaterial } from 'three'
+import { BufferGeometry, BufferAttribute, DoubleSide, ShaderMaterial, Vector2, Clock } from 'three'
 import { useLoop } from '@tresjs/core'
+
+import sinusoidalTresJS2VertexShader from '../../shaders/sinusoidalTresJS2-vertex.glsl'
+import fragmentShader from '../../shaders/fragment.glsl'
+
 
 interface Props {
   position?: [number, number, number]
   scale?: [number, number, number]
   rotationSpeed?: number
   baseArgs?: [number[], number[]] // radii, heights
-  material?: MeshStandardMaterial
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -16,12 +19,30 @@ const props = withDefaults(defineProps<Props>(), {
   scale: () => [1, 1, 1],
   rotationSpeed: 0,
   baseArgs: () => [[1.5, 3.0, 4.8], [0.25, 1.0, 1.5]], // [inner radius, middle radius, outer radius], [inner height, middle height, outer height]
-  material: () => new MeshStandardMaterial({ color: 0x777777, roughness: 0.3, metalness: 0.2, wireframe: false })
 })
 
+const material = shallowRef()
 const meshRef = shallowRef()
 const geometry = shallowRef()
 const currentRotation = shallowRef<[number, number, number]>([0, 0, 0])
+
+const clock = new Clock()
+
+const uniforms = {
+  iResolution: { value: new Vector2(400, 400) },
+  iTime: { value: 0 },
+}
+
+const shaderMaterial = new ShaderMaterial({
+  vertexShader: sinusoidalTresJS2VertexShader,
+  fragmentShader: fragmentShader,
+  uniforms,
+  side: DoubleSide,
+  transparent: true,
+  wireframe: false,
+})
+
+material.value = shaderMaterial
 
 function createConcentricBase(radii: number[], heights: number[]) {
   const geo = new BufferGeometry()
@@ -171,6 +192,7 @@ function createConcentricBase(radii: number[], heights: number[]) {
 }
 
 onMounted(() => {
+  clock.start()
   const [radii, heights] = props.baseArgs
   geometry.value = createConcentricBase(radii, heights)
 })
@@ -178,6 +200,9 @@ onMounted(() => {
 const { onBeforeRender } = useLoop()
 
 onBeforeRender(() => {
+  const elapsed = clock.getElapsedTime()
+  uniforms.iTime.value = elapsed
+
   if (props.rotationSpeed !== 0) {
     const time = Date.now() * 0.001
     currentRotation.value = [0, time * props.rotationSpeed, 0]
@@ -185,19 +210,13 @@ onBeforeRender(() => {
 })
 
 onUnmounted(() => {
+  if (shaderMaterial) shaderMaterial.dispose()
   if (geometry.value) geometry.value.dispose()
-  if (props.material) props.material.dispose()
+  clock.stop()
 })
 </script>
 
 <template>
-  <TresMesh 
-    v-if="geometry" 
-    ref="meshRef" 
-    :position="position" 
-    :scale="scale" 
-    :rotation="currentRotation"
-    :material="material" 
-    :geometry="geometry" 
-  />
+  <TresMesh v-if="geometry" ref="meshRef" :position="position" :scale="scale" :rotation="currentRotation"
+    :material="material" :geometry="geometry" />
 </template>
