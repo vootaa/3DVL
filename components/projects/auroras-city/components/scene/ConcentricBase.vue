@@ -6,7 +6,6 @@ import { useLoop } from '@tresjs/core'
 import sinusoidalTresJS2VertexShader from '../../shaders/sinusoidalTresJS2-vertex.glsl'
 import fragmentShader from '../../shaders/fragment.glsl'
 
-
 interface Props {
   position?: [number, number, number]
   scale?: [number, number, number]
@@ -19,7 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
   position: () => [0, 0, 0],
   scale: () => [1, 1, 1],
   rotationSpeed: 0,
-  baseArgs: () => [[1.5, 3.0, 4.8], 0.8], // [inner radius, middle radius, outer radius], sink depth
+  baseArgs: () => [[1.5, 3.0, 4.8], 0.6], // [inner radius, middle radius, outer radius], sink depth
   outerHeight: 2.0 // outer ring height
 })
 

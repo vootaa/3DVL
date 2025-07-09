@@ -12,9 +12,9 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  lightCount: 3,
-  lightIntensity: 2,
-  lightDistance: 5,
+  lightCount: 4,
+  lightIntensity: 1.5,
+  lightDistance: 6,
   position: () => [0, 0, 0] as [number, number, number],
   lightFunction: 'sinusoidalLightFn_TresJS'
 })
@@ -40,9 +40,16 @@ function sinusoidalLightFn_TresJS(light: PointLight, uv: Vector2, iTime: number)
 }
 
 function sinusoidalLightFn_TresJS2(light: PointLight, uv: Vector2, iTime: number) {
-  color.g = (1.0 - Math.sqrt(Math.abs(Math.cos(uv.y + iTime * 0.1)))) ** (Math.sin(iTime) + 2.0)
-  color.b = (1.0 - Math.sin(uv.y + iTime)) ** (Math.cos(iTime) + 2.0)
-  color.r = Math.sin(iTime + uv.y + Math.sin(uv.y + iTime))
+  // Convert to radial coordinates - consistent with shader
+  const center = new Vector2(0.5, 0.5)
+  const pos = uv.clone().sub(center)
+  const radius = pos.length()
+  const angle = Math.atan2(pos.y, pos.x)
+
+  // Same calculation logic as in the shader
+  color.g = Math.pow(1.0 - Math.sqrt(Math.abs(Math.cos(radius * 6.0 + angle + iTime * 0.1))), Math.sin(iTime) + 2.0)
+  color.b = Math.pow(1.0 - Math.sin(radius * 4.0 + iTime), Math.cos(iTime) + 2.0)
+  color.r = Math.sin(iTime + angle + Math.sin(radius * 3.0 + iTime))
   light.color.lerp(color, 0.1)
 }
 
@@ -63,16 +70,21 @@ onBeforeRender(() => {
   const elapsed = clock.getElapsedTime()
 
   lights.value.forEach((light, index) => {
-    const angle = (index / props.lightCount) * Math.PI * 2 + elapsed * 0.25 // Adjust speed of rotation
+    // Circular orbit motion
+    const baseAngle = (index / props.lightCount) * Math.PI * 2
+    const orbitAngle = baseAngle + elapsed * 0.3
+    const orbitRadius = 2.0 + Math.sin(elapsed * 0.5 + index) * 0.5
+
     light.position.set(
-      props.position[0] + Math.cos(angle) * 0.5, // Horizontal oscillation
-      props.position[1] + Math.sin(elapsed * 0.75 + index) * 2.5, // Vertical oscillation
-      props.position[2] + Math.sin(angle) * 0.5 // Depth oscillation
+      props.position[0] + Math.cos(orbitAngle) * orbitRadius,
+      props.position[1] + Math.sin(elapsed * 0.8 + index) * 1.5 + 2.0, // Vertical oscillation
+      props.position[2] + Math.sin(orbitAngle) * orbitRadius
     )
 
+    // Radial UV coordinates
     const uv = new Vector2(
-      0.5 + Math.cos(angle) * 0.35,
-      0.5 + Math.sin(angle) * 0.35
+      0.5 + Math.cos(orbitAngle) * 0.4,
+      0.5 + Math.sin(orbitAngle) * 0.4
     )
 
     if (props.lightFunction === 'sinusoidalLightFn_TresJS2') {

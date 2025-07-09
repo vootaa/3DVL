@@ -81,7 +81,7 @@ function handleToggleGrid() {
       <TresAmbientLight :intensity="0.8" color="#ffffff" />
 
       <!-- Dynamic lighting -->
-      <DynamicLights :position="[0, 2.5, 0]" :light-count="4" :light-intensity="0.8" :light-distance="8" />
+      <DynamicLights :position="[0, 2.5, 0]" :light-count="5" :light-intensity="0.8" :light-distance="8" />
 
       <!-- BandedCylinder shader effect -->
       <BandedCylinder :position="[0.2, 2.5, -0.2]" :rotation-speed="-0.45"
@@ -95,7 +95,7 @@ function handleToggleGrid() {
 
 
       <!-- Dynamic lighting -->
-      <DynamicLights :position="[0, -3.8, 0]" :light-count="3" :light-intensity="0.8" :light-distance="5"
+      <DynamicLights :position="[0, -2, 0]" :light-count="4" :light-intensity="0.8" :light-distance="5"
         :light-function="'sinusoidalLightFn_TresJS2'" />
 
       <ConcentricBase :position="[0, -2, 0]" :scale="[1.5, 1.0, 1.5]" :rotation-speed="0.1"/>
