@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { BasicShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
+import { BasicShadowMap, SRGBColorSpace, ACESFilmicToneMapping, MeshStandardMaterial } from 'three'
 import { ref, provide, onMounted, nextTick } from 'vue'
 
 import BandedCylinder from './components/scene/BandedCylinder.vue'
+import ConcentricBase from './components/scene/ConcentricBase.vue'
 import DynamicLights from './components/scene/DynamicLights.vue'
 import PostEffects from './components/scene/PostEffects.vue'
 
@@ -13,7 +14,7 @@ import RendererStatsCollector from '../../utils/RendererStatsCollector.vue'
 import { CameraController } from '../../utils/camera-controller'
 
 const gl = {
-  clearColor: '#070707',
+  clearColor: '#171717',
   antiAlias: "true",
   shadows: true,
   alpha: true,
@@ -28,6 +29,10 @@ const cameraRef = ref()
 const orbitControlsRef = ref()
 const showGridAfterCameraMove = ref(false)
 const gridOn = ref(false)
+
+const spotTarget = ref()
+
+const concentricBasePosition = ref<[number, number, number]>([0, -2, 0])
 
 let cameraController: CameraController
 
@@ -70,14 +75,31 @@ function handleToggleGrid() {
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
       <TresPerspectiveCamera ref="cameraRef" :position="[5, 3, 5]" :fov="75" :near="0.1" :far="1000" />
-      <TresAmbientLight :intensity="0.25" color="#ffffff" />
+      <TresAmbientLight :intensity="0.8" color="#ffffff" />
+
+      <TresSpotLight :position="[0, 8, 0]" :target="spotTarget" :intensity="2.0" color="#ffffff" :angle="Math.PI / 3"
+        :penumbra="0.1" :distance="15" :decay="0.5" cast-shadow />
+      <TresObject3D ref="spotTarget" :position="concentricBasePosition" />
+      :penumbra="0.1" :distance="15" :decay="0.5" cast-shadow />
+
+      <!-- Additional top light for better visibility -->
+      <TresPointLight :position="[0, 5, 0]" :intensity="1.5" color="#ffffff" :distance="10" :decay="0.3" />
 
       <!-- Dynamic lighting -->
-      <DynamicLights :position="[0, 0.5, 0]" :light-count="4" :light-intensity="0.8" :light-distance="8" />
+      <DynamicLights :position="[0, 2.5, 0]" :light-count="4" :light-intensity="0.8" :light-distance="8" />
 
       <!-- BandedCylinder shader effect -->
-      <BandedCylinder :position="[0.2, 0.5, -0.2]" :rotation-speed="-0.45" :cylinder-args="[0.5, 4.5, 48, 0.45, 0.15]" />
-      <BandedCylinder :position="[-0.2, 0.5, 0.2]" :rotation-speed="0.45" :cylinder-args="[0.5, 4.5, 48, 0.45, -0.15]" />
+      <BandedCylinder :position="[0.2, 2.5, -0.2]" :rotation-speed="-0.45"
+        :cylinder-args="[0.5, 4.5, 48, 0.45, 0.15]" />
+      <BandedCylinder :position="[-0.2, 2.5, 0.2]" :rotation-speed="0.45"
+        :cylinder-args="[0.5, 4.5, 48, 0.45, -0.15]" />
+
+      <ConcentricBase :position="concentricBasePosition" :scale="[0.6, 0.6, 0.6]" :rotation-speed="0.1" :materials="[
+        new MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3, metalness: 0.1 }),
+        new MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.4, metalness: 0.2 }),
+        new MeshStandardMaterial({ color: 0x888888, roughness: 0.5, metalness: 0.3 }),
+        new MeshStandardMaterial({ color: 0x999999, roughness: 0.2, metalness: 0.4 })
+      ]" />
 
       <!-- Post-processing effects -->
       <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />
