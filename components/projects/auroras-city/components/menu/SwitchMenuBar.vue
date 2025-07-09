@@ -5,6 +5,12 @@ const props = defineProps<{
   gridOn: boolean
   disabled?: boolean
   onToggleGrid: () => void
+  bandedCylinderOn: boolean
+  onToggleBandedCylinder: () => void
+  chainwebSimpleOn: boolean
+  onToggleChainwebSimple: () => void
+  concentricBaseOn: boolean
+  onToggleConcentricBase: () => void
 }>()
 
 const menuOpen = ref(false)
@@ -51,20 +57,28 @@ onUnmounted(() => {
         <span class="menu-text">{{ isCompactMode ? 'Grid' : 'Grid Helper' }}</span>
       </div>
       <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
-        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleStellarCore()">
+        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleBandedCylinder()">
         <span class="menu-status">
-          <i v-if="props.stellarCoreOn" class="i-carbon-checkmark-filled"></i>
+          <i v-if="props.bandedCylinderOn" class="i-carbon-checkmark-filled"></i>
           <i v-else class="i-carbon-close"></i>
         </span>
-        <span class="menu-text">{{ isCompactMode ? 'Core' : 'Stellar Core' }}</span>
+        <span class="menu-text">{{ isCompactMode ? 'Auroras' : 'Auroras Core' }}</span>
       </div>
       <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
-        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleOrbitalSystem()">
+        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleChainwebSimple()">
         <span class="menu-status">
-          <i v-if="props.orbitalSystemOn" class="i-carbon-checkmark-filled"></i>
+          <i v-if="props.chainwebSimpleOn" class="i-carbon-checkmark-filled"></i>
           <i v-else class="i-carbon-close"></i>
         </span>
-        <span class="menu-text">{{ isCompactMode ? 'Orbit' : 'Orbital System' }}</span>
+        <span class="menu-text">{{ isCompactMode ? 'Chainweb' : 'Chainweb 3D' }}</span>
+      </div>
+      <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
+        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleConcentricBase()">
+        <span class="menu-status">
+          <i v-if="props.concentricBaseOn" class="i-carbon-checkmark-filled"></i>
+          <i v-else class="i-carbon-close"></i>
+        </span>
+        <span class="menu-text">{{ isCompactMode ? 'Base' : 'Auroras Base' }}</span>
       </div>
     </div>
   </div>

@@ -35,6 +35,9 @@ const cameraRef = ref()
 const orbitControlsRef = ref()
 const showGridAfterCameraMove = ref(false)
 const gridOn = ref(false)
+const bandedCylinderOn = ref(true)
+const chainwebSimpleOn = ref(true)
+const concentricBaseOn = ref(true)
 
 let cameraController: CameraController
 
@@ -71,6 +74,18 @@ function handleToggleGrid() {
   }
 }
 
+function handleToggleBandedCylinder() {
+  bandedCylinderOn.value = !bandedCylinderOn.value
+}
+
+function handleToggleChainwebSimple() {
+  chainwebSimpleOn.value = !chainwebSimpleOn.value
+}
+
+function handleToggleConcentricBase() {
+  concentricBaseOn.value = !concentricBaseOn.value
+}
+
 </script>
 
 <template>
@@ -81,12 +96,14 @@ function handleToggleGrid() {
       <TresAmbientLight :intensity="0.3" color="#ffffff" />
 
       <!-- BandedCylinder shader effect -->
-      <BandedCylinder :position="[0.2, 7, -0.2]" :rotation-speed="-0.45" :cylinder-args="[0.5, 4.5, 48, 0.45, 0.15]" />
-      <BandedCylinder :position="[-0.2, 7, 0.2]" :rotation-speed="0.45" :cylinder-args="[0.5, 4.5, 48, 0.45, -0.15]" />
+      <BandedCylinder v-if="bandedCylinderOn" :position="[0.2, 7, -0.2]" :rotation-speed="-0.45"
+        :cylinder-args="[0.5, 4.5, 48, 0.45, 0.15]" />
+      <BandedCylinder v-if="bandedCylinderOn" :position="[-0.2, 7, 0.2]" :rotation-speed="0.45"
+        :cylinder-args="[0.5, 4.5, 48, 0.45, -0.15]" />
 
-      <ChainwebSimple :position="[0, -2.5, 0]" :layer-count="15" :height-spacing="0.45" />
+      <ChainwebSimple v-if="chainwebSimpleOn" :position="[0, -2.5, 0]" :layer-count="15" :height-spacing="0.45" />
 
-      <ConcentricBase :position="[0, -5, 0]" :scale="[1.0, 1.0, 1.0]" :rotation-speed="0.1" />
+      <ConcentricBase v-if="concentricBaseOn" :position="[0, -5, 0]" :scale="[1.0, 1.0, 1.0]" :rotation-speed="0.1" />
 
       <Stars />
       <PetersenGraphPlane :position="[0, 20, -20]" :rotation="[0, 0, 0]" :scale="1" />
@@ -103,7 +120,10 @@ function handleToggleGrid() {
       <TresAxesHelper v-if="gridOn" :args="[7.5]" :position="[0, 0, 0]" />
     </TresCanvas>
 
-    <SwitchMenuBar :grid-on="gridOn" :on-toggle-grid="handleToggleGrid" :disabled="false" />
+    <SwitchMenuBar :grid-on="gridOn" :on-toggle-grid="handleToggleGrid" :banded-cylinder-on="bandedCylinderOn"
+      :on-toggle-banded-cylinder="handleToggleBandedCylinder" :chainweb-simple-on="chainwebSimpleOn"
+      :on-toggle-chainweb-simple="handleToggleChainwebSimple" :concentric-base-on="concentricBaseOn"
+      :on-toggle-concentric-base="handleToggleConcentricBase" :disabled="false" />
     <ToolsMenuBar />
   </div>
 </template>
