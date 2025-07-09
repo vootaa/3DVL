@@ -28,9 +28,6 @@ const cameraRef = ref()
 const orbitControlsRef = ref()
 const showGridAfterCameraMove = ref(false)
 const gridOn = ref(false)
-const showShader = ref(false)
-
-
 
 let cameraController: CameraController
 
@@ -66,11 +63,6 @@ function handleToggleGrid() {
     showGridAfterCameraMove.value = false
   }
 }
-
-function handleToggleShader() {
-  showShader.value = !showShader.value
-}
-
 </script>
 
 <template>
@@ -81,10 +73,10 @@ function handleToggleShader() {
       <TresAmbientLight :intensity="0.3" color="#ffffff" />
 
       <!-- Dynamic lighting -->
-      <DynamicLights :position="[0, 0, 0]" :light-count="4" :light-intensity="1.5" :light-distance="8" />
+      <DynamicLights :position="[0.5, 0.5, 0.5]" :light-count="5" :light-intensity="1.2" :light-distance="10" />
 
       <!-- Main shader effect -->
-      <ShaderEffect :position="[0, 0, 0]" :scale="[1.3,1.5,1.2]" :cylinder-args="[1, 1, 2, 32]" />
+      <ShaderEffect :position="[0, 0, 0]"/>
 
       <!-- Post-processing effects -->
       <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />

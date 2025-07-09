@@ -56,13 +56,13 @@ onBeforeRender(() => {
     const angle = (index / props.lightCount) * Math.PI * 2 + elapsed * 0.5
     light.position.set(
       props.position[0] + Math.cos(angle) * 4,
-      props.position[1] + 2 + Math.sin(elapsed * 2 + index) * 1,
+      props.position[1] + Math.sin(elapsed * 4 + index) * 1.2,
       props.position[2] + Math.sin(angle) * 4
     )
     
     const uv = new Vector2(
-      0.5 + Math.cos(angle) * 0.3,
-      0.5 + Math.sin(angle) * 0.3
+      0.5 + Math.cos(angle) * 0.35,
+      0.5 + Math.sin(angle) * 0.35
     )
 
     sinusoidalLightFn(light, uv, elapsed)
