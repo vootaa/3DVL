@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
   position: () => [0, 0, 0],
   layerCount: 20,
   layerSpacing: 0.5,
-  radiusScale: 25,
+  radiusScale: 4,
   nodeSize: 0.1,
   ringThickness: 0.05,
   nodeShape: 'cube',
