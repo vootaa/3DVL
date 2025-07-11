@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { Vector3 } from 'three'
+import { Vector3, BufferAttribute } from 'three'
 import { useRenderLoop } from '@tresjs/core'
 
 import { tetherConfig, tetherConnections } from '../../configs/tether-config'
 import { getCurrentLODLevel } from '../../configs/lodlevel-config'
+import { Logger } from '../../../../utils/logger'
 
 import tetherVertexShader from '../../shaders/tether-vertex.glsl'
 import tetherFragmentShader from '../../shaders/tether-fragment.glsl'
@@ -48,11 +49,11 @@ const tetherAttributes = computed(() => {
   try {
     let tetherIndex = 0
 
-    // process forward connections
+    // Process forward connections
     tetherConnections.forward.forEach((connection) => {
       if (connection[0] >= props.stellarCorePositions.length ||
         connection[1] >= props.stellarCorePositions.length) {
-        console.warn('Invalid connection indices:', connection)
+        Logger.warn('TETHERS', 'Invalid connection indices', connection)
         return
       }
 
@@ -60,7 +61,7 @@ const tetherAttributes = computed(() => {
       const toPos = props.stellarCorePositions[connection[1]] || new Vector3()
 
       if (!fromPos || !toPos) {
-        console.warn('Invalid positions for connection:', connection)
+        Logger.warn('TETHERS', 'Invalid positions for connection', connection)
         return
       }
 
@@ -80,7 +81,7 @@ const tetherAttributes = computed(() => {
           .add(toPos.clone().multiplyScalar(t * t))
 
         if (isNaN(pos.x) || isNaN(pos.y) || isNaN(pos.z)) {
-          console.warn('Invalid position calculated:', pos)
+          Logger.warn('TETHERS', 'Invalid position calculated', pos)
           continue
         }
 
@@ -111,7 +112,7 @@ const tetherAttributes = computed(() => {
       tetherIndex++
     })
 
-    // process reverse connections
+    // Process reverse connections
     tetherConnections.reverse.forEach((connection) => {
       if (connection[0] >= props.stellarCorePositions.length ||
         connection[1] >= props.stellarCorePositions.length) {
@@ -177,25 +178,26 @@ const tetherAttributes = computed(() => {
       tetherIds.length !== expectedLength ||
       archParams.length !== expectedLength * 2 ||
       chaoticPositions.length !== expectedLength * 3) {
-      console.error('Array length mismatch in tether attributes')
+      Logger.error('TETHERS', 'Array length mismatch in tether attributes')
       return null
     }
 
     if (positions.length === 0) {
-      console.warn('No tether particles generated')
+      Logger.warn('TETHERS', 'No tether particles generated')
       return null
     }
 
+    // Return BufferAttribute objects instead of plain arrays
     return {
-      position: positions,
-      color: colors,
-      alpha: alphas,
-      tetherId: tetherIds,
-      archParams: archParams,
-      chaoticPosition: chaoticPositions
+      position: new BufferAttribute(new Float32Array(positions), 3),
+      color: new BufferAttribute(new Float32Array(colors), 3),
+      alpha: new BufferAttribute(new Float32Array(alphas), 1),
+      tetherId: new BufferAttribute(new Float32Array(tetherIds), 1),
+      archParams: new BufferAttribute(new Float32Array(archParams), 2),
+      chaoticPosition: new BufferAttribute(new Float32Array(chaoticPositions), 3)
     }
   } catch (error) {
-    console.error('Error in tetherAttributes computation:', error)
+    Logger.error('TETHERS', 'Error in tetherAttributes computation', error)
     return null
   }
 })
@@ -219,7 +221,7 @@ const tetherShader = computed(() => {
       }
     }
   } catch (error) {
-    console.error('Error creating tether shader:', error)
+    Logger.error('TETHERS', 'Error creating tether shader', error)
     return null
   }
 })
@@ -232,7 +234,7 @@ onLoop(() => {
     const material = tetherMaterialRef.value
 
     if (!material.uniforms) {
-      console.warn('Material uniforms not available')
+      Logger.throttle('TETHERS', 'Material uniforms not available')
       return
     }
 
@@ -264,44 +266,45 @@ onLoop(() => {
       )
     }
   } catch (error) {
-    console.error('Error in Tethers render loop:', error)
+    Logger.error('TETHERS', 'Error in Tethers render loop', error)
   }
 })
 
-watch(() => props.stellarCorePositions, (newPositions, oldPositions) => {
+// Watch stellar core positions with throttled logging
+watch(() => props.stellarCorePositions, (newPositions, _oldPositions) => {
   try {
     if (!newPositions || newPositions.length === 0) {
-      console.log('Waiting for stellar core positions...')
+      Logger.throttle('TETHERS_WATCH', 'Waiting for stellar core positions...')
       return
     }
 
     if (newPositions.length !== 20) {
-      console.warn(`Expected 20 stellar positions, got ${newPositions.length}`)
+      Logger.throttle('TETHERS_WATCH', `Expected 20 stellar positions, got ${newPositions.length}`)
       return
     }
 
     // tetherAttributes is a computed property, so it will automatically update
-    console.log('Stellar core positions updated, recalculating tethers')
+    Logger.throttle('TETHERS_WATCH', 'Stellar core positions updated, recalculating tethers')
 
   } catch (error) {
-    console.error('Error watching stellar core positions:', error)
+    Logger.error('TETHERS', 'Error watching stellar core positions', error)
   }
 }, { deep: true, immediate: true })
 
 onMounted(() => {
   try {
-    console.log('Tethers component mounted')
-    console.log('Stellar core positions:', props.stellarCorePositions.length)
-    console.log('Tether connections forward:', tetherConnections.forward.length)
-    console.log('Tether connections reverse:', tetherConnections.reverse.length)
+    Logger.log('TETHERS', 'Tethers component mounted')
+    Logger.log('TETHERS', 'Stellar core positions', props.stellarCorePositions.length)
+    Logger.log('TETHERS', 'Tether connections forward', tetherConnections.forward.length)
+    Logger.log('TETHERS', 'Tether connections reverse', tetherConnections.reverse.length)
   } catch (error) {
-    console.error('Error in Tethers onMounted:', error)
+    Logger.error('TETHERS', 'Error in Tethers onMounted', error)
   }
 })
 </script>
 
 <template>
-  <TresGroup v-if="enabled && tetherAttributes && tetherAttributes.position && tetherAttributes.position.length > 0">
+  <TresGroup v-if="enabled && tetherAttributes && tetherAttributes.position && tetherAttributes.position.array.length > 0">
     <TresPoints ref="tetherPointsRef">
       <TresBufferGeometry ref="tetherGeometryRef" :attributes="tetherAttributes" />
       <TresShaderMaterial ref="tetherMaterialRef" v-bind="tetherShader" />
