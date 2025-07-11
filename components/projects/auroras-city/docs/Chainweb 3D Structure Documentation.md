@@ -1,15 +1,23 @@
-Chainweb 3D Structure Documentation
-Overview
-The Chainweb 3D structure is a multi-layered blockchain network visualization that represents the Kadena Chainweb architecture. It consists of multiple identical layers stacked vertically, where each layer contains 20 nodes arranged in three concentric rings with specific connectivity patterns.
+# Chainweb 3D Structure Documentation
 
-Layer Structure
-Node Distribution per Layer
-Total Nodes: 20 nodes per layer
-Inner Ring: 5 nodes (chain IDs 5-9) at radius 0.3
-Middle Ring: 5 nodes (chain IDs 0-4) at radius 0.6
-Outer Ring: 10 nodes (chain IDs 10-19) at radius 0.96
+## Overview
 
-Ring Specifications
+The Chainweb 3D structure is a multi-layered blockchain network visualization representing the Kadena Chainweb architecture. Each layer contains 20 nodes arranged in three concentric rings, stacked vertically, with specific connectivity patterns.
+
+---
+
+## Layer Structure
+
+- **Total Nodes per Layer:** 20
+- **Inner Ring:** 5 nodes (chain IDs 5–9), radius: 0.3
+- **Middle Ring:** 5 nodes (chain IDs 0–4), radius: 0.6
+- **Outer Ring:** 10 nodes (chain IDs 10–19), radius: 0.96
+
+---
+
+## Ring Specifications
+
+```js
 const RING_CONFIG = {
   inner: {
     radius: 0.3,
@@ -30,10 +38,15 @@ const RING_CONFIG = {
     thickness: 0.005
   }
 }
+```
 
-Node Positioning (Polar Coordinates)
+---
+
+## Node Positioning (Polar Coordinates)
+
 Nodes are positioned using polar coordinates with predefined angles:
 
+```js
 const ANGLES = [
   // Middle ring (0-4): 5-fold symmetry
   5.0265, 0.0, 1.2566, 2.5133, 3.7699,
@@ -42,10 +55,17 @@ const ANGLES = [
   // Outer ring (10-19): 10 nodes with varied spacing
   4.8521, 0.1745, 1.0821, 2.6878, 3.5954, 5.2009, 6.1087, 1.4312, 2.3387, 3.9444
 ]
+```
 
-Connection Patterns
-Cross-Chain Connections (Within Layer)
+---
+
+## Connection Patterns
+
+### Cross-Chain Connections (Within Layer)
+
 Each layer has 36 bidirectional cross-chain connections:
+
+```js
 const CONNECTIONS = [
   // Middle to Inner (5 connections)
   [0, 5], [1, 6], [2, 7], [3, 8], [4, 9],
@@ -60,7 +80,15 @@ const CONNECTIONS = [
   // Outer Circular Group 2 (5 connections)
   [15, 16], [16, 17], [17, 18], [18, 19], [19, 10]
 ]
+```
 
-Inter-Layer Connections
-Same-Chain Connections: 20 vertical connections per layer pair (chain ID i in layer n connects to chain ID i in layer n+1)
-Cross-Chain Connections: 72 diagonal connections per layer pair (36 forward + 36 reverse based on CONNECTIONS matrix)
+---
+
+### Inter-Layer Connections
+
+- **Same-Chain Connections:**  
+  20 vertical connections per layer pair (chain ID *i* in layer *n* connects to chain ID *i* in layer *n+1*).
+
+- **Cross-Chain Connections:**  
+  72 diagonal connections per layer pair (36 forward + 36 reverse, based on the `CONNECTIONS` matrix).
+
