@@ -1,8 +1,6 @@
 # Petersen Graph Architectural Design Technical Documentation
 
-## 1. Basic Data Structures
-
-### 1.1 Polar Coordinate Node Configuration
+## Polar Coordinate Node Configuration
 
 **Precise polar coordinate data:**
 
@@ -33,9 +31,10 @@
     { id: 17, r: 4.8, theta: 82.0, cicle: 'outer', type: 'blue' },
     { id: 18, r: 4.8, theta: 134.0, cicle: 'outer', type: 'blue' },
     { id: 19, r: 4.8, theta: 226.0, cicle: 'outer', type: 'blue' }
-  ],
+    ];
 
-## 2. Connection Patterns
+## Connection Patterns
+
     CONNECTIONS : [
     // Middle to Inner (5 connections)
     [0, 5], [1, 6], [2, 7], [3, 8], [4, 9],
@@ -49,4 +48,4 @@
     [10, 11], [11, 12], [12, 13], [13, 14], [14, 15],
     // Outer Circular Group 2 (5 connections)
     [15, 16], [16, 17], [17, 18], [18, 19], [19, 10]
-    ]
+    ];
