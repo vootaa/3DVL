@@ -85,27 +85,3 @@ export const tetherConnections = {
     [16, 15], [17, 16], [18, 17], [19, 18], [10, 19]
   ]
 }
-
-// LOD configuration for performance optimization
-export const tetherLOD = {
-  high: {
-    particlesPerTether: 32,
-    particleSize: 8.0,
-    maxDistance: 1000
-  },
-  medium: {
-    particlesPerTether: 16,
-    particleSize: 6.0,
-    maxDistance: 2000
-  },
-  low: {
-    particlesPerTether: 8,
-    particleSize: 4.0,
-    maxDistance: 5000
-  },
-  minimal: {
-    particlesPerTether: 4,
-    particleSize: 2.0,
-    maxDistance: Infinity
-  }
-}

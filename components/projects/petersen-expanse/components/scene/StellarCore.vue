@@ -1,12 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, toRef } from 'vue'
-import {
-  AdditiveBlending,
-  ShaderMaterial,
-  BufferGeometry,
-  Float32BufferAttribute,
-  Vector3,
-} from 'three'
+import { ref, onMounted, toRef } from 'vue'
+import { AdditiveBlending, ShaderMaterial, BufferGeometry, Float32BufferAttribute, Vector3 } from 'three'
 
 import { orbitalConfig } from '../../configs/orbital-config'
 import { starClusterConfig } from '../../configs/star-cluster-config'
@@ -30,6 +24,11 @@ const props = withDefaults(defineProps<Props>(), {
 
 const galaxyCenter = toRef(props, 'galaxyCenter')
 
+const currentPositions = ref<Vector3[]>([])
+function getStellarPositions(): Vector3[] {
+  return currentPositions.value
+}
+
 const { stars } = starClusterConfig
 const stellarCoreColors = starClusterConfig.visual.colors
 const stellarCoreSizes = {
@@ -42,8 +41,6 @@ type StellarType = 'green-star' | 'golden-star' | 'blue-star'
 const stellarCoreGeometry = ref<BufferGeometry>()
 const stellarCoreMaterial = ref<ShaderMaterial>()
 const stellarCoreClusterRef = ref()
-
-let animationId: number | undefined
 
 function initStellarCore() {
   const geometry = new BufferGeometry()
@@ -119,42 +116,65 @@ function initStellarCore() {
   stellarCoreMaterial.value = material
 }
 
-function animate() {
-  if (!props.enabled || !stellarCoreMaterial.value) {
-    animationId = requestAnimationFrame(animate)
-    return
-  }
+function updateCurrentPositions() {
+  const positions: Vector3[] = []
+  stars.forEach((star, index) => {
+    const smoothProgress = Math.min(1, Math.max(0, props.evolutionProgress))
+
+    const chaoticPos = new Vector3(
+      chaoticPositions[index * 3],
+      chaoticPositions[index * 3 + 1],
+      chaoticPositions[index * 3 + 2]
+    )
+
+    const currentAngle = (star.theta * Math.PI / 180) + props.globalTime * orbitalConfig.rotationSpeed
+    const orbitalPos = new Vector3(
+      star.r * Math.cos(currentAngle),
+      0,
+      star.r * Math.sin(currentAngle)
+    )
+
+    const currentPos = chaoticPos.clone().lerp(orbitalPos, smoothProgress)
+
+    // galaxy center offset
+    if (galaxyCenter.value) {
+      currentPos.add(galaxyCenter.value)
+    }
+
+    positions.push(currentPos)
+  })
+
+  currentPositions.value = positions
+}
+
+
+const { onLoop } = useRenderLoop()
+onLoop(() => {
+  if (!props.enabled || !stellarCoreMaterial.value) return
 
   stellarCoreMaterial.value.uniforms.time.value = props.globalTime
   stellarCoreMaterial.value.uniforms.globalTime.value = props.globalTime
   stellarCoreMaterial.value.uniforms.evolutionProgress.value = props.evolutionProgress
 
+  updateCurrentPositions()
+
   if (stellarCoreClusterRef.value && galaxyCenter.value) {
     stellarCoreClusterRef.value.position.set(galaxyCenter.value.x, galaxyCenter.value.y, galaxyCenter.value.z)
   }
-
-  animationId = requestAnimationFrame(animate)
-}
+})
 
 onMounted(() => {
   initStellarCore()
-  animate()
 })
 
-onUnmounted(() => {
-  if (animationId) {
-    cancelAnimationFrame(animationId)
-  }
+defineExpose({
+  getStellarPositions
 })
-
 </script>
 
 <template>
   <TresGroup v-if="enabled" ref="stellarCoreClusterRef">
-    <TresPoints
-      v-if="stellarCoreGeometry && stellarCoreMaterial"
-      :geometry="stellarCoreGeometry"
-      :material="stellarCoreMaterial"
-    />
+    <TresPoints v-if="stellarCoreGeometry && stellarCoreMaterial" :geometry="stellarCoreGeometry"
+      :material="stellarCoreMaterial" />
   </TresGroup>
 </template>

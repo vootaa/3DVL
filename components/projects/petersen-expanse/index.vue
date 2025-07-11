@@ -30,12 +30,24 @@ const gl = {
 }
 
 const stellarCoreRef = ref()
+const stellarCorePositions = ref<Vector3[]>([])
+
+function updateStellarCorePositions() {
+  if (stellarCoreRef.value?.getStellarPositions) {
+    stellarCorePositions.value = stellarCoreRef.value.getStellarPositions()
+  }
+}
+
+const { onLoop } = useRenderLoop()
+onLoop(() => {
+  updateStellarCorePositions()
+})
+
 const cameraRef = ref()
 const orbitControlsRef = ref()
 const evolutionAnimatorRef = ref()
 const showGridAfterCameraMove = ref(false)
 const gridOn = ref(false)
-
 
 const {
   state,
@@ -148,7 +160,8 @@ function handleEvolutionTimelineVisible(_val: boolean) {
         :evolution-progress="state.evolutionProgress" :enabled="state.orbitalSystemEnabled" />
 
       <Tethers :galaxy-center="galaxyCenter" :global-time="state.globalTime"
-        :evolution-progress="state.evolutionProgress" :enabled="state.tethersEnabled" />
+        :evolution-progress="state.evolutionProgress" :enabled="state.tethersEnabled"
+        :stellar-core-positions="stellarCorePositions" />
 
       <Stars />
 

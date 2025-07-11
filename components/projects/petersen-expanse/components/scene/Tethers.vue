@@ -3,7 +3,6 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useLoop } from '@tresjs/core'
 import { Vector3, BufferGeometry, Float32BufferAttribute, ShaderMaterial, Points, AdditiveBlending } from 'three'
 
-import { starClusterConfig } from '../../configs/star-cluster-config'
 import { tetherConfig } from '../../configs/tether-config'
 
 import tetherVertexShader from '../../shaders/tether-vertex.glsl'
@@ -13,14 +12,16 @@ interface Props {
   enabled?: boolean
   globalTime?: number
   evolutionProgress?: number
-  stellarCoreNodes?: Array<{ r: number; theta: number; id: number }>
+  galaxyCenter?: Vector3
+  stellarCorePositions?: Vector3[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
   enabled: true,
   globalTime: 0,
   evolutionProgress: 0,
-  stellarCoreNodes: () => []
+  galaxyCenter: () => new Vector3(0, 0, 0),
+  stellarCorePositions: () => []
 })
 
 // Tether geometry and material
@@ -88,22 +89,8 @@ const createTetherGeometry = () => {
   const archParams: number[] = [] // stores arch direction and progress
   
   petersenConnections.value.forEach((connection, tetherIndex) => {
-    const fromNode = starClusterConfig.stars[connection.from]
-    const toNode = starClusterConfig.stars[connection.to]
-    
-    if (!fromNode || !toNode) return
-    
-    // Convert polar coordinates (r, theta) to Cartesian coordinates (x, y, z)
-    const fromPos = new Vector3(
-      fromNode.r * Math.cos(fromNode.theta),
-      0,
-      fromNode.r * Math.sin(fromNode.theta)
-    )
-    const toPos = new Vector3(
-      toNode.r * Math.cos(toNode.theta),
-      0,
-      toNode.r * Math.sin(toNode.theta)
-    )
+    const fromPos = props.stellarCorePositions[connection.from] || new Vector3()
+    const toPos = props.stellarCorePositions[connection.to] || new Vector3()
     
     // Create arch particles between nodes
     const particleCount = tetherConfig.particlesPerTether

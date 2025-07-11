@@ -1,6 +1,7 @@
 attribute float alpha;
 attribute float tetherId;
 attribute vec2 archParams; // x: arch direction, y: progress along arch
+attribute vec3 chaoticPosition;
 
 uniform float uTime;
 uniform float uEvolutionProgress;
@@ -14,17 +15,14 @@ varying float vFlow;
 void main() {
     vColor = color;
 
-        // Evolution progress affects chaos to order transition
-    vec3 chaosOffset = vec3(sin(uTime * 2.0 + tetherId * 0.5) * (1.0 - uEvolutionProgress), cos(uTime * 1.5 + tetherId * 0.3) * (1.0 - uEvolutionProgress), sin(uTime * 1.8 + tetherId * 0.7) * (1.0 - uEvolutionProgress)) * 50.0;
+    float smoothProgress = smoothstep(0.0, 1.0, uEvolutionProgress);
 
-    vec3 finalPosition = position + chaosOffset * (1.0 - uEvolutionProgress);
+    vec3 finalPosition = mix(chaoticPosition, position, smoothProgress);
 
-        // Flowing animation along the arch
     float flowOffset = mod(uTime * uFlowSpeed + archParams.y * 6.28, 6.28);
     vFlow = sin(flowOffset) * 0.5 + 0.5;
 
-        // Alpha combines base alpha with flow effect
-    vAlpha = alpha * (0.7 + 0.3 * vFlow) * uEvolutionProgress;
+    vAlpha = alpha * (0.7 + 0.3 * vFlow) * smoothProgress;
 
     vec4 mvPosition = modelViewMatrix * vec4(finalPosition, 1.0);
     gl_Position = projectionMatrix * mvPosition;
