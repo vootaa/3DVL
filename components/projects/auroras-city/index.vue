@@ -7,7 +7,6 @@ import PetersenGraphPlane from '../echo-mission/3d/PetersenGraphPlane.vue'
 
 //import ChainwebSimple from './components/scene/ChainwebSimple.vue'
 import Chainweb3D from './components/scene/Chainweb3D.vue'
-//import ChainwebGeometry from './components/scene/ChainwebGeometry.vue'
 import BandedCylinder from './components/scene/BandedCylinder.vue'
 import ConcentricBase from './components/scene/ConcentricBase.vue'
 
@@ -38,7 +37,7 @@ const orbitControlsRef = ref()
 const showGridAfterCameraMove = ref(false)
 const gridOn = ref(false)
 const bandedCylinderOn = ref(false)
-const chainwebSimpleOn = ref(false)
+const chainwebOn = ref(false)
 const concentricBaseOn = ref(false)
 
 let cameraController: CameraController
@@ -80,8 +79,8 @@ function handleToggleBandedCylinder() {
   bandedCylinderOn.value = !bandedCylinderOn.value
 }
 
-function handleToggleChainwebSimple() {
-  chainwebSimpleOn.value = !chainwebSimpleOn.value
+function handleToggleChainweb() {
+  chainwebOn.value = !chainwebOn.value
 }
 
 function handleToggleConcentricBase() {
@@ -103,8 +102,8 @@ function handleToggleConcentricBase() {
       <BandedCylinder v-if="bandedCylinderOn" :position="[-0.2, 7, 0.2]" :rotation-speed="0.45"
         :cylinder-args="[0.5, 4.5, 48, 0.45, -0.15]" />
 
-      <!--<ChainwebSimple v-if="chainwebSimpleOn" :position="[0, -2.5, 0]" :layer-count="15" :height-spacing="0.45" />-->
-      <Chainweb3D v-if="chainwebSimpleOn" :radiusScale ="1" />
+      <!--<ChainwebSimple v-if="chainwebOn" :position="[0, -2.5, 0]" :layer-count="15" :height-spacing="0.45" />-->
+      <Chainweb3D v-if="chainwebOn" :radiusScale="1" :layer-count="5"  :rotationSpeed="0.1" />
 
       <ConcentricBase v-if="concentricBaseOn" :position="[0, -5, 0]" :scale="[1.0, 1.0, 1.0]" :rotation-speed="0.1" />
 
@@ -124,8 +123,8 @@ function handleToggleConcentricBase() {
     </TresCanvas>
 
     <SwitchMenuBar :grid-on="gridOn" :on-toggle-grid="handleToggleGrid" :banded-cylinder-on="bandedCylinderOn"
-      :on-toggle-banded-cylinder="handleToggleBandedCylinder" :chainweb-simple-on="chainwebSimpleOn"
-      :on-toggle-chainweb-simple="handleToggleChainwebSimple" :concentric-base-on="concentricBaseOn"
+      :on-toggle-banded-cylinder="handleToggleBandedCylinder" :chainweb-simple-on="chainwebOn"
+      :on-toggle-chainweb="handleToggleChainweb" :concentric-base-on="concentricBaseOn"
       :on-toggle-concentric-base="handleToggleConcentricBase" :disabled="false" />
     <ToolsMenuBar />
   </div>

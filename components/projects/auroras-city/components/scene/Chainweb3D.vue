@@ -21,7 +21,7 @@ const props = withDefaults(defineProps<Props>(), {
   radiusScale: 4,
   nodeSize: 0.1,
   ringThickness: 0.05,
-  nodeShape: 'cube',
+  nodeShape: 'sphere',
   rotationSpeed: 0,
   useShaderMaterial: false
 })

@@ -8,7 +8,7 @@ const props = defineProps<{
   bandedCylinderOn: boolean
   onToggleBandedCylinder: () => void
   chainwebSimpleOn: boolean
-  onToggleChainwebSimple: () => void
+  onToggleChainweb: () => void
   concentricBaseOn: boolean
   onToggleConcentricBase: () => void
 }>()
@@ -65,7 +65,7 @@ onUnmounted(() => {
         <span class="menu-text">{{ isCompactMode ? 'Auroras' : 'Auroras Core' }}</span>
       </div>
       <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
-        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleChainwebSimple()">
+        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleChainweb()">
         <span class="menu-status">
           <i v-if="props.chainwebSimpleOn" class="i-carbon-checkmark-filled"></i>
           <i v-else class="i-carbon-close"></i>
