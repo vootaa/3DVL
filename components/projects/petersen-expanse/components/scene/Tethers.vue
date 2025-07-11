@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useLoop } from '@tresjs/core'
-import * as THREE from 'three'
+import { Vector3, BufferGeometry, Float32BufferAttribute, ShaderMaterial, Points, AdditiveBlending } from 'three'
 
 import { starClusterConfig } from '../../configs/star-cluster-config'
 import { tetherConfig } from '../../configs/tether-config'
+
+import tetherVertexShader from '../../shaders/tether-vertex.glsl'
+import tetherFragmentShader from '../../shaders/tether-fragment.glsl'
 
 interface Props {
   enabled?: boolean
   globalTime?: number
   evolutionProgress?: number
-  stellarCoreNodes?: Array<{ position: THREE.Vector3; id: number }>
+  stellarCoreNodes?: Array<{ r: number; theta: number; id: number }>
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -21,9 +24,9 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // Tether geometry and material
-const tetherGeometry = ref<THREE.BufferGeometry | null>(null)
-const tetherMaterial = ref<THREE.ShaderMaterial | null>(null)
-const tetherMesh = ref<THREE.Points | null>(null)
+const tetherGeometry = ref<BufferGeometry | null>(null)
+const tetherMaterial = ref<ShaderMaterial | null>(null)
+const tetherMesh = ref<Points | null>(null)
 
 // Petersen Graph connections (60 edges total: 30 forward + 30 reverse)
 const petersenConnections = computed(() => {
@@ -90,15 +93,16 @@ const createTetherGeometry = () => {
     
     if (!fromNode || !toNode) return
     
-    const fromPos = new THREE.Vector3(
-      fromNode.position.x,
-      fromNode.position.y,
-      fromNode.position.z
+    // Convert polar coordinates (r, theta) to Cartesian coordinates (x, y, z)
+    const fromPos = new Vector3(
+      fromNode.r * Math.cos(fromNode.theta),
+      0,
+      fromNode.r * Math.sin(fromNode.theta)
     )
-    const toPos = new THREE.Vector3(
-      toNode.position.x,
-      toNode.position.y,
-      toNode.position.z
+    const toPos = new Vector3(
+      toNode.r * Math.cos(toNode.theta),
+      0,
+      toNode.r * Math.sin(toNode.theta)
     )
     
     // Create arch particles between nodes
@@ -110,7 +114,7 @@ const createTetherGeometry = () => {
       const midPoint = fromPos.clone().lerp(toPos, 0.5)
       midPoint.y += connection.archDirection * tetherConfig.archHeight
       
-      const pos = new THREE.Vector3()
+      const pos = new Vector3()
         .copy(fromPos)
         .multiplyScalar((1 - t) * (1 - t))
         .add(midPoint.clone().multiplyScalar(2 * (1 - t) * t))
@@ -133,19 +137,19 @@ const createTetherGeometry = () => {
     }
   })
   
-  const geometry = new THREE.BufferGeometry()
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
-  geometry.setAttribute('alpha', new THREE.Float32BufferAttribute(alphas, 1))
-  geometry.setAttribute('tetherId', new THREE.Float32BufferAttribute(tetherIds, 1))
-  geometry.setAttribute('archParams', new THREE.Float32BufferAttribute(archParams, 2))
+  const geometry = new BufferGeometry()
+  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
+  geometry.setAttribute('color', new Float32BufferAttribute(colors, 3))
+  geometry.setAttribute('alpha', new Float32BufferAttribute(alphas, 1))
+  geometry.setAttribute('tetherId', new Float32BufferAttribute(tetherIds, 1))
+  geometry.setAttribute('archParams', new Float32BufferAttribute(archParams, 2))
   
   return geometry
 }
 
 // Create tether shader material
 const createTetherMaterial = () => {
-  return new THREE.ShaderMaterial({
+  return new ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
       uEvolutionProgress: { value: 0 },
@@ -153,73 +157,10 @@ const createTetherMaterial = () => {
       uFlowSpeed: { value: tetherConfig.flowSpeed },
       uPointSize: { value: tetherConfig.particleSize }
     },
-    vertexShader: `
-      attribute float alpha;
-      attribute float tetherId;
-      attribute vec2 archParams; // x: arch direction, y: progress along arch
-      
-      uniform float uTime;
-      uniform float uEvolutionProgress;
-      uniform float uPointSize;
-      uniform float uFlowSpeed;
-      
-      varying float vAlpha;
-      varying vec3 vColor;
-      varying float vFlow;
-      
-      void main() {
-        vColor = color;
-        
-        // Evolution progress affects chaos to order transition
-        vec3 chaosOffset = vec3(
-          sin(uTime * 2.0 + tetherId * 0.5) * (1.0 - uEvolutionProgress),
-          cos(uTime * 1.5 + tetherId * 0.3) * (1.0 - uEvolutionProgress),
-          sin(uTime * 1.8 + tetherId * 0.7) * (1.0 - uEvolutionProgress)
-        ) * 50.0;
-        
-        vec3 finalPosition = position + chaosOffset * (1.0 - uEvolutionProgress);
-        
-        // Flowing animation along the arch
-        float flowOffset = mod(uTime * uFlowSpeed + archParams.y * 6.28, 6.28);
-        vFlow = sin(flowOffset) * 0.5 + 0.5;
-        
-        // Alpha combines base alpha with flow effect
-        vAlpha = alpha * (0.7 + 0.3 * vFlow) * uEvolutionProgress;
-        
-        vec4 mvPosition = modelViewMatrix * vec4(finalPosition, 1.0);
-        gl_Position = projectionMatrix * mvPosition;
-        gl_PointSize = uPointSize * (300.0 / -mvPosition.z);
-      }
-    `,
-    fragmentShader: `
-      uniform float uGlowIntensity;
-      
-      varying float vAlpha;
-      varying vec3 vColor;
-      varying float vFlow;
-      
-      void main() {
-        // Circular particle shape
-        vec2 center = gl_PointCoord - 0.5;
-        float dist = length(center);
-        
-        if (dist > 0.5) discard;
-        
-        // Soft glow effect
-        float glow = 1.0 - smoothstep(0.0, 0.5, dist);
-        glow = pow(glow, 2.0);
-        
-        // Flow effect adds brightness variation
-        float brightness = uGlowIntensity * (0.8 + 0.2 * vFlow);
-        
-        vec3 finalColor = vColor * brightness;
-        float finalAlpha = vAlpha * glow;
-        
-        gl_FragColor = vec4(finalColor, finalAlpha);
-      }
-    `,
+    vertexShader: tetherVertexShader,
+    fragmentShader: tetherFragmentShader,
     transparent: true,
-    blending: THREE.AdditiveBlending,
+    blending: AdditiveBlending,
     depthWrite: false,
     vertexColors: true
   })
@@ -233,8 +174,10 @@ const initializeTethers = () => {
   tetherMaterial.value = createTetherMaterial()
   
   if (tetherGeometry.value && tetherMaterial.value) {
-    tetherMesh.value = new THREE.Points(tetherGeometry.value, tetherMaterial.value)
-    tetherMesh.value.renderOrder = tetherConfig.renderOrder
+    tetherMesh.value = new Points(tetherGeometry.value, tetherMaterial.value)
+    if (tetherMesh.value) {
+      tetherMesh.value.renderOrder = tetherConfig.renderOrder
+    }
   }
 }
 

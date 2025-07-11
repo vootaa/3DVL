@@ -1,4 +1,5 @@
-import * as THREE from 'three'
+import { Color, AdditiveBlending } from 'three'
+import type { Blending } from 'three'
 
 export interface TetherConfig {
   // Visual parameters
@@ -14,13 +15,13 @@ export interface TetherConfig {
   
   // Colors
   colors: {
-    forward: THREE.Color
-    reverse: THREE.Color
+    forward: Color
+    reverse: Color
   }
   
   // Rendering
   renderOrder: number
-  blendMode: THREE.Blending
+  blendMode: Blending
   
   // Performance
   maxTethers: number
@@ -41,13 +42,13 @@ export const tetherConfig: TetherConfig = {
   
   // Colors
   colors: {
-    forward: new THREE.Color(0x00ccff), // Cyan for upward arches
-    reverse: new THREE.Color(0xff6600)  // Orange for downward arches
+    forward: new Color(0x00ccff), // Cyan for upward arches
+    reverse: new Color(0xff6600)  // Orange for downward arches
   },
   
   // Rendering
   renderOrder: 100,
-  blendMode: THREE.AdditiveBlending,
+  blendMode: AdditiveBlending,
   
   // Performance
   maxTethers: 60,
