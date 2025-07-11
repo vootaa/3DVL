@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Vector3 } from 'three'
 import { ref, provide, onMounted, nextTick } from 'vue'
+import { useRenderLoop } from '@tresjs/core'
+import { OrbitControls } from '@tresjs/cientos'
 
 import Stars from '../echo-mission/3d/Stars.vue'
 
@@ -153,13 +155,14 @@ function handleEvolutionTimelineVisible(_val: boolean) {
       <TresPerspectiveCamera ref="cameraRef" :position="[0, 0, 2000]" :fov="75" :near="0.01" :far="10000" />
       <TresAmbientLight :intensity="0.08" color="#004488" />
 
-      <StellarCore ref="stellarCoreRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
-        :evolution-progress="state.evolutionProgress" :enabled="state.stellarCoreEnabled" />
+      <StellarCore ref="stellarCoreRef" :camera-ref="cameraRef" :galaxy-center="galaxyCenter"
+        :global-time="state.globalTime" :evolution-progress="state.evolutionProgress"
+        :enabled="state.stellarCoreEnabled" />
 
-      <OrbitalSystem :galaxy-center="galaxyCenter" :global-time="state.globalTime"
+      <OrbitalSystem :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
         :evolution-progress="state.evolutionProgress" :enabled="state.orbitalSystemEnabled" />
 
-      <Tethers :galaxy-center="galaxyCenter" :global-time="state.globalTime"
+      <Tethers :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
         :evolution-progress="state.evolutionProgress" :enabled="state.tethersEnabled"
         :stellar-core-positions="stellarCorePositions" />
 

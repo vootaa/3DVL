@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { AdditiveBlending, Points, ShaderMaterial, Vector3 } from 'three'
 import { ref, toRef } from 'vue'
+import { AdditiveBlending, Points, ShaderMaterial, Vector3 } from 'three'
 import { useRenderLoop } from '@tresjs/core'
+
 import { orbitalConfig, orbitalColorConfig } from '../../configs/orbital-config'
+import { getCurrentLODLevel } from '../../configs/lodlevel-config'
 
 import vertexShader from '../../shaders/orbital-vertex.glsl'
 import fragmentShader from '../../shaders/orbital-fragment.glsl'
@@ -12,13 +14,15 @@ interface Props {
   globalTime?: number
   evolutionProgress?: number
   enabled?: boolean
+  cameraRef?: any
 }
 
 const props = withDefaults(defineProps<Props>(), {
   galaxyCenter: () => new Vector3(1, 1, 0),
   globalTime: 0,
   evolutionProgress: 0,
-  enabled: true
+  enabled: true,
+  cameraRef: null
 })
 
 const galaxyCenter = toRef(props, 'galaxyCenter')
@@ -80,6 +84,7 @@ const shader = {
 }
 
 const bufferRef = ref<InstanceType<typeof Points> | null>(null)
+const cameraDistance = ref(1000)
 
 const { onLoop } = useRenderLoop()
 onLoop(() => {
@@ -93,6 +98,16 @@ onLoop(() => {
   if (galaxyCenter?.value) {
     bufferRef.value.position.set(galaxyCenter.value.x, galaxyCenter.value.y, galaxyCenter.value.z)
   }
+
+  if (bufferRef.value && props.cameraRef?.value) {
+    cameraDistance.value = props.cameraRef.value.position.distanceTo(bufferRef.value.position)
+  }
+
+  const lodLevel = getCurrentLODLevel(cameraDistance.value, 'orbital')
+  if (material) {
+    material.uniforms.uParticleSize.value = lodLevel.particleSize || 15
+  }
+
 })
 </script>
 

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useLoop } from '@tresjs/core'
 import { Vector3, BufferGeometry, Float32BufferAttribute, ShaderMaterial, Points, AdditiveBlending } from 'three'
+import { useRenderLoop } from '@tresjs/core'
 
 import { tetherConfig } from '../../configs/tether-config'
+import { getCurrentLODLevel } from '../../configs/lodlevel-config'
 
 import tetherVertexShader from '../../shaders/tether-vertex.glsl'
 import tetherFragmentShader from '../../shaders/tether-fragment.glsl'
@@ -14,6 +15,7 @@ interface Props {
   evolutionProgress?: number
   galaxyCenter?: Vector3
   stellarCorePositions?: Vector3[]
+  cameraRef?: any
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -21,8 +23,11 @@ const props = withDefaults(defineProps<Props>(), {
   globalTime: 0,
   evolutionProgress: 0,
   galaxyCenter: () => new Vector3(0, 0, 0),
-  stellarCorePositions: () => []
+  stellarCorePositions: () => [],
+  cameraRef: null
 })
+
+const cameraDistance = ref(1000)
 
 // Tether geometry and material
 const tetherGeometry = ref<BufferGeometry | null>(null)
@@ -87,8 +92,13 @@ const createTetherGeometry = () => {
   const alphas: number[] = []
   const tetherIds: number[] = []
   const archParams: number[] = [] // stores arch direction and progress
+  const chaoticPositions: number[] = []
   
   petersenConnections.value.forEach((connection, tetherIndex) => {
+    if (props.stellarCorePositions.length < 20) {
+      return
+    }
+
     const fromPos = props.stellarCorePositions[connection.from] || new Vector3()
     const toPos = props.stellarCorePositions[connection.to] || new Vector3()
     
@@ -108,6 +118,16 @@ const createTetherGeometry = () => {
         .add(toPos.clone().multiplyScalar(t * t))
       
       positions.push(pos.x, pos.y, pos.z)
+
+      // Chaotic initial position for this particle
+      const chaoticRadius = Math.random() * 1000
+      const chaoticAngle = Math.random() * Math.PI * 2
+      const chaoticHeight = (Math.random() - 0.5) * 500
+      chaoticPositions.push(
+        Math.cos(chaoticAngle) * chaoticRadius,
+        chaoticHeight,
+        Math.sin(chaoticAngle) * chaoticRadius
+      )
       
       // Color based on direction and position along arch
       const color = connection.direction === 'forward' 
@@ -130,6 +150,7 @@ const createTetherGeometry = () => {
   geometry.setAttribute('alpha', new Float32BufferAttribute(alphas, 1))
   geometry.setAttribute('tetherId', new Float32BufferAttribute(tetherIds, 1))
   geometry.setAttribute('archParams', new Float32BufferAttribute(archParams, 2))
+  geometry.setAttribute('chaoticPosition', new Float32BufferAttribute(chaoticPositions, 3))
   
   return geometry
 }
@@ -174,9 +195,16 @@ const updateTethers = () => {
   
   tetherMaterial.value.uniforms.uTime.value = props.globalTime
   tetherMaterial.value.uniforms.uEvolutionProgress.value = props.evolutionProgress
+
+  if (tetherMesh.value && props.cameraRef?.value) {
+    cameraDistance.value = props.cameraRef.value.position.distanceTo(tetherMesh.value.position)
+  }
+
+  const lodLevel = getCurrentLODLevel(cameraDistance.value, 'tethers')
+  tetherMaterial.value.uniforms.uPointSize.value = lodLevel.particleSize || tetherConfig.particleSize
   
   // Update geometry if stellar core nodes have moved
-  if (props.stellarCoreNodes.length === 20) {
+  if (props.stellarCorePositions.length === 20) {
     // Recreate geometry with updated node positions
     const newGeometry = createTetherGeometry()
     if (tetherMesh.value && newGeometry) {
@@ -201,8 +229,8 @@ const cleanup = () => {
 }
 
 // Animation loop
-const { onBeforeRender } = useLoop()
-onBeforeRender(() => {
+const { onLoop } = useRenderLoop()
+onLoop(() => {
   updateTethers()
 })
 
@@ -215,7 +243,7 @@ watch(() => props.enabled, (enabled) => {
   }
 })
 
-watch(() => props.stellarCoreNodes, () => {
+watch(() => props.stellarCorePositions, () => {
   if (props.enabled) {
     updateTethers()
   }
