@@ -35,142 +35,164 @@ const tetherMaterialRef = ref()
 const tetherPointsRef = ref()
 
 const tetherAttributes = computed(() => {
-  const positions: number[] = []
-  const colors: number[] = []
-  const alphas: number[] = []
-  const tetherIds: number[] = []
-  const archParams: number[] = []
-  const chaoticPositions: number[] = []
-
-  if (props.stellarCorePositions.length < 20) {
-    return null
-  }
-
   try {
+    if (!props.stellarCorePositions || props.stellarCorePositions.length < 20) {
+      Logger.throttle('TETHERS_ATTR', 'Waiting for stellar core positions', props.stellarCorePositions?.length)
+      return null
+    }
+
+    const positions: number[] = []
+    const colors: number[] = []
+    const alphas: number[] = []
+    const tetherIds: number[] = []
+    const archParams: number[] = []
+    const chaoticPositions: number[] = []
+
     let tetherIndex = 0
 
     // Process forward connections
     tetherConnections.forward.forEach((connection) => {
-      if (connection[0] >= props.stellarCorePositions.length ||
-        connection[1] >= props.stellarCorePositions.length) {
-        Logger.warn('TETHERS', 'Invalid connection indices', connection)
-        return
-      }
-
-      const fromPos = props.stellarCorePositions[connection[0]] || new Vector3()
-      const toPos = props.stellarCorePositions[connection[1]] || new Vector3()
-
-      if (!fromPos || !toPos) {
-        Logger.warn('TETHERS', 'Invalid positions for connection', connection)
-        return
-      }
-
-      // Create arch particles between nodes
-      const particleCount = tetherConfig.particlesPerTether
-      for (let i = 0; i < particleCount; i++) {
-        const t = i / (particleCount - 1)
-
-        // Quadratic Bézier curve for arch (upward)
-        const midPoint = fromPos.clone().lerp(toPos, 0.5)
-        midPoint.y += tetherConfig.archHeight // Adjust height for upward arch
-
-        const pos = new Vector3()
-          .copy(fromPos)
-          .multiplyScalar((1 - t) * (1 - t))
-          .add(midPoint.clone().multiplyScalar(2 * (1 - t) * t))
-          .add(toPos.clone().multiplyScalar(t * t))
-
-        if (isNaN(pos.x) || isNaN(pos.y) || isNaN(pos.z)) {
-          Logger.warn('TETHERS', 'Invalid position calculated', pos)
-          continue
+      try {
+        if (!connection || connection.length < 2) {
+          Logger.warn('TETHERS', 'Invalid connection format', connection)
+          return
         }
 
-        positions.push(pos.x, pos.y, pos.z)
+        if (connection[0] >= props.stellarCorePositions.length ||
+          connection[1] >= props.stellarCorePositions.length) {
+          Logger.warn('TETHERS', 'Invalid connection indices', connection)
+          return
+        }
 
-        // Generate chaotic initial position
-        const chaoticRadius = Math.random() * 1000
-        const chaoticAngle = Math.random() * Math.PI * 2
-        const chaoticHeight = (Math.random() - 0.5) * 500
-        chaoticPositions.push(
-          Math.cos(chaoticAngle) * chaoticRadius,
-          chaoticHeight,
-          Math.sin(chaoticAngle) * chaoticRadius
-        )
+        const fromPos = props.stellarCorePositions[connection[0]] || new Vector3()
+        const toPos = props.stellarCorePositions[connection[1]] || new Vector3()
 
-        // Forward color (cyan)
-        const color = tetherConfig.colors.forward
-        colors.push(color.r, color.g, color.b)
+        if (!fromPos || !toPos) {
+          Logger.warn('TETHERS', 'Invalid positions for connection', connection)
+          return
+        }
 
-        // Alpha varies along the arch
-        const alpha = Math.sin(t * Math.PI) * tetherConfig.baseOpacity
-        alphas.push(alpha)
+        // Create arch particles between nodes
+        const particleCount = tetherConfig.particlesPerTether
+        for (let i = 0; i < particleCount; i++) {
+          const t = i / (particleCount - 1)
 
-        tetherIds.push(tetherIndex)
-        archParams.push(1, t) // archDirection: 1 (upward), progress: t
+          // Quadratic Bézier curve for arch (upward)
+          const midPoint = fromPos.clone().lerp(toPos, 0.5)
+          midPoint.y += tetherConfig.archHeight // Adjust height for upward arch
+
+          const pos = new Vector3()
+            .copy(fromPos)
+            .multiplyScalar((1 - t) * (1 - t))
+            .add(midPoint.clone().multiplyScalar(2 * (1 - t) * t))
+            .add(toPos.clone().multiplyScalar(t * t))
+
+          if (isNaN(pos.x) || isNaN(pos.y) || isNaN(pos.z)) {
+            Logger.warn('TETHERS', 'Invalid position calculated', pos)
+            continue
+          }
+
+          positions.push(pos.x, pos.y, pos.z)
+
+          // Generate chaotic initial position
+          const chaoticRadius = Math.random() * 1000
+          const chaoticAngle = Math.random() * Math.PI * 2
+          const chaoticHeight = (Math.random() - 0.5) * 500
+          chaoticPositions.push(
+            Math.cos(chaoticAngle) * chaoticRadius,
+            chaoticHeight,
+            Math.sin(chaoticAngle) * chaoticRadius
+          )
+
+          // Forward color (cyan)
+          const color = tetherConfig.colors.forward
+          colors.push(color.r, color.g, color.b)
+
+          // Alpha varies along the arch
+          const alpha = Math.sin(t * Math.PI) * tetherConfig.baseOpacity
+          alphas.push(alpha)
+
+          tetherIds.push(tetherIndex)
+          archParams.push(1, t) // archDirection: 1 (upward), progress: t
+        }
+
+        tetherIndex++
+      } catch (error) {
+        Logger.error('TETHERS', 'Error processing forward connection', error)
       }
-
-      tetherIndex++
     })
 
     // Process reverse connections
     tetherConnections.reverse.forEach((connection) => {
-      if (connection[0] >= props.stellarCorePositions.length ||
-        connection[1] >= props.stellarCorePositions.length) {
-        return
-      }
+      try {
+        if (!connection || connection.length < 2) return
 
-      const fromPos = props.stellarCorePositions[connection[0]] || new Vector3()
-      const toPos = props.stellarCorePositions[connection[1]] || new Vector3()
-
-      if (!fromPos || !toPos) {
-        return
-      }
-
-      // Create arch particles between nodes
-      const particleCount = tetherConfig.particlesPerTether
-      for (let i = 0; i < particleCount; i++) {
-        const t = i / (particleCount - 1)
-
-        // Quadratic Bézier curve for arch (downward)
-        const midPoint = fromPos.clone().lerp(toPos, 0.5)
-        midPoint.y -= tetherConfig.archHeight // Adjust height for downward arch
-
-        const pos = new Vector3()
-          .copy(fromPos)
-          .multiplyScalar((1 - t) * (1 - t))
-          .add(midPoint.clone().multiplyScalar(2 * (1 - t) * t))
-          .add(toPos.clone().multiplyScalar(t * t))
-
-        if (isNaN(pos.x) || isNaN(pos.y) || isNaN(pos.z)) {
-          continue
+        if (connection[0] >= props.stellarCorePositions.length ||
+          connection[1] >= props.stellarCorePositions.length) {
+          return
         }
 
-        positions.push(pos.x, pos.y, pos.z)
+        const fromPos = props.stellarCorePositions[connection[0]] || new Vector3()
+        const toPos = props.stellarCorePositions[connection[1]] || new Vector3()
 
-        // Generate chaotic initial position
-        const chaoticRadius = Math.random() * 1000
-        const chaoticAngle = Math.random() * Math.PI * 2
-        const chaoticHeight = (Math.random() - 0.5) * 500
-        chaoticPositions.push(
-          Math.cos(chaoticAngle) * chaoticRadius,
-          chaoticHeight,
-          Math.sin(chaoticAngle) * chaoticRadius
-        )
+        if (!fromPos || !toPos) {
+          return
+        }
 
-        // Reverse color (orange)
-        const color = tetherConfig.colors.reverse
-        colors.push(color.r, color.g, color.b)
+        // Create arch particles between nodes
+        const particleCount = tetherConfig.particlesPerTether
+        for (let i = 0; i < particleCount; i++) {
+          const t = i / (particleCount - 1)
 
-        // Alpha varies along the arch
-        const alpha = Math.sin(t * Math.PI) * tetherConfig.baseOpacity
-        alphas.push(alpha)
+          // Quadratic Bézier curve for arch (downward)
+          const midPoint = fromPos.clone().lerp(toPos, 0.5)
+          midPoint.y -= tetherConfig.archHeight // Adjust height for downward arch
 
-        tetherIds.push(tetherIndex)
-        archParams.push(-1, t) // archDirection: -1 (downward), progress: t
+          const pos = new Vector3()
+            .copy(fromPos)
+            .multiplyScalar((1 - t) * (1 - t))
+            .add(midPoint.clone().multiplyScalar(2 * (1 - t) * t))
+            .add(toPos.clone().multiplyScalar(t * t))
+
+          if (isNaN(pos.x) || isNaN(pos.y) || isNaN(pos.z)) {
+            continue
+          }
+
+          positions.push(pos.x, pos.y, pos.z)
+
+          // Generate chaotic initial position
+          const chaoticRadius = Math.random() * 1000
+          const chaoticAngle = Math.random() * Math.PI * 2
+          const chaoticHeight = (Math.random() - 0.5) * 500
+          chaoticPositions.push(
+            Math.cos(chaoticAngle) * chaoticRadius,
+            chaoticHeight,
+            Math.sin(chaoticAngle) * chaoticRadius
+          )
+
+          // Reverse color (orange)
+          const color = tetherConfig.colors.reverse
+          colors.push(color.r, color.g, color.b)
+
+          // Alpha varies along the arch
+          const alpha = Math.sin(t * Math.PI) * tetherConfig.baseOpacity
+          alphas.push(alpha)
+
+          tetherIds.push(tetherIndex)
+          archParams.push(-1, t) // archDirection: -1 (downward), progress: t
+        }
+
+        tetherIndex++
+      } catch (error) {
+        Logger.error('TETHERS', 'Error processing reverse connection', error)
       }
-
-      tetherIndex++
     })
+
+    // Validation
+    if (positions.length === 0) {
+      Logger.warn('TETHERS', 'No tether particles generated')
+      return null
+    }
 
     const expectedLength = positions.length / 3
     if (colors.length !== expectedLength * 3 ||
@@ -204,6 +226,11 @@ const tetherAttributes = computed(() => {
 
 const tetherShader = computed(() => {
   try {
+    if (!tetherVertexShader || !tetherFragmentShader) {
+      Logger.error('TETHERS', 'Shader files not loaded')
+      return null
+    }
+
     return {
       transparent: true,
       depthWrite: false,
@@ -239,38 +266,52 @@ onLoop(() => {
     }
 
     if (material.uniforms.uTime) {
-      material.uniforms.uTime.value = props.globalTime
+      material.uniforms.uTime.value = props.globalTime || 0
     }
     if (material.uniforms.uEvolutionProgress) {
-      material.uniforms.uEvolutionProgress.value = props.evolutionProgress
+      material.uniforms.uEvolutionProgress.value = props.evolutionProgress || 0
     }
 
     if (tetherPointsRef.value && props.cameraRef?.value) {
       try {
-        cameraDistance.value = props.cameraRef.value.position.distanceTo(tetherPointsRef.value.position)
+        const cameraPos = props.cameraRef.value.position
+        const tetherPos = tetherPointsRef.value.position
+
+        if (cameraPos && tetherPos && typeof cameraPos.distanceTo === 'function') {
+          cameraDistance.value = cameraPos.distanceTo(tetherPos)
+        } else {
+          cameraDistance.value = 1000
+        }
       } catch (e) {
+        Logger.throttle('TETHERS_CAMERA', 'Camera distance calculation failed')
         cameraDistance.value = 1000
       }
     }
 
-    const lodLevel = getCurrentLODLevel(cameraDistance.value, 'tethers')
-    if (material.uniforms.uPointSize) {
-      material.uniforms.uPointSize.value = lodLevel.particleSize || tetherConfig.particleSize
+    // LOD application
+    try {
+      const lodLevel = getCurrentLODLevel(cameraDistance.value, 'tethers')
+      if (material.uniforms.uPointSize && lodLevel) {
+        material.uniforms.uPointSize.value = lodLevel.particleSize || tetherConfig.particleSize
+      }
+    } catch (e) {
+      Logger.throttle('TETHERS_LOD', 'LOD calculation failed')
     }
 
+
     if (tetherPointsRef.value && props.galaxyCenter) {
-      tetherPointsRef.value.position.set(
-        props.galaxyCenter.x,
-        props.galaxyCenter.y,
-        props.galaxyCenter.z
-      )
+      try {
+        tetherPointsRef.value.position.set(props.galaxyCenter.x || 0, props.galaxyCenter.y || 0, props.galaxyCenter.z || 0)
+      } catch (e) {
+        Logger.throttle('TETHERS_POS', 'Position update failed')
+      }
     }
   } catch (error) {
     Logger.error('TETHERS', 'Error in Tethers render loop', error)
   }
 })
 
-// Watch stellar core positions with throttled logging
+// Safer watch
 watch(() => props.stellarCorePositions, (newPositions, _oldPositions) => {
   try {
     if (!newPositions || newPositions.length === 0) {
@@ -283,9 +324,7 @@ watch(() => props.stellarCorePositions, (newPositions, _oldPositions) => {
       return
     }
 
-    // tetherAttributes is a computed property, so it will automatically update
     Logger.throttle('TETHERS_WATCH', 'Stellar core positions updated, recalculating tethers')
-
   } catch (error) {
     Logger.error('TETHERS', 'Error watching stellar core positions', error)
   }
@@ -294,7 +333,7 @@ watch(() => props.stellarCorePositions, (newPositions, _oldPositions) => {
 onMounted(() => {
   try {
     Logger.log('TETHERS', 'Tethers component mounted')
-    Logger.log('TETHERS', 'Stellar core positions', props.stellarCorePositions.length)
+    Logger.log('TETHERS', 'Stellar core positions', props.stellarCorePositions?.length || 0)
     Logger.log('TETHERS', 'Tether connections forward', tetherConnections.forward.length)
     Logger.log('TETHERS', 'Tether connections reverse', tetherConnections.reverse.length)
   } catch (error) {
@@ -304,7 +343,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <TresGroup v-if="enabled && tetherAttributes && tetherAttributes.position && tetherAttributes.position.array.length > 0">
+  <TresGroup
+    v-if="enabled && tetherAttributes && tetherShader && tetherAttributes.position && tetherAttributes.position.array.length > 0">
     <TresPoints ref="tetherPointsRef">
       <TresBufferGeometry ref="tetherGeometryRef" :attributes="tetherAttributes" />
       <TresShaderMaterial ref="tetherMaterialRef" v-bind="tetherShader" />

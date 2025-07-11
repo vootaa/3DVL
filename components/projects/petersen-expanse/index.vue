@@ -31,20 +31,6 @@ const gl = {
   toneMapping: NoToneMapping,
 }
 
-const stellarCoreRef = ref()
-const stellarCorePositions = ref<Vector3[]>([])
-
-function updateStellarCorePositions() {
-  if (stellarCoreRef.value?.getStellarPositions) {
-    stellarCorePositions.value = stellarCoreRef.value.getStellarPositions()
-  }
-}
-
-const { onLoop } = useRenderLoop()
-onLoop(() => {
-  updateStellarCorePositions()
-})
-
 const cameraRef = ref()
 const orbitControlsRef = ref()
 const evolutionAnimatorRef = ref()
@@ -86,6 +72,20 @@ function setCurrentPresetId(id: string | null) {
   currentPresetId.value = id
 }
 provide('setCurrentPresetId', setCurrentPresetId)
+
+const stellarCoreRef = ref()
+const stellarCorePositions = ref<Vector3[]>([])
+
+function updateStellarCorePositions() {
+  if (stellarCoreRef.value?.getStellarPositions) {
+    stellarCorePositions.value = stellarCoreRef.value.getStellarPositions()
+  }
+}
+
+const { onLoop } = useRenderLoop()
+onLoop(() => {
+  updateStellarCorePositions()
+})
 
 onMounted(() => {
   nextTick(() => {

@@ -5,6 +5,7 @@ import { useRenderLoop } from '@tresjs/core'
 
 import { orbitalConfig, orbitalColorConfig } from '../../configs/orbital-config'
 import { getCurrentLODLevel } from '../../configs/lodlevel-config'
+import { Logger } from '../../../../utils/logger'
 
 import vertexShader from '../../shaders/orbital-vertex.glsl'
 import fragmentShader from '../../shaders/orbital-fragment.glsl'
@@ -34,7 +35,7 @@ const particleIds = new Float32Array(totalCount) // Used as a seed for generatin
 
 for (let i = 0; i < totalCount; i++) {
   const i3 = i * 3
-  
+
   const initialRadius = Math.random() * orbitalConfig.maxSpaceRadius
   const initialAngle = Math.random() * Math.PI * 2
   const initialHeight = (Math.random() - 0.5) * 2.25
@@ -59,23 +60,23 @@ const shader = {
     uEvolutionProgress: { value: 0 },
     uParticleSize: { value: orbitalConfig.particleSize },
     uBaseRotationSpeed: { value: orbitalConfig.rotationSpeed },
-    
+
     uOrbitParticleRatio: { value: orbitalConfig.orbitParticleRatio },
     uInnerRadius: { value: orbitalConfig.innerRadius },
     uMiddleRadius: { value: orbitalConfig.middleRadius },
     uOuterRadius: { value: orbitalConfig.outerRadius },
     uMaxSpaceRadius: { value: orbitalConfig.maxSpaceRadius },
-    
+
     uOrbitDistributionInner: { value: orbitalConfig.orbitDistribution.inner },
     uOrbitDistributionMiddle: { value: orbitalConfig.orbitDistribution.middle },
-    
+
     uInnerRingColor: { value: orbitalColorConfig.innerRing },
     uMiddleRingColor: { value: orbitalColorConfig.middleRing },
     uOuterRingColor: { value: orbitalColorConfig.outerRing },
     uScatteredInnerColor: { value: orbitalColorConfig.scatteredInner },
     uScatteredMiddleColor: { value: orbitalColorConfig.scatteredMiddle },
     uScatteredOuterColor: { value: orbitalColorConfig.scatteredOuter },
-    
+
     uBrightnessInner: { value: orbitalColorConfig.brightness.inner },
     uBrightnessMiddle: { value: orbitalColorConfig.brightness.middle },
     uBrightnessOuter: { value: orbitalColorConfig.brightness.outer },
@@ -88,35 +89,49 @@ const cameraDistance = ref(1000)
 
 const { onLoop } = useRenderLoop()
 onLoop(() => {
-  if (!props.enabled || !bufferRef.value) return
+  try {
+    if (!props.enabled || !bufferRef.value) return
 
-  const material = bufferRef.value.material as ShaderMaterial
-  
-  material.uniforms.uTime.value = props.globalTime
-  material.uniforms.uEvolutionProgress.value = props.evolutionProgress
+    const material = bufferRef.value.material as ShaderMaterial
 
-  if (galaxyCenter?.value) {
-    bufferRef.value.position.set(galaxyCenter.value.x, galaxyCenter.value.y, galaxyCenter.value.z)
+    material.uniforms.uTime.value = props.globalTime
+    material.uniforms.uEvolutionProgress.value = props.evolutionProgress
+
+    if (galaxyCenter?.value) {
+      bufferRef.value.position.set(galaxyCenter.value.x, galaxyCenter.value.y, galaxyCenter.value.z)
+    }
+
+    if (bufferRef.value && props.cameraRef?.value) {
+      try {
+        const cameraPos = props.cameraRef.value.position
+        const corePos = bufferRef.value.position
+
+        if (cameraPos && corePos && typeof cameraPos.distanceTo === 'function') {
+          cameraDistance.value = cameraPos.distanceTo(corePos)
+        }
+      } catch (e) {
+        Logger.throttle('Orbital_CAMERA', 'Camera distance calculation failed')
+      }
+    }
+
+    // LOD application
+    try {
+      const lodLevel = getCurrentLODLevel(cameraDistance.value, 'orbital')
+      if (material) {
+        material.uniforms.uParticleSize.value = lodLevel.particleSize || 15
+      }
+    } catch (e) {
+      Logger.throttle('TETHERS_LOD', 'LOD calculation failed')
+    }
+  } catch (error) {
+    Logger.error('Orbital', 'Error in Orbital System render loop', error)
   }
-
-  if (bufferRef.value && props.cameraRef?.value) {
-    cameraDistance.value = props.cameraRef.value.position.distanceTo(bufferRef.value.position)
-  }
-
-  const lodLevel = getCurrentLODLevel(cameraDistance.value, 'orbital')
-  if (material) {
-    material.uniforms.uParticleSize.value = lodLevel.particleSize || 15
-  }
-
 })
 </script>
 
 <template>
   <TresPoints v-if="enabled" ref="bufferRef">
-    <TresBufferGeometry 
-      :position="[positions, 3]" 
-      :a-particle-id="[particleIds, 1]"
-    />
+    <TresBufferGeometry :position="[positions, 3]" :a-particle-id="[particleIds, 1]" />
     <TresShaderMaterial v-bind="shader" />
   </TresPoints>
 </template>

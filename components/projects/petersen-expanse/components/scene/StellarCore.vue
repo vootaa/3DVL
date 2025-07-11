@@ -6,6 +6,7 @@ import { useRenderLoop } from '@tresjs/core'
 import { orbitalConfig } from '../../configs/orbital-config'
 import { starClusterConfig } from '../../configs/star-cluster-config'
 import { getCurrentLODLevel } from '../../configs/lodlevel-config'
+import { Logger } from '../../../../utils/logger'
 
 import starVertexShader from '../../shaders/star-vertex.glsl'
 import starFragmentShader from '../../shaders/star-fragment.glsl'
@@ -157,26 +158,47 @@ const cameraDistance = ref(1000)
 
 const { onLoop } = useRenderLoop()
 onLoop(() => {
-  if (!props.enabled || !stellarCoreMaterial.value) return
+  try {
+    if (!props.enabled || !stellarCoreMaterial.value) return
 
-  if (stellarCoreClusterRef.value && props.cameraRef?.value) {
-    cameraDistance.value = props.cameraRef.value.position.distanceTo(stellarCoreClusterRef.value.position)
-  }
+    if (stellarCoreClusterRef.value && props.cameraRef?.value) {
+      try {
+        const cameraPos = props.cameraRef.value.position
+        const corePos = stellarCoreClusterRef.value.position
 
-  const lodLevel = getCurrentLODLevel(cameraDistance.value, 'stellar')
+        if (cameraPos && corePos && typeof cameraPos.distanceTo === 'function') {
+          cameraDistance.value = cameraPos.distanceTo(corePos)
+        }
+      } catch (e) {
+        Logger.throttle('STELLAR_CAMERA', 'Camera distance calculation failed')
+      }
+    }
 
-  if (stellarCoreMaterial.value.uniforms.particleSize) {
-    stellarCoreMaterial.value.uniforms.particleSize.value = lodLevel.particleSize || 1.0
-  }
+    try {
+      const lodLevel = getCurrentLODLevel(cameraDistance.value, 'stellar')
 
-  stellarCoreMaterial.value.uniforms.time.value = props.globalTime
-  stellarCoreMaterial.value.uniforms.globalTime.value = props.globalTime
-  stellarCoreMaterial.value.uniforms.evolutionProgress.value = props.evolutionProgress
+      if (stellarCoreMaterial.value.uniforms.particleSize) {
+        stellarCoreMaterial.value.uniforms.particleSize.value = lodLevel.particleSize || 1.0
+      }
+    } catch (e) {
+      Logger.throttle('TETHERS_LOD', 'LOD calculation failed')
+    }
 
-  updateCurrentPositions()
+    stellarCoreMaterial.value.uniforms.time.value = props.globalTime
+    stellarCoreMaterial.value.uniforms.globalTime.value = props.globalTime
+    stellarCoreMaterial.value.uniforms.evolutionProgress.value = props.evolutionProgress
 
-  if (stellarCoreClusterRef.value && galaxyCenter.value) {
-    stellarCoreClusterRef.value.position.set(galaxyCenter.value.x, galaxyCenter.value.y, galaxyCenter.value.z)
+    updateCurrentPositions()
+
+    if (stellarCoreClusterRef.value && galaxyCenter) {
+      try {
+        stellarCoreClusterRef.value.position.set(galaxyCenter.value.x || 0, galaxyCenter.value.y || 0, galaxyCenter.value.z || 0)
+      } catch (e) {
+        Logger.throttle('TETHERS_POS', 'Position update failed')
+      }
+    }
+  } catch (error) {
+    Logger.error('STELLAR', 'Error in StellarCore render loop', error)
   }
 })
 
