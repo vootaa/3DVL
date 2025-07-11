@@ -13,7 +13,7 @@ The Chainweb 3D structure is a multi-layered blockchain network visualization re
 - **Middle Ring:** 5 nodes (chain IDs 0–4), radius:  3.0
 - **Outer Ring:** 10 nodes (chain IDs 10–19), radius: 4.8
 
-## [Petersen Graph](Petersen%20Graph.md)
+## [Petersen Graph](../../petersen-expanse/docs/Petersen%20Graph.md)
 
 ---
 
