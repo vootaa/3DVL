@@ -6,6 +6,7 @@ import Stars from '../echo-mission/3d/Stars.vue'
 
 import OrbitalSystem from './components/scene/OrbitalSystem.vue'
 import StellarCore from './components/scene/StellarCore.vue'
+import Tethers from './components/scene/Tethers.vue'
 
 import EvolutionAnimator from './components/animation/EvolutionAnimator.vue'
 
@@ -43,6 +44,7 @@ const {
   resetEvolution,
   toggleStellarCore,
   toggleOrbitalSystem,
+  toggleTethers,
   updateEvolutionProgress,
   onEvolutionComplete,
   controlsDisabled
@@ -123,6 +125,10 @@ function handleToggleOrbitalSystem() {
   toggleOrbitalSystem()
 }
 
+function handleToggleTethers() {
+  toggleTethers()
+}
+
 function handleEvolutionTimelineVisible(_val: boolean) {
   // Timeline visibility is managed by evolution state
 }
@@ -141,6 +147,9 @@ function handleEvolutionTimelineVisible(_val: boolean) {
       <OrbitalSystem :galaxy-center="galaxyCenter" :global-time="state.globalTime"
         :evolution-progress="state.evolutionProgress" :enabled="state.orbitalSystemEnabled" />
 
+      <Tethers :galaxy-center="galaxyCenter" :global-time="state.globalTime"
+        :evolution-progress="state.evolutionProgress" :enabled="state.tethersEnabled" />
+
       <Stars />
 
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
@@ -154,8 +163,9 @@ function handleEvolutionTimelineVisible(_val: boolean) {
       @complete="handleEvolutionComplete" @start="handleEvolutionStart" @reset="handleEvolutionReset" />
 
     <SwitchMenuBar :grid-on="gridOn" :stellar-core-on="state.stellarCoreEnabled"
-      :orbital-system-on="state.orbitalSystemEnabled" :on-toggle-grid="handleToggleGrid"
-      :on-toggle-stellar-core="handleToggleStellarCore" :on-toggle-orbital-system="handleToggleOrbitalSystem"
+      :orbital-system-on="state.orbitalSystemEnabled" :tethers-on="state.tethersEnabled"
+      :on-toggle-grid="handleToggleGrid" :on-toggle-stellar-core="handleToggleStellarCore"
+      :on-toggle-orbital-system="handleToggleOrbitalSystem" :on-toggle-tethers="handleToggleTethers"
       :disabled="controlsDisabled" />
 
     <ToolsMenuBar />

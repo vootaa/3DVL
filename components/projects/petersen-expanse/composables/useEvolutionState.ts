@@ -5,6 +5,7 @@ interface EvolutionState {
   evolutionProgress: number
   stellarCoreEnabled: boolean
   orbitalSystemEnabled: boolean
+  tethersEnabled: boolean
   isEvolutionAnimating: boolean
   evolutionComplete: boolean
 }
@@ -14,6 +15,7 @@ const state = reactive<EvolutionState>({
   evolutionProgress: 0,
   stellarCoreEnabled: true,
   orbitalSystemEnabled: true,
+  tethersEnabled: true,
   isEvolutionAnimating: false,
   evolutionComplete: false
 })
@@ -83,6 +85,10 @@ export function useEvolutionState() {
   function toggleOrbitalSystem() {
     state.orbitalSystemEnabled = !state.orbitalSystemEnabled
   }
+
+  const toggleTethers = () => {
+    state.tethersEnabled = !state.tethersEnabled
+  }
   
   const controlsDisabled = computed(() => state.isEvolutionAnimating)
   
@@ -98,6 +104,7 @@ export function useEvolutionState() {
     
     toggleStellarCore,
     toggleOrbitalSystem,
+    toggleTethers,
     
     startGlobalTime,
     stopGlobalTime

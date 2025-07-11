@@ -5,10 +5,12 @@ const props = defineProps<{
   gridOn: boolean
   stellarCoreOn: boolean
   orbitalSystemOn: boolean
+  tethersOn?: boolean 
   disabled?: boolean
   onToggleGrid: () => void
   onToggleStellarCore: () => void
   onToggleOrbitalSystem: () => void
+  onToggleTethers:()=> void
 }>()
 
 const menuOpen = ref(false)
@@ -53,6 +55,15 @@ onUnmounted(() => {
           <i v-else class="i-carbon-close"></i>
         </span>
         <span class="menu-text">{{ isCompactMode ? 'Grid' : 'Grid Helper' }}</span>
+      </div>
+      <div class="switch-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
+        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleTethers()">
+        <span class="menu-status">
+          <i v-if="props.stellarCoreOn" class="i-carbon-checkmark-filled"></i>
+          <i v-else class="i-carbon-close"></i>
+        </span>
+        <span class="menu-text">{{ isCompactMode ? 'Tethers' : 'Tethers Clusters' }}</span>
+        <i class="i-carbon-network-3 switch-icon" :class="{ active: tethersOn }" />
       </div>
       <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
         :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleStellarCore()">
