@@ -48,6 +48,8 @@ const stellarCoreMaterial = ref<ShaderMaterial>()
 const stellarCoreClusterRef = ref()
 
 function initStellarCore() {
+  Logger.log('STELLAR', 'Initial stellar attributes...')
+
   const geometry = new BufferGeometry()
   const positions = new Float32Array(stars.length * 3)
   const colors = new Float32Array(stars.length * 3)
@@ -103,6 +105,8 @@ function initStellarCore() {
 
   chaoticPositions.value = chaoticPositionsArray
 
+  Logger.log('STELLAR', `Stellar attributes computed for ${stars.length} stars`)
+
   const material = new ShaderMaterial({
     uniforms: {
       time: { value: 0 },
@@ -152,6 +156,11 @@ function updateCurrentPositions() {
   })
 
   currentPositions.value = positions
+
+  Logger.throttle('STELLAR_UPDATE_POS', `Updated ${positions.length} stellar positions`)
+  if (positions.length > 0) {
+    Logger.throttle('STELLAR_UPDATE_POS_DETAIL', `First: ${positions[0].toArray().join(', ')}, Last: ${positions[positions.length - 1].toArray().join(', ')}`)
+  }
 }
 
 const cameraDistance = ref(1000)
@@ -188,7 +197,12 @@ onLoop(() => {
     stellarCoreMaterial.value.uniforms.globalTime.value = props.globalTime
     stellarCoreMaterial.value.uniforms.evolutionProgress.value = props.evolutionProgress
 
-    updateCurrentPositions()
+    try {
+      updateCurrentPositions()
+    } catch (error) {
+      Logger.error('STELLAR', 'Failed to update stellar positions', error)
+    }
+
 
     if (stellarCoreClusterRef.value && galaxyCenter) {
       try {
@@ -203,7 +217,11 @@ onLoop(() => {
 })
 
 onMounted(() => {
-  initStellarCore()
+  try {
+    initStellarCore()
+  } catch (error) {
+    Logger.error('STELLAR', 'Failed to initialize StellarCore', error)
+  }
 })
 
 defineExpose({

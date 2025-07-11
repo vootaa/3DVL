@@ -4,11 +4,13 @@ import { ref, provide, onMounted, nextTick } from 'vue'
 import { useRenderLoop } from '@tresjs/core'
 import { OrbitControls } from '@tresjs/cientos'
 
+import { Logger } from '../../utils/logger'
+
 import Stars from '../echo-mission/3d/Stars.vue'
 
 import OrbitalSystem from './components/scene/OrbitalSystem.vue'
 import StellarCore from './components/scene/StellarCore.vue'
-import Tethers from './components/scene/Tethers.vue'
+//import Tethers from './components/scene/Tethers.vue'
 
 import EvolutionAnimator from './components/animation/EvolutionAnimator.vue'
 
@@ -77,8 +79,24 @@ const stellarCoreRef = ref()
 const stellarCorePositions = ref<Vector3[]>([])
 
 function updateStellarCorePositions() {
-  if (stellarCoreRef.value?.getStellarPositions) {
-    stellarCorePositions.value = stellarCoreRef.value.getStellarPositions()
+  try {
+    if (stellarCoreRef.value?.getStellarPositions) {
+      const positions = stellarCoreRef.value.getStellarPositions()
+      if (positions && positions.length > 0) {
+        stellarCorePositions.value = positions
+        Logger.throttle(
+          'INDEX_POS_UPDATE',
+          `Updated stellar positions: ${positions.length}, first: ${positions[0]?.toArray?.().join(', ')}, last: ${positions[positions.length - 1]?.toArray?.().join(', ')}`
+        )
+
+      } else {
+        Logger.throttle('INDEX_POS_EMPTY', 'No stellar positions available')
+      }
+    } else {
+      Logger.throttle('INDEX_NO_REF', 'StellarCore ref not available')
+    }
+  } catch (error) {
+    Logger.error('INDEX', 'Error getting stellar positions', error)
   }
 }
 
@@ -162,9 +180,9 @@ function handleEvolutionTimelineVisible(_val: boolean) {
       <OrbitalSystem :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
         :evolution-progress="state.evolutionProgress" :enabled="state.orbitalSystemEnabled" />
 
-      <Tethers :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
+      <!--<Tethers :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
         :evolution-progress="state.evolutionProgress" :enabled="state.tethersEnabled"
-        :stellar-core-positions="stellarCorePositions" />
+        :stellar-core-positions="stellarCorePositions" />-->
 
       <Stars />
 
