@@ -90,5 +90,5 @@ const CONNECTIONS = [
   20 vertical connections per layer pair (chain ID *i* in layer *n* connects to chain ID *i* in layer *n+1*).
 
 - **Cross-Chain Connections:**  
-  72 diagonal connections per layer pair (36 forward + 36 reverse, based on the `CONNECTIONS` matrix).
+  60 diagonal connections per layer pair (30 forward + 30 reverse, based on the `CONNECTIONS` matrix).
 
