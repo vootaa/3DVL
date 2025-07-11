@@ -157,10 +157,11 @@ function updateCurrentPositions() {
 
   currentPositions.value = positions
 
+  /*
   Logger.throttle('STELLAR_UPDATE_POS', `Updated ${positions.length} stellar positions`)
   if (positions.length > 0) {
     Logger.throttle('STELLAR_UPDATE_POS_DETAIL', `First: ${positions[0].toArray().join(', ')}, Last: ${positions[positions.length - 1].toArray().join(', ')}`)
-  }
+  } */
 }
 
 const cameraDistance = ref(1000)

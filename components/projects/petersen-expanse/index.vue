@@ -84,10 +84,10 @@ function updateStellarCorePositions() {
       const positions = stellarCoreRef.value.getStellarPositions()
       if (positions && positions.length > 0) {
         stellarCorePositions.value = positions
-        Logger.throttle(
+        /*Logger.throttle(
           'INDEX_POS_UPDATE',
           `Updated stellar positions: ${positions.length}, first: ${positions[0]?.toArray?.().join(', ')}, last: ${positions[positions.length - 1]?.toArray?.().join(', ')}`
-        )
+        )*/
 
       } else {
         Logger.throttle('INDEX_POS_EMPTY', 'No stellar positions available')
@@ -170,7 +170,7 @@ function handleEvolutionTimelineVisible(_val: boolean) {
   <div class="galaxy-container">
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
-      <TresPerspectiveCamera ref="cameraRef" :position="[0, 0, 2000]" :fov="75" :near="0.01" :far="10000" />
+      <TresPerspectiveCamera ref="cameraRef" :position="[0, 400, 2000]" :fov="75" :near="0.01" :far="10000" />
       <TresAmbientLight :intensity="0.08" color="#004488" />
 
       <StellarCore ref="stellarCoreRef" :camera-ref="cameraRef" :galaxy-center="galaxyCenter"
