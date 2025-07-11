@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { Vector3, BufferGeometry, Float32BufferAttribute, ShaderMaterial, Points, AdditiveBlending } from 'three'
+import { ref, computed, onMounted, watch } from 'vue'
+import { Vector3, BufferAttribute } from 'three'
 import { useRenderLoop } from '@tresjs/core'
 
 import { tetherConfig } from '../../configs/tether-config'
@@ -29,10 +29,9 @@ const props = withDefaults(defineProps<Props>(), {
 
 const cameraDistance = ref(1000)
 
-// Tether geometry and material
-const tetherGeometry = ref<BufferGeometry | null>(null)
-const tetherMaterial = ref<ShaderMaterial | null>(null)
-const tetherMesh = ref<Points | null>(null)
+const tetherGeometryRef = ref()
+const tetherMaterialRef = ref()
+const tetherPointsRef = ref()
 
 // Petersen Graph connections (60 edges total: 30 forward + 30 reverse)
 const petersenConnections = computed(() => {
@@ -40,65 +39,34 @@ const petersenConnections = computed(() => {
   
   // Forward connections (arching upward)
   for (let i = 0; i < 10; i++) {
-    connections.push({
-      from: i,
-      to: (i + 5) % 10,
-      direction: 'forward',
-      archDirection: 1 // upward
-    })
-    connections.push({
-      from: i,
-      to: i + 10,
-      direction: 'forward', 
-      archDirection: 1
-    })
-    connections.push({
-      from: i + 10,
-      to: 10 + ((i + 1) % 10),
-      direction: 'forward',
-      archDirection: 1
-    })
+    connections.push({ from: i, to: (i + 5) % 10, direction: 'forward', archDirection: 1 })
+    connections.push({ from: i, to: i + 10, direction: 'forward', archDirection: 1 })
+    connections.push({ from: i + 10, to: ((i + 1) % 10) + 10, direction: 'forward', archDirection: 1 })
   }
   
   // Reverse connections (arching downward)
   for (let i = 0; i < 10; i++) {
-    connections.push({
-      from: (i + 5) % 10,
-      to: i,
-      direction: 'reverse',
-      archDirection: -1 // downward
-    })
-    connections.push({
-      from: i + 10,
-      to: i,
-      direction: 'reverse',
-      archDirection: -1
-    })
-    connections.push({
-      from: 10 + ((i + 1) % 10),
-      to: i + 10,
-      direction: 'reverse',
-      archDirection: -1
-    })
+    connections.push({ from: (i + 5) % 10, to: i, direction: 'reverse', archDirection: -1 })
+    connections.push({ from: i + 10, to: i, direction: 'reverse', archDirection: -1 })
+    connections.push({ from: ((i + 1) % 10) + 10, to: i + 10, direction: 'reverse', archDirection: -1 })
   }
   
   return connections
 })
 
-// Create tether particles geometry
-const createTetherGeometry = () => {
+const tetherAttributes = computed(() => {
   const positions: number[] = []
   const colors: number[] = []
   const alphas: number[] = []
   const tetherIds: number[] = []
-  const archParams: number[] = [] // stores arch direction and progress
+  const archParams: number[] = []
   const chaoticPositions: number[] = []
   
+  if (props.stellarCorePositions.length < 20) {
+    return null
+  }
+  
   petersenConnections.value.forEach((connection, tetherIndex) => {
-    if (props.stellarCorePositions.length < 20) {
-      return
-    }
-
     const fromPos = props.stellarCorePositions[connection.from] || new Vector3()
     const toPos = props.stellarCorePositions[connection.to] || new Vector3()
     
@@ -118,8 +86,8 @@ const createTetherGeometry = () => {
         .add(toPos.clone().multiplyScalar(t * t))
       
       positions.push(pos.x, pos.y, pos.z)
-
-      // Chaotic initial position for this particle
+      
+      // Generate chaotic initial position
       const chaoticRadius = Math.random() * 1000
       const chaoticAngle = Math.random() * Math.PI * 2
       const chaoticHeight = (Math.random() - 0.5) * 500
@@ -129,139 +97,91 @@ const createTetherGeometry = () => {
         Math.sin(chaoticAngle) * chaoticRadius
       )
       
-      // Color based on direction and position along arch
+      // Color based on direction
       const color = connection.direction === 'forward' 
         ? tetherConfig.colors.forward
         : tetherConfig.colors.reverse
       colors.push(color.r, color.g, color.b)
       
-      // Alpha varies along the arch (fade at ends)
+      // Alpha varies along the arch
       const alpha = Math.sin(t * Math.PI) * tetherConfig.baseOpacity
       alphas.push(alpha)
       
       tetherIds.push(tetherIndex)
-      archParams.push(connection.archDirection, t) // direction, progress along arch
+      archParams.push(connection.archDirection, t)
     }
   })
-  
-  const geometry = new BufferGeometry()
-  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
-  geometry.setAttribute('color', new Float32BufferAttribute(colors, 3))
-  geometry.setAttribute('alpha', new Float32BufferAttribute(alphas, 1))
-  geometry.setAttribute('tetherId', new Float32BufferAttribute(tetherIds, 1))
-  geometry.setAttribute('archParams', new Float32BufferAttribute(archParams, 2))
-  geometry.setAttribute('chaoticPosition', new Float32BufferAttribute(chaoticPositions, 3))
-  
-  return geometry
-}
 
-// Create tether shader material
-const createTetherMaterial = () => {
-  return new ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-      uEvolutionProgress: { value: 0 },
-      uGlowIntensity: { value: tetherConfig.glowIntensity },
-      uFlowSpeed: { value: tetherConfig.flowSpeed },
-      uPointSize: { value: tetherConfig.particleSize }
-    },
-    vertexShader: tetherVertexShader,
-    fragmentShader: tetherFragmentShader,
-    transparent: true,
-    blending: AdditiveBlending,
-    depthWrite: false,
-    vertexColors: true
-  })
-}
-
-// Initialize tethers
-const initializeTethers = () => {
-  if (!props.enabled) return
-  
-  tetherGeometry.value = createTetherGeometry()
-  tetherMaterial.value = createTetherMaterial()
-  
-  if (tetherGeometry.value && tetherMaterial.value) {
-    tetherMesh.value = new Points(tetherGeometry.value, tetherMaterial.value)
-    if (tetherMesh.value) {
-      tetherMesh.value.renderOrder = tetherConfig.renderOrder
-    }
+  // Import BufferAttribute from three
+  // (add this import at the top if not present: import { BufferAttribute } from 'three')
+  return {
+    position: new BufferAttribute(new Float32Array(positions), 3),
+    color: new BufferAttribute(new Float32Array(colors), 3),
+    alpha: new BufferAttribute(new Float32Array(alphas), 1),
+    tetherId: new BufferAttribute(new Float32Array(tetherIds), 1),
+    archParams: new BufferAttribute(new Float32Array(archParams), 2),
+    chaoticPosition: new BufferAttribute(new Float32Array(chaoticPositions), 3)
   }
-}
+})
 
-// Update tethers based on evolution progress and stellar core positions
-const updateTethers = () => {
-  if (!tetherMaterial.value || !props.enabled) return
-  
-  tetherMaterial.value.uniforms.uTime.value = props.globalTime
-  tetherMaterial.value.uniforms.uEvolutionProgress.value = props.evolutionProgress
+const tetherShader = computed(() => ({
+  transparent: true,
+  depthWrite: false,
+  blending: tetherConfig.blendMode,
+  vertexColors: true,
+  vertexShader: tetherVertexShader,
+  fragmentShader: tetherFragmentShader,
+  uniforms: {
+    uTime: { value: 0.0 },
+    uEvolutionProgress: { value: 0.0 },
+    uPointSize: { value: tetherConfig.particleSize },
+    uFlowSpeed: { value: tetherConfig.flowSpeed },
+    uPulseFrequency: { value: tetherConfig.pulseFrequency },
+    uGlowIntensity: { value: tetherConfig.glowIntensity }
+  }
+}))
 
-  if (tetherMesh.value && props.cameraRef?.value) {
-    cameraDistance.value = props.cameraRef.value.position.distanceTo(tetherMesh.value.position)
+const { onLoop } = useRenderLoop()
+onLoop(() => {
+  if (!props.enabled || !tetherMaterialRef.value) return
+
+  const material = tetherMaterialRef.value
+  material.uniforms.uTime.value = props.globalTime
+  material.uniforms.uEvolutionProgress.value = props.evolutionProgress
+
+  if (tetherPointsRef.value && props.cameraRef?.value) {
+    cameraDistance.value = props.cameraRef.value.position.distanceTo(tetherPointsRef.value.position)
   }
 
   const lodLevel = getCurrentLODLevel(cameraDistance.value, 'tethers')
-  tetherMaterial.value.uniforms.uPointSize.value = lodLevel.particleSize || tetherConfig.particleSize
-  
-  // Update geometry if stellar core nodes have moved
-  if (props.stellarCorePositions.length === 20) {
-    // Recreate geometry with updated node positions
-    const newGeometry = createTetherGeometry()
-    if (tetherMesh.value && newGeometry) {
-      tetherMesh.value.geometry.dispose()
-      tetherMesh.value.geometry = newGeometry
-      tetherGeometry.value = newGeometry
-    }
-  }
-}
+  material.uniforms.uPointSize.value = lodLevel.particleSize || tetherConfig.particleSize
 
-// Cleanup
-const cleanup = () => {
-  if (tetherGeometry.value) {
-    tetherGeometry.value.dispose()
-    tetherGeometry.value = null
-  }
-  if (tetherMaterial.value) {
-    tetherMaterial.value.dispose()
-    tetherMaterial.value = null
-  }
-  tetherMesh.value = null
-}
-
-// Animation loop
-const { onLoop } = useRenderLoop()
-onLoop(() => {
-  updateTethers()
-})
-
-// Watch for changes
-watch(() => props.enabled, (enabled) => {
-  if (enabled) {
-    initializeTethers()
-  } else {
-    cleanup()
+  if (tetherPointsRef.value && props.galaxyCenter) {
+    tetherPointsRef.value.position.set(props.galaxyCenter.x, props.galaxyCenter.y, props.galaxyCenter.z)
   }
 })
 
+// Watch for position changes - trigger geometry recalculation
 watch(() => props.stellarCorePositions, () => {
-  if (props.enabled) {
-    updateTethers()
-  }
+  // tetherAttributes will automatically recalculate because it's computed
 }, { deep: true })
 
 onMounted(() => {
-  if (props.enabled) {
-    initializeTethers()
-  }
-})
-
-onUnmounted(() => {
-  cleanup()
+  // Initialization logic if needed
 })
 </script>
 
 <template>
-  <TresGroup v-if="enabled && tetherMesh">
-    <primitive :object="tetherMesh" />
+  <TresGroup v-if="enabled && tetherAttributes">
+    <TresPoints ref="tetherPointsRef">
+      <TresBufferGeometry 
+        ref="tetherGeometryRef"
+        :attributes="tetherAttributes"
+      />
+      <TresShaderMaterial 
+        ref="tetherMaterialRef"
+        v-bind="tetherShader"
+      />
+    </TresPoints>
   </TresGroup>
 </template>
