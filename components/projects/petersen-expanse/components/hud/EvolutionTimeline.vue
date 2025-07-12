@@ -87,10 +87,10 @@ const timelineTitle = computed(() => {
     case 'ultra':
       return 'Evolution'
     case 'compact':
-      return 'Galaxy Evolution'
+      return 'Expanse Evolution'
     case 'full':
     default:
-      return 'Petersen Galaxy Evolution Timeline'
+      return 'Petersen Expanse Evolution Timeline'
   }
 })
 
