@@ -45,7 +45,7 @@ const lineGeometry = ref<{
     colors: BufferAttribute
 } | null>(null)
 
-// Cache original connection data to avoid recalculating every frame
+// Cache original connection data
 const connectionData = ref<Array<{
     fromId: number
     toId: number
@@ -53,25 +53,12 @@ const connectionData = ref<Array<{
     color: { r: number; g: number; b: number }
 }>>([])
 
-// Add computed for reactive debug info
-const debugInfo = computed(() => {
-    return {
-        enabled: props.enabled,
-        globalTime: props.globalTime,
-        evolutionProgress: props.evolutionProgress,
-        galaxyCenter: {
-            x: props.galaxyCenter?.x || 0,
-            y: props.galaxyCenter?.y || 0,
-            z: props.galaxyCenter?.z || 0
-        },
-        nodes: nodeData.value.length,
-        linesInitialized: isLinesInitialized.value,
-        connections: connectionData.value.length,
-        rotationSpeed: orbitalConfig.rotationSpeed
-    }
+const currentRotation = computed(() => {
+    const rotationSpeed = orbitalConfig.rotationSpeed || 0
+    return props.globalTime * rotationSpeed
 })
 
-// Calculate arch segment position (segmented arch)
+// Calculate arch segment position
 function calculateArchPosition(fromPos: Vector3, toPos: Vector3, t: number, archDirection: number): Vector3 {
     const basePos = fromPos.clone().lerp(toPos, t)
     const archHeight = (tetherConfig.archHeight || 2) * Math.sin(t * Math.PI) * archDirection
@@ -79,7 +66,6 @@ function calculateArchPosition(fromPos: Vector3, toPos: Vector3, t: number, arch
     return basePos
 }
 
-// Initialize line data - only create static structure, no position calculation
 function initializeLines() {
     if (isLinesInitialized.value) return
 
@@ -103,7 +89,7 @@ function initializeLines() {
             type: star.type
         }))
 
-        // Build connection data structure (no position calculation)
+        // Build connection data structure
         const connections: typeof connectionData.value = []
 
         // Add forward connections (upward arch)
@@ -132,8 +118,8 @@ function initializeLines() {
 
         connectionData.value = connections
 
-        // Create initial geometry (using current time)
-        updateGeometry()
+        // Create static geometry (no rotation applied)
+        createStaticGeometry()
 
         isLinesInitialized.value = true
         
@@ -144,15 +130,11 @@ function initializeLines() {
     }
 }
 
-// Update geometry - recalculate all positions based on current time
-function updateGeometry() {
-    if (!isComponentMounted.value || connectionData.value.length === 0) return
+function createStaticGeometry() {
+    if (connectionData.value.length === 0) return
 
     try {
-        const currentTime = props.globalTime || 0
-        const rotationSpeed = orbitalConfig.rotationSpeed || 0
         const archSegments = tetherConfig.archSegments || 20
-
         const positions: number[] = []
         const colors: number[] = []
 
@@ -165,20 +147,16 @@ function updateGeometry() {
             const fromNode = nodeData.value[conn.fromId]
             const toNode = nodeData.value[conn.toId]
 
-            // Calculate current rotated node positions
-            const fromAngle = fromNode.angle + currentTime * rotationSpeed
-            const toAngle = toNode.angle + currentTime * rotationSpeed
-
             const fromPos = new Vector3(
-                fromNode.radius * Math.cos(fromAngle),
+                fromNode.radius * Math.cos(fromNode.angle),
                 0,
-                fromNode.radius * Math.sin(fromAngle)
+                fromNode.radius * Math.sin(fromNode.angle)
             )
 
             const toPos = new Vector3(
-                toNode.radius * Math.cos(toAngle),
+                toNode.radius * Math.cos(toNode.angle),
                 0,
-                toNode.radius * Math.sin(toAngle)
+                toNode.radius * Math.sin(toNode.angle)
             )
 
             // Create arch segments
@@ -199,35 +177,18 @@ function updateGeometry() {
             }
         })
 
-        // Update or create BufferAttributes
-        if (lineGeometry.value) {
-            // Update existing geometry
-            if (lineGeometry.value.positions.array.length === positions.length) {
-                // Same length, update array content directly
-                lineGeometry.value.positions.array.set(positions)
-                lineGeometry.value.positions.needsUpdate = true
-            } else {
-                // Different length, recreate
-                lineGeometry.value.positions = new BufferAttribute(new Float32Array(positions), 3)
-                lineGeometry.value.colors = new BufferAttribute(new Float32Array(colors), 3)
-            }
-        } else {
-            // Create new geometry
-            lineGeometry.value = {
-                positions: new BufferAttribute(new Float32Array(positions), 3),
-                colors: new BufferAttribute(new Float32Array(colors), 3)
-            }
+        // Create geometry once
+        lineGeometry.value = {
+            positions: new BufferAttribute(new Float32Array(positions), 3),
+            colors: new BufferAttribute(new Float32Array(colors), 3)
         }
 
     } catch (error) {
-        Logger.error('TETHERS_TEST', 'Failed to update geometry', error)
+        Logger.error('TETHERS_TEST', 'Failed to create static geometry', error)
     }
 }
 
-// Use Tres render loop - lower update frequency
 let renderLoopCleanup: (() => void) | null = null
-let lastUpdateTime = 0
-const updateInterval = 1000 / 30 // 30 FPS, lower update frequency
 
 function startRenderLoop() {
     if (renderLoopCleanup) return
@@ -238,15 +199,6 @@ function startRenderLoop() {
         if (!isComponentMounted.value || !props.enabled || !isLinesInitialized.value) return
 
         try {
-            const currentTime = performance.now()
-            
-            // Limit update frequency
-            if (currentTime - lastUpdateTime >= updateInterval) {
-                updateGeometry()
-                lastUpdateTime = currentTime
-            }
-
-            // Update line group position (update every frame, lower performance)
             if (linesGroupRef.value) {
                 linesGroupRef.value.position.copy(props.galaxyCenter)
             }
@@ -286,14 +238,8 @@ watch(() => props.evolutionProgress, (progress) => {
     }
 })
 
-// Watch globalTime changes, but don't update positions here (avoid duplicate updates)
-watch(() => props.globalTime, (_time) => {
-    // Position updates handled in renderLoop
-})
-
 onMounted(() => {
     isComponentMounted.value = true
-    console.log('TethersTest: Component mounted')
     
     if (props.enabled) {
         startRenderLoop()
@@ -306,16 +252,15 @@ onMounted(() => {
 onUnmounted(() => {
     isComponentMounted.value = false
     stopRenderLoop()
-    console.log('TethersTest: Component unmounted')
 })
 </script>
 
 <template>
-    <!-- Arch line rendering -->
     <TresGroup 
         v-if="props.enabled && isLinesInitialized && lineGeometry" 
         ref="linesGroupRef" 
         :position="props.galaxyCenter"
+        :rotation="[0, currentRotation, 0]"
     >
         <TresLineSegments>
             <TresBufferGeometry>
