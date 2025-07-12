@@ -5,7 +5,7 @@ import { OrbitControls } from '@tresjs/cientos'
 
 import Stars from '../echo-mission/3d/Stars.vue'
 
-import Tethers from './components/scene/TethersTest.vue'
+import Tethers from './components/scene/Tethers.vue'
 
 import GridDotBox from './components/scene/GridDotBox.vue'
 import OrbitalSystem from './components/scene/OrbitalSystem.vue'
