@@ -30,8 +30,8 @@ export interface TetherConfig {
 export const tetherConfig: TetherConfig = {
   // Visual parameters
   particlesPerTether: 64,
-  particleSize: 32, // Size of each particle in pixels
-  archHeight: 1.5, // Height of arch above/below XZ plane
+  particleSize: 25, // Size of each particle in pixels
+  archHeight: 2.5, // Height of arch above/below XZ plane
   baseOpacity: 0.7,
   glowIntensity: 1.2,
 
