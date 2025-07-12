@@ -6,7 +6,6 @@ export interface TetherConfig {
   particlesPerTether: number
   particleSize: number
   archHeight: number
-  archSegments: number
   baseOpacity: number
   glowIntensity: number
 
@@ -30,16 +29,15 @@ export interface TetherConfig {
 
 export const tetherConfig: TetherConfig = {
   // Visual parameters
-  particlesPerTether: 32, // Reduced for better performance
-  particleSize: 20, // Reduced size
-  archHeight: 1.2, // Increased arch height for better visibility
-  archSegments: 16,
-  baseOpacity: 0.8, // Increased opacity
-  glowIntensity: 1.5, // Increased glow
+  particlesPerTether: 32, // particles per tether
+  particleSize: 2, //  size
+  archHeight: 0.8, //  arch height for better visibility
+  baseOpacity: 0.9, //  opacity
+  glowIntensity: 0.85, // glow
 
   // Animation parameters  
-  flowSpeed: 1.2, // Increased flow speed
-  pulseFrequency: 0.8, // Reduced pulse frequency
+  flowSpeed: 8, // flow speed
+  pulseFrequency: 0.1, // pulse frequency
 
   // Colors - more distinct colors
   colors: {
