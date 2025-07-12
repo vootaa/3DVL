@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { Vector3, BufferAttribute, AdditiveBlending, ShaderMaterial } from 'three'
+import { Vector3, BufferAttribute, AdditiveBlending, ShaderMaterial, Color } from 'three'
 import { useRenderLoop } from '@tresjs/core'
 
 import { tetherConfig, tetherConnections } from '../../configs/tether-config'
@@ -48,6 +48,7 @@ const nodeData = ref<Array<{
   radius: number
   angle: number
   type: string
+  color: Color
 }>>([])
 
 function initializeTethers() {
@@ -61,17 +62,19 @@ function initializeTethers() {
       throw new Error('No star data available')
     }
 
-    // Prepare node data (base angles without rotation)
+    // Prepare node data with colors from stellar core
     nodeData.value = starClusterConfig.stars.map(star => ({
       id: star.id,
       radius: star.r,
       angle: star.theta * Math.PI / 180, // Base angle
-      type: star.type
+      type: star.type,
+      color: starClusterConfig.visual.colors[star.type as keyof typeof starClusterConfig.visual.colors]
     }))
 
     // Generate particle data
     const positions: number[] = []
-    const colors: number[] = []
+    const headColors: number[] = [] // Source node colors (head)
+    const tailColors: number[] = [] // Tail colors (brighter variant)
     const alphas: number[] = []
     const tetherIds: number[] = []
     const archParams: number[] = []
@@ -83,8 +86,7 @@ function initializeTethers() {
     // Helper function to add connection particles
     const addConnection = (
       connection: number[],
-      direction: number,
-      color: { r: number; g: number; b: number }
+      direction: number
     ) => {
       const [fromId, toId] = connection
       
@@ -93,12 +95,25 @@ function initializeTethers() {
         return
       }
 
+      const sourceNode = nodeData.value[fromId]
+      const headColor = sourceNode.color
+      
+      // Create tail color - brighter variant of head color
+      const tailColor = headColor.clone()
+      tailColor.multiplyScalar(1.3) // Make tail brighter
+      tailColor.r = Math.min(tailColor.r, 1.0)
+      tailColor.g = Math.min(tailColor.g, 1.0)
+      tailColor.b = Math.min(tailColor.b, 1.0)
+
       for (let i = 0; i < tetherConfig.particlesPerTether; i++) {
         // Initial reference position (will be computed in shader)
         positions.push(0, 0, 0)
 
-        // Color
-        colors.push(color.r, color.g, color.b)
+        // Head color (source node color)
+        headColors.push(headColor.r, headColor.g, headColor.b)
+        
+        // Tail color (brighter variant)
+        tailColors.push(tailColor.r, tailColor.g, tailColor.b)
         
         // Base alpha
         alphas.push(tetherConfig.baseOpacity)
@@ -120,17 +135,18 @@ function initializeTethers() {
 
     // Add all connections
     tetherConnections.forward.forEach(conn => 
-      addConnection(conn, 1, tetherConfig.colors.forward)
+      addConnection(conn, 1)
     )
     
     tetherConnections.reverse.forEach(conn => 
-      addConnection(conn, -1, tetherConfig.colors.reverse)
+      addConnection(conn, -1)
     )
 
     // Create buffer attributes
     geometryAttributes.value = {
       position: new BufferAttribute(new Float32Array(positions), 3),
-      color: new BufferAttribute(new Float32Array(colors), 3),
+      headColor: new BufferAttribute(new Float32Array(headColors), 3),
+      tailColor: new BufferAttribute(new Float32Array(tailColors), 3),
       alpha: new BufferAttribute(new Float32Array(alphas), 1),
       tetherId: new BufferAttribute(new Float32Array(tetherIds), 1),
       archParams: new BufferAttribute(new Float32Array(archParams), 2),
@@ -146,6 +162,8 @@ function initializeTethers() {
       uArchHeight: { value: tetherConfig.archHeight },
       uParticleSpacing: { value: tetherConfig.particleSpacing },
       uTrailLength: { value: tetherConfig.trailLength },
+      uHeadBrightness: { value: tetherConfig.trailColors.head },
+      uTailBrightness: { value: tetherConfig.trailColors.tail },
       uNodeRadii: { value: new Float32Array(nodeData.value.map(n => n.radius)) },
       uNodeAngles: { value: new Float32Array(nodeData.value.map(n => n.angle)) }
     }
@@ -257,7 +275,8 @@ onUnmounted(() => {
     >
       <TresBufferGeometry 
         :position="[geometryAttributes.position.array, 3]"
-        :color="[geometryAttributes.color.array, 3]"
+        :head-color="[geometryAttributes.headColor.array, 3]"
+        :tail-color="[geometryAttributes.tailColor.array, 3]"
         :alpha="[geometryAttributes.alpha.array, 1]"
         :tether-id="[geometryAttributes.tetherId.array, 1]"
         :arch-params="[geometryAttributes.archParams.array, 2]"
@@ -269,7 +288,6 @@ onUnmounted(() => {
         :transparent="true"
         :depth-write="false"
         :blending="AdditiveBlending"
-        :vertex-colors="true"
         :vertex-shader="tetherVertexShader"
         :fragment-shader="tetherFragmentShader"
         :uniforms="materialUniforms"

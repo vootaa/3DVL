@@ -10,22 +10,19 @@ void main() {
     // Discard pixels outside circle
     if(dist > 0.5) discard;
 
-    // Create soft particle edge
-    float edge = 1.0 - smoothstep(0.3, 0.5, dist);
+    // Create soft particle edge with consistent brightness
+    float edge = 1.0 - smoothstep(0.2, 0.5, dist);
     
-    // Core brightness based on trail position
-    float coreBrightness = mix(0.4, 1.0, vTrailPosition);
+    // Create bright core
+    float core = 1.0 - smoothstep(0.0, 0.3, dist);
+    core = pow(core, 1.5);
     
-    // Create bright core for leading particles
-    float core = 1.0 - smoothstep(0.0, 0.2, dist);
-    core = pow(core, 2.0) * coreBrightness;
-    
-    // Combine edge and core
-    float finalStrength = edge + core;
+    // Combine edge and core for consistent brightness
+    float finalStrength = edge + core * 0.5;
     finalStrength = min(finalStrength, 1.0);
     
-    // Apply color with slight intensity boost for trail head
-    vec3 finalColor = vColor * (0.8 + 0.4 * vTrailPosition);
+    // Use the interpolated color from vertex shader
+    vec3 finalColor = vColor;
     float finalAlpha = vAlpha * finalStrength;
 
     // Ensure alpha is within valid range

@@ -1,3 +1,5 @@
+attribute vec3 headColor;
+attribute vec3 tailColor;
 attribute float alpha;
 attribute float tetherId;
 attribute vec2 archParams; // x: arch direction, y: particle index
@@ -12,6 +14,8 @@ uniform float uBaseRotationSpeed;
 uniform float uArchHeight;
 uniform float uParticleSpacing;
 uniform float uTrailLength;
+uniform float uHeadBrightness;
+uniform float uTailBrightness;
 uniform float uNodeRadii[20];
 uniform float uNodeAngles[20];
 
@@ -20,8 +24,6 @@ varying vec3 vColor;
 varying float vTrailPosition;
 
 void main() {
-    vColor = color;
-
     // Get the two connected node info
     int fromNodeId = int(nodeIndices.x);
     int toNodeId = int(nodeIndices.y);
@@ -63,18 +65,22 @@ void main() {
     vTrailPosition = t;
     float trailFade = 1.0;
     
-    // Create trail by fading particles based on their flow position
+    // Create smooth trail by fading particles based on their flow position
     if (t > (1.0 - uTrailLength)) {
-        // Leading particles are brighter
-        trailFade = 1.0;
+        // Leading particles (head) - use head brightness
+        trailFade = uHeadBrightness;
+        vColor = headColor * uHeadBrightness;
     } else {
-        // Trailing particles fade out
+        // Trailing particles - interpolate between head and tail
         float trailT = t / (1.0 - uTrailLength);
-        trailFade = smoothstep(0.0, 1.0, trailT) * 0.3 + 0.1;
+        trailFade = mix(uTailBrightness, uHeadBrightness, trailT);
+        
+        // Interpolate colors from tail to head
+        vColor = mix(tailColor * uTailBrightness, headColor * uHeadBrightness, trailT);
     }
     
     // Final alpha calculation with trail effect
-    vAlpha = alpha * smoothProgress * trailFade;
+    vAlpha = alpha * smoothProgress * min(trailFade, 1.0);
 
     // Apply evolution progress to position
     vec3 finalPosition = basePos * smoothProgress;
@@ -84,6 +90,6 @@ void main() {
     
     // Adaptive point size based on distance and trail position
     float distance = length(mvPosition.xyz);
-    float sizeMultiplier = mix(0.5, 1.0, trailFade); // Larger particles at trail head
+    float sizeMultiplier = mix(0.7, 1.0, min(trailFade, 1.0)); // Larger particles at trail head
     gl_PointSize = uPointSize * sizeMultiplier * (300.0 / max(distance, 50.0));
 }

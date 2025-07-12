@@ -1,4 +1,4 @@
-import { Color, AdditiveBlending } from 'three'
+import { AdditiveBlending } from 'three'
 import type { Blending } from 'three'
 
 export interface TetherConfig {
@@ -13,10 +13,10 @@ export interface TetherConfig {
   particleSpacing: number
   trailLength: number
 
-  // Colors
-  colors: {
-    forward: Color
-    reverse: Color
+  // Trail colors
+  trailColors: {
+    head: number // Brightness multiplier for head
+    tail: number // Brightness multiplier for tail
   }
 
   // Rendering
@@ -39,10 +39,10 @@ export const tetherConfig: TetherConfig = {
   particleSpacing: 0.05, // Space between particles (0-1)
   trailLength: 0.35, // Length of particle trail effect
 
-  // Colors - distinct colors for direction
-  colors: {
-    forward: new Color(0x00ccff), // Cyan for forward flow
-    reverse: new Color(0xff6600)  // Orange for reverse flow
+  // Trail colors - brightness multipliers
+  trailColors: {
+    head: 1.2, // Head particles are brighter (source node color)
+    tail: 0.8  // Tail particles are slightly dimmer but still bright
   },
 
   // Rendering
