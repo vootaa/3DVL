@@ -54,7 +54,7 @@ function initializeTethers() {
   if (isInitialized.value) return
 
   try {
-    Logger.log('TETHERS', 'Initializing tether particles...')
+    Logger.log('TETHERS', 'Initializing tether flow particles...')
 
     // Validate data
     if (!starClusterConfig?.stars || starClusterConfig.stars.length === 0) {
@@ -76,7 +76,7 @@ function initializeTethers() {
     const tetherIds: number[] = []
     const archParams: number[] = []
     const nodeIndices: number[] = []
-    const progressValues: number[] = []
+    const particleIndices: number[] = []
 
     let connectionIndex = 0
 
@@ -94,28 +94,26 @@ function initializeTethers() {
       }
 
       for (let i = 0; i < tetherConfig.particlesPerTether; i++) {
-        const t = i / (tetherConfig.particlesPerTether - 1)
-
         // Initial reference position (will be computed in shader)
         positions.push(0, 0, 0)
 
         // Color
         colors.push(color.r, color.g, color.b)
         
-        // Alpha based on arch position
-        alphas.push(Math.sin(t * Math.PI) * tetherConfig.baseOpacity)
+        // Base alpha
+        alphas.push(tetherConfig.baseOpacity)
         
         // Tether ID
         tetherIds.push(connectionIndex)
         
-        // Arch parameters: direction and progress
-        archParams.push(direction, t)
+        // Arch parameters: direction and particle index
+        archParams.push(direction, i)
         
         // Node indices for shader lookup
         nodeIndices.push(fromId, toId)
         
-        // Progress along arch
-        progressValues.push(t)
+        // Particle index in this tether
+        particleIndices.push(i)
       }
       connectionIndex++
     }
@@ -137,24 +135,24 @@ function initializeTethers() {
       tetherId: new BufferAttribute(new Float32Array(tetherIds), 1),
       archParams: new BufferAttribute(new Float32Array(archParams), 2),
       nodeIndices: new BufferAttribute(new Float32Array(nodeIndices), 2),
-      progressAlongArch: new BufferAttribute(new Float32Array(progressValues), 1)
+      particleIndex: new BufferAttribute(new Float32Array(particleIndices), 1)
     }
 
     // Create material uniforms using rotation manager
     materialUniforms.value = {
       ...rotationManager.getShaderUniforms(),
       uPointSize: { value: tetherConfig.particleSize },
-      uGlowIntensity: { value: tetherConfig.glowIntensity },
       uFlowSpeed: { value: tetherConfig.flowSpeed },
-      uPulseFrequency: { value: tetherConfig.pulseFrequency },
       uArchHeight: { value: tetherConfig.archHeight },
+      uParticleSpacing: { value: tetherConfig.particleSpacing },
+      uTrailLength: { value: tetherConfig.trailLength },
       uNodeRadii: { value: new Float32Array(nodeData.value.map(n => n.radius)) },
       uNodeAngles: { value: new Float32Array(nodeData.value.map(n => n.angle)) }
     }
 
     isInitialized.value = true
     
-    Logger.log('TETHERS', `Initialized ${positions.length / 3} particles for ${connectionIndex} connections`)
+    Logger.log('TETHERS', `Initialized ${positions.length / 3} flow particles for ${connectionIndex} connections`)
 
   } catch (error) {
     Logger.error('TETHERS', 'Failed to initialize tethers', error)
@@ -264,7 +262,7 @@ onUnmounted(() => {
         :tether-id="[geometryAttributes.tetherId.array, 1]"
         :arch-params="[geometryAttributes.archParams.array, 2]"
         :node-indices="[geometryAttributes.nodeIndices.array, 2]"
-        :progress-along-arch="[geometryAttributes.progressAlongArch.array, 1]"
+        :particle-index="[geometryAttributes.particleIndex.array, 1]"
       />
       <TresShaderMaterial
         v-if="Object.keys(materialUniforms).length > 0"

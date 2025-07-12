@@ -1,22 +1,23 @@
 attribute float alpha;
 attribute float tetherId;
-attribute vec2 archParams; // x: arch direction, y: progress along arch
+attribute vec2 archParams; // x: arch direction, y: particle index
 attribute vec2 nodeIndices; // x: fromNodeId, y: toNodeId
-attribute float progressAlongArch;
+attribute float particleIndex; // Index of this particle in the tether
 
 uniform float uTime;
 uniform float uEvolutionProgress;
 uniform float uPointSize;
 uniform float uFlowSpeed;
-uniform float uPulseFrequency;
 uniform float uBaseRotationSpeed;
 uniform float uArchHeight;
+uniform float uParticleSpacing;
+uniform float uTrailLength;
 uniform float uNodeRadii[20];
 uniform float uNodeAngles[20];
 
 varying float vAlpha;
 varying vec3 vColor;
-varying float vFlow;
+varying float vTrailPosition;
 
 void main() {
     vColor = color;
@@ -42,38 +43,47 @@ void main() {
         uNodeRadii[toNodeId] * sin(toAngle)
     );
 
-    // Calculate arch position using simple interpolation with height
-    float t = progressAlongArch;
-    float archDirection = archParams.x; // 1.0 is upward, -1.0 is downward
+    // Calculate flowing particle position
+    float archDirection = archParams.x; // 1.0 for up arch, -1.0 for down arch
+    float particleOffset = particleIndex * uParticleSpacing;
     
-    // Linear interpolation between from and to positions
+    // Create flowing effect: particles move along the tether path
+    float flowTime = uTime * uFlowSpeed + particleOffset;
+    float t = mod(flowTime, 1.0); // Keep t in [0,1] range for cycling
+    
+    // Calculate arch position using sine wave for height
     vec3 basePos = mix(fromPos, toPos, t);
-    
-    // Add arch height using sine wave
     float heightMultiplier = sin(t * 3.14159265359);
     basePos.y += archDirection * uArchHeight * heightMultiplier;
 
     // Smooth transition for evolution progress
     float smoothProgress = smoothstep(0.0, 1.0, uEvolutionProgress);
     
-    // Flow effect along the arch
-    float flowPhase = uTime * uFlowSpeed + t * 6.28318530718;
-    vFlow = sin(flowPhase) * 0.5 + 0.5;
+    // Trail effect: particles fade based on their position in the flow
+    vTrailPosition = t;
+    float trailFade = 1.0;
     
-    // Pulse effect
-    float pulsePhase = uTime * uPulseFrequency;
-    float pulse = sin(pulsePhase) * 0.3 + 0.7;
+    // Create trail by fading particles based on their flow position
+    if (t > (1.0 - uTrailLength)) {
+        // Leading particles are brighter
+        trailFade = 1.0;
+    } else {
+        // Trailing particles fade out
+        float trailT = t / (1.0 - uTrailLength);
+        trailFade = smoothstep(0.0, 1.0, trailT) * 0.3 + 0.1;
+    }
     
-    // Final alpha calculation
-    vAlpha = alpha * smoothProgress * pulse * (0.6 + 0.4 * vFlow);
+    // Final alpha calculation with trail effect
+    vAlpha = alpha * smoothProgress * trailFade;
 
-    // Apply evolution progress to position (particles appear gradually)
+    // Apply evolution progress to position
     vec3 finalPosition = basePos * smoothProgress;
 
     vec4 mvPosition = modelViewMatrix * vec4(finalPosition, 1.0);
     gl_Position = projectionMatrix * mvPosition;
     
-    // Adaptive point size based on distance
+    // Adaptive point size based on distance and trail position
     float distance = length(mvPosition.xyz);
-    gl_PointSize = uPointSize * (300.0 / max(distance, 50.0));
+    float sizeMultiplier = mix(0.5, 1.0, trailFade); // Larger particles at trail head
+    gl_PointSize = uPointSize * sizeMultiplier * (300.0 / max(distance, 50.0));
 }

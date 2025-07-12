@@ -1,8 +1,6 @@
-uniform float uGlowIntensity;
-
 varying float vAlpha;
 varying vec3 vColor;
-varying float vFlow;
+varying float vTrailPosition;
 
 void main() {
     // Create circular particle shape
@@ -12,16 +10,23 @@ void main() {
     // Discard pixels outside circle
     if(dist > 0.5) discard;
 
-    // Create soft glow effect
-    float glow = 1.0 - smoothstep(0.0, 0.5, dist);
-    glow = pow(glow, 1.5);
-
-    // Apply flow effect for brightness variation
-    float brightness = uGlowIntensity * (0.7 + 0.3 * vFlow);
-
-    // Final color and alpha
-    vec3 finalColor = vColor * brightness;
-    float finalAlpha = vAlpha * glow;
+    // Create soft particle edge
+    float edge = 1.0 - smoothstep(0.3, 0.5, dist);
+    
+    // Core brightness based on trail position
+    float coreBrightness = mix(0.4, 1.0, vTrailPosition);
+    
+    // Create bright core for leading particles
+    float core = 1.0 - smoothstep(0.0, 0.2, dist);
+    core = pow(core, 2.0) * coreBrightness;
+    
+    // Combine edge and core
+    float finalStrength = edge + core;
+    finalStrength = min(finalStrength, 1.0);
+    
+    // Apply color with slight intensity boost for trail head
+    vec3 finalColor = vColor * (0.8 + 0.4 * vTrailPosition);
+    float finalAlpha = vAlpha * finalStrength;
 
     // Ensure alpha is within valid range
     finalAlpha = clamp(finalAlpha, 0.0, 1.0);
