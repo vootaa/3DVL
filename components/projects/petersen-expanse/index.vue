@@ -10,7 +10,7 @@ import Stars from '../echo-mission/3d/Stars.vue'
 
 import OrbitalSystem from './components/scene/OrbitalSystem.vue'
 import StellarCore from './components/scene/StellarCore.vue'
-//import Tethers from './components/scene/Tethers.vue'
+import Tethers from './components/scene/Tethers.vue'
 
 import EvolutionAnimator from './components/animation/EvolutionAnimator.vue'
 
@@ -84,10 +84,10 @@ function updateStellarCorePositions() {
       const positions = stellarCoreRef.value.getStellarPositions()
       if (positions && positions.length > 0) {
         stellarCorePositions.value = positions
-        /*Logger.throttle(
+        Logger.throttle(
           'INDEX_POS_UPDATE',
-          `Updated stellar positions: ${positions.length}, first: ${positions[0]?.toArray?.().join(', ')}, last: ${positions[positions.length - 1]?.toArray?.().join(', ')}`
-        )*/
+          `Updated stellar positions: ${stellarCorePositions.value.length}, first: ${stellarCorePositions.value[0]?.toArray?.().join(', ')}, last: ${stellarCorePositions.value[positions.length - 1]?.toArray?.().join(', ')}`
+        )
 
       } else {
         Logger.throttle('INDEX_POS_EMPTY', 'No stellar positions available')
@@ -180,9 +180,9 @@ function handleEvolutionTimelineVisible(_val: boolean) {
       <OrbitalSystem :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
         :evolution-progress="state.evolutionProgress" :enabled="state.orbitalSystemEnabled" />
 
-      <!--<Tethers :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
+      <Tethers :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
         :evolution-progress="state.evolutionProgress" :enabled="state.tethersEnabled"
-        :stellar-core-positions="stellarCorePositions" />-->
+        :stellar-core-positions="stellarCorePositions" />
 
       <Stars />
 

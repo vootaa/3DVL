@@ -4,7 +4,6 @@ import { AdditiveBlending, Points, ShaderMaterial, Vector3 } from 'three'
 import { useRenderLoop } from '@tresjs/core'
 
 import { orbitalConfig, orbitalColorConfig } from '../../configs/orbital-config'
-import { getCurrentLODLevel } from '../../configs/lodlevel-config'
 import { Logger } from '../../../../utils/logger'
 
 import vertexShader from '../../shaders/orbital-vertex.glsl'
@@ -85,7 +84,6 @@ const shader = {
 }
 
 const bufferRef = ref<InstanceType<typeof Points> | null>(null)
-const cameraDistance = ref(1000)
 
 const { onLoop } = useRenderLoop()
 onLoop(() => {
@@ -99,29 +97,6 @@ onLoop(() => {
 
     if (galaxyCenter?.value) {
       bufferRef.value.position.set(galaxyCenter.value.x, galaxyCenter.value.y, galaxyCenter.value.z)
-    }
-
-    if (bufferRef.value && props.cameraRef?.value) {
-      try {
-        const cameraPos = props.cameraRef.value.position
-        const corePos = bufferRef.value.position
-
-        if (cameraPos && corePos && typeof cameraPos.distanceTo === 'function') {
-          cameraDistance.value = cameraPos.distanceTo(corePos)
-        }
-      } catch (e) {
-        Logger.throttle('Orbital_CAMERA', 'Camera distance calculation failed')
-      }
-    }
-
-    // LOD application
-    try {
-      const lodLevel = getCurrentLODLevel(cameraDistance.value, 'orbital')
-      if (material) {
-        material.uniforms.uParticleSize.value = lodLevel.particleSize || 15
-      }
-    } catch (e) {
-      Logger.throttle('TETHERS_LOD', 'LOD calculation failed')
     }
   } catch (error) {
     Logger.error('Orbital', 'Error in Orbital System render loop', error)

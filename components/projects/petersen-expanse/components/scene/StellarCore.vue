@@ -5,7 +5,6 @@ import { useRenderLoop } from '@tresjs/core'
 
 import { orbitalConfig } from '../../configs/orbital-config'
 import { starClusterConfig } from '../../configs/star-cluster-config'
-import { getCurrentLODLevel } from '../../configs/lodlevel-config'
 import { Logger } from '../../../../utils/logger'
 
 import starVertexShader from '../../shaders/star-vertex.glsl'
@@ -182,16 +181,6 @@ onLoop(() => {
       } catch (e) {
         Logger.throttle('STELLAR_CAMERA', 'Camera distance calculation failed')
       }
-    }
-
-    try {
-      const lodLevel = getCurrentLODLevel(cameraDistance.value, 'stellar')
-
-      if (stellarCoreMaterial.value.uniforms.particleSize) {
-        stellarCoreMaterial.value.uniforms.particleSize.value = lodLevel.particleSize || 1.0
-      }
-    } catch (e) {
-      Logger.throttle('TETHERS_LOD', 'LOD calculation failed')
     }
 
     stellarCoreMaterial.value.uniforms.time.value = props.globalTime

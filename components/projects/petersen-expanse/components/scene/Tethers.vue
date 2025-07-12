@@ -4,7 +4,6 @@ import { Vector3, BufferAttribute } from 'three'
 import { useRenderLoop } from '@tresjs/core'
 
 import { tetherConfig, tetherConnections } from '../../configs/tether-config'
-import { getCurrentLODLevel } from '../../configs/lodlevel-config'
 import { Logger } from '../../../../utils/logger'
 
 import tetherVertexShader from '../../shaders/tether-vertex.glsl'
@@ -27,8 +26,6 @@ const props = withDefaults(defineProps<Props>(), {
   stellarCorePositions: () => [],
   cameraRef: null
 })
-
-const cameraDistance = ref(1000)
 
 const tetherGeometryRef = ref()
 const tetherMaterialRef = ref()
@@ -271,33 +268,6 @@ onLoop(() => {
     if (material.uniforms.uEvolutionProgress) {
       material.uniforms.uEvolutionProgress.value = props.evolutionProgress || 0
     }
-
-    if (tetherPointsRef.value && props.cameraRef?.value) {
-      try {
-        const cameraPos = props.cameraRef.value.position
-        const tetherPos = tetherPointsRef.value.position
-
-        if (cameraPos && tetherPos && typeof cameraPos.distanceTo === 'function') {
-          cameraDistance.value = cameraPos.distanceTo(tetherPos)
-        } else {
-          cameraDistance.value = 1000
-        }
-      } catch (e) {
-        Logger.throttle('TETHERS_CAMERA', 'Camera distance calculation failed')
-        cameraDistance.value = 1000
-      }
-    }
-
-    // LOD application
-    try {
-      const lodLevel = getCurrentLODLevel(cameraDistance.value, 'tethers')
-      if (material.uniforms.uPointSize && lodLevel) {
-        material.uniforms.uPointSize.value = lodLevel.particleSize || tetherConfig.particleSize
-      }
-    } catch (e) {
-      Logger.throttle('TETHERS_LOD', 'LOD calculation failed')
-    }
-
 
     if (tetherPointsRef.value && props.galaxyCenter) {
       try {
