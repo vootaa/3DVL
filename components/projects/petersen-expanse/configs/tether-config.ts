@@ -25,14 +25,13 @@ export interface TetherConfig {
 
   // Performance
   maxTethers: number
-  lodDistances: number[]
 }
 
 export const tetherConfig: TetherConfig = {
   // Visual parameters
-  particlesPerTether: 32,
-  particleSize: 8.0,
-  archHeight: 150.0, // Height of arch above/below XZ plane
+  particlesPerTether: 64,
+  particleSize: 32, // Size of each particle in pixels
+  archHeight: 1.5, // Height of arch above/below XZ plane
   baseOpacity: 0.7,
   glowIntensity: 1.2,
 
@@ -52,7 +51,6 @@ export const tetherConfig: TetherConfig = {
 
   // Performance
   maxTethers: 60,
-  lodDistances: [1000, 2000, 5000] // Distance-based level of detail
 }
 
 // Tether connection patterns based on Petersen Graph
