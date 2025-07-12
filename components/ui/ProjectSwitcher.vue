@@ -17,7 +17,7 @@ const projectsToList = computed(() => {
     // On a project page: show homepage first, then other projects
     const otherProjects = projects.filter(p => p.path !== route.path);
     return [
-      { id: 'homepage', name: 'Homepage', path: '/' },
+      { id: 'homepage', name: 'Vootaa HomePage', path: '/' },
       ...otherProjects
     ];
   } else {
@@ -47,7 +47,7 @@ onUnmounted(() => {
     <button @click="showPanel = !showPanel"
       class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-gray-800/50 backdrop-blur-sm rounded-md hover:bg-gray-700/70 transition-colors border border-gray-700 hover:border-gray-600">
       <i class="i-carbon-grid w-4 h-4" />
-      <span>{{ currentProject ? currentProject.name : 'Projects' }}</span>
+      <span>{{ currentProject ? currentProject.name : 'Switch Scenes' }}</span>
     </button>
     <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0"
       enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in"
