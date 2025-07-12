@@ -22,6 +22,7 @@ import EvolutionTimeline from './components/hud/EvolutionTimeline.vue'
 import RendererStatsCollector from '../../utils/RendererStatsCollector.vue'
 import { CameraController } from '../../utils/camera-controller'
 import { useEvolutionState } from './composables/useEvolutionState'
+import { RotationManager } from './composables/rotationManager'
 
 const gl = {
   clearColor: '#000811',
@@ -37,6 +38,9 @@ const orbitControlsRef = ref()
 const evolutionAnimatorRef = ref()
 const showGridAfterCameraMove = ref(false)
 const gridOn = ref(false)
+
+// Initialize rotation manager
+const rotationManager = RotationManager.getInstance()
 
 const {
   state,
@@ -89,6 +93,8 @@ onMounted(() => {
 
 function handleEvolutionProgress(progress: number) {
   updateEvolutionProgress(progress)
+  // Update rotation manager
+  rotationManager.updateEvolution(progress)
 }
 
 function handleEvolutionComplete() {
@@ -110,7 +116,6 @@ function handleToggleGrid() {
   gridOn.value = !gridOn.value
 
   if (gridOn.value) {
-    // If grid is enabled, adjust camera and show grid
     showGridAfterCameraMove.value = false
     cameraController?.adjustForGrid(() => {
       showGridAfterCameraMove.value = true

@@ -5,7 +5,7 @@ import { useRenderLoop } from '@tresjs/core'
 
 import { tetherConfig, tetherConnections } from '../../configs/tether-config'
 import { starClusterConfig } from '../../configs/star-cluster-config'
-import { orbitalConfig } from '../../configs/orbital-config'
+import { RotationManager } from '../../composables/rotationManager'
 import { Logger } from '../../../../utils/logger'
 
 import tetherVertexShader from '../../shaders/tether-vertex.glsl'
@@ -26,6 +26,9 @@ const props = withDefaults(defineProps<Props>(), {
   galaxyCenter: () => new Vector3(0, 0, 0),
   cameraRef: null
 })
+
+// Get rotation manager instance
+const rotationManager = RotationManager.getInstance()
 
 // Component refs
 const tetherGroupRef = ref()
@@ -137,18 +140,16 @@ function initializeTethers() {
       progressAlongArch: new BufferAttribute(new Float32Array(progressValues), 1)
     }
 
-    // Create material uniforms (consistent with other components)
+    // Create material uniforms using rotation manager
     materialUniforms.value = {
-      uTime: { value: 0.0 },
-      uEvolutionProgress: { value: 0.0 },
+      ...rotationManager.getShaderUniforms(),
       uPointSize: { value: tetherConfig.particleSize },
       uGlowIntensity: { value: tetherConfig.glowIntensity },
       uFlowSpeed: { value: tetherConfig.flowSpeed },
       uPulseFrequency: { value: tetherConfig.pulseFrequency },
-      uBaseRotationSpeed: { value: orbitalConfig.rotationSpeed }, // Same as other components
       uArchHeight: { value: tetherConfig.archHeight },
       uNodeRadii: { value: new Float32Array(nodeData.value.map(n => n.radius)) },
-      uNodeAngles: { value: new Float32Array(nodeData.value.map(n => n.angle)) } // Base angles
+      uNodeAngles: { value: new Float32Array(nodeData.value.map(n => n.angle)) }
     }
 
     isInitialized.value = true
@@ -175,11 +176,20 @@ function startRenderLoop() {
         props.evolutionProgress < 1.0) return
 
     try {
-      // Update material uniforms (same pattern as StellarCore/OrbitalSystem)
+      // Update rotation manager
+      rotationManager.updateTime(props.globalTime)
+      rotationManager.updateEvolution(props.evolutionProgress)
+
+      // Update material uniforms
       if (tetherPointsRef.value?.material) {
         const material = tetherPointsRef.value.material as ShaderMaterial
-        material.uniforms.uTime.value = props.globalTime
-        material.uniforms.uEvolutionProgress.value = props.evolutionProgress
+        const shaderUniforms = rotationManager.getShaderUniforms()
+        
+        Object.keys(shaderUniforms).forEach(key => {
+          if (material.uniforms[key]) {
+            material.uniforms[key].value = shaderUniforms[key].value
+          }
+        })
       }
 
       // Update position

@@ -4,6 +4,7 @@ import { AdditiveBlending, Points, ShaderMaterial, Vector3 } from 'three'
 import { useRenderLoop } from '@tresjs/core'
 
 import { orbitalConfig, orbitalColorConfig } from '../../configs/orbital-config'
+import { RotationManager } from '../../composables/rotationManager'
 import { Logger } from '../../../../utils/logger'
 
 import vertexShader from '../../shaders/orbital-vertex.glsl'
@@ -27,10 +28,13 @@ const props = withDefaults(defineProps<Props>(), {
 
 const galaxyCenter = toRef(props, 'galaxyCenter')
 
+// Get rotation manager instance
+const rotationManager = RotationManager.getInstance()
+
 const { totalCount } = orbitalConfig
 
 const positions = new Float32Array(totalCount * 3)
-const particleIds = new Float32Array(totalCount) // Used as a seed for generating random numbers in the shader
+const particleIds = new Float32Array(totalCount)
 
 for (let i = 0; i < totalCount; i++) {
   const i3 = i * 3
@@ -43,7 +47,6 @@ for (let i = 0; i < totalCount; i++) {
   positions[i3 + 1] = initialHeight
   positions[i3 + 2] = Math.sin(initialAngle) * initialRadius
 
-  // Particle ID as random seed
   particleIds[i] = i
 }
 
@@ -55,10 +58,8 @@ const shader = {
   vertexShader,
   fragmentShader,
   uniforms: {
-    uTime: { value: 0 },
-    uEvolutionProgress: { value: 0 },
+    ...rotationManager.getShaderUniforms(),
     uParticleSize: { value: orbitalConfig.particleSize },
-    uBaseRotationSpeed: { value: orbitalConfig.rotationSpeed },
 
     uOrbitParticleRatio: { value: orbitalConfig.orbitParticleRatio },
     uInnerRadius: { value: orbitalConfig.innerRadius },
@@ -90,10 +91,19 @@ onLoop(() => {
   try {
     if (!props.enabled || !bufferRef.value) return
 
-    const material = bufferRef.value.material as ShaderMaterial
+    // Update rotation manager
+    rotationManager.updateTime(props.globalTime)
+    rotationManager.updateEvolution(props.evolutionProgress)
 
-    material.uniforms.uTime.value = props.globalTime
-    material.uniforms.uEvolutionProgress.value = props.evolutionProgress
+    const material = bufferRef.value.material as ShaderMaterial
+    const shaderUniforms = rotationManager.getShaderUniforms()
+    
+    // Update shader uniforms from rotation manager
+    Object.keys(shaderUniforms).forEach(key => {
+      if (material.uniforms[key]) {
+        material.uniforms[key].value = shaderUniforms[key].value
+      }
+    })
 
     if (galaxyCenter?.value) {
       bufferRef.value.position.set(galaxyCenter.value.x, galaxyCenter.value.y, galaxyCenter.value.z)

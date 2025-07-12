@@ -3,10 +3,10 @@ import { Color } from 'three'
 // Orbital parameters
 export const orbitalConfig = {
   // Particle counts
-  totalCount: 8000, // Balanced for clear rings and performance
-  orbitParticleRatio: 0.8, // 80% orbital, 20% scattered
+  totalCount: 8000,
+  orbitParticleRatio: 0.8,
   
-  // Orbital distribution ratios (optimized: middle +50%, outer +100%)
+  // Orbital distribution ratios
   orbitDistribution: {
     inner: 0.2, 
     middle: 0.35,
@@ -14,40 +14,30 @@ export const orbitalConfig = {
   },
   
   // Orbital radii
-  innerRadius: 1.5,   // 0.15 ratio
-  middleRadius: 3.0,  // 0.3 ratio  
-  outerRadius: 4.8,   // 0.48 ratio
+  innerRadius: 1.5,
+  middleRadius: 3.0,
+  outerRadius: 4.8,
   
   // Space boundaries
-  maxSpaceRadius: 6.24, // outerRadius * 1.3
+  maxSpaceRadius: 6.24,
   
   // Particle properties
   particleSize: 15,
-
-  // Rotation speeds - synchronized base speed with random oscillations for stable relative structure
-  // Base rotation speed for all orbits (0.24 rad/s)
-  // Random ±2.5% oscillation applied in shader for natural variation
-
-  rotationSpeed: 0.24
 }
 
-// Orbital color scheme - consistent blue/cyan tones
+// Orbital color scheme
 export const orbitalColorConfig = {
-  // Orbital ring colors (same color family, different intensities)
-  innerRing: new Color('#00ffff'),    // Bright cyan
-  middleRing: new Color('#00ccff'),   // Bright blue-cyan
-  outerRing: new Color('#0099ff'),    // Bright blue
+  innerRing: new Color('#00ffff'),
+  middleRing: new Color('#00ccff'),
+  outerRing: new Color('#0099ff'),
+  scatteredInner: new Color('#0099cc'),
+  scatteredMiddle: new Color('#0088bb'),
+  scatteredOuter: new Color('#0077aa'),
   
-  // Scattered particles (same color family but dimmer)
-  scatteredInner: new Color('#0099cc'), // Dimmer cyan for inner area
-  scatteredMiddle: new Color('#0088bb'), // Dimmer blue-cyan for middle area
-  scatteredOuter: new Color('#0077aa'),  // Dimmer blue for outer area
-  
-  // Brightness multipliers
   brightness: {
-    inner: 2.0,     // Very bright
-    middle: 1.8,    // Bright
-    outer: 1.5,     // Moderately bright
-    scattered: 0.8  // Increased from 0.6 for better visibility
+    inner: 2.0,
+    middle: 1.8,
+    outer: 1.5,
+    scattered: 0.8
   }
 }

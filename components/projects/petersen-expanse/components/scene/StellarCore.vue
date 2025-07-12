@@ -3,8 +3,8 @@ import { ref, onMounted, toRef } from 'vue'
 import { AdditiveBlending, ShaderMaterial, BufferGeometry, Float32BufferAttribute, Vector3 } from 'three'
 import { useRenderLoop } from '@tresjs/core'
 
-import { orbitalConfig } from '../../configs/orbital-config'
 import { starClusterConfig } from '../../configs/star-cluster-config'
+import { RotationManager } from '../../composables/rotationManager'
 import { Logger } from '../../../../utils/logger'
 
 import starVertexShader from '../../shaders/star-vertex.glsl'
@@ -27,6 +27,10 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const galaxyCenter = toRef(props, 'galaxyCenter')
+
+// Get rotation manager instance
+const rotationManager = RotationManager.getInstance()
+
 const chaoticPositions = ref<Float32Array>(new Float32Array())
 
 const { stars } = starClusterConfig
@@ -107,7 +111,7 @@ function initStellarCore() {
       time: { value: 0 },
       globalTime: { value: 0 },
       evolutionProgress: { value: 0 },
-      baseRotationSpeed: { value: orbitalConfig.rotationSpeed },
+      baseRotationSpeed: { value: rotationManager.getBaseSpeed() },
       resolution: { value: [window.innerWidth, window.innerHeight, 1.0] },
       cameraDistance: { value: 10.0 }
     },
@@ -129,6 +133,10 @@ onLoop(() => {
   try {
     if (!props.enabled || !stellarCoreMaterial.value) return
 
+    // Update rotation manager
+    rotationManager.updateTime(props.globalTime)
+    rotationManager.updateEvolution(props.evolutionProgress)
+
     if (stellarCoreClusterRef.value && props.cameraRef?.value) {
       try {
         const cameraPos = props.cameraRef.value.position
@@ -142,9 +150,12 @@ onLoop(() => {
       }
     }
 
+    // Update material uniforms using rotation manager
+    const shaderUniforms = rotationManager.getShaderUniforms()
     stellarCoreMaterial.value.uniforms.time.value = props.globalTime
-    stellarCoreMaterial.value.uniforms.globalTime.value = props.globalTime
-    stellarCoreMaterial.value.uniforms.evolutionProgress.value = props.evolutionProgress
+    stellarCoreMaterial.value.uniforms.globalTime.value = shaderUniforms.uTime.value
+    stellarCoreMaterial.value.uniforms.evolutionProgress.value = shaderUniforms.uEvolutionProgress.value
+    stellarCoreMaterial.value.uniforms.baseRotationSpeed.value = shaderUniforms.uBaseRotationSpeed.value
 
     if (stellarCoreClusterRef.value && galaxyCenter) {
       try {

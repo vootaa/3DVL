@@ -26,8 +26,9 @@ void main() {
     int toNodeId = int(nodeIndices.y);
     
     // Calculate the positions of the two nodes at the current time (considering global rotation)
-    float fromAngle = uNodeAngles[fromNodeId] + uTime * uBaseRotationSpeed;
-    float toAngle = uNodeAngles[toNodeId] + uTime * uBaseRotationSpeed;
+    float currentRotation = uTime * uBaseRotationSpeed;
+    float fromAngle = uNodeAngles[fromNodeId] + currentRotation;
+    float toAngle = uNodeAngles[toNodeId] + currentRotation;
     
     vec3 fromPos = vec3(
         uNodeRadii[fromNodeId] * cos(fromAngle),
@@ -41,33 +42,38 @@ void main() {
         uNodeRadii[toNodeId] * sin(toAngle)
     );
 
-    // Calculate arch position (quadratic Bezier curve)
+    // Calculate arch position using simple interpolation with height
     float t = progressAlongArch;
     float archDirection = archParams.x; // 1.0 is upward, -1.0 is downward
     
-    // Arch control point (above or below the midpoint)
-    vec3 midPoint = (fromPos + toPos) * 0.5;
-    midPoint.y += archDirection * uArchHeight * sin(t * 3.14159);
+    // Linear interpolation between from and to positions
+    vec3 basePos = mix(fromPos, toPos, t);
     
-    // Quadratic Bezier interpolation
-    vec3 archPosition = fromPos * (1.0 - t) * (1.0 - t) + 
-                       midPoint * 2.0 * (1.0 - t) * t + 
-                       toPos * t * t;
+    // Add arch height using sine wave
+    float heightMultiplier = sin(t * 3.14159265359);
+    basePos.y += archDirection * uArchHeight * heightMultiplier;
 
     // Smooth transition for evolution progress
     float smoothProgress = smoothstep(0.0, 1.0, uEvolutionProgress);
     
-    // Flow effect
-    float flowOffset = mod(uTime * uFlowSpeed + t * 6.28, 6.28);
-    vFlow = sin(flowOffset) * 0.5 + 0.5;
+    // Flow effect along the arch
+    float flowPhase = uTime * uFlowSpeed + t * 6.28318530718;
+    vFlow = sin(flowPhase) * 0.5 + 0.5;
     
     // Pulse effect
-    float pulse = sin(uTime * uPulseFrequency) * 0.5 + 0.5;
+    float pulsePhase = uTime * uPulseFrequency;
+    float pulse = sin(pulsePhase) * 0.3 + 0.7;
     
-    // Final alpha
-    vAlpha = alpha * (0.7 + 0.3 * vFlow) * smoothProgress * (0.8 + 0.2 * pulse);
+    // Final alpha calculation
+    vAlpha = alpha * smoothProgress * pulse * (0.6 + 0.4 * vFlow);
 
-    vec4 mvPosition = modelViewMatrix * vec4(archPosition, 1.0);
+    // Apply evolution progress to position (particles appear gradually)
+    vec3 finalPosition = basePos * smoothProgress;
+
+    vec4 mvPosition = modelViewMatrix * vec4(finalPosition, 1.0);
     gl_Position = projectionMatrix * mvPosition;
-    gl_PointSize = uPointSize * (300.0 / -mvPosition.z);
+    
+    // Adaptive point size based on distance
+    float distance = length(mvPosition.xyz);
+    gl_PointSize = uPointSize * (300.0 / max(distance, 50.0));
 }
