@@ -16,6 +16,7 @@ uniform float uParticleSpacing;
 uniform float uTrailLength;
 uniform float uHeadBrightness;
 uniform float uTailBrightness;
+uniform float uCameraDistance;
 uniform float uNodeRadii[20];
 uniform float uNodeAngles[20];
 
@@ -88,8 +89,22 @@ void main() {
     vec4 mvPosition = modelViewMatrix * vec4(finalPosition, 1.0);
     gl_Position = projectionMatrix * mvPosition;
     
-    // Adaptive point size based on distance and trail position
-    float distance = length(mvPosition.xyz);
+    // Calculate camera-based size scaling (similar to OrbitalSystem)
+    float viewDistance = length(mvPosition.xyz);
+    
+    // Base size scaling based on camera distance to the tether group
+    float cameraScale = 1.0 + (uCameraDistance - 300.0) / 1000.0;
+    cameraScale = clamp(cameraScale, 0.5, 3.0); // Limit scaling range
+    
+    // Additional distance-based scaling for individual particles
+    float distanceScale = 800.0 / max(viewDistance, 100.0);
+    
+    // Trail-based size multiplier
     float sizeMultiplier = mix(0.7, 1.0, min(trailFade, 1.0)); // Larger particles at trail head
-    gl_PointSize = uPointSize * sizeMultiplier * (300.0 / max(distance, 50.0));
+    
+    // Combine all scaling factors
+    gl_PointSize = uPointSize * cameraScale * distanceScale * sizeMultiplier;
+    
+    // Ensure minimum and maximum size
+    gl_PointSize = clamp(gl_PointSize, 1.0, 50.0);
 }

@@ -38,6 +38,9 @@ const tetherPointsRef = ref()
 const isComponentMounted = ref(false)
 const isInitialized = ref(false)
 
+// Camera distance tracking
+const cameraDistance = ref(1000)
+
 // Geometry data
 const geometryAttributes = ref<Record<string, BufferAttribute>>({})
 const materialUniforms = ref<Record<string, { value: any }>>({})
@@ -164,6 +167,7 @@ function initializeTethers() {
       uTrailLength: { value: tetherConfig.trailLength },
       uHeadBrightness: { value: tetherConfig.trailColors.head },
       uTailBrightness: { value: tetherConfig.trailColors.tail },
+      uCameraDistance: { value: cameraDistance.value }, // camera distance uniform
       uNodeRadii: { value: new Float32Array(nodeData.value.map(n => n.radius)) },
       uNodeAngles: { value: new Float32Array(nodeData.value.map(n => n.angle)) }
     }
@@ -196,16 +200,36 @@ function startRenderLoop() {
       rotationManager.updateTime(props.globalTime)
       rotationManager.updateEvolution(props.evolutionProgress)
 
+      // Calculate camera distance (similar to StellarCore and OrbitalSystem)
+      if (tetherGroupRef.value && props.cameraRef?.value) {
+        try {
+          const cameraPos = props.cameraRef.value.position
+          const tetherPos = tetherGroupRef.value.position
+
+          if (cameraPos && tetherPos && typeof cameraPos.distanceTo === 'function') {
+            cameraDistance.value = cameraPos.distanceTo(tetherPos)
+          }
+        } catch (e) {
+          Logger.throttle('TETHERS_CAMERA', 'Camera distance calculation failed')
+        }
+      }
+
       // Update material uniforms
       if (tetherPointsRef.value?.material) {
         const material = tetherPointsRef.value.material as ShaderMaterial
         const shaderUniforms = rotationManager.getShaderUniforms()
         
+        // Update rotation manager uniforms
         Object.keys(shaderUniforms).forEach(key => {
           if (material.uniforms[key]) {
             material.uniforms[key].value = shaderUniforms[key].value
           }
         })
+
+        // Update camera distance uniform
+        if (material.uniforms.uCameraDistance) {
+          material.uniforms.uCameraDistance.value = cameraDistance.value
+        }
       }
 
       // Update position
