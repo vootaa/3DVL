@@ -29,15 +29,15 @@ export interface TetherConfig {
 
 export const tetherConfig: TetherConfig = {
   // Visual parameters
-  particlesPerTether: 32, // particle count per tether
-  particleSize: 1.0, // Slightly larger particles
-  archHeight: 0.5, // Arch height
+  particlesPerTether: 48, // particle count per tether
+  particleSize: 1.25, // Slightly larger particles
+  archHeight: 0.25, // Arch height
   baseOpacity: 0.8, // Base opacity
 
   // Animation parameters  
-  flowSpeed: 0.25, // Flow speed for particle movement
-  particleSpacing: 0.05, // Space between particles (0-1)
-  trailLength: 0.35, // Length of particle trail effect
+  flowSpeed: 0.1, // Flow speed for particle movement
+  particleSpacing: 0.08, // Space between particles (0-1)
+  trailLength: 0.5, // Length of particle trail effect
 
   // Trail colors - brightness multipliers
   trailColors: {

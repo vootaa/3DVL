@@ -22,7 +22,7 @@ export const orbitalConfig = {
   maxSpaceRadius: 6.24,
   
   // Particle properties
-  particleSize: 15,
+  particleSize: 12,
 }
 
 // Orbital color scheme
