@@ -5,9 +5,11 @@ import { OrbitControls } from '@tresjs/cientos'
 
 import Stars from '../echo-mission/3d/Stars.vue'
 
+import Tethers from './components/scene/TethersTest.vue'
+
+import GridDotBox from './components/scene/GridDotBox.vue'
 import OrbitalSystem from './components/scene/OrbitalSystem.vue'
 import StellarCore from './components/scene/StellarCore.vue'
-import Tethers from './components/scene/Tethers.vue'
 
 import EvolutionAnimator from './components/animation/EvolutionAnimator.vue'
 
@@ -155,6 +157,7 @@ function handleEvolutionTimelineVisible(_val: boolean) {
       <Stars />
 
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
+      <GridDotBox :enabled="gridOn" :galaxy-center=" galaxyCenter" />
       <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[16, 16, '#003366', '#002244']"
         :position="[0, -4.2, 0]" />
       <TresAxesHelper v-if="gridOn" :args="[1]" :position="[0, 0, 0]" />
