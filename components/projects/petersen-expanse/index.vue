@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Vector3 } from 'three'
 import { ref, provide, onMounted, nextTick } from 'vue'
-import { useRenderLoop } from '@tresjs/core'
 import { OrbitControls } from '@tresjs/cientos'
-
-import { Logger } from '../../utils/logger'
 
 import Stars from '../echo-mission/3d/Stars.vue'
 
@@ -76,34 +73,6 @@ function setCurrentPresetId(id: string | null) {
 provide('setCurrentPresetId', setCurrentPresetId)
 
 const stellarCoreRef = ref()
-const stellarCorePositions = ref<Vector3[]>([])
-
-function updateStellarCorePositions() {
-  try {
-    if (stellarCoreRef.value?.getStellarPositions) {
-      const positions = stellarCoreRef.value.getStellarPositions()
-      if (positions && positions.length > 0) {
-        stellarCorePositions.value = positions
-        Logger.throttle(
-          'INDEX_POS_UPDATE',
-          `Updated stellar positions: ${stellarCorePositions.value.length}, first: ${stellarCorePositions.value[0]?.toArray?.().join(', ')}, last: ${stellarCorePositions.value[positions.length - 1]?.toArray?.().join(', ')}`
-        )
-
-      } else {
-        Logger.throttle('INDEX_POS_EMPTY', 'No stellar positions available')
-      }
-    } else {
-      Logger.throttle('INDEX_NO_REF', 'StellarCore ref not available')
-    }
-  } catch (error) {
-    Logger.error('INDEX', 'Error getting stellar positions', error)
-  }
-}
-
-const { onLoop } = useRenderLoop()
-onLoop(() => {
-  updateStellarCorePositions()
-})
 
 onMounted(() => {
   nextTick(() => {
@@ -181,8 +150,7 @@ function handleEvolutionTimelineVisible(_val: boolean) {
         :evolution-progress="state.evolutionProgress" :enabled="state.orbitalSystemEnabled" />
 
       <Tethers :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
-        :evolution-progress="state.evolutionProgress" :enabled="state.tethersEnabled"
-        :stellar-core-positions="stellarCorePositions" />
+        :evolution-progress="state.evolutionProgress" :enabled="state.tethersEnabled" />
 
       <Stars />
 

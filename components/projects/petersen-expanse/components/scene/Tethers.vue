@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Vector3, BufferAttribute } from 'three'
 import { useRenderLoop } from '@tresjs/core'
 
@@ -16,7 +16,6 @@ interface Props {
   globalTime?: number
   evolutionProgress?: number
   galaxyCenter?: Vector3
-  stellarCorePositions?: Vector3[]
   cameraRef?: any
 }
 
@@ -25,7 +24,6 @@ const props = withDefaults(defineProps<Props>(), {
   globalTime: 0,
   evolutionProgress: 0,
   galaxyCenter: () => new Vector3(0, 0, 0),
-  stellarCorePositions: () => [],
   cameraRef: null
 })
 
@@ -33,20 +31,24 @@ const props = withDefaults(defineProps<Props>(), {
 const tetherPointsRef = ref()
 const tetherMaterialRef = ref()
 
-// Static node data - get initial angle and radius from star-cluster-config
+// Static node data from star-cluster-config
 const nodeStaticData = computed(() => {
   return starClusterConfig.stars.map(star => ({
     id: star.id,
-    initialRadius: star.r,
-    initialAngle: star.theta * Math.PI / 180, // Convert to radians
+    radius: star.r,
+    angle: star.theta * Math.PI / 180, // Convert to radians
     type: star.type
   }))
 })
 
+// Only show tethers after evolution is complete
+const shouldRender = computed(() => {
+  return props.enabled && props.evolutionProgress >= 1.0
+})
+
 // Calculate tether particle attributes
 const tetherAttributes = computed(() => {
-  if (!props.stellarCorePositions || props.stellarCorePositions.length < 20) {
-    Logger.throttle('TETHERS_ATTR', `Waiting for stellar core position data: ${props.stellarCorePositions?.length || 0}/20`)
+  if (!shouldRender.value) {
     return null
   }
 
@@ -60,8 +62,12 @@ const tetherAttributes = computed(() => {
 
   let tetherIndex = 0
 
-  // Handle forward connections (upward arch)
-  tetherConnections.forward.forEach((connection, connectionIndex) => {
+  // Helper function to add particles for a connection
+  const addConnectionParticles = (
+    connection: [number, number], 
+    archDirection: number, 
+    color: { r: number; g: number; b: number }
+  ) => {
     const [fromNodeId, toNodeId] = connection
     
     if (fromNodeId >= nodeStaticData.value.length || toNodeId >= nodeStaticData.value.length) {
@@ -69,7 +75,6 @@ const tetherAttributes = computed(() => {
       return
     }
 
-    // Get static node data (for dynamic position calculation in shader)
     const fromNode = nodeStaticData.value[fromNodeId]
     const toNode = nodeStaticData.value[toNodeId]
 
@@ -77,19 +82,17 @@ const tetherAttributes = computed(() => {
     for (let i = 0; i < tetherConfig.particlesPerTether; i++) {
       const t = i / (tetherConfig.particlesPerTether - 1) // Progress along the arch (0-1)
 
-      // Static position (shader will calculate actual position dynamically based on time)
-      // Only provide initial arch reference position here
-      const midRadius = (fromNode.initialRadius + toNode.initialRadius) * 0.5
-      const midAngle = (fromNode.initialAngle + toNode.initialAngle) * 0.5
+      // Initial reference position (shader will calculate actual dynamic position)
+      const midRadius = (fromNode.radius + toNode.radius) * 0.5
+      const midAngle = (fromNode.angle + toNode.angle) * 0.5
       
       positions.push(
         midRadius * Math.cos(midAngle),
-        tetherConfig.archHeight * Math.sin(t * Math.PI), // Arch height
+        archDirection * tetherConfig.archHeight * Math.sin(t * Math.PI), // Arch height
         midRadius * Math.sin(midAngle)
       )
 
-      // Forward color (cyan)
-      const color = tetherConfig.colors.forward
+      // Color
       colors.push(color.r, color.g, color.b)
 
       // Alpha variation along the arch
@@ -97,50 +100,21 @@ const tetherAttributes = computed(() => {
       alphas.push(alpha)
 
       tetherIds.push(tetherIndex)
-      archParams.push(1, t) // archDirection: 1 (upward), progress: t
-      nodeIndices.push(fromNodeId, toNodeId) // Store the two node indices of the connection
+      archParams.push(archDirection, t) // archDirection: 1 (upward) or -1 (downward), progress: t
+      nodeIndices.push(fromNodeId, toNodeId) // Store the two node indices
       progressAlongArch.push(t)
     }
     tetherIndex++
+  }
+
+  // Handle forward connections (upward arch)
+  tetherConnections.forward.forEach((connection) => {
+    addConnectionParticles(connection as [number, number], 1, tetherConfig.colors.forward)
   })
 
   // Handle reverse connections (downward arch)
-  tetherConnections.reverse.forEach((connection, connectionIndex) => {
-    const [fromNodeId, toNodeId] = connection
-    
-    if (fromNodeId >= nodeStaticData.value.length || toNodeId >= nodeStaticData.value.length) {
-      Logger.warn('TETHERS', `Invalid connection index: [${fromNodeId}, ${toNodeId}]`)
-      return
-    }
-
-    const fromNode = nodeStaticData.value[fromNodeId]
-    const toNode = nodeStaticData.value[toNodeId]
-
-    for (let i = 0; i < tetherConfig.particlesPerTether; i++) {
-      const t = i / (tetherConfig.particlesPerTether - 1)
-
-      const midRadius = (fromNode.initialRadius + toNode.initialRadius) * 0.5
-      const midAngle = (fromNode.initialAngle + toNode.initialAngle) * 0.5
-      
-      positions.push(
-        midRadius * Math.cos(midAngle),
-        -tetherConfig.archHeight * Math.sin(t * Math.PI), // Downward arch
-        midRadius * Math.sin(midAngle)
-      )
-
-      // Reverse color (orange)
-      const color = tetherConfig.colors.reverse
-      colors.push(color.r, color.g, color.b)
-
-      const alpha = Math.sin(t * Math.PI) * tetherConfig.baseOpacity
-      alphas.push(alpha)
-
-      tetherIds.push(tetherIndex)
-      archParams.push(-1, t) // archDirection: -1 (downward), progress: t
-      nodeIndices.push(fromNodeId, toNodeId)
-      progressAlongArch.push(t)
-    }
-    tetherIndex++
+  tetherConnections.reverse.forEach((connection) => {
+    addConnectionParticles(connection as [number, number], -1, tetherConfig.colors.reverse)
   })
 
   // Validate data integrity
@@ -195,15 +169,15 @@ const tetherShader = computed(() => {
       uFlowSpeed: { value: tetherConfig.flowSpeed },
       uPulseFrequency: { value: tetherConfig.pulseFrequency },
       
-      // Global rotation parameter (keep in sync with OrbitalSystem)
+      // Global rotation parameter (synchronized with OrbitalSystem)
       uBaseRotationSpeed: { value: orbitalConfig.rotationSpeed },
       
       // Arch parameters
       uArchHeight: { value: tetherConfig.archHeight },
       
       // Node static data (for dynamic position calculation in shader)
-      uNodeRadii: { value: nodeStaticData.value.map(n => n.initialRadius) },
-      uNodeAngles: { value: nodeStaticData.value.map(n => n.initialAngle) }
+      uNodeRadii: { value: nodeStaticData.value.map(n => n.radius) },
+      uNodeAngles: { value: nodeStaticData.value.map(n => n.angle) }
     }
   }
 })
@@ -211,7 +185,7 @@ const tetherShader = computed(() => {
 // Render loop
 const { onLoop } = useRenderLoop()
 onLoop(() => {
-  if (!props.enabled || !tetherMaterialRef.value?.uniforms) return
+  if (!shouldRender.value || !tetherMaterialRef.value?.uniforms) return
 
   const uniforms = tetherMaterialRef.value.uniforms
 
@@ -225,21 +199,6 @@ onLoop(() => {
   }
 })
 
-// Watch for stellar core position changes
-watch(() => props.stellarCorePositions, (newPositions) => {
-  if (!newPositions || newPositions.length === 0) {
-    Logger.throttle('TETHERS_WATCH', 'Waiting for stellar core position data...')
-    return
-  }
-
-  if (newPositions.length !== 20) {
-    Logger.throttle('TETHERS_WATCH', `Expected 20 stellar positions, got ${newPositions.length}`)
-    return
-  }
-
-  Logger.throttle('TETHERS_WATCH', 'Stellar core positions updated, recalculating tether connections')
-}, { deep: true, immediate: true })
-
 onMounted(() => {
   Logger.log('TETHERS', 'Tethers component mounted')
   Logger.log('TETHERS', `Config - Forward connections: ${tetherConnections.forward.length}, Reverse connections: ${tetherConnections.reverse.length}`)
@@ -248,7 +207,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <TresGroup v-if="enabled && tetherAttributes && tetherShader">
+  <TresGroup v-if="shouldRender && tetherAttributes && tetherShader">
     <TresPoints ref="tetherPointsRef">
       <TresBufferGeometry :attributes="tetherAttributes" />
       <TresShaderMaterial ref="tetherMaterialRef" v-bind="tetherShader" />

@@ -28,10 +28,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 const galaxyCenter = toRef(props, 'galaxyCenter')
 const chaoticPositions = ref<Float32Array>(new Float32Array())
-const currentPositions = ref<Vector3[]>([])
-function getStellarPositions(): Vector3[] {
-  return currentPositions.value
-}
 
 const { stars } = starClusterConfig
 const stellarCoreColors = starClusterConfig.visual.colors
@@ -126,43 +122,6 @@ function initStellarCore() {
   stellarCoreMaterial.value = material
 }
 
-function updateCurrentPositions() {
-  const positions: Vector3[] = []
-  stars.forEach((star, index) => {
-    const smoothProgress = Math.min(1, Math.max(0, props.evolutionProgress))
-
-    const chaoticPos = new Vector3(
-      chaoticPositions.value[index * 3],
-      chaoticPositions.value[index * 3 + 1],
-      chaoticPositions.value[index * 3 + 2]
-    )
-
-    const currentAngle = (star.theta * Math.PI / 180) + props.globalTime * orbitalConfig.rotationSpeed
-    const orbitalPos = new Vector3(
-      star.r * Math.cos(currentAngle),
-      0,
-      star.r * Math.sin(currentAngle)
-    )
-
-    const currentPos = chaoticPos.clone().lerp(orbitalPos, smoothProgress)
-
-    // galaxy center offset
-    if (galaxyCenter.value) {
-      currentPos.add(galaxyCenter.value)
-    }
-
-    positions.push(currentPos)
-  })
-
-  currentPositions.value = positions
-
-  /*
-  Logger.throttle('STELLAR_UPDATE_POS', `Updated ${positions.length} stellar positions`)
-  if (positions.length > 0) {
-    Logger.throttle('STELLAR_UPDATE_POS_DETAIL', `First: ${positions[0].toArray().join(', ')}, Last: ${positions[positions.length - 1].toArray().join(', ')}`)
-  } */
-}
-
 const cameraDistance = ref(1000)
 
 const { onLoop } = useRenderLoop()
@@ -187,18 +146,11 @@ onLoop(() => {
     stellarCoreMaterial.value.uniforms.globalTime.value = props.globalTime
     stellarCoreMaterial.value.uniforms.evolutionProgress.value = props.evolutionProgress
 
-    try {
-      updateCurrentPositions()
-    } catch (error) {
-      Logger.error('STELLAR', 'Failed to update stellar positions', error)
-    }
-
-
     if (stellarCoreClusterRef.value && galaxyCenter) {
       try {
         stellarCoreClusterRef.value.position.set(galaxyCenter.value.x || 0, galaxyCenter.value.y || 0, galaxyCenter.value.z || 0)
       } catch (e) {
-        Logger.throttle('TETHERS_POS', 'Position update failed')
+        Logger.throttle('STELLAR_POS', 'Position update failed')
       }
     }
   } catch (error) {
@@ -212,10 +164,6 @@ onMounted(() => {
   } catch (error) {
     Logger.error('STELLAR', 'Failed to initialize StellarCore', error)
   }
-})
-
-defineExpose({
-  getStellarPositions
 })
 </script>
 
