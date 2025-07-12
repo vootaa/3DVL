@@ -25,14 +25,13 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // Three.js object refs
-const tethersGroupRef = ref()
 const linesGroupRef = ref()
 
 // Component state
 const isComponentMounted = ref(false)
 const isLinesInitialized = ref(false)
 
-// 节点数据
+// Node data
 const nodeData = ref<Array<{
     id: number
     radius: number
@@ -40,13 +39,21 @@ const nodeData = ref<Array<{
     type: string
 }>>([])
 
-// 线段几何数据
+// Line geometry data
 const lineGeometry = ref<{
     positions: BufferAttribute
     colors: BufferAttribute
 } | null>(null)
 
-// 添加computed来测试响应式计算
+// Cache original connection data to avoid recalculating every frame
+const connectionData = ref<Array<{
+    fromId: number
+    toId: number
+    archDirection: number
+    color: { r: number; g: number; b: number }
+}>>([])
+
+// Add computed for reactive debug info
 const debugInfo = computed(() => {
     return {
         enabled: props.enabled,
@@ -57,22 +64,29 @@ const debugInfo = computed(() => {
             y: props.galaxyCenter?.y || 0,
             z: props.galaxyCenter?.z || 0
         },
-        // 新增的调试信息
         nodes: nodeData.value.length,
         linesInitialized: isLinesInitialized.value,
-        connections: isLinesInitialized.value ? 
-            (tetherConnections?.forward?.length || 0) + (tetherConnections?.reverse?.length || 0) : 0
+        connections: connectionData.value.length,
+        rotationSpeed: orbitalConfig.rotationSpeed
     }
 })
 
-// 初始化线段数据
+// Calculate arch segment position (segmented arch)
+function calculateArchPosition(fromPos: Vector3, toPos: Vector3, t: number, archDirection: number): Vector3 {
+    const basePos = fromPos.clone().lerp(toPos, t)
+    const archHeight = (tetherConfig.archHeight || 2) * Math.sin(t * Math.PI) * archDirection
+    basePos.y += archHeight
+    return basePos
+}
+
+// Initialize line data - only create static structure, no position calculation
 function initializeLines() {
     if (isLinesInitialized.value) return
 
     try {
-        Logger.log('TETHERS_TEST', 'Initializing lines...')
+        Logger.log('TETHERS_TEST', 'Initializing arch lines...')
 
-        // 验证数据
+        // Validate data
         if (!starClusterConfig?.stars || starClusterConfig.stars.length === 0) {
             throw new Error('No star data available')
         }
@@ -81,7 +95,7 @@ function initializeLines() {
             throw new Error('Tether configuration not available')
         }
 
-        // 准备节点数据
+        // Prepare node data
         nodeData.value = starClusterConfig.stars.map(star => ({
             id: star.id,
             radius: star.r,
@@ -89,28 +103,69 @@ function initializeLines() {
             type: star.type
         }))
 
-        // 创建线段数据
+        // Build connection data structure (no position calculation)
+        const connections: typeof connectionData.value = []
+
+        // Add forward connections (upward arch)
+        if (tetherConnections.forward) {
+            tetherConnections.forward.forEach(connection => {
+                connections.push({
+                    fromId: connection[0],
+                    toId: connection[1],
+                    archDirection: 1,
+                    color: tetherConfig.colors.forward
+                })
+            })
+        }
+
+        // Add reverse connections (downward arch)
+        if (tetherConnections.reverse) {
+            tetherConnections.reverse.forEach(connection => {
+                connections.push({
+                    fromId: connection[0],
+                    toId: connection[1],
+                    archDirection: -1,
+                    color: tetherConfig.colors.reverse
+                })
+            })
+        }
+
+        connectionData.value = connections
+
+        // Create initial geometry (using current time)
+        updateGeometry()
+
+        isLinesInitialized.value = true
+        
+        Logger.log('TETHERS_TEST', `Initialized ${connections.length} arch connections (${nodeData.value.length} nodes)`)
+
+    } catch (error) {
+        Logger.error('TETHERS_TEST', 'Failed to initialize arch lines', error)
+    }
+}
+
+// Update geometry - recalculate all positions based on current time
+function updateGeometry() {
+    if (!isComponentMounted.value || connectionData.value.length === 0) return
+
+    try {
+        const currentTime = props.globalTime || 0
+        const rotationSpeed = orbitalConfig.rotationSpeed || 0
+        const archSegments = tetherConfig.archSegments || 20
+
         const positions: number[] = []
         const colors: number[] = []
 
-        // 添加线段的辅助函数
-        const addLine = (
-            fromId: number, 
-            toId: number, 
-            color: { r: number; g: number; b: number }
-        ) => {
-            if (fromId >= nodeData.value.length || toId >= nodeData.value.length) {
-                Logger.warn('TETHERS_TEST', `Invalid connection: [${fromId}, ${toId}]`)
+        // Iterate all connections
+        connectionData.value.forEach(conn => {
+            if (conn.fromId >= nodeData.value.length || conn.toId >= nodeData.value.length) {
                 return
             }
 
-            const fromNode = nodeData.value[fromId]
-            const toNode = nodeData.value[toId]
+            const fromNode = nodeData.value[conn.fromId]
+            const toNode = nodeData.value[conn.toId]
 
-            // 计算节点位置（使用当前时间）
-            const currentTime = props.globalTime || 0
-            const rotationSpeed = orbitalConfig.rotationSpeed || 0
-
+            // Calculate current rotated node positions
             const fromAngle = fromNode.angle + currentTime * rotationSpeed
             const toAngle = toNode.angle + currentTime * rotationSpeed
 
@@ -126,108 +181,53 @@ function initializeLines() {
                 toNode.radius * Math.sin(toAngle)
             )
 
-            // 添加线段（从 fromPos 到 toPos）
-            positions.push(fromPos.x, fromPos.y, fromPos.z)
-            positions.push(toPos.x, toPos.y, toPos.z)
+            // Create arch segments
+            for (let i = 0; i < archSegments; i++) {
+                const t1 = i / archSegments
+                const t2 = (i + 1) / archSegments
 
-            // 添加颜色（每个顶点一个颜色）
-            colors.push(color.r, color.g, color.b)
-            colors.push(color.r, color.g, color.b)
-        }
+                const pos1 = calculateArchPosition(fromPos, toPos, t1, conn.archDirection)
+                const pos2 = calculateArchPosition(fromPos, toPos, t2, conn.archDirection)
 
-        // 添加前向连接（30根线）
-        if (tetherConnections.forward) {
-            tetherConnections.forward.forEach(connection => {
-                addLine(connection[0], connection[1], tetherConfig.colors.forward)
-            })
-        }
+                // Add line segment
+                positions.push(pos1.x, pos1.y, pos1.z)
+                positions.push(pos2.x, pos2.y, pos2.z)
 
-        // 添加反向连接（30根线）
-        if (tetherConnections.reverse) {
-            tetherConnections.reverse.forEach(connection => {
-                addLine(connection[0], connection[1], tetherConfig.colors.reverse)
-            })
-        }
+                // Add color
+                colors.push(conn.color.r, conn.color.g, conn.color.b)
+                colors.push(conn.color.r, conn.color.g, conn.color.b)
+            }
+        })
 
-        // 创建BufferAttributes
-        if (positions.length > 0) {
+        // Update or create BufferAttributes
+        if (lineGeometry.value) {
+            // Update existing geometry
+            if (lineGeometry.value.positions.array.length === positions.length) {
+                // Same length, update array content directly
+                lineGeometry.value.positions.array.set(positions)
+                lineGeometry.value.positions.needsUpdate = true
+            } else {
+                // Different length, recreate
+                lineGeometry.value.positions = new BufferAttribute(new Float32Array(positions), 3)
+                lineGeometry.value.colors = new BufferAttribute(new Float32Array(colors), 3)
+            }
+        } else {
+            // Create new geometry
             lineGeometry.value = {
                 positions: new BufferAttribute(new Float32Array(positions), 3),
                 colors: new BufferAttribute(new Float32Array(colors), 3)
             }
         }
 
-        isLinesInitialized.value = true
-        
-        Logger.log('TETHERS_TEST', `Initialized ${positions.length / 6} line segments (${nodeData.value.length} nodes)`)
-
     } catch (error) {
-        Logger.error('TETHERS_TEST', 'Failed to initialize lines', error)
+        Logger.error('TETHERS_TEST', 'Failed to update geometry', error)
     }
 }
 
-// 更新线段位置（基于当前时间）
-function updateLinePositions() {
-    if (!isLinesInitialized.value || !lineGeometry.value || !props.enabled) return
-
-    try {
-        const positions: number[] = []
-        const currentTime = props.globalTime || 0
-        const rotationSpeed = orbitalConfig.rotationSpeed || 0
-
-        // 重新计算所有线段位置
-        const addLine = (fromId: number, toId: number) => {
-            if (fromId >= nodeData.value.length || toId >= nodeData.value.length) return
-
-            const fromNode = nodeData.value[fromId]
-            const toNode = nodeData.value[toId]
-
-            const fromAngle = fromNode.angle + currentTime * rotationSpeed
-            const toAngle = toNode.angle + currentTime * rotationSpeed
-
-            const fromPos = new Vector3(
-                fromNode.radius * Math.cos(fromAngle),
-                0,
-                fromNode.radius * Math.sin(fromAngle)
-            )
-
-            const toPos = new Vector3(
-                toNode.radius * Math.cos(toAngle),
-                0,
-                toNode.radius * Math.sin(toAngle)
-            )
-
-            positions.push(fromPos.x, fromPos.y, fromPos.z)
-            positions.push(toPos.x, toPos.y, toPos.z)
-        }
-
-        // 重新计算前向连接
-        if (tetherConnections.forward) {
-            tetherConnections.forward.forEach(connection => {
-                addLine(connection[0], connection[1])
-            })
-        }
-
-        // 重新计算反向连接
-        if (tetherConnections.reverse) {
-            tetherConnections.reverse.forEach(connection => {
-                addLine(connection[0], connection[1])
-            })
-        }
-
-        // 更新BufferAttribute
-        if (positions.length > 0) {
-            lineGeometry.value.positions.array = new Float32Array(positions)
-            lineGeometry.value.positions.needsUpdate = true
-        }
-
-    } catch (error) {
-        Logger.error('TETHERS_TEST', 'Failed to update line positions', error)
-    }
-}
-
-// 使用Tres的渲染循环
+// Use Tres render loop - lower update frequency
 let renderLoopCleanup: (() => void) | null = null
+let lastUpdateTime = 0
+const updateInterval = 1000 / 30 // 30 FPS, lower update frequency
 
 function startRenderLoop() {
     if (renderLoopCleanup) return
@@ -235,31 +235,18 @@ function startRenderLoop() {
     const { onLoop, resume } = useRenderLoop()
     
     const stopLoop = onLoop(() => {
-        if (!isComponentMounted.value || !props.enabled) return
+        if (!isComponentMounted.value || !props.enabled || !isLinesInitialized.value) return
 
         try {
-            // 更新原来的测试几何体
-            if (tethersGroupRef.value && props.galaxyCenter) {
-                tethersGroupRef.value.position.copy(props.galaxyCenter)
-                
-                // 基于props改变颜色
-                const mesh = tethersGroupRef.value.children[0]
-                if (mesh && mesh.material) {
-                    // 基于evolutionProgress改变颜色
-                    const progress = props.evolutionProgress
-                    const red = progress
-                    const green = 1 - progress
-                    mesh.material.color.setRGB(red, green, 0)
-                }
-                
-                // 基于globalTime旋转
-                tethersGroupRef.value.rotation.y = props.globalTime * 0.1
+            const currentTime = performance.now()
+            
+            // Limit update frequency
+            if (currentTime - lastUpdateTime >= updateInterval) {
+                updateGeometry()
+                lastUpdateTime = currentTime
             }
 
-            // 更新线段位置（基于全局时间）
-            updateLinePositions()
-
-            // 更新线段组位置
+            // Update line group position (update every frame, lower performance)
             if (linesGroupRef.value) {
                 linesGroupRef.value.position.copy(props.galaxyCenter)
             }
@@ -284,7 +271,6 @@ function stopRenderLoop() {
 watch(() => props.enabled, (enabled) => {
     if (enabled && isComponentMounted.value) {
         startRenderLoop()
-        // 如果演化已经完成，初始化线段
         if (props.evolutionProgress >= 1.0 && !isLinesInitialized.value) {
             initializeLines()
         }
@@ -293,26 +279,24 @@ watch(() => props.enabled, (enabled) => {
     }
 })
 
-// Watch for other props to test reactivity
+// Watch for evolution progress
 watch(() => props.evolutionProgress, (progress) => {
-    console.log('TethersTest: Evolution progress changed to', progress)
-    // 当演化完成时初始化线段
     if (progress >= 1.0 && !isLinesInitialized.value && props.enabled) {
         initializeLines()
     }
 })
 
-watch(() => props.globalTime, (time) => {
-    console.log('TethersTest: Global time changed to', time)
+// Watch globalTime changes, but don't update positions here (avoid duplicate updates)
+watch(() => props.globalTime, (_time) => {
+    // Position updates handled in renderLoop
 })
 
 onMounted(() => {
     isComponentMounted.value = true
-    console.log('TethersTest: Component mounted with props:', debugInfo.value)
+    console.log('TethersTest: Component mounted')
     
     if (props.enabled) {
         startRenderLoop()
-        // 如果演化已经完成，立即初始化线段
         if (props.evolutionProgress >= 1.0) {
             initializeLines()
         }
@@ -327,6 +311,7 @@ onUnmounted(() => {
 </script>
 
 <template>
+    <!-- Arch line rendering -->
     <TresGroup 
         v-if="props.enabled && isLinesInitialized && lineGeometry" 
         ref="linesGroupRef" 

@@ -6,6 +6,7 @@ export interface TetherConfig {
   particlesPerTether: number
   particleSize: number
   archHeight: number
+  archSegments: number
   baseOpacity: number
   glowIntensity: number
 
@@ -31,7 +32,8 @@ export const tetherConfig: TetherConfig = {
   // Visual parameters
   particlesPerTether: 64,
   particleSize: 25, // Size of each particle in pixels
-  archHeight: 2.5, // Height of arch above/below XZ plane
+  archHeight: 0.5, // Height of arch above/below XZ plane
+  archSegments: 16, // Number of segments in the arch curve
   baseOpacity: 0.7,
   glowIntensity: 1.2,
 
