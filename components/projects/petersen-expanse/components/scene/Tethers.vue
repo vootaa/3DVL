@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import { Vector3, BufferAttribute } from 'three'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { Vector3, BufferAttribute, AdditiveBlending } from 'three'
 import { useRenderLoop } from '@tresjs/core'
 
 import { tetherConfig, tetherConnections } from '../../configs/tether-config'
@@ -27,264 +27,245 @@ const props = withDefaults(defineProps<Props>(), {
   cameraRef: null
 })
 
-// Component refs
+// Component state
+const isComponentMounted = ref(false)
+const isDataReady = ref(false)
+const hasInitialized = ref(false)
+
+// Refs for Three.js components
+const tetherGroupRef = ref()
 const tetherPointsRef = ref()
 const tetherMaterialRef = ref()
 
-// Internal state
-const isInitialized = ref(false)
-const hasError = ref(false)
-const isReady = ref(false)
+// Geometry attributes
+const geometryAttributes = ref<Record<string, BufferAttribute>>({})
 
-// Static node data from star-cluster-config
-const nodeStaticData = computed(() => {
+// Material uniforms
+const materialUniforms = ref<Record<string, { value: any }>>({})
+
+// Check if should render
+const shouldRender = ref(false)
+
+// Initialize tether data
+function initializeTethers() {
+  if (hasInitialized.value) return
+  
   try {
-    if (!starClusterConfig?.stars) {
-      return []
+    Logger.log('TETHERS', 'Initializing tethers...')
+
+    // Validate required data
+    if (!starClusterConfig?.stars || starClusterConfig.stars.length === 0) {
+      throw new Error('No star data available')
     }
-    return starClusterConfig.stars.map(star => ({
+
+    if (!tetherVertexShader || !tetherFragmentShader) {
+      throw new Error('Shaders not loaded')
+    }
+
+    // Prepare node data
+    const nodeData = starClusterConfig.stars.map(star => ({
       id: star.id,
       radius: star.r,
       angle: star.theta * Math.PI / 180,
       type: star.type
     }))
-  } catch (error) {
-    Logger.error('TETHERS', 'Failed to process node static data', error)
-    hasError.value = true
-    return []
-  }
-})
 
-// Only show tethers after evolution is complete
-const shouldRender = computed(() => {
-  return props.enabled && 
-         props.evolutionProgress >= 1.0 && 
-         !hasError.value && 
-         isInitialized.value &&
-         isReady.value &&
-         nodeStaticData.value.length > 0
-})
-
-// Geometry and material data (separated for better control)
-const geometryData = ref<{
-  position: BufferAttribute
-  color: BufferAttribute
-  alpha: BufferAttribute
-  tetherId: BufferAttribute
-  archParams: BufferAttribute
-  nodeIndices: BufferAttribute
-  progressAlongArch: BufferAttribute
-} | null>(null)
-
-const materialConfig = ref<{
-  transparent: boolean
-  depthWrite: boolean
-  blending: any
-  vertexColors: boolean
-  vertexShader: string
-  fragmentShader: string
-  uniforms: Record<string, { value: any }>
-} | null>(null)
-
-// Initialize tether data
-async function initializeTethers() {
-  if (isInitialized.value || hasError.value) return
-
-  try {
-    Logger.log('TETHERS', 'Initializing tether data...')
-
-    // Validate shaders first
-    if (!tetherVertexShader || !tetherFragmentShader) {
-      throw new Error('Shader files not loaded')
-    }
-
-    // Validate node data
-    if (nodeStaticData.value.length === 0) {
-      throw new Error('No node data available')
-    }
-
-    // Validate config data
-    if (!tetherConfig || !tetherConnections) {
-      throw new Error('Tether configuration not loaded')
-    }
-
+    // Generate particle data
     const positions: number[] = []
     const colors: number[] = []
     const alphas: number[] = []
     const tetherIds: number[] = []
     const archParams: number[] = []
     const nodeIndices: number[] = []
-    const progressAlongArch: number[] = []
+    const progressValues: number[] = []
 
-    let tetherIndex = 0
+    let connectionIndex = 0
 
-    // Helper function to add particles for a connection
-    const addConnectionParticles = (
-      connection: [number, number], 
-      archDirection: number, 
+    // Helper function
+    const addConnection = (
+      connection: number[],
+      direction: number,
       color: { r: number; g: number; b: number }
     ) => {
-      const [fromNodeId, toNodeId] = connection
+      const [fromId, toId] = connection
       
-      if (fromNodeId >= nodeStaticData.value.length || toNodeId >= nodeStaticData.value.length) {
-        Logger.warn('TETHERS', `Invalid connection index: [${fromNodeId}, ${toNodeId}]`)
+      if (fromId >= nodeData.length || toId >= nodeData.length) {
+        Logger.warn('TETHERS', `Invalid connection: [${fromId}, ${toId}]`)
         return
       }
 
-      const fromNode = nodeStaticData.value[fromNodeId]
-      const toNode = nodeStaticData.value[toNodeId]
+      const fromNode = nodeData[fromId]
+      const toNode = nodeData[toId]
 
-      // Generate particles for the connection
       for (let i = 0; i < tetherConfig.particlesPerTether; i++) {
         const t = i / (tetherConfig.particlesPerTether - 1)
 
-        // Initial reference position
+        // Reference position
         const midRadius = (fromNode.radius + toNode.radius) * 0.5
         const midAngle = (fromNode.angle + toNode.angle) * 0.5
         
         positions.push(
           midRadius * Math.cos(midAngle),
-          archDirection * tetherConfig.archHeight * Math.sin(t * Math.PI),
+          direction * tetherConfig.archHeight * Math.sin(t * Math.PI),
           midRadius * Math.sin(midAngle)
         )
 
         colors.push(color.r, color.g, color.b)
-
-        const alpha = Math.sin(t * Math.PI) * tetherConfig.baseOpacity
-        alphas.push(alpha)
-
-        tetherIds.push(tetherIndex)
-        archParams.push(archDirection, t)
-        nodeIndices.push(fromNodeId, toNodeId)
-        progressAlongArch.push(t)
+        alphas.push(Math.sin(t * Math.PI) * tetherConfig.baseOpacity)
+        tetherIds.push(connectionIndex)
+        archParams.push(direction, t)
+        nodeIndices.push(fromId, toId)
+        progressValues.push(t)
       }
-      tetherIndex++
+      connectionIndex++
     }
 
-    // Handle connections
-    tetherConnections.forward.forEach((connection) => {
-      addConnectionParticles(connection as [number, number], 1, tetherConfig.colors.forward)
-    })
+    // Add all connections
+    tetherConnections.forward.forEach(conn => 
+      addConnection(conn, 1, tetherConfig.colors.forward)
+    )
+    
+    tetherConnections.reverse.forEach(conn => 
+      addConnection(conn, -1, tetherConfig.colors.reverse)
+    )
 
-    tetherConnections.reverse.forEach((connection) => {
-      addConnectionParticles(connection as [number, number], -1, tetherConfig.colors.reverse)
-    })
-
-    // Validate data
-    const particleCount = positions.length / 3
-    if (colors.length !== particleCount * 3 ||
-        alphas.length !== particleCount ||
-        tetherIds.length !== particleCount ||
-        archParams.length !== particleCount * 2 ||
-        nodeIndices.length !== particleCount * 2 ||
-        progressAlongArch.length !== particleCount) {
-      throw new Error(`Attribute array length mismatch. Expected ${particleCount} particles`)
-    }
-
-    // Wait for next tick to ensure DOM is ready
-    await nextTick()
-
-    // Create geometry data
-    geometryData.value = {
+    // Create buffer attributes
+    geometryAttributes.value = {
       position: new BufferAttribute(new Float32Array(positions), 3),
       color: new BufferAttribute(new Float32Array(colors), 3),
       alpha: new BufferAttribute(new Float32Array(alphas), 1),
       tetherId: new BufferAttribute(new Float32Array(tetherIds), 1),
       archParams: new BufferAttribute(new Float32Array(archParams), 2),
       nodeIndices: new BufferAttribute(new Float32Array(nodeIndices), 2),
-      progressAlongArch: new BufferAttribute(new Float32Array(progressAlongArch), 1)
+      progressAlongArch: new BufferAttribute(new Float32Array(progressValues), 1)
     }
 
-    // Create material config (safe object without non-serializable properties)
-    materialConfig.value = {
-      transparent: true,
-      depthWrite: false,
-      blending: tetherConfig.blendMode,
-      vertexColors: true,
-      vertexShader: tetherVertexShader,
-      fragmentShader: tetherFragmentShader,
-      uniforms: {
-        uTime: { value: 0.0 },
-        uEvolutionProgress: { value: 0.0 },
-        uPointSize: { value: tetherConfig.particleSize },
-        uGlowIntensity: { value: tetherConfig.glowIntensity },
-        uFlowSpeed: { value: tetherConfig.flowSpeed },
-        uPulseFrequency: { value: tetherConfig.pulseFrequency },
-        uBaseRotationSpeed: { value: orbitalConfig.rotationSpeed },
-        uArchHeight: { value: tetherConfig.archHeight },
-        uNodeRadii: { value: [...nodeStaticData.value.map(n => n.radius)] }, // Clone array
-        uNodeAngles: { value: [...nodeStaticData.value.map(n => n.angle)] }  // Clone array
-      }
+    // Create material uniforms
+    materialUniforms.value = {
+      uTime: { value: 0.0 },
+      uEvolutionProgress: { value: 0.0 },
+      uPointSize: { value: tetherConfig.particleSize },
+      uGlowIntensity: { value: tetherConfig.glowIntensity },
+      uFlowSpeed: { value: tetherConfig.flowSpeed },
+      uPulseFrequency: { value: tetherConfig.pulseFrequency },
+      uBaseRotationSpeed: { value: orbitalConfig.rotationSpeed },
+      uArchHeight: { value: tetherConfig.archHeight },
+      uNodeRadii: { value: new Float32Array(nodeData.map(n => n.radius)) },
+      uNodeAngles: { value: new Float32Array(nodeData.map(n => n.angle)) }
     }
 
-    isInitialized.value = true
+    hasInitialized.value = true
+    isDataReady.value = true
     
-    // Wait another tick before marking as ready
-    await nextTick()
-    isReady.value = true
-
-    Logger.log('TETHERS', `Generated ${particleCount} tether particles, ${tetherIndex} connections`)
+    Logger.log('TETHERS', `Initialized ${positions.length / 3} particles for ${connectionIndex} connections`)
 
   } catch (error) {
     Logger.error('TETHERS', 'Failed to initialize tethers', error)
-    hasError.value = true
   }
 }
 
-// Watch for evolution progress to trigger initialization
-watch(() => props.evolutionProgress, async (progress) => {
-  if (progress >= 1.0 && !isInitialized.value && !hasError.value) {
-    await initializeTethers()
+// Update shouldRender based on conditions
+function updateRenderState() {
+  shouldRender.value = props.enabled && 
+                      props.evolutionProgress >= 1.0 && 
+                      isComponentMounted.value && 
+                      isDataReady.value
+}
+
+// Watch for evolution progress
+watch(() => props.evolutionProgress, (progress) => {
+  if (progress >= 1.0 && !hasInitialized.value) {
+    initializeTethers()
   }
+  updateRenderState()
 })
 
-// Render loop
-const { onLoop } = useRenderLoop()
-onLoop(() => {
-  if (!shouldRender.value) return
-
-  try {
-    // Safely access material uniforms
-    const material = tetherMaterialRef.value
-    if (!material?.uniforms) return
-
-    // Update uniforms
-    material.uniforms.uTime.value = props.globalTime
-    material.uniforms.uEvolutionProgress.value = props.evolutionProgress
-
-    // Update position
-    const points = tetherPointsRef.value
-    if (points && props.galaxyCenter) {
-      points.position.copy(props.galaxyCenter)
-    }
-  } catch (error) {
-    Logger.throttle('TETHERS_LOOP', 'Error in render loop', error)
-  }
+// Watch for enabled state
+watch(() => props.enabled, () => {
+  updateRenderState()
 })
 
-onMounted(async () => {
-  Logger.log('TETHERS', 'Tethers component mounted')
+// Render loop - only register when component is mounted
+let renderLoopCleanup: (() => void) | null = null
+
+function startRenderLoop() {
+  if (renderLoopCleanup) return
+
+  const { onLoop, resume } = useRenderLoop()
   
-  // Initialize immediately if evolution is already complete
-  if (props.evolutionProgress >= 1.0) {
-    await initializeTethers()
+  const stopLoop = onLoop(() => {
+    if (!isComponentMounted.value || !shouldRender.value) return
+
+    try {
+      // Update material uniforms
+      if (tetherMaterialRef.value?.uniforms) {
+        const uniforms = tetherMaterialRef.value.uniforms
+        uniforms.uTime.value = props.globalTime
+        uniforms.uEvolutionProgress.value = props.evolutionProgress
+      }
+
+      // Update position
+      if (tetherGroupRef.value && props.galaxyCenter) {
+        tetherGroupRef.value.position.copy(props.galaxyCenter)
+      }
+    } catch (error) {
+      Logger.throttle('TETHERS_LOOP', 'Render loop error', error)
+    }
+  })
+
+  renderLoopCleanup = () => stopLoop.off()
+  resume()
+}
+
+function stopRenderLoop() {
+  if (renderLoopCleanup) {
+    renderLoopCleanup()
+    renderLoopCleanup = null
   }
+}
+
+onMounted(() => {
+  isComponentMounted.value = true
+  Logger.log('TETHERS', 'Component mounted')
+  
+  // Initialize if evolution is already complete
+  if (props.evolutionProgress >= 1.0) {
+    initializeTethers()
+  }
+  
+  updateRenderState()
+  startRenderLoop()
+})
+
+onUnmounted(() => {
+  isComponentMounted.value = false
+  stopRenderLoop()
+  Logger.log('TETHERS', 'Component unmounted')
 })
 </script>
 
 <template>
-  <TresGroup v-if="shouldRender && geometryData && materialConfig">
-    <TresPoints ref="tetherPointsRef">
-      <TresBufferGeometry :attributes="geometryData" />
-      <TresShaderMaterial 
+  <TresGroup 
+    v-if="shouldRender"
+    ref="tetherGroupRef"
+  >
+    <TresPoints 
+      v-if="Object.keys(geometryAttributes).length > 0"
+      ref="tetherPointsRef"
+    >
+      <TresBufferGeometry 
+        :attributes="geometryAttributes"
+      />
+      <TresShaderMaterial
+        v-if="Object.keys(materialUniforms).length > 0"
         ref="tetherMaterialRef"
-        :transparent="materialConfig.transparent"
-        :depth-write="materialConfig.depthWrite"
-        :blending="materialConfig.blending"
-        :vertex-colors="materialConfig.vertexColors"
-        :vertex-shader="materialConfig.vertexShader"
-        :fragment-shader="materialConfig.fragmentShader"
-        :uniforms="materialConfig.uniforms"
+        :transparent="true"
+        :depth-write="false"
+        :blending="AdditiveBlending"
+        :vertex-colors="true"
+        :vertex-shader="tetherVertexShader"
+        :fragment-shader="tetherFragmentShader"
+        :uniforms="materialUniforms"
       />
     </TresPoints>
   </TresGroup>
