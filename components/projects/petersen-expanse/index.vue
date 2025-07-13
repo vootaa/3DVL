@@ -162,7 +162,7 @@ function handleEvolutionTimelineVisible(_val: boolean) {
         <Tethers :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
           :evolution-progress="state.evolutionProgress" :enabled="state.tethersEnabled" />
 
-        <PostEffects :bloom-strength="0.2" :bloom-radius="0.15" :bloom-threshold="0.15" />
+        <PostEffects :bloom-strength="0.08" :bloom-radius="0.15" :bloom-threshold="0.25" />
       </TresGroup>
 
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />

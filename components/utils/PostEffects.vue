@@ -67,7 +67,7 @@ useLoop().render(() => {
 <template>
   <TresEffectComposer ref="composer" :args="[renderer]" :set-size="[sizes.width.value, sizes.height.value]">
     <TresRenderPass :args="[scene, camera]" attach="passes-0" />
-    <TresUnrealBloomPass :args="[undefined, props.bloomStrength, props.bloomRadius, props.bloomThreshold]"
+    <TresUnrealBloomPass :args="[[sizes.width.value, sizes.height.value], props.bloomStrength, props.bloomRadius, props.bloomThreshold]"
       attach="passes-1" />
     <TresOutputPass attach="passes-2" />
   </TresEffectComposer>
