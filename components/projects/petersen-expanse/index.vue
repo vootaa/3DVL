@@ -26,7 +26,7 @@ import { useEvolutionState } from './composables/useEvolutionState'
 import { RotationManager } from './composables/rotationManager'
 
 const gl = {
-  clearColor: '#000811',
+  clearColor: '#010101', // Near-black color for space background
   shadows: true,
   alpha: false,
   shadowMapType: BasicShadowMap,
@@ -148,7 +148,7 @@ function handleEvolutionTimelineVisible(_val: boolean) {
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
       <TresPerspectiveCamera ref="cameraRef" :position="[0, 400, 2000]" :fov="75" :near="0.01" :far="10000" />
-      <TresAmbientLight :intensity="0.08" color="#000000" />
+      <TresAmbientLight :intensity="0.08" color="#ffffff" />
       <Stars />
 
       <TresGroup>
@@ -162,7 +162,7 @@ function handleEvolutionTimelineVisible(_val: boolean) {
         <Tethers :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
           :evolution-progress="state.evolutionProgress" :enabled="state.tethersEnabled" />
 
-        <PostEffects :bloom-strength="0.08" :bloom-radius="0.15" :bloom-threshold="0.25" />
+        <PostEffects :bloom-strength="0.35" :bloom-radius="0.25" :bloom-threshold="0.15" />
       </TresGroup>
 
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
