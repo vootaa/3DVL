@@ -15,7 +15,7 @@ const state = reactive<EvolutionState>({
   evolutionProgress: 0,
   stellarCoreEnabled: true,
   orbitalSystemEnabled: true,
-  tethersEnabled: true,
+  tethersEnabled: Math.random() < 0.5, // Randomly enable tethers
   isEvolutionAnimating: false,
   evolutionComplete: false
 })

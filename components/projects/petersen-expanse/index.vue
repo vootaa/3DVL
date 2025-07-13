@@ -39,7 +39,7 @@ const orbitControlsRef = ref()
 const evolutionAnimatorRef = ref()
 const showGridAfterCameraMove = ref(false)
 const gridOn = ref(false)
-const effectsOn = ref(true)
+const effectsOn = ref(Math.random() < 0.5) // Randomly enable effects on initial load
 
 // Initialize rotation manager
 const rotationManager = RotationManager.getInstance()
