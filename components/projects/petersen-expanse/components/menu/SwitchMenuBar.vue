@@ -3,14 +3,16 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps<{
   gridOn: boolean
+  effectsOn: boolean
   stellarCoreOn: boolean
   orbitalSystemOn: boolean
-  tethersOn?: boolean 
+  tethersOn: boolean
   disabled?: boolean
   onToggleGrid: () => void
+  onToggleEffects: () => void
   onToggleStellarCore: () => void
   onToggleOrbitalSystem: () => void
-  onToggleTethers:()=> void
+  onToggleTethers: () => void
 }>()
 
 const menuOpen = ref(false)
@@ -55,6 +57,14 @@ onUnmounted(() => {
           <i v-else class="i-carbon-close"></i>
         </span>
         <span class="menu-text">{{ isCompactMode ? 'Grid' : 'Grid Helper' }}</span>
+      </div>
+      <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
+        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleEffects()">
+        <span class="menu-status">
+          <i v-if="props.effectsOn" class="i-carbon-checkmark-filled"></i>
+          <i v-else class="i-carbon-close"></i>
+        </span>
+        <span class="menu-text">{{ isCompactMode ? 'Effects' : 'Post Effects' }}</span>
       </div>
       <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
         :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleTethers()">
@@ -229,21 +239,21 @@ onUnmounted(() => {
     top: 10px;
     left: 10px;
   }
-  
+
   .menu-btn {
     height: 28px;
     padding: 0 8px;
     font-size: 11px;
   }
-  
+
   .menu-btn i {
     font-size: 1em;
   }
-  
+
   .menu-dropdown {
     min-width: 100px;
   }
-  
+
   .menu-item {
     padding: 6px 8px;
     font-size: 11px;

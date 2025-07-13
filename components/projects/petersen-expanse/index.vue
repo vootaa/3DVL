@@ -39,6 +39,7 @@ const orbitControlsRef = ref()
 const evolutionAnimatorRef = ref()
 const showGridAfterCameraMove = ref(false)
 const gridOn = ref(false)
+const effectsOn = ref(true)
 
 // Initialize rotation manager
 const rotationManager = RotationManager.getInstance()
@@ -126,6 +127,10 @@ function handleToggleGrid() {
   }
 }
 
+function handleToggleEffects() {
+  effectsOn.value = !effectsOn.value
+}
+
 function handleToggleStellarCore() {
   toggleStellarCore()
 }
@@ -162,7 +167,7 @@ function handleEvolutionTimelineVisible(_val: boolean) {
         <Tethers :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
           :evolution-progress="state.evolutionProgress" :enabled="state.tethersEnabled" />
 
-        <PostEffects :bloom-strength="0.25" :bloom-radius="0.25" :bloom-threshold="0.15" />
+        <PostEffects v-if="effectsOn" :bloom-strength="0.08" :bloom-radius="0.05" :bloom-threshold="0.05" />
       </TresGroup>
 
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
@@ -176,9 +181,9 @@ function handleEvolutionTimelineVisible(_val: boolean) {
       :duration="13.8" :global-time="state.globalTime" @progress="handleEvolutionProgress"
       @complete="handleEvolutionComplete" @start="handleEvolutionStart" @reset="handleEvolutionReset" />
 
-    <SwitchMenuBar :grid-on="gridOn" :stellar-core-on="state.stellarCoreEnabled"
+    <SwitchMenuBar :grid-on="gridOn" :effects-on="effectsOn" :stellar-core-on="state.stellarCoreEnabled"
       :orbital-system-on="state.orbitalSystemEnabled" :tethers-on="state.tethersEnabled"
-      :on-toggle-grid="handleToggleGrid" :on-toggle-stellar-core="handleToggleStellarCore"
+      :on-toggle-grid="handleToggleGrid" :on-toggle-effects="handleToggleEffects" :on-toggle-stellar-core="handleToggleStellarCore"
       :on-toggle-orbital-system="handleToggleOrbitalSystem" :on-toggle-tethers="handleToggleTethers"
       :disabled="controlsDisabled" />
 
