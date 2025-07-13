@@ -336,13 +336,14 @@ export const ResourceLoader = reactive({
     this.registerResource('Rings', import('../3d/Rings.vue'))
     this.registerResource('Rocks', import('../3d/Rocks.vue'))
     this.registerResource('Ship', import('../3d/Ship.vue'))
-    this.registerResource('SpaceGameEffects', import('../3d/SpaceGameEffects.vue'))
     this.registerResource('SpaceObjects', import('../3d/SpaceObjects.vue'))
     this.registerResource('SpaceProbe', import('../3d/SpaceProbe.vue'))
     this.registerResource('SpaceStation', import('../3d/SpaceStation.vue'))
-    this.registerResource('Stars', import('../3d/Stars.vue'))
+    this.registerResource('Stars', import('../../../utils/Stars.vue'))
     this.registerResource('TextPlane', import('../3d/TextPlane.vue'))
     this.registerResource('Track', import('../3d/Track.vue'))
+
+    this.registerResource('PostEffects', import('../../../utils/PostEffects.vue'))
 
     this.registerResource('SoundControl', import('../controls/SoundControl.vue'))
     this.registerResource('TrackControl', import('../controls/TrackControl.vue'))

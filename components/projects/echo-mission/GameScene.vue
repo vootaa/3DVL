@@ -4,7 +4,6 @@ import { useLoop } from '@tresjs/core'
 import { Logger } from '../../utils/logger'
 
 import Planets from './3d/Planets.vue'
-import Stars from './3d/Stars.vue'
 import Particles from './3d/Particles.vue'
 import Rings from './3d/Rings.vue'
 import Chainweb3D from './3d/Chainweb3D.vue'
@@ -16,7 +15,9 @@ import Explosions from './3d/Explosions.vue'
 import Rig from './3d/Rig.vue'
 import Ship from './3d/Ship.vue'
 import SpaceObjects from './3d/SpaceObjects.vue'
-import SpaceGameEffects from './3d/SpaceGameEffects.vue'
+
+import Stars from '../../utils/Stars.vue'
+import PostEffects from '../../utils/PostEffects.vue'
 
 import { gameStore } from './GameStore'
 
@@ -49,7 +50,7 @@ if (gameStore) {
         <Ship />
       </Rig>
       <Explosions />
-      <SpaceGameEffects />
+      <PostEffects :bloom-strength="0.5" :bloom-radius="0.3" :bloom-threshold="0.05" />
     </TresGroup>
   </Suspense>
 </template>

@@ -3,8 +3,6 @@ import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Vector3 } from 'three'
 import { ref, provide, onMounted, nextTick } from 'vue'
 import { OrbitControls } from '@tresjs/cientos'
 
-import Stars from '../echo-mission/3d/Stars.vue'
-
 import Tethers from './components/scene/Tethers.vue'
 
 import GridDotBox from './components/scene/GridDotBox.vue'
@@ -19,7 +17,10 @@ import ToolsMenuBar from './components/menu/ToolsMenuBar.vue'
 import CameraInfo from './components/hud/CameraInfo.vue'
 import EvolutionTimeline from './components/hud/EvolutionTimeline.vue'
 
+import Stars from '../../utils/Stars.vue'
+import PostEffects from '../../utils/PostEffects.vue'
 import RendererStatsCollector from '../../utils/RendererStatsCollector.vue'
+
 import { CameraController } from '../../utils/camera-controller'
 import { useEvolutionState } from './composables/useEvolutionState'
 import { RotationManager } from './composables/rotationManager'
@@ -147,22 +148,25 @@ function handleEvolutionTimelineVisible(_val: boolean) {
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
       <TresPerspectiveCamera ref="cameraRef" :position="[0, 400, 2000]" :fov="75" :near="0.01" :far="10000" />
-      <TresAmbientLight :intensity="0.08" color="#004488" />
-
-      <StellarCore ref="stellarCoreRef" :camera-ref="cameraRef" :galaxy-center="galaxyCenter"
-        :global-time="state.globalTime" :evolution-progress="state.evolutionProgress"
-        :enabled="state.stellarCoreEnabled" />
-
-      <OrbitalSystem :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
-        :evolution-progress="state.evolutionProgress" :enabled="state.orbitalSystemEnabled" />
-
-      <Tethers :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
-        :evolution-progress="state.evolutionProgress" :enabled="state.tethersEnabled" />
-
+      <TresAmbientLight :intensity="0.08" color="#000000" />
       <Stars />
 
+      <TresGroup>
+        <StellarCore ref="stellarCoreRef" :camera-ref="cameraRef" :galaxy-center="galaxyCenter"
+          :global-time="state.globalTime" :evolution-progress="state.evolutionProgress"
+          :enabled="state.stellarCoreEnabled" />
+
+        <OrbitalSystem :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
+          :evolution-progress="state.evolutionProgress" :enabled="state.orbitalSystemEnabled" />
+
+        <Tethers :camera-ref="cameraRef" :galaxy-center="galaxyCenter" :global-time="state.globalTime"
+          :evolution-progress="state.evolutionProgress" :enabled="state.tethersEnabled" />
+
+        <PostEffects :bloom-strength="0.2" :bloom-radius="0.15" :bloom-threshold="0.15" />
+      </TresGroup>
+
       <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
-      <GridDotBox :enabled="gridOn" :galaxy-center=" galaxyCenter" />
+      <GridDotBox :enabled="gridOn" :galaxy-center="galaxyCenter" />
       <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[16, 16, '#003366', '#002244']"
         :position="[0, -4.2, 0]" />
       <TresAxesHelper v-if="gridOn" :args="[1]" :position="[0, 0, 0]" />
