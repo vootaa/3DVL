@@ -8,6 +8,15 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), { count: 500 })
 
 const positions = new Float32Array(props.count * 3)
+const colors = new Float32Array(props.count * 3)
+
+// Preset several common star colors (white, light blue, light yellow, light orange)
+const starColors = [
+  [1.0, 1.0, 1.0],      // pure white
+  [0.87, 0.93, 1.0],    // light blue (#DDEEFF)
+  [1.0, 0.96, 0.87],    // light yellow (#FFEEDD)
+  [1.0, 0.92, 0.80],    // light orange (#FFDDB3)
+]
 
 for (let i = 0; i < props.count; i++) {
   const r = 8000
@@ -19,17 +28,24 @@ for (let i = 0; i < props.count; i++) {
   positions[i * 3 + 0] = x
   positions[i * 3 + 1] = y
   positions[i * 3 + 2] = z
+
+  // Randomly select a star color
+  const color = starColors[Math.floor(Math.random() * starColors.length)]
+  colors[i * 3 + 0] = color[0]
+  colors[i * 3 + 1] = color[1]
+  colors[i * 3 + 2] = color[2]
 }
 
 const geom = new BufferGeometry()
 geom.setAttribute('position', new BufferAttribute(positions, 3))
+geom.setAttribute('color', new BufferAttribute(colors, 3))
 </script>
 
 <template>
   <TresPoints :args="[geom]">
-    <TresBufferGeometry :position="[positions, 3]" />
+    <TresBufferGeometry :position="[positions, 3]" :color="[colors, 3]" />
     <TresPointsMaterial
-      color="#DDEEFF"
+      vertexColors
       :size="15"
       :size-attenuation="true"
       :fog="false"
