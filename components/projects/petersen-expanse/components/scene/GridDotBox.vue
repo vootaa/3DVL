@@ -77,7 +77,7 @@ onUnmounted(() => {
     <TresGroup v-if="props.enabled" ref="dotBoxGroupRef" :position="props.galaxyCenter">
         <TresMesh>
             <TresSphereGeometry :args="[0.2, 8, 6]" />
-            <TresMeshBasicMaterial color="#ff0000" />
+            <TresMeshBasicMaterial color="#ffffff" :wireframe="true" />
         </TresMesh>
 
         <TresMesh :position="[0, 0.5, 0]">
