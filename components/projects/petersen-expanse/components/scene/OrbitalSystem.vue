@@ -41,7 +41,7 @@ for (let i = 0; i < totalCount; i++) {
 
   const initialRadius = Math.random() * orbitalConfig.maxSpaceRadius
   const initialAngle = Math.random() * Math.PI * 2
-  const initialHeight = (Math.random() - 0.5) * 2.25
+  const initialHeight = (Math.random() - 0.5) * 5.0 // Random height between -2.5 and 2.5
 
   positions[i3] = Math.cos(initialAngle) * initialRadius
   positions[i3 + 1] = initialHeight
@@ -104,6 +104,10 @@ onLoop(() => {
         material.uniforms[key].value = shaderUniforms[key].value
       }
     })
+
+    if (material.uniforms.uTime) {
+      material.uniforms.uTime.value = props.globalTime
+    }
 
     if (galaxyCenter?.value) {
       bufferRef.value.position.set(galaxyCenter.value.x, galaxyCenter.value.y, galaxyCenter.value.z)

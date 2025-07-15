@@ -8,9 +8,9 @@ export const orbitalConfig = {
   
   // Orbital distribution ratios
   orbitDistribution: {
-    inner: 0.2, 
-    middle: 0.35,
-    outer: 0.45
+    inner: 0.08, 
+    middle: 0.26,
+    outer: 0.66
   },
   
   // Orbital radii
@@ -19,10 +19,10 @@ export const orbitalConfig = {
   outerRadius: 4.8,
   
   // Space boundaries
-  maxSpaceRadius: 6.24,
+  maxSpaceRadius: 6.0,
   
   // Particle properties
-  particleSize: 12,
+  particleSize: 28,
 }
 
 // Orbital color scheme
