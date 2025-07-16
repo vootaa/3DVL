@@ -10,6 +10,7 @@ import SwitchMenuBar from './components/menu/SwitchMenuBar.vue'
 import ToolsMenuBar from './components/menu/ToolsMenuBar.vue'
 
 import KeyboardCameraControls from './components/controls/KeyboardCameraControls.vue'
+import KeyboardHelper from './components/hud/KeyboardHelper.vue'
 
 import PetersenGraphPlane from '../echo-mission/3d/PetersenGraphPlane.vue'
 
@@ -67,7 +68,7 @@ function handleToggleFirstPerson() {
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
       <TresPerspectiveCamera ref="cameraRef" :position="[0, 2, 10]" :fov="75" :near="0.1" :far="1000" />、
-      <KeyboardCameraControls v-if="firstPersonOn" />
+      <KeyboardCameraControls v-if="firstPersonOn" :rotate-speed="0.008" />
       <TresAmbientLight :intensity="0.3" color="#ffffff" />
 
       <TresGroup>
@@ -98,6 +99,7 @@ function handleToggleFirstPerson() {
       :on-toggle-concentric-base="handleToggleConcentricBase" :first-person-on="firstPersonOn"
       :on-toggle-first-person="handleToggleFirstPerson" :disabled="false" />
     <ToolsMenuBar />
+    <KeyboardHelper />
   </div>
 </template>
 
