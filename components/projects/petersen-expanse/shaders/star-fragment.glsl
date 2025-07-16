@@ -1,4 +1,4 @@
-uniform float time;
+uniform float uTime;
 uniform vec3 resolution;
 
 varying vec3 vColor;

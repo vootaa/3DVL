@@ -108,8 +108,7 @@ function initStellarCore() {
 
   const material = new ShaderMaterial({
     uniforms: {
-      time: { value: 0 },
-      globalTime: { value: 0 },
+      uTime: { value: 0 },
       evolutionProgress: { value: 0 },
       baseRotationSpeed: { value: rotationManager.getBaseSpeed() },
       resolution: { value: [window.innerWidth, window.innerHeight, 1.0] },
@@ -152,8 +151,7 @@ onLoop(() => {
 
     // Update material uniforms using rotation manager
     const shaderUniforms = rotationManager.getShaderUniforms()
-    stellarCoreMaterial.value.uniforms.time.value = props.globalTime
-    stellarCoreMaterial.value.uniforms.globalTime.value = shaderUniforms.uTime.value
+    stellarCoreMaterial.value.uniforms.uTime.value = props.globalTime
     stellarCoreMaterial.value.uniforms.evolutionProgress.value = shaderUniforms.uEvolutionProgress.value
     stellarCoreMaterial.value.uniforms.baseRotationSpeed.value = shaderUniforms.uBaseRotationSpeed.value
 

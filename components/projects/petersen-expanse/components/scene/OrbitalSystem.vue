@@ -105,10 +105,6 @@ onLoop(() => {
       }
     })
 
-    if (material.uniforms.uTime) {
-      material.uniforms.uTime.value = props.globalTime
-    }
-
     if (galaxyCenter?.value) {
       bufferRef.value.position.set(galaxyCenter.value.x, galaxyCenter.value.y, galaxyCenter.value.z)
     }
