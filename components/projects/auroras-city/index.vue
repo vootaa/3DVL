@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BasicShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
+import { BasicShadowMap, SRGBColorSpace, ACESFilmicToneMapping, Vector3, Object3D } from 'three'
 import { ref, provide } from 'vue'
 
 //import ChainwebSimple from './components/scene/ChainwebSimple.vue'
@@ -33,6 +33,10 @@ const gl = {
 }
 
 const cameraRef = ref()
+const directionalLightRef = ref()
+const globalLightTarget = ref(new Object3D())
+globalLightTarget.value.position.set(0, 0, 0)
+
 const gridOn = ref(true)
 const bandedCylinderOn = ref(false)
 const chainwebOn = ref(false)
@@ -61,6 +65,20 @@ function handleToggleFirstPerson() {
   firstPersonOn.value = !firstPersonOn.value
 }
 
+// Keep the directional light direction aligned with the camera
+watchEffect(() => {
+  if (cameraRef.value && directionalLightRef.value) {
+    const camera = cameraRef.value
+    const light = directionalLightRef.value
+    // Align light direction with camera direction
+    const dir = new Vector3()
+    camera.getWorldDirection(dir)
+    light.position.copy(camera.position)
+    light.target.position.copy(camera.position.clone().add(dir))
+    light.target.updateMatrixWorld()
+  }
+})
+
 </script>
 
 <template>
@@ -68,10 +86,16 @@ function handleToggleFirstPerson() {
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
       <TresPerspectiveCamera ref="cameraRef" :position="[0, 2, 10]" :fov="75" :near="0.1" :far="1000" />、
+      <TresDirectionalLight ref="directionalLightRef" :intensity="1.2" color="#ffffff" :position="[0, 2, 10]"
+        cast-shadow />
+
       <KeyboardCameraControls v-if="firstPersonOn" :rotate-speed="0.008" />
       <TresAmbientLight :intensity="0.3" color="#ffffff" />
+      <TresDirectionalLight :intensity="0.8" color="#ffffff" :position="[50, 100, 50]" :target="globalLightTarget"
+        cast-shadow />
 
       <TresGroup>
+        <DynamicTerrain :width="150" :height="150" :segments="15" :maxHeight="3" />
 
         <!-- BandedCylinder shader effect -->
         <BandedCylinder v-if="bandedCylinderOn" :position="[0.2, 7, -0.2]" :rotation-speed="-0.45"
