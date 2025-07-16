@@ -11,6 +11,8 @@ const props = defineProps<{
   onToggleChainweb: () => void
   concentricBaseOn: boolean
   onToggleConcentricBase: () => void
+  firstPersonOn: boolean
+  onToggleFirstPerson: () => void
 }>()
 
 const menuOpen = ref(false)
@@ -79,6 +81,14 @@ onUnmounted(() => {
           <i v-else class="i-carbon-close"></i>
         </span>
         <span class="menu-text">{{ isCompactMode ? 'Base' : 'Auroras Base' }}</span>
+      </div>
+      <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
+        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleFirstPerson()">
+        <span class="menu-status">
+          <i v-if="props.firstPersonOn" class="i-carbon-checkmark-filled"></i>
+          <i v-else class="i-carbon-close"></i>
+        </span>
+        <span class="menu-text">{{ isCompactMode ? 'Roam' : 'First Person Roam' }}</span>
       </div>
     </div>
   </div>

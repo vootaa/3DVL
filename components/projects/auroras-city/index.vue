@@ -1,22 +1,23 @@
 <script setup lang="ts">
 import { BasicShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
-import { ref, provide, onMounted, nextTick } from 'vue'
-
-import PetersenGraphPlane from '../echo-mission/3d/PetersenGraphPlane.vue'
+import { ref, provide } from 'vue'
 
 //import ChainwebSimple from './components/scene/ChainwebSimple.vue'
 import Chainweb3D from './components/scene/Chainweb3D.vue'
 import BandedCylinder from './components/scene/BandedCylinder.vue'
 import ConcentricBase from './components/scene/ConcentricBase.vue'
 
-import Stars from '../../utils/Stars.vue'
-import PostEffects from '../../utils/PostEffects.vue'
-
 import SwitchMenuBar from './components/menu/SwitchMenuBar.vue'
 import ToolsMenuBar from './components/menu/ToolsMenuBar.vue'
 
+import PointerLockControls from './components/controls/PointerLockControls.vue'
+
+import PetersenGraphPlane from '../echo-mission/3d/PetersenGraphPlane.vue'
+
+import Stars from '../../utils/Stars.vue'
+import PostEffects from '../../utils/PostEffects.vue'
+
 import RendererStatsCollector from '../../utils/RendererStatsCollector.vue'
-import { CameraController } from '../../utils/camera-controller'
 
 const gl = {
   clearColor: '#010104',
@@ -33,46 +34,16 @@ const gl = {
 }
 
 const cameraRef = ref()
-const orbitControlsRef = ref()
-const showGridAfterCameraMove = ref(false)
 const gridOn = ref(false)
 const bandedCylinderOn = ref(false)
 const chainwebOn = ref(false)
 const concentricBaseOn = ref(false)
-
-let cameraController: CameraController
+const firstPersonOn = ref(false)
 
 provide('camera', cameraRef)
-provide('orbitControls', orbitControlsRef)
-
-const orbitControlsConfig = {
-  enableDamping: true,
-  dampingFactor: 0.05,
-  minDistance: 0,
-  maxDistance: 15,
-  minPolarAngle: Math.PI * 0.05,
-  maxPolarAngle: Math.PI * 0.9,
-  enablePan: true,
-}
-
-onMounted(() => {
-  nextTick(() => {
-    cameraController = new CameraController(cameraRef, orbitControlsRef)
-  })
-})
 
 function handleToggleGrid() {
   gridOn.value = !gridOn.value
-
-  if (gridOn.value) {
-    // If grid is enabled, adjust camera and show grid
-    showGridAfterCameraMove.value = false
-    cameraController?.adjustForGrid(() => {
-      showGridAfterCameraMove.value = true
-    })
-  } else {
-    showGridAfterCameraMove.value = false
-  }
 }
 
 function handleToggleBandedCylinder() {
@@ -87,15 +58,19 @@ function handleToggleConcentricBase() {
   concentricBaseOn.value = !concentricBaseOn.value
 }
 
+function handleToggleFirstPerson() {
+  firstPersonOn.value = !firstPersonOn.value
+}
+
 </script>
 
 <template>
   <div class="shader-container">
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
-      <TresPerspectiveCamera ref="cameraRef" :position="[0, 0, 2000]" :fov="75" :near="0.01" :far="10000" />
+      <TresPerspectiveCamera ref="cameraRef" :position="[0, 2, 10]" :fov="75" :near="0.1" :far="1000" />、
+      <PointerLockControls v-if="firstPersonOn" />
       <TresAmbientLight :intensity="0.3" color="#ffffff" />
-      <Stars />
 
       <TresGroup>
 
@@ -105,15 +80,9 @@ function handleToggleConcentricBase() {
         <BandedCylinder v-if="bandedCylinderOn" :position="[-0.2, 7, 0.2]" :rotation-speed="0.45"
           :cylinder-args="[0.5, 4.5, 48, 0.45, -0.15]" />
 
-        <!--<ChainwebSimple v-if="chainwebOn" :position="[0, -2.5, 0]" :layer-count="15" :height-spacing="0.45" />-->
-        <Chainweb3D v-if="chainwebOn" :radiusScale="1" :layer-count="5" :rotationSpeed="0.1" />
-
-        <ConcentricBase v-if="concentricBaseOn" :position="[0, -5, 0]" :scale="[1.0, 1.0, 1.0]" :rotation-speed="0.1" />
+        <ConcentricBase v-if="concentricBaseOn" :position="[0, 2, 0]" :scale="[1.0, 1.0, 1.0]" :rotation-speed="0.1" />
 
         <PetersenGraphPlane :position="[0, 20, -20]" :rotation="[0, 0, 0]" :scale="1" />
-
-        <!-- Camera controls -->
-        <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
 
         <!-- Post-processing effects -->
         <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" :noise-shader="false" />
@@ -121,15 +90,15 @@ function handleToggleConcentricBase() {
       </TresGroup>
 
       <!-- Debug helpers -->
-      <TresGridHelper v-if="gridOn && showGridAfterCameraMove" :args="[15, 15, '#113366', '#224488']"
-        :position="[0, -5.1, 0]" />
+      <TresGridHelper v-if="gridOn" :args="[150, 150, '#113366', '#224488']" :position="[0, 0, 0]" />
       <TresAxesHelper v-if="gridOn" :args="[7.5]" :position="[0, 0, 0]" />
     </TresCanvas>
 
     <SwitchMenuBar :grid-on="gridOn" :on-toggle-grid="handleToggleGrid" :banded-cylinder-on="bandedCylinderOn"
       :on-toggle-banded-cylinder="handleToggleBandedCylinder" :chainweb-simple-on="chainwebOn"
       :on-toggle-chainweb="handleToggleChainweb" :concentric-base-on="concentricBaseOn"
-      :on-toggle-concentric-base="handleToggleConcentricBase" :disabled="false" />
+      :on-toggle-concentric-base="handleToggleConcentricBase" :first-person-on="firstPersonOn"
+      :on-toggle-first-person="handleToggleFirstPerson" :disabled="false" />
     <ToolsMenuBar />
   </div>
 </template>

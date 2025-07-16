@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { BufferAttribute, BufferGeometry } from 'three'
+import { ref, onMounted, inject } from 'vue'
+
+import type { Ref } from 'vue'
+import type { PerspectiveCamera } from 'three'
 
 interface Props {
   count?: number
+  radius?: number
 }
 
-const props = withDefaults(defineProps<Props>(), { count: 500 })
+const props = withDefaults(defineProps<Props>(), { count: 500, radius: 6000 })
 
 const positions = new Float32Array(props.count * 3)
 const colors = new Float32Array(props.count * 3)
@@ -19,7 +24,7 @@ const starColors = [
 ]
 
 for (let i = 0; i < props.count; i++) {
-  const r = 8000
+  const r = props.radius * (1 + 0.5 * Math.random())
   const theta = 2 * Math.PI * Math.random()
   const phi = Math.acos(2 * Math.random() - 1)
   const x = r * Math.cos(theta) * Math.sin(phi) + (-2000 + Math.random() * 4000)
@@ -39,16 +44,27 @@ for (let i = 0; i < props.count; i++) {
 const geom = new BufferGeometry()
 geom.setAttribute('position', new BufferAttribute(positions, 3))
 geom.setAttribute('color', new BufferAttribute(colors, 3))
+
+
+const cameraRef = inject('camera') as Ref<PerspectiveCamera | undefined>
+const starsPosition = ref<[number, number, number]>([0, 0, 0])
+
+function updateStarsPosition() {
+  if (cameraRef?.value) {
+    const pos = cameraRef.value.position
+    starsPosition.value = [pos.x, pos.y, pos.z]
+  }
+  requestAnimationFrame(updateStarsPosition)
+}
+
+onMounted(() => {
+  updateStarsPosition()
+})
 </script>
 
 <template>
-  <TresPoints :args="[geom]">
+  <TresPoints :args="[geom]" :position="starsPosition">
     <TresBufferGeometry :position="[positions, 3]" :color="[colors, 3]" />
-    <TresPointsMaterial
-      vertexColors
-      :size="15"
-      :size-attenuation="true"
-      :fog="false"
-    />
+    <TresPointsMaterial vertexColors :size="15" :size-attenuation="true" :fog="false" />
   </TresPoints>
 </template>
