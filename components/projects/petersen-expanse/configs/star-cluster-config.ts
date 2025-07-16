@@ -44,7 +44,7 @@ export const starClusterConfig = {
     sizes: {
       'green-star': { min: 18, max: 28 },  // 18-28 pixels
       'golden-star': { min: 25, max: 40 }, // 25-40 pixels
-      'blue-star': { min: 35, max: 55 }    // 35-55 pixels
+      'blue-star': { min: 32, max: 50 }    // 32-50 pixels
     },
     
     // Brightness settings
