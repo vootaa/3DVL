@@ -3,18 +3,16 @@ import { BasicShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
 import { ref, provide } from 'vue'
 
 //import ChainwebSimple from './components/scene/ChainwebSimple.vue'
-import Chainweb3D from './components/scene/Chainweb3D.vue'
 import BandedCylinder from './components/scene/BandedCylinder.vue'
 import ConcentricBase from './components/scene/ConcentricBase.vue'
 
 import SwitchMenuBar from './components/menu/SwitchMenuBar.vue'
 import ToolsMenuBar from './components/menu/ToolsMenuBar.vue'
 
-import PointerLockControls from './components/controls/PointerLockControls.vue'
+import KeyboardCameraControls from './components/controls/KeyboardCameraControls.vue'
 
 import PetersenGraphPlane from '../echo-mission/3d/PetersenGraphPlane.vue'
 
-import Stars from '../../utils/Stars.vue'
 import PostEffects from '../../utils/PostEffects.vue'
 
 import RendererStatsCollector from '../../utils/RendererStatsCollector.vue'
@@ -34,11 +32,11 @@ const gl = {
 }
 
 const cameraRef = ref()
-const gridOn = ref(false)
+const gridOn = ref(true)
 const bandedCylinderOn = ref(false)
 const chainwebOn = ref(false)
 const concentricBaseOn = ref(false)
-const firstPersonOn = ref(false)
+const firstPersonOn = ref(true)
 
 provide('camera', cameraRef)
 
@@ -69,7 +67,7 @@ function handleToggleFirstPerson() {
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
       <TresPerspectiveCamera ref="cameraRef" :position="[0, 2, 10]" :fov="75" :near="0.1" :far="1000" />、
-      <PointerLockControls v-if="firstPersonOn" />
+      <KeyboardCameraControls v-if="firstPersonOn" />
       <TresAmbientLight :intensity="0.3" color="#ffffff" />
 
       <TresGroup>
