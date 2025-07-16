@@ -5,6 +5,7 @@ import { ref, provide } from 'vue'
 //import ChainwebSimple from './components/scene/ChainwebSimple.vue'
 import BandedCylinder from './components/scene/BandedCylinder.vue'
 import ConcentricBase from './components/scene/ConcentricBase.vue'
+import Terrain from './components/scene/Terrain.vue'
 
 import SwitchMenuBar from './components/menu/SwitchMenuBar.vue'
 import ToolsMenuBar from './components/menu/ToolsMenuBar.vue'
@@ -37,7 +38,7 @@ const directionalLightRef = ref()
 const globalLightTarget = ref(new Object3D())
 globalLightTarget.value.position.set(0, 0, 0)
 
-const gridOn = ref(true)
+const gridOn = ref(false)
 const bandedCylinderOn = ref(false)
 const chainwebOn = ref(false)
 const concentricBaseOn = ref(false)
@@ -95,7 +96,7 @@ watchEffect(() => {
         cast-shadow />
 
       <TresGroup>
-        <DynamicTerrain :width="150" :height="150" :segments="15" :maxHeight="3" />
+        <Terrain :width="150" :height="150" :segments="50" :max-height="20" :valley-width="3" />
 
         <!-- BandedCylinder shader effect -->
         <BandedCylinder v-if="bandedCylinderOn" :position="[0.2, 7, -0.2]" :rotation-speed="-0.45"
