@@ -116,7 +116,7 @@ function handleToggleConcentricBase() {
         <OrbitControls ref="orbitControlsRef" v-bind="orbitControlsConfig" />
 
         <!-- Post-processing effects -->
-        <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" />
+        <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" :noise-shader="false" />
 
       </TresGroup>
 
