@@ -13,8 +13,6 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const { camera } = useTresContext()
-const getTerrainHeight = inject<(x: number, z: number) => number>('getTerrainHeight')
-const CAMERA_HEIGHT = 1.7
 
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false
 let rotateLeft = false, rotateRight = false, rotateUp = false, rotateDown = false
@@ -60,14 +58,6 @@ function animate() {
         if (moveBackward) camera.value.position.addScaledVector(direction, -props.moveSpeed)
         if (moveLeft) camera.value.position.addScaledVector(right, props.moveSpeed)
         if (moveRight) camera.value.position.addScaledVector(right, -props.moveSpeed)
-
-        // Bind terrain height
-        if (getTerrainHeight) {
-            const x = camera.value.position.x
-            const z = camera.value.position.z
-            const terrainY = getTerrainHeight(x, z)
-            camera.value.position.y = terrainY + CAMERA_HEIGHT
-        }
 
         // rotate
         const euler = new Euler(
