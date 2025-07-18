@@ -5,7 +5,6 @@ import { ref, provide } from 'vue'
 //import ChainwebSimple from './components/scene/ChainwebSimple.vue'
 import BandedCylinder from './components/scene/BandedCylinder.vue'
 import ConcentricBase from './components/scene/ConcentricBase.vue'
-import Terrain from './components/scene/Terrain.vue'
 
 import SwitchMenuBar from './components/menu/SwitchMenuBar.vue'
 import ToolsMenuBar from './components/menu/ToolsMenuBar.vue'
@@ -95,8 +94,6 @@ watchEffect(() => {
         cast-shadow />
 
       <TresGroup>
-        <Terrain :width="150" :height="150" :segments="50" :max-height="20" :valley-width="3" />
-
         <!-- BandedCylinder shader effect -->
         <BandedCylinder v-if="bandedCylinderOn" :position="[0.2, 7, -0.2]" :rotation-speed="-0.45"
           :cylinder-args="[0.5, 4.5, 48, 0.45, 0.15]" />
@@ -125,7 +122,7 @@ watchEffect(() => {
       :on-toggle-concentric-base="handleToggleConcentricBase" :first-person-on="firstPersonOn"
       :on-toggle-first-person="handleToggleFirstPerson" :disabled="false" />
     <ToolsMenuBar />
-    <KeyboardHelper />
+    <KeyboardHelper v-if="firstPersonOn" />
   </div>
 </template>
 
