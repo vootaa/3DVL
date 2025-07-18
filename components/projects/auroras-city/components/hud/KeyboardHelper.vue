@@ -6,7 +6,7 @@
             <li><b>A/D</b>: Move Left/Right</li>
             <li><b>↑/↓</b>: Look Up/Down</li>
             <li><b>←/→</b>: Turn Left/Right</li>
-            <li><b>Q/E</b>: Turn Left/Right (Alternate)</li>
+            <li><b>Q/E</b>: Turn Left/Right</li>
         </ul>
     </div>
 </template>
@@ -20,7 +20,7 @@
     color: #fff;
     padding: 16px 20px;
     border-radius: 10px;
-    font-size: 15px;
+    font-size: 12px;
     z-index: 1000;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     pointer-events: none;
