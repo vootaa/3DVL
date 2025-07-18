@@ -11,7 +11,7 @@ defineProps<Props>()
 <template>
     <TresGroup>
         <!-- Inner ring -->
-        <TresMesh :position="[0, config.rings.inner.height, 0]">
+        <TresMesh :position="[0, 0, 0]" :rotation="[-Math.PI / 2, 0, 0]">
             <TresRingGeometry :args="[
                 config.rings.inner.radius - config.rings.inner.width / 2,
                 config.rings.inner.radius + config.rings.inner.width / 2,
@@ -22,7 +22,7 @@ defineProps<Props>()
         </TresMesh>
 
         <!-- Middle ring -->
-        <TresMesh :position="[0, config.rings.middle.height, 0]">
+        <TresMesh :position="[0, 0, 0]" :rotation="[-Math.PI / 2, 0, 0]">
             <TresRingGeometry :args="[
                 config.rings.middle.radius - config.rings.middle.width / 2,
                 config.rings.middle.radius + config.rings.middle.width / 2,
@@ -33,7 +33,7 @@ defineProps<Props>()
         </TresMesh>
 
         <!-- Outer ring -->
-        <TresMesh :position="[0, config.rings.outer.height, 0]">
+        <TresMesh :position="[0, 0, 0]" :rotation="[-Math.PI / 2, 0, 0]">
             <TresRingGeometry :args="[
                 config.rings.outer.radius - config.rings.outer.width / 2,
                 config.rings.outer.radius + config.rings.outer.width / 2,

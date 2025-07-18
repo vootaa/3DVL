@@ -10,14 +10,14 @@ defineProps<Props>()
 
 <template>
     <TresGroup>
-        <!-- Ground plane -->
-        <TresMesh :position="[0, 0, 0]">
+        <!-- Ground plane - rotated to XZ plane -->
+        <TresMesh :position="[0, 0, 0]" :rotation="[-Math.PI / 2, 0, 0]">
             <TresPlaneGeometry :args="[config.ground.size, config.ground.size]" />
             <TresMeshLambertMaterial color="#2d5a27" />
         </TresMesh>
 
-        <!-- Mountain boundary -->
-        <TresMesh :position="[0, 0.5, 0]">
+        <!-- Mountain boundary - rotated to XZ plane -->
+        <TresMesh :position="[0, 0.01, 0]" :rotation="[-Math.PI / 2, 0, 0]">
             <TresRingGeometry :args="[
                 config.movement.boundaryRadius,
                 config.ground.size / 2,
@@ -27,7 +27,7 @@ defineProps<Props>()
             <TresMeshLambertMaterial color="#4a4a4a" />
         </TresMesh>
 
-        <!-- Mountain walls -->
+        <!-- Mountain walls - cylinder already in correct orientation -->
         <TresMesh :position="[0, 1, 0]">
             <TresCylinderGeometry :args="[
                 config.movement.boundaryRadius,
