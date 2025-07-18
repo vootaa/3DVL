@@ -90,7 +90,6 @@ watchEffect(() => {
       <TresDirectionalLight ref="directionalLightRef" :intensity="1.2" color="#ffffff" :position="[0, 2, 10]"
         cast-shadow />
 
-      <KeyboardCameraControls v-if="firstPersonOn" :rotate-speed="0.008" />
       <TresAmbientLight :intensity="0.3" color="#ffffff" />
       <TresDirectionalLight :intensity="0.8" color="#ffffff" :position="[50, 100, 50]" :target="globalLightTarget"
         cast-shadow />
@@ -112,6 +111,8 @@ watchEffect(() => {
         <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" :noise-shader="false" />
 
       </TresGroup>
+
+      <KeyboardCameraControls v-if="firstPersonOn" :rotate-speed="0.008" />
 
       <!-- Debug helpers -->
       <TresGridHelper v-if="gridOn" :args="[150, 150, '#113366', '#224488']" :position="[0, 0, 0]" />

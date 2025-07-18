@@ -26,13 +26,6 @@ function getHeight(x: number, y: number): number {
   return t * props.maxHeight
 }
 
-// Provide terrain height query method (x, z are world coordinates)
-function getTerrainHeight(x: number, z: number): number {
-  // Map x/z to terrain coordinates
-  return getHeight(x, z)
-}
-provide('getTerrainHeight', getTerrainHeight)
-
 const geometry = ref<BufferGeometry>()
 const meshRef = ref<Mesh>()
 
@@ -71,8 +64,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <TresMesh ref="meshRef" :geometry="geometry" :position="[0, 0, 0]" receive-shadow cast-shadow>
-    <TresMeshStandardMaterial color="#226688" :wireframe="false" :metalness="0.2" :roughness="0.8" :opacity="0.95" transparent />
-    <TresMeshStandardMaterial :wireframe="true" :color="wireColor" :opacity="0.7" transparent />
+  <TresMesh ref="meshRef" :geometry="geometry" :position="[0, -props.maxHeight - 1, 0]" receive-shadow cast-shadow>
+    <TresMeshStandardMaterial color="#226688" :wireframe="false" :metalness="0.2" :roughness="0.8" :opacity="0.95"
+      transparent />
+    <TresMeshStandardMaterial :wireframe="false" :color="wireColor" :opacity="0.7" transparent />
   </TresMesh>
 </template>
