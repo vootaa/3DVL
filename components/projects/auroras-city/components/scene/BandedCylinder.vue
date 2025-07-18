@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { shallowRef, onUnmounted, onMounted, computed } from 'vue'
+import { shallowRef, onUnmounted, onMounted } from 'vue'
 import { BufferGeometry, BufferAttribute, DoubleSide, ShaderMaterial, Vector2, Clock } from 'three'
 import { useLoop } from '@tresjs/core'
 

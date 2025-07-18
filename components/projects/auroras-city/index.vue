@@ -6,6 +6,13 @@ import { ref, provide } from 'vue'
 import BandedCylinder from './components/scene/BandedCylinder.vue'
 import ConcentricBase from './components/scene/ConcentricBase.vue'
 
+import GroundTerrain from './components/scene/GroundTerrain.vue'
+import HemisphereDome from './components/scene/HemisphereDome.vue'
+import OrbitalRings from './components/scene/OrbitalRings.vue'
+import Temples from './components/scene/Temples.vue'
+import TetherBridges from './components/scene/TetherBridges.vue'
+import Staircases from './components/scene/Staircases.vue'
+
 import SwitchMenuBar from './components/menu/SwitchMenuBar.vue'
 import ToolsMenuBar from './components/menu/ToolsMenuBar.vue'
 
@@ -17,6 +24,11 @@ import PetersenGraphPlane from '../echo-mission/3d/PetersenGraphPlane.vue'
 import PostEffects from '../../utils/PostEffects.vue'
 
 import RendererStatsCollector from '../../utils/RendererStatsCollector.vue'
+
+
+import { defaultConfig } from './config/scene-config'
+
+const sceneConfig = ref(defaultConfig)
 
 const gl = {
   clearColor: '#010104',
@@ -107,6 +119,15 @@ watchEffect(() => {
         <!-- Post-processing effects -->
         <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" :noise-shader="false" />
 
+      </TresGroup>
+
+      <TresGroup>
+        <GroundTerrain :config="sceneConfig" />
+        <HemisphereDome :config="sceneConfig" />
+        <OrbitalRings :config="sceneConfig" />
+        <Temples :config="sceneConfig" />
+        <TetherBridges :config="sceneConfig" />
+        <Staircases :config="sceneConfig" />
       </TresGroup>
 
       <KeyboardCameraControls v-if="firstPersonOn" :rotate-speed="0.008" />
