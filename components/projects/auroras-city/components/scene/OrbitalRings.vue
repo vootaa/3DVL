@@ -28,7 +28,8 @@ const createShaderUniforms = (ringType: 'inner' | 'middle' | 'outer') => reactiv
     uRingType: { value: ringType === 'inner' ? 0.0 : ringType === 'middle' ? 1.0 : 2.0 },
     uRadius: { value: props.config.rings[ringType].radius },
     uWidth: { value: props.config.rings[ringType].width },
-    uHeight: { value: props.config.rings[ringType].height },
+    uHeight: { value: props.config.rings.height },
+    uThickness: { value: props.config.rings.thickness },
     uEnergyIntensity: { value: ringType === 'inner' ? 1.0 : ringType === 'middle' ? 0.8 : 0.6 },
     uInnerRadius: { value: props.config.rings[ringType].radius - props.config.rings[ringType].width / 2 },
     uOuterRadius: { value: props.config.rings[ringType].radius + props.config.rings[ringType].width / 2 }
@@ -40,14 +41,12 @@ const outerUniforms = createShaderUniforms('outer')
 
 let animationId: number
 
-// Animation loop - only for shader time animation, no rotation
+// Animation loop - only for shader time animation
 const animate = () => {
-    const time = performance.now() * 0.001
-
     // Update time uniforms for shader effects only
-    innerUniforms.uTime.value = time
-    middleUniforms.uTime.value = time
-    outerUniforms.uTime.value = time
+    innerUniforms.uTime.value += 0.005
+    middleUniforms.uTime.value += 0.005
+    outerUniforms.uTime.value += 0.005
 
     animationId = requestAnimationFrame(animate)
 }
@@ -56,21 +55,24 @@ const updateUniforms = () => {
     // Update inner ring uniforms
     innerUniforms.uRadius.value = props.config.rings.inner.radius
     innerUniforms.uWidth.value = props.config.rings.inner.width
-    innerUniforms.uHeight.value = props.config.rings.inner.height
+    innerUniforms.uHeight.value = props.config.rings.height
+    innerUniforms.uThickness.value = props.config.rings.thickness
     innerUniforms.uInnerRadius.value = props.config.rings.inner.radius - props.config.rings.inner.width / 2
     innerUniforms.uOuterRadius.value = props.config.rings.inner.radius + props.config.rings.inner.width / 2
 
     // Update middle ring uniforms
     middleUniforms.uRadius.value = props.config.rings.middle.radius
     middleUniforms.uWidth.value = props.config.rings.middle.width
-    middleUniforms.uHeight.value = props.config.rings.middle.height
+    middleUniforms.uHeight.value = props.config.rings.height
+    middleUniforms.uThickness.value = props.config.rings.thickness
     middleUniforms.uInnerRadius.value = props.config.rings.middle.radius - props.config.rings.middle.width / 2
     middleUniforms.uOuterRadius.value = props.config.rings.middle.radius + props.config.rings.middle.width / 2
 
     // Update outer ring uniforms
     outerUniforms.uRadius.value = props.config.rings.outer.radius
     outerUniforms.uWidth.value = props.config.rings.outer.width
-    outerUniforms.uHeight.value = props.config.rings.outer.height
+    outerUniforms.uHeight.value = props.config.rings.height
+    outerUniforms.uThickness.value = props.config.rings.thickness
     outerUniforms.uInnerRadius.value = props.config.rings.outer.radius - props.config.rings.outer.width / 2
     outerUniforms.uOuterRadius.value = props.config.rings.outer.radius + props.config.rings.outer.width / 2
 }
@@ -94,44 +96,44 @@ watch(() => props.config.rings, () => {
 </script>
 
 <template>
-    <TresGroup>
-        <!-- Inner Ring - Rotated 90 degrees to make it horizontal -->
-        <TresMesh ref="innerRingMesh" :position="[0, config.rings.inner.height, 0]" :rotation="[-Math.PI / 2, 0, 0]">
-            <TresRingGeometry ref="innerRingGeometry" :args="[
-            config.rings.inner.radius - config.rings.inner.width / 2,
-            config.rings.inner.radius + config.rings.inner.width / 2,
-            64,
-            1
+    <TresGroup :scale="[1, config.rings.thickness, 1]" :position="[0, config.rings.height, 0]">
+        <!-- Inner Ring -->
+        <TresMesh ref="innerRingMesh" :rotation="[-Math.PI / 2, 0, 0]">
+            <TresTorusGeometry ref="innerRingGeometry" :args="[
+                config.rings.inner.radius,
+                config.rings.inner.width / 2,
+                16,
+                64
             ]" />
             <TresShaderMaterial ref="innerRingMaterial" :vertexShader="orbitalRingsVertexShader"
-            :fragmentShader="orbitalRingsFragmentShader" :uniforms="innerUniforms" :transparent="true"
-            :depthWrite="false" :blending="2" />
+                :fragmentShader="orbitalRingsFragmentShader" :uniforms="innerUniforms" :transparent="true"
+                :depthWrite="false" :blending="2" :side="2" />
         </TresMesh>
 
-        <!-- Middle Ring - Rotated 90 degrees to make it horizontal -->
-        <TresMesh ref="middleRingMesh" :position="[0, config.rings.middle.height, 0]" :rotation="[-Math.PI / 2, 0, 0]">
-            <TresRingGeometry ref="middleRingGeometry" :args="[
-            config.rings.middle.radius - config.rings.middle.width / 2,
-            config.rings.middle.radius + config.rings.middle.width / 2,
-            64,
-            1
+        <!-- Middle Ring -->
+        <TresMesh ref="middleRingMesh" :rotation="[-Math.PI / 2, 0, 0]">
+            <TresTorusGeometry ref="middleRingGeometry" :args="[
+                config.rings.middle.radius,
+                config.rings.middle.width / 2,
+                16,
+                64
             ]" />
             <TresShaderMaterial ref="middleRingMaterial" :vertexShader="orbitalRingsVertexShader"
-            :fragmentShader="orbitalRingsFragmentShader" :uniforms="middleUniforms" :transparent="true"
-            :depthWrite="false" :blending="2" />
+                :fragmentShader="orbitalRingsFragmentShader" :uniforms="middleUniforms" :transparent="true"
+                :depthWrite="false" :blending="2" :side="2" />
         </TresMesh>
 
-        <!-- Outer Ring - Rotated 90 degrees to make it horizontal -->
-        <TresMesh ref="outerRingMesh" :position="[0, config.rings.outer.height, 0]" :rotation="[-Math.PI / 2, 0, 0]">
-            <TresRingGeometry ref="outerRingGeometry" :args="[
-                config.rings.outer.radius - config.rings.outer.width / 2,
-                config.rings.outer.radius + config.rings.outer.width / 2,
-                64,
-                1
+        <!-- Outer Ring -->
+        <TresMesh ref="outerRingMesh" :rotation="[-Math.PI / 2, 0, 0]">
+            <TresTorusGeometry ref="outerRingGeometry" :args="[
+                config.rings.outer.radius,
+                config.rings.outer.width / 2,
+                16,
+                64
             ]" />
             <TresShaderMaterial ref="outerRingMaterial" :vertexShader="orbitalRingsVertexShader"
                 :fragmentShader="orbitalRingsFragmentShader" :uniforms="outerUniforms" :transparent="true"
-                :depthWrite="false" :blending="2" />
+                :depthWrite="false" :blending="2" :side="2" />
         </TresMesh>
     </TresGroup>
 </template>

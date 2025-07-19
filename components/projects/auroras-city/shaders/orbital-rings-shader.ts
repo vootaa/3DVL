@@ -1,196 +1,196 @@
 export const orbitalRingsVertexShader = `
-  uniform float uTime;
-  uniform float uRingType;
-  uniform float uRadius;
-  uniform float uWidth;
-  uniform float uHeight;
-  uniform float uRotationSpeed;
-  uniform float uEnergyIntensity;
-  uniform float uInnerRadius;
-  uniform float uOuterRadius;
+    uniform float uTime;
+    uniform float uRingType;
+    uniform float uRadius;
+    uniform float uWidth;
+    uniform float uThickness;
+    uniform float uEnergyIntensity;
 
-  varying vec3 vPosition;
-  varying vec3 vWorldPosition;
-  varying vec2 vUv;
-  varying float vDistance;
-  varying float vRadialDistance;
-  varying float vRingAngle;
-  varying float vHeightVar;
-  varying float vRingType;
+    varying vec3 vPosition;
+    varying vec3 vWorldPosition;
+    varying vec3 vNormal;
+    varying vec2 vUv;
+    varying float vDistance;
+    varying float vRingAngle;
+    varying float vTubeAngle;
+    varying float vRingType;
+    varying float vEnergyFlow;
 
-  // Noise function consistent with terrain shader
-  float noise(vec2 p) {
-    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
-  }
-
-  // Energy wave function similar to terrain
-  float energyWave(vec2 pos, float time, float speed) {
-    float dist = length(pos);
-    float angle = atan(pos.y, pos.x);
-    
-    float wave1 = sin(dist * 0.4 - time * speed + angle * 3.0) * 0.5 + 0.5;
-    float wave2 = sin(dist * 0.6 - time * speed * 1.2 + angle * 6.0) * 0.3 + 0.5;
-    float wave3 = sin(dist * 0.8 - time * speed * 0.8) * 0.2 + 0.5;
-    
-    return (wave1 + wave2 + wave3) / 3.0;
-  }
-
-  void main() {
-    vUv = uv;
-    vRingType = uRingType;
-    
-    vec3 pos = position;
-    
-    // Calculate radial distance from ring center
-    vRadialDistance = length(pos.xz);
-    vRingAngle = atan(pos.z, pos.x);
-    
-    // Add dynamic height variations
-    float heightWave = energyWave(pos.xz, uTime, uRotationSpeed * 2.0);
-    float heightNoise = noise(pos.xz * 0.5 + uTime * 0.1) * 0.02;
-    
-    // Different height effects for different ring types
-    if (uRingType < 0.5) { // Inner ring
-      pos.y += sin(uTime * 3.0 + vRingAngle * 8.0) * 0.05 + heightNoise;
-    } else if (uRingType < 1.5) { // Middle ring
-      pos.y += sin(uTime * 2.0 + vRingAngle * 6.0) * 0.03 + heightWave * 0.02;
-    } else { // Outer ring
-      pos.y += sin(uTime * 1.5 + vRingAngle * 4.0) * 0.02 + heightNoise * 0.5;
+    // Noise function
+    float noise(vec3 p) {
+        return fract(sin(dot(p, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
     }
-    
-    vHeightVar = pos.y - position.y;
-    vPosition = pos;
-    
-    // World position for lighting calculations
-    vec4 worldPos = modelMatrix * vec4(pos, 1.0);
-    vWorldPosition = worldPos.xyz;
-    
-    // Distance from world center for energy effects
-    vDistance = length(vWorldPosition.xz);
-    
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-  }
+
+    // Energy flow calculation
+    float calculateEnergyFlow(vec3 pos, float time, float ringType) {
+        float ringRadius = length(pos.xz);
+        float angle = atan(pos.z, pos.x);
+        
+        // Energy flow speed for different rings
+        float flowSpeed = ringType < 0.5 ? 3.0 : ringType < 1.5 ? 2.0 : 1.5;
+        
+        // Main energy wave
+        float mainWave = sin(angle * 4.0 - time * flowSpeed) * 0.5 + 0.5;
+        
+        // Secondary fluctuation
+        float subWave = sin(angle * 8.0 + time * flowSpeed * 0.7) * 0.3;
+        
+        // Pulse effect
+        float pulse = sin(time * 2.0 + ringType * 2.0) * 0.2 + 0.8;
+        
+        return (mainWave + subWave) * pulse;
+    }
+
+    void main() {
+        vUv = uv;
+        vRingType = uRingType;
+        vNormal = normalize(normalMatrix * normal);
+        
+        vec3 pos = position;
+        
+        // Calculate ring angle and tube angle
+        vRingAngle = atan(pos.z, pos.x);
+        
+        // For torus geometry, calculate the tube's angular position
+        float tubeRadius = length(pos.yz);
+        vTubeAngle = atan(pos.y, length(pos.xz) - uRadius);
+        
+        // Calculate energy flow
+        vEnergyFlow = calculateEnergyFlow(pos, uTime, uRingType);
+        
+        // Deformation effect based on energy flow
+        float energyDisplacement = vEnergyFlow * 0.05;
+        
+        // Displacement along the normal direction
+        pos += normal * energyDisplacement;
+        
+        // Add subtle wave effect
+        float waveEffect = sin(vRingAngle * 6.0 - uTime * 2.0) * 0.02;
+        pos += normal * waveEffect;
+        
+        vPosition = pos;
+        
+        // World position
+        vec4 worldPos = modelMatrix * vec4(pos, 1.0);
+        vWorldPosition = worldPos.xyz;
+        
+        // Distance to center
+        vDistance = length(vWorldPosition.xz);
+        
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+    }
 `
 
 export const orbitalRingsFragmentShader = `
-  uniform float uTime;
-  uniform float uRingType;
-  uniform float uRadius;
-  uniform float uWidth;
-  uniform float uHeight;
-  uniform float uRotationSpeed;
-  uniform float uEnergyIntensity;
-  uniform float uInnerRadius;
-  uniform float uOuterRadius;
+    uniform float uTime;
+    uniform float uRingType;
+    uniform float uRadius;
+    uniform float uWidth;
+    uniform float uThickness;
+    uniform float uEnergyIntensity;
 
-  varying vec3 vPosition;
-  varying vec3 vWorldPosition;
-  varying vec2 vUv;
-  varying float vDistance;
-  varying float vRadialDistance;
-  varying float vRingAngle;
-  varying float vHeightVar;
-  varying float vRingType;
+    varying vec3 vPosition;
+    varying vec3 vWorldPosition;
+    varying vec3 vNormal;
+    varying vec2 vUv;
+    varying float vDistance;
+    varying float vRingAngle;
+    varying float vTubeAngle;
+    varying float vRingType;
+    varying float vEnergyFlow;
 
-  // Shared noise function with terrain shader
-  float noise(vec2 p) {
-    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
-  }
-
-  // Enhanced noise for more detail
-  float smoothNoise(vec2 p) {
-    vec2 i = floor(p);
-    vec2 f = fract(p);
-    f = f * f * (3.0 - 2.0 * f);
-    
-    float a = noise(i);
-    float b = noise(i + vec2(1.0, 0.0));
-    float c = noise(i + vec2(0.0, 1.0));
-    float d = noise(i + vec2(1.0, 1.0));
-    
-    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-  }
-
-  // Energy wave function matching terrain
-  float energyWave(vec2 pos, float time, float speed) {
-    float dist = length(pos);
-    float angle = atan(pos.y, pos.x);
-    
-    float wave1 = sin(dist * 0.4 - time * speed + angle * 3.0) * 0.5 + 0.5;
-    float wave2 = sin(dist * 0.6 - time * speed * 1.2 + angle * 6.0) * 0.3 + 0.5;
-    float wave3 = sin(dist * 0.8 - time * speed * 0.8) * 0.2 + 0.5;
-    
-    return (wave1 + wave2 + wave3) / 3.0;
-  }
-
-  // Ring-specific energy patterns
-  vec3 calculateRingEnergy(float ringType, vec2 position, float time) {
-    vec3 baseColor;
-    vec3 energyColor;
-    float energyPattern;
-    
-    if (ringType < 0.5) { // Inner ring - matches terrain plain energy
-      baseColor = vec3(0.1, 0.15, 0.2);
-      energyColor = vec3(0.0, 1.0, 0.8); // Cyan like terrain
-      
-      // High-frequency energy patterns
-      energyPattern = energyWave(position, time, 2.5);
-      float pulsePattern = sin(time * 4.0 + vRingAngle * 12.0) * 0.5 + 0.5;
-      energyPattern = mix(energyPattern, pulsePattern, 0.4);
-      
-    } else if (ringType < 1.5) { // Middle ring - transition energy
-      baseColor = vec3(0.15, 0.1, 0.2);
-      energyColor = vec3(0.4, 0.0, 1.0); // Purple like terrain transition
-      
-      // Medium-frequency patterns
-      energyPattern = energyWave(position * 0.7, time, 1.8);
-      float spiralPattern = sin(vRingAngle * 8.0 - time * 3.0) * 0.5 + 0.5;
-      energyPattern = mix(energyPattern, spiralPattern, 0.3);
-      
-    } else { // Outer ring - mountain crystal energy
-      baseColor = vec3(0.1, 0.1, 0.15);
-      energyColor = vec3(1.0, 0.2, 0.4); // Red like terrain crystal veins
-      
-      // Low-frequency, crystalline patterns
-      energyPattern = energyWave(position * 0.5, time, 1.2);
-      float crystallinePattern = step(0.7, smoothNoise(position * 2.0 + time * 0.3));
-      energyPattern = mix(energyPattern, crystallinePattern, 0.5);
+    // Noise function
+    float noise(vec3 p) {
+        return fract(sin(dot(p, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
     }
-    
-    return mix(baseColor, energyColor, energyPattern * uEnergyIntensity);
-  }
 
-  void main() {
-    // Calculate radial position within ring
-    float ringProgress = (vRadialDistance - uInnerRadius) / (uOuterRadius - uInnerRadius);
-    ringProgress = clamp(ringProgress, 0.0, 1.0);
-    
-    // Edge falloff for smooth ring boundaries
-    float edgeFalloff = sin(ringProgress * 3.14159) * 0.8 + 0.2;
-    
-    // Calculate energy-based color
-    vec3 energyColor = calculateRingEnergy(vRingType, vWorldPosition.xz, uTime);
-    
-    // Add rotation-based energy trails
-    float rotationTrail = sin(vRingAngle * 6.0 - uTime * uRotationSpeed * 3.0) * 0.5 + 0.5;
-    energyColor += energyColor * rotationTrail * 0.3;
-    
-    // Add height variation influence
-    float heightInfluence = abs(vHeightVar) * 10.0;
-    energyColor += vec3(0.2, 0.4, 1.0) * heightInfluence;
-    
-    // Distance-based atmospheric scattering (matching terrain fog)
-    float atmosphericDistance = length(vWorldPosition);
-    float scattering = exp(-atmosphericDistance * 0.002);
-    vec3 atmosphereColor = vec3(0.5, 0.7, 1.0);
-    energyColor = mix(atmosphereColor * 0.1, energyColor, scattering);
-    
-    // Final transparency based on energy intensity and edge falloff
-    float alpha = uEnergyIntensity * edgeFalloff * 0.8;
-    
-    // Add pulsing effect
-    alpha *= (1.0 + sin(uTime * 2.0) * 0.1);
-    
-    gl_FragColor = vec4(energyColor, alpha);
-  }
+    // Smooth noise
+    float smoothNoise(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        
+        float n000 = noise(i);
+        float n001 = noise(i + vec3(0, 0, 1));
+        float n010 = noise(i + vec3(0, 1, 0));
+        float n011 = noise(i + vec3(0, 1, 1));
+        float n100 = noise(i + vec3(1, 0, 0));
+        float n101 = noise(i + vec3(1, 0, 1));
+        float n110 = noise(i + vec3(1, 1, 0));
+        float n111 = noise(i + vec3(1, 1, 1));
+        
+        float nx00 = mix(n000, n100, f.x);
+        float nx01 = mix(n001, n101, f.x);
+        float nx10 = mix(n010, n110, f.x);
+        float nx11 = mix(n011, n111, f.x);
+        
+        float nxy0 = mix(nx00, nx10, f.y);
+        float nxy1 = mix(nx01, nx11, f.y);
+        
+        return mix(nxy0, nxy1, f.z);
+    }
+
+    // Energy texture generation
+    vec3 generateEnergyTexture(vec3 pos, float time, float ringType) {
+        vec3 baseColor;
+        vec3 energyColor;
+        
+        if (ringType < 0.5) { // Inner ring - high energy cyan
+            baseColor = vec3(0.05, 0.1, 0.15);
+            energyColor = vec3(0.0, 1.2, 1.0);
+        } else if (ringType < 1.5) { // Middle ring - purple energy
+            baseColor = vec3(0.1, 0.05, 0.15);
+            energyColor = vec3(0.8, 0.2, 1.2);
+        } else { // Outer ring - red crystal energy
+            baseColor = vec3(0.15, 0.05, 0.05);
+            energyColor = vec3(1.2, 0.3, 0.5);
+        }
+        
+        // Energy stripes on the tube surface
+        float tubeStripes = sin(vTubeAngle * 8.0 - time * 3.0) * 0.5 + 0.5;
+        
+        // Ring energy flow
+        float ringFlow = sin(vRingAngle * 6.0 - time * 4.0) * 0.5 + 0.5;
+        
+        // Combined energy pattern
+        float energyPattern = vEnergyFlow * tubeStripes * ringFlow;
+        
+        // Add noise detail
+        float noiseDetail = smoothNoise(pos * 2.0 + time * 0.5) * 0.3;
+        energyPattern += noiseDetail;
+        
+        return mix(baseColor, energyColor, energyPattern * uEnergyIntensity);
+    }
+
+    void main() {
+        // Generate energy texture
+        vec3 energyColor = generateEnergyTexture(vPosition, uTime, vRingType);
+        
+        // Edge glow based on normal
+        float fresnel = 1.0 - abs(dot(normalize(vNormal), vec3(0, 0, 1)));
+        fresnel = pow(fresnel, 2.0);
+        
+        // Enhance edge glow
+        energyColor += energyColor * fresnel * 0.5;
+        
+        // Pulse effect
+        float pulse = sin(uTime * 3.0 + vRingType * 2.0) * 0.1 + 0.9;
+        energyColor *= pulse;
+        
+        // Extra brightness from energy flow
+        energyColor += vec3(0.2, 0.4, 1.0) * vEnergyFlow * 0.3;
+        
+        // Distance attenuation (atmospheric scattering)
+        float atmosphericDistance = length(vWorldPosition);
+        float scattering = exp(-atmosphericDistance * 0.001);
+        vec3 atmosphereColor = vec3(0.3, 0.5, 0.8);
+        energyColor = mix(atmosphereColor * 0.1, energyColor, scattering);
+        
+        // Alpha calculation
+        float alpha = uEnergyIntensity * 0.9;
+        alpha *= (0.7 + vEnergyFlow * 0.3); // Alpha variation based on energy flow
+        alpha *= pulse; // Pulse alpha
+        
+        gl_FragColor = vec4(energyColor, alpha);
+    }
 `

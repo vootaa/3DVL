@@ -45,23 +45,19 @@ export interface SceneConfig {
     }
   }
   rings: {
+    thickness: number
+    height: number
     inner: {
       radius: number
       width: number
-      thickness: number
-      height: number
     }
     middle: {
       radius: number
       width: number
-      thickness: number
-      height: number
     }
     outer: {
       radius: number
       width: number
-      thickness: number
-      height: number
     }
   }
   temples: {
@@ -132,23 +128,19 @@ export const defaultConfig: SceneConfig = {
     }
   },
   rings: {
+    thickness: 0.2,
+    height: 1.5,
     inner: {
       radius: 15,
       width: 5,
-      thickness: 0.1,
-      height: 2
     },
     middle: {
       radius: 30,
-      width: 6,
-      thickness: 0.1,
-      height: 2
+      width: 7,
     },
     outer: {
       radius: 48,
-      width: 10,
-      thickness: 0.1,
-      height: 2
+      width: 9,
     }
   },
   temples: {

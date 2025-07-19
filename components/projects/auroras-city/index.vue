@@ -122,7 +122,7 @@ watchEffect(() => {
       <TresGroup>
         <ProceduralTerrain :config="sceneConfig" />
         <HemisphereDome :config="sceneConfig" />
-        <OrbitalRings :config="sceneConfig" />
+        <OrbitalRings :config="sceneConfig"/>
 
         <!--
         <Temples :config="sceneConfig" />
