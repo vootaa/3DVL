@@ -1,6 +1,9 @@
 <template>
     <div class="keyboard-hud">
-        <div class="hud-title">Keyboard Controls</div>
+        <div class="hud-title">
+            <i class="i-carbon-keyboard hud-title-icon" aria-hidden="true" />
+            Keyboard Controls
+        </div>
         <ul>
             <li><b>W/S</b>: Move Forward/Backward</li>
             <li><b>A/D</b>: Move Left/Right</li>
@@ -31,6 +34,14 @@
     font-weight: bold;
     margin-bottom: 8px;
     font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hud-title-icon {
+    font-size: 18px;
+    color: #00ccff;  filter: drop-shadow(0 0 4px #00ccff88);
 }
 
 ul {
@@ -44,6 +55,6 @@ li {
 }
 
 b {
-    color: #ffd700;
+    color: #00ccff;
 }
 </style>
