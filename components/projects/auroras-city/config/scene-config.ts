@@ -103,12 +103,12 @@ export const defaultConfig: SceneConfig = {
 
     // Grid parameters
     size: 200,              // Terrain grid size (covers dome area)
-    segments: 256,          // High subdivision for smooth terrain
+    segments: 32,          // High subdivision for smooth terrain
 
     // Noise parameters
     noiseScale: 0.015,      // Base noise scale
     noiseIntensity: 1.0,    // Noise intensity
-    ridgeNoiseScale: 0.008, // Ridge noise (larger features)
+    ridgeNoiseScale: 0.005, // Ridge noise (larger features)
 
     // Smoothing parameter
     transitionSmoothness: 0.7

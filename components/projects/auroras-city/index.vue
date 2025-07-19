@@ -100,7 +100,8 @@ watchEffect(() => {
       <TresDirectionalLight ref="directionalLightRef" :intensity="1.2" color="#ffffff" :position="[0, 2.5, 10]"
         cast-shadow />
 
-      <TresAmbientLight :intensity="0.3" color="#ffffff" />
+      <TresAmbientLight :intensity="0.6" />
+      <TresDirectionalLight :position="[50, 50, 50]" :intensity="1" :castShadow="true" />
 
       <TresGroup>
         <!-- BandedCylinder shader effect -->
