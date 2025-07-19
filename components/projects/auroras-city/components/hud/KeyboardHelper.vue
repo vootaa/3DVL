@@ -4,6 +4,7 @@
             <i class="i-carbon-keyboard hud-title-icon" aria-hidden="true" />
             Keyboard Controls
         </div>
+        <div class="hud-divider"></div>
         <ul>
             <li><b>W/S</b>: Move Forward/Backward</li>
             <li><b>A/D</b>: Move Left/Right</li>
@@ -37,6 +38,13 @@
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.hud-divider {
+    height: 1px;
+    background: linear-gradient(90deg, #00ccff33 0%, #00ccff99 50%, #00ccff33 100%);
+    margin-bottom: 10px;
+    border: none;
 }
 
 .hud-title-icon {
