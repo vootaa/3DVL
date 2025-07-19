@@ -24,6 +24,11 @@ export const auroraFragmentShader = `
   uniform vec3 uAuroraColor1;
   uniform vec3 uAuroraColor2;
   uniform vec3 uAuroraColor3;
+
+  uniform float uAuroraTheta;   // Aurora center angle (radians)
+  uniform float uAuroraArc;     // Aurora arc angle range (radians)
+  uniform float uAuroraMinY;    // Aurora minimum height (normalized 0~1)
+  uniform float uAuroraMaxY;    // Aurora maximum height (normalized 0~1)
   
   varying vec3 vPosition;
   varying vec3 vNormal;
@@ -71,7 +76,7 @@ export const auroraFragmentShader = `
     float curtain2 = sin(uv.x * 15.0 - time * 2.0) * 0.3 + 0.5;
     
     // Height fade
-    float heightFade = smoothstep(0.0, 0.8, uv.y);
+    float heightFade = smoothstep(0.5, 0.98, uv.y);
     
     return (curtain1 + curtain2) * 0.5 * heightFade;
   }
@@ -80,27 +85,38 @@ export const auroraFragmentShader = `
     vec3 baseColor = vec3(0.0);
     float alpha = 0.0;
     
-    // Calculate height factor for aurora intensity
-    float heightFactor = vPosition.y / uDomeRadius;
-    
-    // Aurora effects based on position
+    // 1. Calculate polar coordinates of current pixel
+    float theta = atan(vPosition.z, vPosition.x); // [-PI, PI]
+    float normTheta = mod(theta + 6.2831853, 6.2831853); // [0, 2PI]
+    float heightNorm = clamp(vPosition.y / uDomeRadius, 0.0, 1.0);
+
+    // 2. Check if within aurora angle range
+    float thetaDist = abs(normTheta - uAuroraTheta);
+    if (thetaDist > 3.1415926) thetaDist = 6.2831853 - thetaDist; // Minimum angle distance
+    float arcMask = smoothstep(uAuroraArc, uAuroraArc * 0.7, thetaDist);
+
+    // 3. Check if within aurora height range
+    float heightMask = smoothstep(uAuroraMinY, uAuroraMinY + 0.05, heightNorm)
+                     * (1.0 - smoothstep(uAuroraMaxY - 0.05, uAuroraMaxY, heightNorm));
+
+    // 4. Combine original aurora effects
     float auroraPattern = auroraWave(vPosition.xz, uTime);
     float curtainPattern = auroraCurtain(vUv, uTime);
-    
-    // Noise for aurora variation
     float noisePattern = fractalNoise(vPosition.xz * 0.01 + uTime * 0.1, 3);
     float detailNoise = fractalNoise(vUv * 5.0 + uTime * 0.3, 2);
-    
-    // Distance-based intensity (stronger aurora over plain area)
+
     float distanceFactor = 1.0 - smoothstep(uPlainRadius * 0.5, uPlainRadius * 1.5, vDistanceFromCenter);
-    
-    // Combine aurora patterns
-    float auroraIntensity = (auroraPattern * 0.4 + curtainPattern * 0.3 + noisePattern * 0.2 + detailNoise * 0.1) * heightFactor * distanceFactor * uAuroraIntensity;
+
+    float auroraIntensity = (auroraPattern * 0.4 + curtainPattern * 0.3 + noisePattern * 0.2 + detailNoise * 0.1)
+                            * distanceFactor * uAuroraIntensity;
+
+    // 5. Only show aurora in specified area
+    auroraIntensity *= arcMask * heightMask;
     
     // Color mixing based on patterns
-    vec3 color1 = uAuroraColor1; // Cyan-green
-    vec3 color2 = uAuroraColor2; // Purple-blue  
-    vec3 color3 = uAuroraColor3; // Pink-red
+    vec3 color1 = uAuroraColor1;
+    vec3 color2 = uAuroraColor2;
+    vec3 color3 = uAuroraColor3;
     
     // Dynamic color blending
     float colorMix1 = sin(uTime * 1.2 + vPosition.x * 0.01) * 0.5 + 0.5;
@@ -119,7 +135,7 @@ export const auroraFragmentShader = `
     alpha = auroraIntensity * shimmer;
     
     // Edge fade for smooth blending
-    float edgeFade = smoothstep(0.95, 1.0, vDistanceFromCenter / uDomeRadius);
+    float edgeFade = smoothstep(0.98, 1.0, vDistanceFromCenter / uDomeRadius);
     alpha *= (1.0 - edgeFade);
     
     // Ensure aurora is subtle but visible
