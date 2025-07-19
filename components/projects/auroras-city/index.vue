@@ -96,7 +96,7 @@ watchEffect(() => {
   <div class="shader-container">
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
-      <TresPerspectiveCamera ref="cameraRef" :position="[0, 2.5, 10]" :fov="75" :near="0.1" :far="1000" />、
+      <TresPerspectiveCamera ref="cameraRef" :position="[0, 2.5, 10]" :fov="75" :aspect="1" :near="0.1" :far="1000" />、
       <TresDirectionalLight ref="directionalLightRef" :intensity="1.2" color="#ffffff" :position="[0, 2.5, 10]"
         cast-shadow />
 
@@ -132,7 +132,8 @@ watchEffect(() => {
         -->
       </TresGroup>
 
-      <KeyboardCameraControls v-if="firstPersonOn" :rotate-speed="0.008" />
+      <KeyboardCameraControls v-if="firstPersonOn" :config="sceneConfig" :moveSpeed="0.1" :rotate-speed="0.005"
+        :minHeight="1.5" :maxHeight="8" />
 
       <!-- Debug helpers -->
       <TresGridHelper v-if="gridOn" :args="[150, 150, '#113366', '#224488']" :position="[0, 0.5, 0]" />
