@@ -24,43 +24,44 @@ const { camera } = useTresContext()
 
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false
 let rotateLeft = false, rotateRight = false, rotateUp = false, rotateDown = false
+let moveUp = false, moveDown = false  // Add vertical movement flags
 
 // Movement boundary constraint function
 function constrainPosition(position: Vector3): Vector3 {
     const constrainedPosition = position.clone()
-    
+
     // Calculate distance from center (origin) in XZ plane
     const distanceFromCenter = Math.sqrt(
-        constrainedPosition.x * constrainedPosition.x + 
+        constrainedPosition.x * constrainedPosition.x +
         constrainedPosition.z * constrainedPosition.z
     )
-    
+
     // If outside boundary, clamp to boundary circle
     if (distanceFromCenter > props.config.movement.boundaryRadius) {
         const scale = props.config.movement.boundaryRadius / distanceFromCenter
         constrainedPosition.x *= scale
         constrainedPosition.z *= scale
     }
-    
+
     // Constrain Y position (height)
     constrainedPosition.y = Math.max(
-        props.minHeight, 
+        props.minHeight,
         Math.min(props.maxHeight, constrainedPosition.y)
     )
-    
+
     return constrainedPosition
 }
 
 // Check if a potential new position would be valid
 function isValidPosition(newPosition: Vector3): boolean {
     const distanceFromCenter = Math.sqrt(
-        newPosition.x * newPosition.x + 
+        newPosition.x * newPosition.x +
         newPosition.z * newPosition.z
     )
-    
+
     return distanceFromCenter <= props.config.movement.boundaryRadius &&
-           newPosition.y >= props.minHeight &&
-           newPosition.y <= props.maxHeight
+        newPosition.y >= props.minHeight &&
+        newPosition.y <= props.maxHeight
 }
 
 function onKeyDown(e: KeyboardEvent) {
@@ -75,6 +76,8 @@ function onKeyDown(e: KeyboardEvent) {
         case 'ArrowDown': rotateDown = true; break
         case 'KeyQ': rotateLeft = true; break
         case 'KeyE': rotateRight = true; break
+        case 'KeyI': moveUp = true; break
+        case 'KeyK': moveDown = true; break
     }
 }
 
@@ -90,6 +93,8 @@ function onKeyUp(e: KeyboardEvent) {
         case 'ArrowDown': rotateDown = false; break
         case 'KeyQ': rotateLeft = false; break
         case 'KeyE': rotateRight = false; break
+        case 'KeyI': moveUp = false; break
+        case 'KeyK': moveDown = false; break
     }
 }
 
@@ -100,43 +105,60 @@ function animate() {
         camera.value.getWorldDirection(direction)
         direction.y = 0 // Keep movement horizontal
         direction.normalize()
-        
+
         const right = new Vector3().crossVectors(camera.value.up, direction).normalize()
-        
+
         // Calculate potential new position
         let newPosition = camera.value.position.clone()
-        
+
         if (moveForward) {
             const testPosition = newPosition.clone().addScaledVector(direction, props.moveSpeed)
             if (isValidPosition(testPosition)) {
                 newPosition = testPosition
             }
         }
-        
+
         if (moveBackward) {
             const testPosition = newPosition.clone().addScaledVector(direction, -props.moveSpeed)
             if (isValidPosition(testPosition)) {
                 newPosition = testPosition
             }
         }
-        
+
         if (moveLeft) {
             const testPosition = newPosition.clone().addScaledVector(right, props.moveSpeed)
             if (isValidPosition(testPosition)) {
                 newPosition = testPosition
             }
         }
-        
+
         if (moveRight) {
             const testPosition = newPosition.clone().addScaledVector(right, -props.moveSpeed)
             if (isValidPosition(testPosition)) {
                 newPosition = testPosition
             }
         }
-        
+
+        // Handle vertical movement
+        if (moveUp) {
+            const testPosition = newPosition.clone()
+            testPosition.y += props.moveSpeed
+            if (isValidPosition(testPosition)) {
+                newPosition = testPosition
+            }
+        }
+
+        if (moveDown) {
+            const testPosition = newPosition.clone()
+            testPosition.y -= props.moveSpeed
+            if (isValidPosition(testPosition)) {
+                newPosition = testPosition
+            }
+        }
+
         // Apply constrained position
         camera.value.position.copy(constrainPosition(newPosition))
-        
+
         // Handle rotation
         const euler = new Euler(
             camera.value.rotation.x + (rotateUp ? -props.rotateSpeed : 0) + (rotateDown ? props.rotateSpeed : 0),
@@ -144,25 +166,25 @@ function animate() {
             0,
             'YXZ'
         )
-        
+
         // Limit vertical rotation to prevent camera flipping
         euler.x = Math.max(-Math.PI / 2.1, Math.min(Math.PI / 2.1, euler.x))
-        
+
         camera.value.rotation.copy(euler)
     }
-    
+
     requestAnimationFrame(animate)
 }
 
 onMounted(() => {
     document.addEventListener('keydown', onKeyDown)
     document.addEventListener('keyup', onKeyUp)
-    
+
     // Set initial camera position within bounds if needed
     if (camera.value) {
         camera.value.position.copy(constrainPosition(camera.value.position))
     }
-    
+
     animate()
 })
 
@@ -173,5 +195,5 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- This component doesn't render anything visible -->
+    <!-- This component doesn't render anything visible -->
 </template>

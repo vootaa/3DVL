@@ -4,6 +4,7 @@
         <ul>
             <li><b>W/S</b>: Move Forward/Backward</li>
             <li><b>A/D</b>: Move Left/Right</li>
+            <li><b>I/K</b>: Move Up/Down</li>
             <li><b>↑/↓</b>: Look Up/Down</li>
             <li><b>←/→</b>: Turn Left/Right</li>
             <li><b>Q/E</b>: Turn Left/Right</li>

@@ -105,12 +105,12 @@ watchEffect(() => {
 
       <TresGroup>
         <!-- BandedCylinder shader effect -->
-        <BandedCylinder v-if="bandedCylinderOn" :position="[0.2, 7, -0.2]" :rotation-speed="-0.45"
-          :cylinder-args="[0.5, 4.5, 48, 0.45, 0.15]" />
-        <BandedCylinder v-if="bandedCylinderOn" :position="[-0.2, 7, 0.2]" :rotation-speed="0.45"
-          :cylinder-args="[0.5, 4.5, 48, 0.45, -0.15]" />
+        <BandedCylinder v-if="bandedCylinderOn" :position="[0.5, 5, -0.5]" :rotation-speed="-0.75"
+          :cylinder-args="[0.75, 3.5, 48, 0.45, 0.15]" />
+        <BandedCylinder v-if="bandedCylinderOn" :position="[-0.5, 5, 0.5]" :rotation-speed="0.75"
+          :cylinder-args="[0.75, 3.5, 48, 0.45, -0.15]" />
 
-        <ConcentricBase v-if="concentricBaseOn" :position="[0, 2, 0]" :scale="[1.0, 1.0, 1.0]" :rotation-speed="0.1" />
+        <ConcentricBase v-if="concentricBaseOn" :position="[0, 0.5, 0]" :scale="[1.0, 0.5, 1.0]" :rotation-speed="0.1" />
 
         <PetersenGraphPlane :position="[0, 20, -20]" :rotation="[0, 0, 0]" :scale="1" />
 
@@ -133,7 +133,7 @@ watchEffect(() => {
       </TresGroup>
 
       <KeyboardCameraControls v-if="firstPersonOn" :config="sceneConfig" :moveSpeed="0.1" :rotate-speed="0.005"
-        :minHeight="1.5" :maxHeight="8" />
+        :minHeight="0.5" :maxHeight="8" />
 
       <!-- Debug helpers -->
       <TresGridHelper v-if="gridOn" :args="[150, 150, '#113366', '#224488']" :position="[0, 0.5, 0]" />
