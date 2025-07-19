@@ -133,7 +133,7 @@ watchEffect(() => {
       <KeyboardCameraControls v-if="firstPersonOn" :rotate-speed="0.008" />
 
       <!-- Debug helpers -->
-      <TresGridHelper v-if="gridOn" :args="[150, 150, '#113366', '#224488']" :position="[0, 0, 0]" />
+      <TresGridHelper v-if="gridOn" :args="[150, 150, '#113366', '#224488']" :position="[0, 2, 0]" />
       <TresAxesHelper v-if="gridOn" :args="[7.5]" :position="[0, 0, 0]" />
     </TresCanvas>
 

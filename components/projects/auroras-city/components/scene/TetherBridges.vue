@@ -10,12 +10,6 @@ interface Props {
 
 const props = defineProps<Props>()
 
-interface Bridge {
-    position: Vector3
-    rotation: Euler
-    length: number
-}
-
 const bridges = computed(() => {
     const result: Bridge[] = []
 
@@ -24,17 +18,20 @@ const bridges = computed(() => {
         const toNode = petersenNodes.find(n => n.id === toId)
 
         if (fromNode && toNode) {
-            const fromPos = polarToCartesian(fromNode.r, fromNode.theta, props.config.bridges.height)
-            const toPos = polarToCartesian(toNode.r, toNode.theta, props.config.bridges.height)
+            // Use y=0 to match the ring height (XZ plane)
+            const fromPos = polarToCartesian(fromNode.r, fromNode.theta, 0)
+            const toPos = polarToCartesian(toNode.r, toNode.theta, 0)
 
-            // Calculate bridge position (midpoint)
+            // Calculate bridge position (midpoint) - keep y=0
             const position = new Vector3()
                 .addVectors(fromPos, toPos)
                 .multiplyScalar(0.5)
 
-            // Calculate bridge rotation
+            // Calculate bridge rotation in XZ plane
             const direction = new Vector3().subVectors(toPos, fromPos)
             const length = direction.length()
+
+            // Rotation around Y axis for XZ plane alignment
             const rotation = new Euler(0, Math.atan2(direction.x, direction.z), 0)
 
             result.push({ position, rotation, length })
