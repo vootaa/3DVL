@@ -9,7 +9,6 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
 
-
 extend({ EffectComposer, RenderPass, UnrealBloomPass, OutputPass, ShaderPass })
 
 interface Props {

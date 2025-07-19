@@ -80,19 +80,19 @@ export const orbitalRingsFragmentShader = `
         fresnel = pow(fresnel, 2.0);
 
         // Brightness difference between inside and outside of the tube (based on UV, not color phase)
-        float brightness = 0.55 + 0.1 * sin(vUv.y * 3.14159);
+        float brightness = 0.55 + 0.125 * sin(vUv.y * 3.14159);
 
         // Apply brightness
         vec3 finalColor = ringColor * brightness;
 
         // Add edge glow 
-        finalColor += ringColor * fresnel * 0.15;
+        finalColor += ringColor * fresnel * 0.125;
 
         // Apply energy intensity
         finalColor *= uEnergyIntensity;
 
         // Slight pulse effect
-        float pulse = 0.75 + 0.07 * sin(uTime * 3.0 + vRingType * 2.0);
+        float pulse = 0.6 + 0.055 * sin(uTime * 3.0 + vRingType * 2.0);
         finalColor *= pulse;
 
         gl_FragColor = vec4(finalColor, 1.0);
