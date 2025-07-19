@@ -38,9 +38,6 @@ export interface SceneConfig {
     radius: number
     segments: number
     energyShield: {
-      baseColor: [number, number, number]      // Main color
-      edgeColor: [number, number, number]      // Edge highlight
-      pulseColor: [number, number, number]     // Pulse highlight
       intensity: number                         // Overall intensity
       edgeGlow: number                          // Edge glow intensity
       pulseSpeed: number                        // Pulse speed
@@ -128,9 +125,6 @@ export const defaultConfig: SceneConfig = {
     radius: 100,
     segments: 32,
     energyShield: {
-      baseColor: [0.08, 0.6, 0.7],      // Main color: dimmer cyan-blue
-      edgeColor: [0.25, 0.4, 0.6],      // Edge highlight with purple tint
-      pulseColor: [0.35, 0.3, 0.5],     // Pulse highlight with purple tint
       intensity: 0.18,                 // Overall intensity
       edgeGlow: 1.0,                    // Edge glow intensity
       pulseSpeed: 0.5,                 // Pulse speed

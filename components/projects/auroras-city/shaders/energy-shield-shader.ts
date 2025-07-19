@@ -1,16 +1,16 @@
 export const energyShieldVertexShader = `
-    varying vec3 vPosition;
-    varying float vHeightNorm;
-    varying float vEdgeFactor;
-    varying float vDistanceFromCenter;
+  varying vec3 vPosition;
+  varying float vHeightNorm;
+  varying float vEdgeFactor;
+  varying float vDistanceFromCenter;
 
-    void main() {
-        vPosition = position;
-        vDistanceFromCenter = length(position.xz);
-        vHeightNorm = clamp(position.y / 100.0, 0.0, 1.0); // 100.0 can be passed as a uniform
-        vEdgeFactor = smoothstep(0.7, 1.0, vDistanceFromCenter / 100.0);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
+  void main() {
+    vPosition = position;
+    vDistanceFromCenter = length(position.xz);
+    vHeightNorm = clamp(position.y / 100.0, 0.0, 1.0); // Normalize height to [0, 1] based on dome radius
+    vEdgeFactor = smoothstep(0.7, 1.0, vDistanceFromCenter / 100.0);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
 `;
 
 export const energyShieldFragmentShader = `
@@ -20,9 +20,6 @@ export const energyShieldFragmentShader = `
     uniform float uEdgeGlow;
     uniform float uPulseSpeed;
     uniform float uNoiseScale;
-    uniform vec3 uBaseColor;
-    uniform vec3 uEdgeColor;
-    uniform vec3 uPulseColor;
 
     varying vec3 vPosition;
     varying float vHeightNorm;
@@ -54,9 +51,35 @@ export const energyShieldFragmentShader = `
         return v;
     }
 
+    // Multiple color schemes
+    void getColorScheme(int idx, out vec3 base, out vec3 edge, out vec3 pulse) {
+        if(idx == 0) {
+            base = vec3(0.08, 0.6, 0.7);
+            edge = vec3(0.25, 0.4, 0.6);
+            pulse = vec3(0.35, 0.3, 0.5);
+        } else if(idx == 1) {
+            base = vec3(0.1, 0.8, 0.3);
+            edge = vec3(0.3, 1.0, 0.6);
+            pulse = vec3(0.7, 1.0, 0.8);
+        } else if(idx == 2) {
+            base = vec3(0.6, 0.2, 0.8);
+            edge = vec3(1.0, 0.4, 0.8);
+            pulse = vec3(1.0, 0.8, 0.9);
+        } else {
+            base = vec3(0.9, 0.7, 0.1);
+            edge = vec3(1.0, 0.9, 0.4);
+            pulse = vec3(1.0, 1.0, 0.8);
+        }
+    }
+
     void main() {
+        // Calculate current color scheme index, switch every 15 seconds
+        int colorIdx = int(mod(floor(uTime / 15.0), 4.0));
+        vec3 baseColor, edgeColor, pulseColor;
+        getColorScheme(colorIdx, baseColor, edgeColor, pulseColor);
+
         // Gradient color
-        vec3 color = mix(uBaseColor, uEdgeColor, vEdgeFactor);
+        vec3 color = mix(baseColor, edgeColor, vEdgeFactor);
 
         // Energy flow noise
         float energy = fbm(vPosition.xz * uNoiseScale + uTime * 0.2);
@@ -64,7 +87,7 @@ export const energyShieldFragmentShader = `
 
         // Dynamic pulse ring
         float pulse = sin(uTime * uPulseSpeed + vDistanceFromCenter * 0.25 - vHeightNorm * 6.0) * 0.5 + 0.5;
-        color = mix(color, uPulseColor, pulse * 0.25);
+        color = mix(color, pulseColor, pulse * 0.25);
 
         // Edge highlight
         float edgeGlow = pow(vEdgeFactor, 2.5) * uEdgeGlow;

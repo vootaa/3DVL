@@ -17,10 +17,7 @@ const shieldUniforms = reactive({
     uIntensity: { value: props.config.dome.energyShield.intensity },
     uEdgeGlow: { value: props.config.dome.energyShield.edgeGlow },
     uPulseSpeed: { value: props.config.dome.energyShield.pulseSpeed },
-    uNoiseScale: { value: props.config.dome.energyShield.noiseScale },
-    uBaseColor: { value: props.config.dome.energyShield.baseColor },
-    uEdgeColor: { value: props.config.dome.energyShield.edgeColor },
-    uPulseColor: { value: props.config.dome.energyShield.pulseColor }
+    uNoiseScale: { value: props.config.dome.energyShield.noiseScale }
 })
 
 let animationId: number
@@ -36,9 +33,6 @@ watch(() => props.config.dome.energyShield, (val) => {
     shieldUniforms.uEdgeGlow.value = val.edgeGlow
     shieldUniforms.uPulseSpeed.value = val.pulseSpeed
     shieldUniforms.uNoiseScale.value = val.noiseScale
-    shieldUniforms.uBaseColor.value = val.baseColor
-    shieldUniforms.uEdgeColor.value = val.edgeColor
-    shieldUniforms.uPulseColor.value = val.pulseColor
 }, { deep: true })
 </script>
 
