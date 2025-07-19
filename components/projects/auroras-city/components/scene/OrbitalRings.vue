@@ -106,7 +106,7 @@ watch(() => props.config.rings, () => {
                 64
             ]" />
             <TresShaderMaterial ref="innerRingMaterial" :vertexShader="orbitalRingsVertexShader"
-                :fragmentShader="orbitalRingsFragmentShader" :uniforms="innerUniforms" :transparent="true"
+                :fragmentShader="orbitalRingsFragmentShader" :uniforms="innerUniforms" :transparent="false"
                 :depthWrite="false" :blending="2" :side="2" />
         </TresMesh>
 
@@ -119,7 +119,7 @@ watch(() => props.config.rings, () => {
                 64
             ]" />
             <TresShaderMaterial ref="middleRingMaterial" :vertexShader="orbitalRingsVertexShader"
-                :fragmentShader="orbitalRingsFragmentShader" :uniforms="middleUniforms" :transparent="true"
+                :fragmentShader="orbitalRingsFragmentShader" :uniforms="middleUniforms" :transparent="false"
                 :depthWrite="false" :blending="2" :side="2" />
         </TresMesh>
 
@@ -132,7 +132,7 @@ watch(() => props.config.rings, () => {
                 64
             ]" />
             <TresShaderMaterial ref="outerRingMaterial" :vertexShader="orbitalRingsVertexShader"
-                :fragmentShader="orbitalRingsFragmentShader" :uniforms="outerUniforms" :transparent="true"
+                :fragmentShader="orbitalRingsFragmentShader" :uniforms="outerUniforms" :transparent="false"
                 :depthWrite="false" :blending="2" :side="2" />
         </TresMesh>
     </TresGroup>
