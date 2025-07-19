@@ -44,9 +44,9 @@ let animationId: number
 // Animation loop - only for shader time animation
 const animate = () => {
     // Update time uniforms for shader effects only
-    innerUniforms.uTime.value += 0.01
-    middleUniforms.uTime.value += 0.01
-    outerUniforms.uTime.value += 0.01
+    innerUniforms.uTime.value += 0.0025
+    middleUniforms.uTime.value += 0.0025
+    outerUniforms.uTime.value += 0.0025
 
     animationId = requestAnimationFrame(animate)
 }
