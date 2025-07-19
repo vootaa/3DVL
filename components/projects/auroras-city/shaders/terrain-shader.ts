@@ -22,6 +22,7 @@ export const terrainFragmentShader = `
   uniform float uTransitionRadius;
   uniform float uMountainRadius;
   uniform float uMaxHeight;
+  uniform bool uEnergyEffects;
   
   varying vec3 vPosition;
   varying vec3 vNormal;
@@ -53,20 +54,27 @@ export const terrainFragmentShader = `
     
     // Plain area - energy field
     if (vDistance <= uPlainRadius) {
-      baseColor = vec3(0.1, 0.15, 0.2);  // Dark blue-gray
-      
-      // Animated energy lines
-      float energyPattern = energyWave(vPosition.xz, uTime);
-      float gridPattern = step(0.9, fract(vPosition.x * 0.5)) + step(0.9, fract(vPosition.z * 0.5));
-      
-      emissiveColor = mix(
-        vec3(0.0, 1.0, 0.8),    // Cyan
-        vec3(0.0, 0.6, 1.0),    // Blue
-        energyPattern
-      );
-      
-      energyIntensity = (energyPattern * 0.4 + gridPattern * 0.2) * 
-                       (1.0 + sin(uTime * 4.0) * 0.1);
+      if (uEnergyEffects) {
+        baseColor = vec3(0.1, 0.15, 0.2);  // Dark blue-gray
+        
+        // Animated energy lines
+        float energyPattern = energyWave(vPosition.xz, uTime);
+        float gridPattern = step(0.9, fract(vPosition.x * 0.5)) + step(0.9, fract(vPosition.z * 0.5));
+        
+        emissiveColor = mix(
+          vec3(0.0, 1.0, 0.8),    // Cyan
+          vec3(0.0, 0.6, 1.0),    // Blue
+          energyPattern
+        );
+        
+        energyIntensity = (energyPattern * 0.4 + gridPattern * 0.2) * (1.0 + sin(uTime * 4.0) * 0.1);
+      } else {
+        baseColor = vec3(0.05, 0.08, 0.06);  // Very dark green-gray
+          emissiveColor = vec3(0.1, 0.15, 0.1); // Subtle dark green
+
+          float subtleNoise = noise(vPosition.xz * 0.1) * 0.02;
+          energyIntensity = subtleNoise;
+      }
     }
     // Transition area
     else if (vDistance <= uTransitionRadius) {

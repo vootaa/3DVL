@@ -28,6 +28,8 @@ export interface TerrainConfig {
 
   // Smoothing parameter
   transitionSmoothness: number // Transition smoothness
+
+  enableEnergyEffects: boolean  // Control energy field visibility in plain area
 }
 
 export interface SceneConfig {
@@ -109,7 +111,9 @@ export const defaultConfig: SceneConfig = {
     noiseIntensity: 1.2,
     ridgeNoiseScale: 0.008,
 
-    transitionSmoothness: 0.8
+    transitionSmoothness: 0.8,
+
+    enableEnergyEffects: false
   },
   dome: {
     radius: 100,

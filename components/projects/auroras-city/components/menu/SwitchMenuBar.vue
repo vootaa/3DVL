@@ -7,8 +7,8 @@ const props = defineProps<{
   onToggleGrid: () => void
   bandedCylinderOn: boolean
   onToggleBandedCylinder: () => void
-  chainwebSimpleOn: boolean
-  onToggleChainweb: () => void
+  energyEffectsOn: boolean
+  onToggleEnergyEffects: () => void
   concentricBaseOn: boolean
   onToggleConcentricBase: () => void
   firstPersonOn: boolean
@@ -67,12 +67,12 @@ onUnmounted(() => {
         <span class="menu-text">{{ isCompactMode ? 'Auroras' : 'Auroras Core' }}</span>
       </div>
       <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
-        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleChainweb()">
+        :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleEnergyEffects()">
         <span class="menu-status">
-          <i v-if="props.chainwebSimpleOn" class="i-carbon-checkmark-filled"></i>
+          <i v-if="props.energyEffectsOn" class="i-carbon-checkmark-filled"></i>
           <i v-else class="i-carbon-close"></i>
         </span>
-        <span class="menu-text">{{ isCompactMode ? 'Chainweb' : 'Chainweb 3D' }}</span>
+        <span class="menu-text">{{ isCompactMode ? 'Effects' : 'Energy Effects' }}</span>
       </div>
       <div class="menu-item" :class="{ disabled: props.disabled }" :tabindex="props.disabled ? -1 : 0"
         :aria-disabled="props.disabled" @click="!props.disabled && props.onToggleConcentricBase()">

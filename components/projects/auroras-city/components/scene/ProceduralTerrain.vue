@@ -23,7 +23,8 @@ const shaderUniforms = reactive({
   uPlainRadius: { value: props.config.terrain.plainRadius },
   uTransitionRadius: { value: props.config.terrain.transitionRadius },
   uMountainRadius: { value: props.config.terrain.mountainRadius },
-  uMaxHeight: { value: props.config.terrain.maxHeight }
+  uMaxHeight: { value: props.config.terrain.maxHeight },
+  uEnergyEffects: { value: props.config.terrain.enableEnergyEffects }
 })
 
 let animationId: number
@@ -60,6 +61,7 @@ const updateUniforms = () => {
   shaderUniforms.uTransitionRadius.value = props.config.terrain.transitionRadius
   shaderUniforms.uMountainRadius.value = props.config.terrain.mountainRadius
   shaderUniforms.uMaxHeight.value = props.config.terrain.maxHeight
+  shaderUniforms.uEnergyEffects.value = props.config.terrain.enableEnergyEffects
 }
 
 onMounted(() => {

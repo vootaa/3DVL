@@ -50,7 +50,6 @@ const directionalLightRef = ref()
 
 const gridOn = ref(false)
 const bandedCylinderOn = ref(false)
-const chainwebOn = ref(false)
 const concentricBaseOn = ref(false)
 const firstPersonOn = ref(true)
 
@@ -64,8 +63,8 @@ function handleToggleBandedCylinder() {
   bandedCylinderOn.value = !bandedCylinderOn.value
 }
 
-function handleToggleChainweb() {
-  chainwebOn.value = !chainwebOn.value
+function handleToggleEnergyEffects() {
+  sceneConfig.value.terrain.enableEnergyEffects = !sceneConfig.value.terrain.enableEnergyEffects
 }
 
 function handleToggleConcentricBase() {
@@ -112,7 +111,7 @@ watchEffect(() => {
 
         <ConcentricBase v-if="concentricBaseOn" :position="[0, 0.5, 0]" :rotation-speed="0.1" />
 
-        <PetersenGraphPlane :position="[0, 20, -20]" :rotation="[0, 0, 0]" :scale="1" />
+        <PetersenGraphPlane :position="[0, 20, 20]" :rotation="[0, 0, 0]" :scale="1" />
 
         <!-- Post-processing effects -->
         <PostEffects :bloom-strength="0.4" :bloom-radius="0.5" :bloom-threshold="0.2" :noise-shader="false" />
@@ -136,15 +135,15 @@ watchEffect(() => {
         :minHeight="0.5" :maxHeight="8" />
 
       <!-- Debug helpers -->
-      <TresGridHelper v-if="gridOn" :args="[150, 150, '#113366', '#224488']" :position="[0, 0.5, 0]" />
+      <TresGridHelper v-if="gridOn" :args="[150, 150, '#113366', '#224488']" :position="[0, 0.25, 0]" />
       <TresAxesHelper v-if="gridOn" :args="[7.5]" :position="[0, 0, 0]" />
     </TresCanvas>
 
-    <SwitchMenuBar :grid-on="gridOn" :on-toggle-grid="handleToggleGrid" :banded-cylinder-on="bandedCylinderOn"
-      :on-toggle-banded-cylinder="handleToggleBandedCylinder" :chainweb-simple-on="chainwebOn"
-      :on-toggle-chainweb="handleToggleChainweb" :concentric-base-on="concentricBaseOn"
-      :on-toggle-concentric-base="handleToggleConcentricBase" :first-person-on="firstPersonOn"
-      :on-toggle-first-person="handleToggleFirstPerson" :disabled="false" />
+    <SwitchMenuBar :grid-on="gridOn" :on-toggle-grid="handleToggleGrid" 
+      :banded-cylinder-on="bandedCylinderOn" :on-toggle-banded-cylinder="handleToggleBandedCylinder"
+      :energy-effects-on="sceneConfig.terrain.enableEnergyEffects" :on-toggle-energy-effects="handleToggleEnergyEffects"
+      :concentric-base-on="concentricBaseOn" :on-toggle-concentric-base="handleToggleConcentricBase"
+      :first-person-on="firstPersonOn" :on-toggle-first-person="handleToggleFirstPerson" :disabled="false" />
     <ToolsMenuBar />
     <KeyboardHelper v-if="firstPersonOn" />
   </div>
