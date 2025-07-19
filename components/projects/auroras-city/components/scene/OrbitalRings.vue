@@ -30,7 +30,7 @@ const createShaderUniforms = (ringType: 'inner' | 'middle' | 'outer') => reactiv
     uWidth: { value: props.config.rings[ringType].width },
     uHeight: { value: props.config.rings.height },
     uThickness: { value: props.config.rings.thickness },
-    uEnergyIntensity: { value: ringType === 'inner' ? 1.0 : ringType === 'middle' ? 0.8 : 0.6 },
+    uEnergyIntensity: { value: ringType === 'inner' ? 1.2 : ringType === 'middle' ? 1.0 : 0.8 },
     uInnerRadius: { value: props.config.rings[ringType].radius - props.config.rings[ringType].width / 2 },
     uOuterRadius: { value: props.config.rings[ringType].radius + props.config.rings[ringType].width / 2 }
 })
@@ -44,9 +44,9 @@ let animationId: number
 // Animation loop - only for shader time animation
 const animate = () => {
     // Update time uniforms for shader effects only
-    innerUniforms.uTime.value += 0.005
-    middleUniforms.uTime.value += 0.005
-    outerUniforms.uTime.value += 0.005
+    innerUniforms.uTime.value += 0.01
+    middleUniforms.uTime.value += 0.01
+    outerUniforms.uTime.value += 0.01
 
     animationId = requestAnimationFrame(animate)
 }
@@ -106,8 +106,8 @@ watch(() => props.config.rings, () => {
                 64
             ]" />
             <TresShaderMaterial ref="innerRingMaterial" :vertexShader="orbitalRingsVertexShader"
-                :fragmentShader="orbitalRingsFragmentShader" :uniforms="innerUniforms" :transparent="false"
-                :depthWrite="false" :blending="2" :side="2" />
+                :fragmentShader="orbitalRingsFragmentShader" :uniforms="innerUniforms" :transparent="true"
+                :depthWrite="true" :side="2" />
         </TresMesh>
 
         <!-- Middle Ring -->
@@ -119,8 +119,8 @@ watch(() => props.config.rings, () => {
                 64
             ]" />
             <TresShaderMaterial ref="middleRingMaterial" :vertexShader="orbitalRingsVertexShader"
-                :fragmentShader="orbitalRingsFragmentShader" :uniforms="middleUniforms" :transparent="false"
-                :depthWrite="false" :blending="2" :side="2" />
+                :fragmentShader="orbitalRingsFragmentShader" :uniforms="middleUniforms" :transparent="true"
+                :depthWrite="true" :side="2" />
         </TresMesh>
 
         <!-- Outer Ring -->
@@ -132,8 +132,8 @@ watch(() => props.config.rings, () => {
                 64
             ]" />
             <TresShaderMaterial ref="outerRingMaterial" :vertexShader="orbitalRingsVertexShader"
-                :fragmentShader="orbitalRingsFragmentShader" :uniforms="outerUniforms" :transparent="false"
-                :depthWrite="false" :blending="2" :side="2" />
+                :fragmentShader="orbitalRingsFragmentShader" :uniforms="outerUniforms" :transparent="true"
+                :depthWrite="true" :side="2" />
         </TresMesh>
     </TresGroup>
 </template>

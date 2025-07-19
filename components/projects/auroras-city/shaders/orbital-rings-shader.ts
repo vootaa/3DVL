@@ -3,8 +3,11 @@ export const orbitalRingsVertexShader = `
     uniform float uRingType;
     uniform float uRadius;
     uniform float uWidth;
+    uniform float uHeight;
     uniform float uThickness;
     uniform float uEnergyIntensity;
+    uniform float uInnerRadius;
+    uniform float uOuterRadius;
 
     varying vec3 vPosition;
     varying vec3 vWorldPosition;
@@ -58,14 +61,14 @@ export const orbitalRingsVertexShader = `
         // Calculate energy flow
         vEnergyFlow = calculateEnergyFlow(pos, uTime, uRingType);
         
-        // Deformation effect based on energy flow
-        float energyDisplacement = vEnergyFlow * 0.05;
+        // Enhanced deformation effect for rainbow bands
+        float energyDisplacement = vEnergyFlow * 0.03; // Reduce deformation intensity
         
         // Displacement along the normal direction
         pos += normal * energyDisplacement;
         
-        // Add subtle wave effect
-        float waveEffect = sin(vRingAngle * 6.0 - uTime * 2.0) * 0.02;
+        // Add rainbow wave effect
+        float waveEffect = sin(vRingAngle * 8.0 - uTime * 3.0) * 0.01; // Reduce wave intensity
         pos += normal * waveEffect;
         
         vPosition = pos;
@@ -79,15 +82,18 @@ export const orbitalRingsVertexShader = `
         
         gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
     }
-`
+`;
 
 export const orbitalRingsFragmentShader = `
     uniform float uTime;
     uniform float uRingType;
     uniform float uRadius;
     uniform float uWidth;
+    uniform float uHeight;
     uniform float uThickness;
     uniform float uEnergyIntensity;
+    uniform float uInnerRadius;
+    uniform float uOuterRadius;
 
     varying vec3 vPosition;
     varying vec3 vWorldPosition;
@@ -130,67 +136,73 @@ export const orbitalRingsFragmentShader = `
         return mix(nxy0, nxy1, f.z);
     }
 
-    // Energy texture generation
-    vec3 generateEnergyTexture(vec3 pos, float time, float ringType) {
-        vec3 baseColor;
-        vec3 energyColor;
+    // Dark rainbow color generation
+    vec3 getRainbowColor(float t) {
+        t = mod(t, 1.0);
         
-        if (ringType < 0.5) { // Inner ring - high energy cyan
-            baseColor = vec3(0.05, 0.1, 0.15);
-            energyColor = vec3(0.0, 1.2, 1.0);
-        } else if (ringType < 1.5) { // Middle ring - purple energy
-            baseColor = vec3(0.1, 0.05, 0.15);
-            energyColor = vec3(0.8, 0.2, 1.2);
-        } else { // Outer ring - red crystal energy
-            baseColor = vec3(0.15, 0.05, 0.05);
-            energyColor = vec3(1.2, 0.3, 0.5);
+        vec3 color;
+        if (t < 0.16667) {
+            // Dark red to dark orange
+            color = mix(vec3(0.8, 0.1, 0.1), vec3(0.8, 0.4, 0.1), t * 6.0);
+        } else if (t < 0.33333) {
+            // Dark orange to dark yellow
+            color = mix(vec3(0.8, 0.4, 0.1), vec3(0.8, 0.8, 0.1), (t - 0.16667) * 6.0);
+        } else if (t < 0.5) {
+            // Dark yellow to dark green
+            color = mix(vec3(0.8, 0.8, 0.1), vec3(0.1, 0.8, 0.1), (t - 0.33333) * 6.0);
+        } else if (t < 0.66667) {
+            // Dark green to dark cyan
+            color = mix(vec3(0.1, 0.8, 0.1), vec3(0.1, 0.8, 0.8), (t - 0.5) * 6.0);
+        } else if (t < 0.83333) {
+            // Dark cyan to dark blue
+            color = mix(vec3(0.1, 0.8, 0.8), vec3(0.1, 0.1, 0.8), (t - 0.66667) * 6.0);
+        } else {
+            // Dark blue to dark purple
+            color = mix(vec3(0.1, 0.1, 0.8), vec3(0.8, 0.1, 0.8), (t - 0.83333) * 6.0);
         }
         
-        // Energy stripes on the tube surface
-        float tubeStripes = sin(vTubeAngle * 8.0 - time * 3.0) * 0.5 + 0.5;
-        
-        // Ring energy flow
-        float ringFlow = sin(vRingAngle * 6.0 - time * 4.0) * 0.5 + 0.5;
-        
-        // Combined energy pattern
-        float energyPattern = vEnergyFlow * tubeStripes * ringFlow;
-        
-        // Add noise detail
-        float noiseDetail = smoothNoise(pos * 2.0 + time * 0.5) * 0.3;
-        energyPattern += noiseDetail;
-        
-        return mix(baseColor, energyColor, energyPattern * uEnergyIntensity);
+        return color;
     }
 
     void main() {
-        // Generate energy texture
-        vec3 energyColor = generateEnergyTexture(vPosition, uTime, vRingType);
+        // Generate rainbow color based on ring position
+        float rainbowT = vRingAngle / (2.0 * 3.14159) + uTime * 0.5;
+        rainbowT += vTubeAngle * 2.0; // Tubular variation
         
-        // Edge glow based on normal
-        float fresnel = 1.0 - abs(dot(normalize(vNormal), vec3(0, 0, 1)));
+        // Get base rainbow color
+        vec3 baseColor = getRainbowColor(rainbowT);
+        
+        // Energy flow effect
+        float energyPattern = vEnergyFlow;
+        energyPattern *= sin(vTubeAngle * 6.0 - uTime * 3.0) * 0.5 + 0.5;
+        
+        // Add noise detail
+        float noiseDetail = smoothNoise(vPosition * 2.0 + uTime * 0.3) * 0.3;
+        energyPattern += noiseDetail;
+        
+        // Energy enhanced color
+        vec3 energyColor = getRainbowColor(rainbowT + energyPattern * 0.2);
+        
+        // Mix base and energy color
+        vec3 finalColor = mix(baseColor, energyColor, 0.7);
+        
+        // Edge glow
+        vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
+        float fresnel = 1.0 - abs(dot(normalize(vNormal), viewDirection));
         fresnel = pow(fresnel, 2.0);
         
-        // Enhance edge glow
-        energyColor += energyColor * fresnel * 0.5;
+        finalColor += getRainbowColor(rainbowT + uTime) * fresnel * 0.3;
         
         // Pulse effect
         float pulse = sin(uTime * 3.0 + vRingType * 2.0) * 0.1 + 0.9;
-        energyColor *= pulse;
+        finalColor *= pulse;
         
-        // Extra brightness from energy flow
-        energyColor += vec3(0.2, 0.4, 1.0) * vEnergyFlow * 0.3;
+        // Apply energy intensity
+        finalColor *= uEnergyIntensity;
         
-        // Distance attenuation (atmospheric scattering)
-        float atmosphericDistance = length(vWorldPosition);
-        float scattering = exp(-atmosphericDistance * 0.001);
-        vec3 atmosphereColor = vec3(0.3, 0.5, 0.8);
-        energyColor = mix(atmosphereColor * 0.1, energyColor, scattering);
+        // Clamp color to avoid over-brightness
+        finalColor = clamp(finalColor, 0.0, 1.0);
         
-        // Alpha calculation
-        float alpha = uEnergyIntensity * 0.9;
-        alpha *= (0.7 + vEnergyFlow * 0.3); // Alpha variation based on energy flow
-        alpha *= pulse; // Pulse alpha
-        
-        gl_FragColor = vec4(energyColor, alpha);
+        gl_FragColor = vec4(finalColor, 1.0);
     }
-`
+`;
