@@ -6,12 +6,32 @@ export interface PetersenNode {
   theta: number
   orbit: 'inner' | 'middle' | 'outer'
 }
+export interface TerrainConfig {
+  // Terrain zone radii
+  plainRadius: number      // Inner plain area radius
+  transitionRadius: number // Transition area outer boundary radius  
+  mountainRadius: number   // Mountain area outer boundary radius
+  domeRadius: number       // Radius connecting to the dome
+
+  // Height parameters
+  maxHeight: number        // Maximum mountain height
+  transitionHeight: number // Maximum transition area height
+
+  // Grid parameters
+  size: number            // Total terrain grid size
+  segments: number        // Grid subdivisions
+
+  // Noise parameters
+  noiseScale: number      // Noise scale
+  noiseIntensity: number  // Noise intensity
+  ridgeNoiseScale: number // Ridge noise scale
+
+  // Smoothing parameter
+  transitionSmoothness: number // Transition smoothness
+}
 
 export interface SceneConfig {
-  ground: {
-    size: number
-    mountainSize: number
-  }
+  terrain: TerrainConfig
   dome: {
     radius: number
     segments: number
@@ -70,9 +90,28 @@ export interface SceneConfig {
 }
 
 export const defaultConfig: SceneConfig = {
-  ground: {
-    size: 140,
-    mountainSize: 20
+  terrain: {
+    // Terrain zones (based on dome radius=100)
+    plainRadius: 55,        // Plain area - includes all Petersen graph nodes
+    transitionRadius: 70,   // Transition area - gentle slope from plain to mountain
+    mountainRadius: 85,     // Mountain area - forms a natural boundary
+    domeRadius: 95,         // Area connecting to the dome
+
+    // Height design
+    maxHeight: 12,          // Maximum mountain height
+    transitionHeight: 4,    // Maximum transition area height
+
+    // Grid parameters
+    size: 200,              // Terrain grid size (covers dome area)
+    segments: 256,          // High subdivision for smooth terrain
+
+    // Noise parameters
+    noiseScale: 0.015,      // Base noise scale
+    noiseIntensity: 1.0,    // Noise intensity
+    ridgeNoiseScale: 0.008, // Ridge noise (larger features)
+
+    // Smoothing parameter
+    transitionSmoothness: 0.7
   },
   dome: {
     radius: 100,
@@ -127,12 +166,9 @@ export const defaultConfig: SceneConfig = {
     steps: 10
   },
   movement: {
-    boundaryRadius: 0
+    boundaryRadius: 55  // Radius for movement boundary
   }
 }
-
-// Calculate movement boundary radius
-defaultConfig.movement.boundaryRadius = (defaultConfig.ground.size - defaultConfig.ground.mountainSize) / 2
 
 export const petersenNodes: PetersenNode[] = [
   // Middle (r=30)
@@ -148,7 +184,7 @@ export const petersenNodes: PetersenNode[] = [
   { id: 7, r: 15, theta: 72.0, orbit: 'inner' },
   { id: 8, r: 15, theta: 144.0, orbit: 'inner' },
   { id: 9, r: 15, theta: 216.0, orbit: 'inner' },
-  
+
   // Outer (r=48)
   { id: 10, r: 48, theta: 278.0, orbit: 'outer' },
   { id: 11, r: 48, theta: 10.0, orbit: 'outer' },

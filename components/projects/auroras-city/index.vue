@@ -6,12 +6,13 @@ import { ref, provide } from 'vue'
 import BandedCylinder from './components/scene/BandedCylinder.vue'
 import ConcentricBase from './components/scene/ConcentricBase.vue'
 
-import GroundTerrain from './components/scene/GroundTerrain.vue'
+import ProceduralTerrain from './components/scene/ProceduralTerrain.vue'
 import HemisphereDome from './components/scene/HemisphereDome.vue'
-import OrbitalRings from './components/scene/OrbitalRings.vue'
-import Temples from './components/scene/Temples.vue'
-import TetherBridges from './components/scene/TetherBridges.vue'
-import Staircases from './components/scene/Staircases.vue'
+
+//import OrbitalRings from './components/scene/OrbitalRings.vue'
+//import Temples from './components/scene/Temples.vue'
+//import TetherBridges from './components/scene/TetherBridges.vue'
+//import Staircases from './components/scene/Staircases.vue'
 
 import SwitchMenuBar from './components/menu/SwitchMenuBar.vue'
 import ToolsMenuBar from './components/menu/ToolsMenuBar.vue'
@@ -46,8 +47,6 @@ const gl = {
 
 const cameraRef = ref()
 const directionalLightRef = ref()
-const globalLightTarget = ref(new Object3D())
-globalLightTarget.value.position.set(0, 0, 0)
 
 const gridOn = ref(false)
 const bandedCylinderOn = ref(false)
@@ -97,13 +96,11 @@ watchEffect(() => {
   <div class="shader-container">
     <TresCanvas v-bind="gl">
       <RendererStatsCollector />
-      <TresPerspectiveCamera ref="cameraRef" :position="[0, 2, 10]" :fov="75" :near="0.1" :far="1000" />、
-      <TresDirectionalLight ref="directionalLightRef" :intensity="1.2" color="#ffffff" :position="[0, 2, 10]"
+      <TresPerspectiveCamera ref="cameraRef" :position="[0, 2.5, 10]" :fov="75" :near="0.1" :far="1000" />、
+      <TresDirectionalLight ref="directionalLightRef" :intensity="1.2" color="#ffffff" :position="[0, 2.5, 10]"
         cast-shadow />
 
       <TresAmbientLight :intensity="0.3" color="#ffffff" />
-      <TresDirectionalLight :intensity="0.8" color="#ffffff" :position="[50, 100, 50]" :target="globalLightTarget"
-        cast-shadow />
 
       <TresGroup>
         <!-- BandedCylinder shader effect -->
@@ -121,19 +118,23 @@ watchEffect(() => {
 
       </TresGroup>
 
+      <!-- Scene components -->
       <TresGroup>
-        <GroundTerrain :config="sceneConfig" />
+        <ProceduralTerrain :config="sceneConfig" />
         <HemisphereDome :config="sceneConfig" />
+
+        <!--
         <OrbitalRings :config="sceneConfig" />
         <Temples :config="sceneConfig" />
         <TetherBridges :config="sceneConfig" />
         <Staircases :config="sceneConfig" />
+        -->
       </TresGroup>
 
       <KeyboardCameraControls v-if="firstPersonOn" :rotate-speed="0.008" />
 
       <!-- Debug helpers -->
-      <TresGridHelper v-if="gridOn" :args="[150, 150, '#113366', '#224488']" :position="[0, 2, 0]" />
+      <TresGridHelper v-if="gridOn" :args="[150, 150, '#113366', '#224488']" :position="[0, 0.5, 0]" />
       <TresAxesHelper v-if="gridOn" :args="[7.5]" :position="[0, 0, 0]" />
     </TresCanvas>
 
