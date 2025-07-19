@@ -74,7 +74,7 @@ export const energyShieldFragmentShader = `
 
     void main() {
         // Calculate current color scheme index, switch every 15 seconds
-        int colorIdx = int(mod(floor(uTime / 15.0), 4.0));
+        int colorIdx = int(mod(floor(uTime / 10.0), 4.0));
         vec3 baseColor, edgeColor, pulseColor;
         getColorScheme(colorIdx, baseColor, edgeColor, pulseColor);
 
