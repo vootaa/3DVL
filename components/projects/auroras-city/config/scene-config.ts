@@ -37,6 +37,14 @@ export interface SceneConfig {
   dome: {
     radius: number
     segments: number
+    aurora: {
+      intensity: number
+      colors: {
+        primary: [number, number, number]    // Cyan-green
+        secondary: [number, number, number]  // Purple-blue  
+        accent: [number, number, number]     // Pink-red
+      }
+    }
   }
   rings: {
     inner: {
@@ -114,12 +122,20 @@ export const defaultConfig: SceneConfig = {
     transitionSmoothness: 0.8,
 
     enableEnergyEffects: false
-  },
-  dome: {
+    },
+    dome: {
     radius: 100,
-    segments: 32
-  },
-  rings: {
+    segments: 32,
+    aurora: {
+      intensity: 0.6,
+      colors: {
+      primary: [0.0, 1.0, 0.8],    // Cyan-green - echoes terrain energy field
+      secondary: [0.4, 0.2, 1.0],  // Purple-blue - echoes transition area
+      accent: [1.0, 0.3, 0.6]      // Pink-red - echoes mountain area
+      }
+    }
+    },
+    rings: {
     inner: {
       radius: 15,
       width: 5,
@@ -138,8 +154,8 @@ export const defaultConfig: SceneConfig = {
       thickness: 0.1,
       height: 2
     }
-  },
-  temples: {
+    },
+    temples: {
     outer: {
       radius: 1.25,
       height: 1.5,
@@ -155,19 +171,19 @@ export const defaultConfig: SceneConfig = {
       height: 1.5,
       count: 5
     }
-  },
-  bridges: {
+    },
+    bridges: {
     width: 0.5,
     thickness: 0.05,
     height: 2
-  },
-  stairs: {
+    },
+    stairs: {
     count: 5,
     width: 0.4,
     height: 2,
     steps: 10
-  },
-  movement: {
+    },
+    movement: {
     boundaryRadius: 55  // Radius for movement boundary
   }
 }
