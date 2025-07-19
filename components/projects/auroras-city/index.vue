@@ -110,7 +110,7 @@ watchEffect(() => {
         <BandedCylinder v-if="bandedCylinderOn" :position="[-0.5, 5, 0.5]" :rotation-speed="0.75"
           :cylinder-args="[0.75, 3.5, 48, 0.45, -0.15]" />
 
-        <ConcentricBase v-if="concentricBaseOn" :position="[0, 0.5, 0]" :scale="[1.0, 0.5, 1.0]" :rotation-speed="0.1" />
+        <ConcentricBase v-if="concentricBaseOn" :position="[0, 0.5, 0]" :rotation-speed="0.1" />
 
         <PetersenGraphPlane :position="[0, 20, -20]" :rotation="[0, 0, 0]" :scale="1" />
 
