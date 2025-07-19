@@ -91,27 +91,25 @@ export interface SceneConfig {
 
 export const defaultConfig: SceneConfig = {
   terrain: {
-    // Terrain zones (based on dome radius=100)
-    plainRadius: 55,        // Plain area - includes all Petersen graph nodes
-    transitionRadius: 70,   // Transition area - gentle slope from plain to mountain
-    mountainRadius: 85,     // Mountain area - forms a natural boundary
-    domeRadius: 95,         // Area connecting to the dome
+    plainRadius: 55,        // Plain area - player activity area
+    transitionRadius: 70,   // Transition area - gradual hills
+    mountainRadius: 85,     // Mountain area - diverse peaks
+    domeRadius: 95,         // High mountain barrier - dramatic skyline
 
-    // Height design
-    maxHeight: 12,          // Maximum mountain height
-    transitionHeight: 4,    // Maximum transition area height
+    // Enhanced height design
+    maxHeight: 8,           // Maximum mountain base height
+    transitionHeight: 3,    // Maximum transition area height
 
-    // Grid parameters
-    size: 200,              // Terrain grid size (covers dome area)
-    segments: 32,          // High subdivision for smooth terrain
+    // High-precision grid
+    size: 200,
+    segments: 48,          // Higher subdivisions for smoother terrain and shader effects
 
-    // Noise parameters
-    noiseScale: 0.015,      // Base noise scale
-    noiseIntensity: 1.0,    // Noise intensity
-    ridgeNoiseScale: 0.005, // Ridge noise (larger features)
+    // Optimized noise parameters
+    noiseScale: 0.02,
+    noiseIntensity: 1.2,
+    ridgeNoiseScale: 0.008,
 
-    // Smoothing parameter
-    transitionSmoothness: 0.7
+    transitionSmoothness: 0.8
   },
   dome: {
     radius: 100,
