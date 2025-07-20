@@ -82,7 +82,6 @@ export interface SceneConfig {
     thickness: number
     height: number
     archHeight: number
-    segments: number
   }
   stairs: {
     count: number
@@ -128,8 +127,8 @@ export const defaultConfig: SceneConfig = {
       pulseSpeed: 0.5,                 // Pulse speed
       noiseScale: 0.8                  // Energy noise detail
     }
-    },
-    rings: {
+  },
+  rings: {
     thickness: 0.4,
     height: 3.5,
     inner: {
@@ -144,8 +143,8 @@ export const defaultConfig: SceneConfig = {
       radius: 48,
       width: 9,
     }
-    },
-    temples: {
+  },
+  temples: {
     outer: {
       radius: 1.25,
       height: 8.5,
@@ -161,13 +160,12 @@ export const defaultConfig: SceneConfig = {
       height: 8.5,
       count: 5
     }
-    },
-    bridges: {
+  },
+  bridges: {
     width: 0.8,        // Bridge width
-    thickness: 0.25,   // (Reserved for future extension as thickness)
+    thickness: 0.25,   // Bridge thickness
     height: 6.5,       // Bridge height
     archHeight: 0.5,   // Maximum bridge arch height
-    segments: 8       // Bridge segment count
   },
   stairs: {
     count: 5,

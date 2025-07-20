@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
+import { createAllIrregularBridgesGeometry } from '../../utils/bridge-geometry'
+
+import { tetherBridgeIrregularVertexShader, tetherBridgeIrregularFragmentShader } from '../../shaders/tether-bridge-shader'
+
 import type { SceneConfig } from '../../config/scene-config'
 import { petersenNodes, petersenConnections, polarToCartesian } from '../../config/scene-config'
 
-import { createAllIrregularBridgesGeometry } from '../../utils/bridge-geometry'
-import { tetherBridgeIrregularVertexShader, tetherBridgeIrregularFragmentShader } from '../../shaders/tether-bridge-shader'
 
 const props = defineProps<{ config: SceneConfig }>()
 const bridgeGeometry = ref()
@@ -24,8 +26,8 @@ onMounted(() => {
   bridgeGeometry.value = createAllIrregularBridgesGeometry(
     bridges,
     props.config.bridges.width ?? 0.8,
-    props.config.bridges.archHeight ?? 1.2,
-    18
+    props.config.bridges.archHeight ?? 0.5,
+    props.config.bridges.thickness ?? 0.25
   )
   const animate = () => {
     uniforms.value.uTime.value += 0.016
