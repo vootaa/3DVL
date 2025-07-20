@@ -61,21 +61,8 @@ export interface SceneConfig {
     }
   }
   temples: {
-    outer: {
-      radius: number
-      height: number
-      count: number
-    }
-    middle: {
-      size: number
-      height: number
-      count: number
-    }
-    inner: {
-      size: number
-      height: number
-      count: number
-    }
+    height: number
+    baseSize: number
   }
   bridges: {
     width: number
@@ -145,21 +132,8 @@ export const defaultConfig: SceneConfig = {
     }
   },
   temples: {
-    outer: {
-      radius: 1.25,
-      height: 8.5,
-      count: 10
-    },
-    middle: {
-      size: 1.2,
-      height: 8.5,
-      count: 5
-    },
-    inner: {
-      size: 1.0,
-      height: 8.5,
-      count: 5
-    }
+    height: 12.5,  // Height of the temple structure
+    baseSize: 1.5  // Base size of the temple structure,
   },
   bridges: {
     width: 1.2,        // Bridge width
