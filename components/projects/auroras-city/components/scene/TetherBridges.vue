@@ -45,7 +45,7 @@ onUnmounted(() => {
   <TresGroup>
     <TresMesh v-if="bridgeGeometry" :geometry="bridgeGeometry">
       <TresShaderMaterial :vertexShader="tetherBridgeIrregularVertexShader"
-        :fragmentShader="tetherBridgeIrregularFragmentShader" :uniforms="uniforms" :transparent="true"
+        :fragmentShader="tetherBridgeIrregularFragmentShader" :uniforms="uniforms" :transparent="false"
         :depthWrite="true" :side="2" />
     </TresMesh>
   </TresGroup>

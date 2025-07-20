@@ -5,7 +5,7 @@ export function createAllIrregularBridgesGeometry(
     width: number,
     archHeight: number,
     thickness: number,
-    segmentLength: number = 0.5
+    segmentLength: number = 0.15
 ) {
     const positions: number[] = []
     const indices: number[] = []
