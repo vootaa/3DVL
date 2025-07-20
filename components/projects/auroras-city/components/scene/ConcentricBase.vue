@@ -41,7 +41,7 @@ onMounted(() => {
     radii,
     sinkDepth: validSinkDepth,
     outerHeight,
-    segments: 32
+    segments: 64
   })
 
   material.value = new ShaderMaterial({
