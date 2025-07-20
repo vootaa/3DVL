@@ -12,7 +12,7 @@ export function createAllIrregularBridgesGeometry(
     width: number,
     archHeight: number,
     thickness: number,
-    segmentLength: number = 0.5
+    segmentLength: number = 1.5
 ) {
     const positions: number[] = []
     const normals: number[] = []

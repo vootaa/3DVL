@@ -130,7 +130,7 @@ export const defaultConfig: SceneConfig = {
   },
   rings: {
     thickness: 0.4,
-    height: 3.5,
+    height: 4.5,
     inner: {
       radius: 15,
       width: 5,
