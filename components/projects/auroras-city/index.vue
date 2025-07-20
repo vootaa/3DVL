@@ -11,6 +11,7 @@ import HemisphereDome from './components/scene/HemisphereDome.vue'
 import OrbitalRings from './components/scene/OrbitalRings.vue'
 import Temples from './components/scene/Temples.vue'
 import TetherBridges from './components/scene/TetherBridges.vue'
+import BoundaryRing from './components/scene/BoundaryRing.vue'
 
 //import Staircases from './components/scene/Staircases.vue'
 
@@ -125,6 +126,7 @@ watchEffect(() => {
         <OrbitalRings :config="sceneConfig" />
         <Temples :config="sceneConfig" />
         <TetherBridges :config="sceneConfig" />
+        <BoundaryRing :config="sceneConfig" />
 
         <!--<Staircases :config="sceneConfig" />-->
       </TresGroup>
