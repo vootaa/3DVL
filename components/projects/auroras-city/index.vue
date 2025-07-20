@@ -10,8 +10,8 @@ import ProceduralTerrain from './components/scene/ProceduralTerrain.vue'
 import HemisphereDome from './components/scene/HemisphereDome.vue'
 import OrbitalRings from './components/scene/OrbitalRings.vue'
 import Temples from './components/scene/Temples.vue'
+import TetherBridges from './components/scene/TetherBridges.vue'
 
-//import TetherBridges from './components/scene/TetherBridges.vue'
 //import Staircases from './components/scene/Staircases.vue'
 
 import SwitchMenuBar from './components/menu/SwitchMenuBar.vue'
@@ -124,12 +124,9 @@ watchEffect(() => {
         <HemisphereDome :config="sceneConfig" />
         <OrbitalRings :config="sceneConfig" />
         <Temples :config="sceneConfig" />
-
-        <!--
-        
         <TetherBridges :config="sceneConfig" />
-        <Staircases :config="sceneConfig" />
-        -->
+
+        <!--<Staircases :config="sceneConfig" />-->
       </TresGroup>
 
       <KeyboardCameraControls v-if="firstPersonOn" :config="sceneConfig" :moveSpeed="0.1" :rotate-speed="0.005"
