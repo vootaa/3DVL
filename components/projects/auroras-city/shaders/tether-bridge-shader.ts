@@ -36,9 +36,8 @@ export const tetherBridgeIrregularFragmentShader = `
   varying vec3 vNormal;
   varying vec3 vWorldPosition;
 
-  // Top surface color palette (customize more colors as needed)
+  // Color palette for top faces
   vec3 getPatchColor(float patchId, float patchType, float colorSeed, float bridgeId, float time) {
-    // Color sequence
     vec3 palette[6];
     palette[0] = vec3(0.85, 0.25, 0.25); // Red
     palette[1] = vec3(0.25, 0.55, 0.85); // Blue
@@ -47,37 +46,44 @@ export const tetherBridgeIrregularFragmentShader = `
     palette[4] = vec3(0.65, 0.25, 0.85); // Purple
     palette[5] = vec3(0.25, 0.85, 0.85); // Cyan
 
-    // PatchId + time rotation, creates moving color blocks
-    float idx = mod(floor(patchId + time * 2.0), 6.0);
+    // Bidirectional color cycling: even patchType forward, odd backward
+    float cycle = floor(time); // Change color every 1 second
+    float dir = mod(patchType, 2.0) < 0.5 ? 1.0 : -1.0;
+    float idx = mod(floor(patchId + dir * cycle), 6.0);
     return palette[int(idx)];
   }
 
-  // Side/bottom gradient color
-  vec3 getSideColor(float bridgeId, vec3 worldPos, float faceType) {
-    // Each bridge has a different main color
+  // Side/bottom color: deeper, slower cycling
+  vec3 getSideColor(float bridgeId, vec3 worldPos, float faceType, float time) {
     float t = mod(bridgeId, 5.0) / 5.0;
-    vec3 base = mix(vec3(0.2,0.3,0.5), vec3(0.8,0.5,0.3), t);
-    // Gradient: y direction or z direction
-    float g = 0.5 + 0.5 * sin(worldPos.y * 0.6 + bridgeId * 1.3 + faceType * 2.0);
-    return mix(base * 0.7, base * 1.2, g);
+    vec3 base = mix(vec3(0.15,0.22,0.35), vec3(0.35,0.22,0.12), t); // Deeper base
+    float g = 0.5 + 0.5 * sin(worldPos.y * 0.6 + bridgeId * 1.3 + faceType * 2.0 + time * 0.3); // Slower
+    return mix(base * 0.7, base * 1.1, g);
+  }
+
+  // Draw polygon border (for top face)
+  float borderMask(vec3 normal) {
+    // Only for top faces (normal.y ~ 1)
+    float edge = 1.0 - smoothstep(0.95, 1.0, abs(normal.y));
+    return edge;
   }
 
   void main() {
     vec3 color;
+    float border = 0.0;
     if (vFaceType < 0.5) {
-      // Top surface: polygon color blocks, rotating
+      // Top face: color block, clear border, no strong highlight
       color = getPatchColor(vPatchId, vPatchType, vColorSeed, vBridgeId, uTime);
-      // Highlight
-      vec3 lightDir = normalize(vec3(0.3, 1.0, 0.5));
-      float diffuse = max(dot(normalize(vNormal), lightDir), 0.0);
-      color += diffuse * 0.15;
+      // Add polygon border (darken edge)
+      border = borderMask(vNormal);
+      color = mix(color, vec3(0.08,0.08,0.08), border * 0.7);
     } else {
-      // Side/bottom: gradient
-      color = getSideColor(vBridgeId, vWorldPosition, vFaceType);
-      // Add some highlight
+      // Side/bottom: deep color, slow cycling, weak highlight
+      color = getSideColor(vBridgeId, vWorldPosition, vFaceType, uTime);
+      // Very weak highlight
       vec3 lightDir = normalize(vec3(0.3, 1.0, 0.5));
       float diffuse = max(dot(normalize(vNormal), lightDir), 0.0);
-      color += diffuse * 0.10;
+      color += diffuse * 0.04;
     }
     gl_FragColor = vec4(color, 1.0);
   }
