@@ -8,6 +8,7 @@ export function createAllIrregularBridgesGeometry(
     segmentLength: number = 0.5
 ) {
     const positions: number[] = []
+    const normals: number[] = []
     const indices: number[] = []
     const patchTypes: number[] = []
     const patchIds: number[] = []
@@ -15,141 +16,236 @@ export function createAllIrregularBridgesGeometry(
     const bridgeIds: number[] = []
     const faceTypes: number[] = []
 
-    let vertexOffset = 0
+    let vertexIndex = 0
     let patchId = 0
 
-    const rowCount = 2 // 2 rows of bricks on the top surface
+    const rowCount = 3 // 3 rows of irregular patches on top surface
 
     bridges.forEach((bridge, bridgeIdx) => {
         const from = bridge.from
         const to = bridge.to
         const length = from.distanceTo(to)
-        const segmentCount = Math.max(2, Math.ceil(length / segmentLength))
+        const segmentCount = Math.max(3, Math.ceil(length / segmentLength))
 
-        // Sample points for the top surface
-        const topRows: Vector3[][] = []
-        // Sample points for the sides and bottom
-        const sideRows: Vector3[][] = []
-        const bottomRows: Vector3[][] = []
-
+        // Generate path points with arch
+        const pathPoints: Vector3[] = []
         for (let i = 0; i <= segmentCount; i++) {
             const t = i / segmentCount
             const center = from.clone().lerp(to, t)
             center.y += archHeight * Math.sin(Math.PI * t)
-            const dir = to.clone().sub(from).normalize()
-            const up = new Vector3(0, 1, 0)
-            const side = new Vector3().crossVectors(dir, up).normalize().multiplyScalar(width / 2)
-
-            // 2 rows on the top surface (can be extended to 3 rows)
-            const row: Vector3[] = []
-            for (let j = 0; j < rowCount; j++) {
-                const offset = side.clone().multiplyScalar((j / (rowCount - 1)) * 2 - 1)
-                row.push(center.clone().add(offset))
-            }
-            topRows.push(row)
-
-            // Sides (two points per side)
-            sideRows.push([
-                center.clone().add(side),
-                center.clone().add(side.clone().negate())
-            ])
-            // Bottom (two points per side, shifted down by thickness)
-            bottomRows.push([
-                center.clone().add(side).add(new Vector3(0, -thickness, 0)),
-                center.clone().add(side.clone().negate()).add(new Vector3(0, -thickness, 0))
-            ])
+            pathPoints.push(center)
         }
 
-        // Top surface brick stitching (each patch has independent attributes)
+        // Create cross-section points for each path point
+        const topRows: Vector3[][] = []
+        const bottomRows: Vector3[][] = []
+        
+        for (let i = 0; i <= segmentCount; i++) {
+            const center = pathPoints[i]
+            const dir = i < segmentCount ? 
+                pathPoints[i + 1].clone().sub(center).normalize() :
+                center.clone().sub(pathPoints[i - 1]).normalize()
+            
+            const up = new Vector3(0, 1, 0)
+            const side = new Vector3().crossVectors(dir, up).normalize()
+
+            // Top surface points (irregular spacing for variety)
+            const topRow: Vector3[] = []
+            for (let j = 0; j <= rowCount; j++) {
+                const t = j / rowCount
+                // Add slight randomness to create irregular patches
+                const randomOffset = (Math.random() - 0.5) * 0.1 * width
+                const offset = side.clone().multiplyScalar((t * 2 - 1) * width / 2 + randomOffset)
+                topRow.push(center.clone().add(offset))
+            }
+            topRows.push(topRow)
+
+            // Bottom surface points
+            const bottomRow: Vector3[] = []
+            for (let j = 0; j <= rowCount; j++) {
+                const t = j / rowCount
+                const offset = side.clone().multiplyScalar((t * 2 - 1) * width / 2)
+                bottomRow.push(center.clone().add(offset).add(new Vector3(0, -thickness, 0)))
+            }
+            bottomRows.push(bottomRow)
+        }
+
+        // Create top surface patches (irregular quads)
         for (let i = 0; i < segmentCount; i++) {
-            for (let j = 0; j < rowCount - 1; j++) {
-                // Random brick type
-                const patchType = 3 + Math.floor(Math.random() * 4)
-                const a = vertexOffset + i * rowCount + j
-                const b = vertexOffset + (i + 1) * rowCount + j
-                const c = vertexOffset + (i + 1) * rowCount + j + 1
-                const d = vertexOffset + i * rowCount + j + 1
-                indices.push(a, b, d)
-                indices.push(b, c, d)
-                // Fill attributes (all four vertices get the same patch attributes)
-                for (const idx of [a, b, c, d]) {
-                    patchTypes[idx] = patchType
-                    patchIds[idx] = patchId
-                    colorSeeds[idx] = Math.random()
-                    bridgeIds[idx] = bridgeIdx
-                    faceTypes[idx] = 0 // Top surface
+            for (let j = 0; j < rowCount; j++) {
+                const patchType = Math.floor(Math.random() * 8) // More variety
+                const colorSeed = Math.random()
+                
+                // Create independent vertices for this patch (no sharing)
+                const v1 = topRows[i][j]
+                const v2 = topRows[i + 1][j]
+                const v3 = topRows[i + 1][j + 1]
+                const v4 = topRows[i][j + 1]
+
+                // Calculate face normal
+                const edge1 = v2.clone().sub(v1)
+                const edge2 = v4.clone().sub(v1)
+                const normal = new Vector3().crossVectors(edge1, edge2).normalize()
+
+                // Add vertices (6 vertices for 2 triangles, no sharing)
+                const patchVertices = [v1, v2, v4, v2, v3, v4]
+                
+                for (const vertex of patchVertices) {
+                    positions.push(vertex.x, vertex.y, vertex.z)
+                    normals.push(normal.x, normal.y, normal.z)
+                    patchTypes.push(patchType)
+                    patchIds.push(patchId)
+                    colorSeeds.push(colorSeed)
+                    bridgeIds.push(bridgeIdx)
+                    faceTypes.push(0) // Top face
                 }
+
+                // Add indices for two triangles
+                const startIdx = vertexIndex
+                indices.push(
+                    startIdx, startIdx + 1, startIdx + 2,     // First triangle
+                    startIdx + 3, startIdx + 4, startIdx + 5  // Second triangle
+                )
+                
+                vertexIndex += 6
                 patchId++
             }
         }
-        // Fill top surface vertices
-        for (let i = 0; i <= segmentCount; i++) {
+
+        // Create side faces
+        for (let i = 0; i < segmentCount; i++) {
+            // Left side
+            createSideFace(
+                topRows[i][0], topRows[i + 1][0], 
+                bottomRows[i + 1][0], bottomRows[i][0],
+                bridgeIdx, patchId++
+            )
+            
+            // Right side  
+            createSideFace(
+                topRows[i + 1][rowCount], topRows[i][rowCount],
+                bottomRows[i][rowCount], bottomRows[i + 1][rowCount],
+                bridgeIdx, patchId++
+            )
+        }
+
+        // Create end faces
+        if (bridgeIdx === 0) { // Only for first segment or as needed
+            createEndFace(topRows[0], bottomRows[0], bridgeIdx, patchId++, true)
+        }
+        createEndFace(topRows[segmentCount], bottomRows[segmentCount], bridgeIdx, patchId++, false)
+
+        // Create bottom surface
+        for (let i = 0; i < segmentCount; i++) {
             for (let j = 0; j < rowCount; j++) {
-                const v = topRows[i][j]
-                positions.push(v.x, v.y, v.z)
-            }
-        }
-        vertexOffset += (segmentCount + 1) * rowCount
+                const v1 = bottomRows[i][j]
+                const v2 = bottomRows[i][j + 1]
+                const v3 = bottomRows[i + 1][j + 1]
+                const v4 = bottomRows[i + 1][j]
 
-        // Sides (treated as a whole, unified attributes)
-        const sideStart = vertexOffset
-        for (let i = 0; i < segmentCount; i++) {
-            for (let j = 0; j < 1; j++) {
-                const a = sideStart + i * 2 + j
-                const b = sideStart + (i + 1) * 2 + j
-                const c = sideStart + (i + 1) * 2 + j + 1
-                const d = sideStart + i * 2 + j + 1
-                indices.push(a, b, d)
-                indices.push(b, c, d)
-            }
-        }
-        for (let i = 0; i <= segmentCount; i++) {
-            for (let j = 0; j < 2; j++) {
-                const v = sideRows[i][j]
-                positions.push(v.x, v.y, v.z)
-                patchTypes.push(0)
-                patchIds.push(0)
-                colorSeeds.push(0)
-                bridgeIds.push(bridgeIdx)
-                faceTypes.push(1) // Side
-            }
-        }
-        vertexOffset += (segmentCount + 1) * 2
+                // Calculate face normal (pointing down)
+                const edge1 = v2.clone().sub(v1)
+                const edge2 = v4.clone().sub(v1)
+                const normal = new Vector3().crossVectors(edge2, edge1).normalize()
 
-        // Bottom (treated as a whole, unified attributes)
-        const bottomStart = vertexOffset
-        for (let i = 0; i < segmentCount; i++) {
-            for (let j = 0; j < 1; j++) {
-                const a = bottomStart + i * 2 + j
-                const b = bottomStart + (i + 1) * 2 + j
-                const c = bottomStart + (i + 1) * 2 + j + 1
-                const d = bottomStart + i * 2 + j + 1
-                indices.push(a, d, b)
-                indices.push(b, d, c)
+                // Add vertices (6 vertices for 2 triangles)
+                const patchVertices = [v1, v2, v4, v2, v3, v4]
+                
+                for (const vertex of patchVertices) {
+                    positions.push(vertex.x, vertex.y, vertex.z)
+                    normals.push(normal.x, normal.y, normal.z)
+                    patchTypes.push(0)
+                    patchIds.push(patchId)
+                    colorSeeds.push(0)
+                    bridgeIds.push(bridgeIdx)
+                    faceTypes.push(2) // Bottom face
+                }
+
+                const startIdx = vertexIndex
+                indices.push(
+                    startIdx, startIdx + 1, startIdx + 2,
+                    startIdx + 3, startIdx + 4, startIdx + 5
+                )
+                
+                vertexIndex += 6
+                patchId++
             }
         }
-        for (let i = 0; i <= segmentCount; i++) {
-            for (let j = 0; j < 2; j++) {
-                const v = bottomRows[i][j]
-                positions.push(v.x, v.y, v.z)
+
+        function createSideFace(v1: Vector3, v2: Vector3, v3: Vector3, v4: Vector3, 
+                               bridgeId: number, patchId: number) {
+            // Calculate face normal
+            const edge1 = v2.clone().sub(v1)
+            const edge2 = v4.clone().sub(v1)
+            const normal = new Vector3().crossVectors(edge1, edge2).normalize()
+
+            const patchVertices = [v1, v2, v4, v2, v3, v4]
+            
+            for (const vertex of patchVertices) {
+                positions.push(vertex.x, vertex.y, vertex.z)
+                normals.push(normal.x, normal.y, normal.z)
                 patchTypes.push(0)
-                patchIds.push(0)
+                patchIds.push(patchId)
                 colorSeeds.push(0)
-                bridgeIds.push(bridgeIdx)
-                faceTypes.push(2) // Bottom
+                bridgeIds.push(bridgeId)
+                faceTypes.push(1) // Side face
+            }
+
+            const startIdx = vertexIndex
+            indices.push(
+                startIdx, startIdx + 1, startIdx + 2,
+                startIdx + 3, startIdx + 4, startIdx + 5
+            )
+            
+            vertexIndex += 6
+        }
+
+        function createEndFace(topRow: Vector3[], bottomRow: Vector3[], 
+                              bridgeId: number, patchId: number, isStart: boolean) {
+            // Create triangular fan for end face
+            for (let j = 0; j < rowCount; j++) {
+                const v1 = isStart ? topRow[j] : topRow[j + 1]
+                const v2 = isStart ? topRow[j + 1] : topRow[j]
+                const v3 = isStart ? bottomRow[j + 1] : bottomRow[j]
+                const v4 = isStart ? bottomRow[j] : bottomRow[j + 1]
+
+                // Calculate face normal
+                const edge1 = v2.clone().sub(v1)
+                const edge2 = v4.clone().sub(v1)
+                const normal = new Vector3().crossVectors(edge1, edge2).normalize()
+
+                const patchVertices = [v1, v2, v4, v2, v3, v4]
+                
+                for (const vertex of patchVertices) {
+                    positions.push(vertex.x, vertex.y, vertex.z)
+                    normals.push(normal.x, normal.y, normal.z)
+                    patchTypes.push(0)
+                    patchIds.push(patchId)
+                    colorSeeds.push(0)
+                    bridgeIds.push(bridgeId)
+                    faceTypes.push(3) // End face
+                }
+
+                const startIdx = vertexIndex
+                indices.push(
+                    startIdx, startIdx + 1, startIdx + 2,
+                    startIdx + 3, startIdx + 4, startIdx + 5
+                )
+                
+                vertexIndex += 6
             }
         }
-        vertexOffset += (segmentCount + 1) * 2
     })
 
     const geometry = new BufferGeometry()
     geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3))
+    geometry.setAttribute('normal', new BufferAttribute(new Float32Array(normals), 3))
     geometry.setAttribute('patchType', new BufferAttribute(new Float32Array(patchTypes), 1))
     geometry.setAttribute('patchId', new BufferAttribute(new Float32Array(patchIds), 1))
     geometry.setAttribute('colorSeed', new BufferAttribute(new Float32Array(colorSeeds), 1))
     geometry.setAttribute('bridgeId', new BufferAttribute(new Float32Array(bridgeIds), 1))
     geometry.setAttribute('faceType', new BufferAttribute(new Float32Array(faceTypes), 1))
     geometry.setIndex(indices)
-    geometry.computeVertexNormals()
+    
     return geometry
 }
