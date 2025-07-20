@@ -1,4 +1,4 @@
-import { BufferGeometry, BufferAttribute } from 'three'
+import { BufferGeometry, BufferAttribute, Vector3 } from 'three'
 
 export interface ConcentricBaseConfig {
   radii: [number, number, number] // [inner, middle, outer radius]
@@ -10,111 +10,182 @@ export interface ConcentricBaseConfig {
 export function createConcentricBase(config: ConcentricBaseConfig): BufferGeometry {
   const { radii, sinkDepth, outerHeight, segments = 32 } = config
   
-  const geo = new BufferGeometry()
-  
-  const vertices: number[] = []
+  const positions: number[] = []
   const normals: number[] = []
-  const uvs: number[] = []
   const indices: number[] = []
+  const faceTypes: number[] = [] // 0=top, 1=side, 2=bottom
+  const faceIds: number[] = []   // unique ID for each face section
   
   let vertexIndex = 0
+  let faceId = 0
+  
   const [innerRadius, middleRadius, outerRadius] = radii
   
-  // Calculate Y positions for each layer (sinking design)
-  const baseY = 0 // bottom base
+  // Calculate Y positions for each layer
+  const baseY = 0
   const outerTop = baseY + outerHeight
-  const outerBottom = baseY
-  const middleTop = outerTop - sinkDepth // middle ring sinks down from outer top
-  const innerTop = middleTop - sinkDepth // inner ring sinks down from middle top
+  const middleTop = outerTop - sinkDepth
+  const innerTop = middleTop - sinkDepth
   
-  // Helper function to add vertex
-  function addVertex(x: number, y: number, z: number, nx: number, ny: number, nz: number, u: number, v: number): number {
-    vertices.push(x, y, z)
-    normals.push(nx, ny, nz)
-    uvs.push(u, v)
-    return vertexIndex++
+  // Helper function to create a face with consistent attributes
+  function createFace(vertices: Vector3[], normal: Vector3, faceType: number, currentFaceId: number) {
+    // For quads, create two triangles
+    if (vertices.length === 4) {
+      const triangles = [
+        [vertices[0], vertices[1], vertices[2]],
+        [vertices[0], vertices[2], vertices[3]]
+      ]
+      
+      triangles.forEach(triangle => {
+        triangle.forEach(vertex => {
+          positions.push(vertex.x, vertex.y, vertex.z)
+          normals.push(normal.x, normal.y, normal.z)
+          faceTypes.push(faceType)
+          faceIds.push(currentFaceId)
+        })
+        
+        indices.push(vertexIndex, vertexIndex + 1, vertexIndex + 2)
+        vertexIndex += 3
+      })
+    } else if (vertices.length === 3) {
+      // Triangle
+      vertices.forEach(vertex => {
+        positions.push(vertex.x, vertex.y, vertex.z)
+        normals.push(normal.x, normal.y, normal.z)
+        faceTypes.push(faceType)
+        faceIds.push(currentFaceId)
+      })
+      
+      indices.push(vertexIndex, vertexIndex + 1, vertexIndex + 2)
+      vertexIndex += 3
+    }
   }
   
-  // Store vertex indices for different rings at different heights
-  const rings = {
-    outerTop: [] as number[],
-    outerBottom: [] as number[],
-    middleTop: [] as number[],
-    middleAtOuterBottom: [] as number[], // middle ring at outer bottom level
-    innerTop: [] as number[],
-    innerBottom: [] as number[]
+  // Create ring vertices
+  const createRingVertices = (radius: number, y: number) => {
+    const vertices: Vector3[] = []
+    for (let i = 0; i <= segments; i++) {
+      const angle = (i / segments) * Math.PI * 2
+      const x = Math.cos(angle) * radius
+      const z = Math.sin(angle) * radius
+      vertices.push(new Vector3(x, y, z))
+    }
+    return vertices
   }
   
-  // Create all ring vertices first
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2
-    
-    // Outer ring at top
-    const outerX = Math.cos(angle) * outerRadius
-    const outerZ = Math.sin(angle) * outerRadius
-    rings.outerTop.push(addVertex(outerX, outerTop, outerZ, 0, 1, 0, (outerX / outerRadius + 1) / 2, (outerZ / outerRadius + 1) / 2))
-    
-    // Outer ring at bottom
-    rings.outerBottom.push(addVertex(outerX, outerBottom, outerZ, 0, -1, 0, (outerX / outerRadius + 1) / 2, (outerZ / outerRadius + 1) / 2))
-    
-    // Middle ring at outer top level
-    const middleX = Math.cos(angle) * middleRadius
-    const middleZ = Math.sin(angle) * middleRadius
-    rings.middleTop.push(addVertex(middleX, outerTop, middleZ, 0, 1, 0, (middleX / outerRadius + 1) / 2, (middleZ / outerRadius + 1) / 2))
-    
-    // Middle ring at middle level (sunk down)
-    rings.middleAtOuterBottom.push(addVertex(middleX, middleTop, middleZ, 0, 1, 0, (middleX / outerRadius + 1) / 2, (middleZ / outerRadius + 1) / 2))
-    
-    // Inner ring at middle level
-    const innerX = Math.cos(angle) * innerRadius
-    const innerZ = Math.sin(angle) * innerRadius
-    rings.innerTop.push(addVertex(innerX, middleTop, innerZ, 0, 1, 0, (innerX / outerRadius + 1) / 2, (innerZ / outerRadius + 1) / 2))
-    
-    // Inner ring at inner level (sunk down further)
-    rings.innerBottom.push(addVertex(innerX, innerTop, innerZ, 0, -1, 0, (innerX / outerRadius + 1) / 2, (innerZ / outerRadius + 1) / 2))
-  }
+  // Generate ring vertices
+  const outerTopRing = createRingVertices(outerRadius, outerTop)
+  const outerBottomRing = createRingVertices(outerRadius, baseY)
+  const middleOuterTopRing = createRingVertices(middleRadius, outerTop)
+  const middleTopRing = createRingVertices(middleRadius, middleTop)
+  const innerMiddleTopRing = createRingVertices(innerRadius, middleTop)
+  const innerTopRing = createRingVertices(innerRadius, innerTop)
   
-  // Add center vertices for circles
-  const centerOuterBottom = addVertex(0, outerBottom, 0, 0, -1, 0, 0.5, 0.5) // center of outer bottom (full circle)
-  const centerInnerBottom = addVertex(0, innerTop, 0, 0, -1, 0, 0.5, 0.5) // center of inner bottom (full circle)
+  // 1. Create TOP SURFACES (as continuous surfaces)
   
-  // Create faces
+  // Outer ring top surface (middle to outer radius)
   for (let i = 0; i < segments; i++) {
-    const next = (i + 1) % (segments + 1)
+    const v1 = middleOuterTopRing[i]
+    const v2 = outerTopRing[i]
+    const v3 = outerTopRing[i + 1]
+    const v4 = middleOuterTopRing[i + 1]
     
-    // 1. Outer top ring face (middle to outer radius at outer height)
-    indices.push(rings.middleTop[i], rings.outerTop[i], rings.middleTop[next])
-    indices.push(rings.middleTop[next], rings.outerTop[i], rings.outerTop[next])
-    
-    // 2. Outer cylinder side (outer radius from top to bottom)
-    indices.push(rings.outerTop[i], rings.outerBottom[i], rings.outerTop[next])
-    indices.push(rings.outerTop[next], rings.outerBottom[i], rings.outerBottom[next])
-    
-    // 3. Middle step side (middle radius from outer top to middle level)
-    indices.push(rings.middleTop[i], rings.middleAtOuterBottom[next], rings.middleTop[next])
-    indices.push(rings.middleTop[i], rings.middleAtOuterBottom[i], rings.middleAtOuterBottom[next])
-    
-    // 4. Middle ring face (inner to middle radius at middle height) - ring surface
-    indices.push(rings.innerTop[i], rings.middleAtOuterBottom[i], rings.innerTop[next])
-    indices.push(rings.innerTop[next], rings.middleAtOuterBottom[i], rings.middleAtOuterBottom[next])
-    
-    // 5. Inner step side (inner radius from middle to inner level)
-    indices.push(rings.innerTop[i], rings.innerBottom[next], rings.innerTop[next])
-    indices.push(rings.innerTop[i], rings.innerBottom[i], rings.innerBottom[next])
-    
-    // 6. Inner bottom face (center to inner radius) - full circle
-    indices.push(centerInnerBottom, rings.innerBottom[i], rings.innerBottom[next])
-    
-    // 7. Outer bottom face (center to outer radius) - full circle
-    indices.push(centerOuterBottom, rings.outerBottom[next], rings.outerBottom[i])
+    createFace([v1, v2, v3, v4], new Vector3(0, 1, 0), 0, faceId)
   }
+  faceId++
   
-  geo.setIndex(indices)
-  geo.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3))
-  geo.setAttribute('normal', new BufferAttribute(new Float32Array(normals), 3))
-  geo.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), 2))
+  // Middle ring top surface (inner to middle radius)
+  for (let i = 0; i < segments; i++) {
+    const v1 = innerMiddleTopRing[i]
+    const v2 = middleTopRing[i]
+    const v3 = middleTopRing[i + 1]
+    const v4 = innerMiddleTopRing[i + 1]
+    
+    createFace([v1, v2, v3, v4], new Vector3(0, 1, 0), 0, faceId)
+  }
+  faceId++
   
-  geo.computeVertexNormals()
+  // Inner circular top surface
+  const innerCenter = new Vector3(0, innerTop, 0)
+  for (let i = 0; i < segments; i++) {
+    const v1 = innerCenter
+    const v2 = innerTopRing[i]
+    const v3 = innerTopRing[i + 1]
+    
+    createFace([v1, v2, v3], new Vector3(0, 1, 0), 0, faceId)
+  }
+  faceId++
   
-  return geo
+  // 2. Create SIDE SURFACES (as continuous surfaces)
+  
+  // Outer cylinder side
+  for (let i = 0; i < segments; i++) {
+    const v1 = outerTopRing[i]
+    const v2 = outerBottomRing[i]
+    const v3 = outerBottomRing[i + 1]
+    const v4 = outerTopRing[i + 1]
+    
+    // Calculate outward normal
+    const center = new Vector3(0, 0, 0)
+    const surfaceCenter = v1.clone().add(v3).multiplyScalar(0.5)
+    const normal = surfaceCenter.clone().sub(center).normalize()
+    normal.y = 0 // Keep horizontal
+    
+    createFace([v1, v2, v3, v4], normal, 1, faceId)
+  }
+  faceId++
+  
+  // Middle step outer side (vertical drop from outer top to middle top)
+  for (let i = 0; i < segments; i++) {
+    const v1 = middleOuterTopRing[i]
+    const v2 = middleTopRing[i]
+    const v3 = middleTopRing[i + 1]
+    const v4 = middleOuterTopRing[i + 1]
+    
+    const center = new Vector3(0, 0, 0)
+    const surfaceCenter = v1.clone().add(v3).multiplyScalar(0.5)
+    const normal = surfaceCenter.clone().sub(center).normalize()
+    normal.y = 0
+    
+    createFace([v1, v2, v3, v4], normal, 1, faceId)
+  }
+  faceId++
+  
+  // Inner step outer side (vertical drop from middle top to inner top)
+  for (let i = 0; i < segments; i++) {
+    const v1 = innerMiddleTopRing[i]
+    const v2 = innerTopRing[i]
+    const v3 = innerTopRing[i + 1]
+    const v4 = innerMiddleTopRing[i + 1]
+    
+    const center = new Vector3(0, 0, 0)
+    const surfaceCenter = v1.clone().add(v3).multiplyScalar(0.5)
+    const normal = surfaceCenter.clone().sub(center).normalize()
+    normal.y = 0
+    
+    createFace([v1, v2, v3, v4], normal, 1, faceId)
+  }
+  faceId++
+  
+  // 3. Create BOTTOM SURFACE (as one continuous surface)
+  
+  // Outer bottom circular surface
+  const bottomCenter = new Vector3(0, baseY, 0)
+  for (let i = 0; i < segments; i++) {
+    const v1 = bottomCenter
+    const v2 = outerBottomRing[i + 1] // Reverse order for bottom face
+    const v3 = outerBottomRing[i]
+    
+    createFace([v1, v2, v3], new Vector3(0, -1, 0), 2, faceId)
+  }
+  faceId++
+  
+  const geometry = new BufferGeometry()
+  geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3))
+  geometry.setAttribute('normal', new BufferAttribute(new Float32Array(normals), 3))
+  geometry.setAttribute('faceType', new BufferAttribute(new Float32Array(faceTypes), 1))
+  geometry.setAttribute('faceId', new BufferAttribute(new Float32Array(faceIds), 1))
+  geometry.setIndex(indices)
+  
+  return geometry
 }
