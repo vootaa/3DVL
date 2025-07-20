@@ -128,8 +128,8 @@ export const defaultConfig: SceneConfig = {
     }
   },
   rings: {
-    thickness: 0.2,
-    height: 1.5,
+    thickness: 0.4,
+    height: 3.5,
     inner: {
       radius: 15,
       width: 5,
@@ -146,17 +146,17 @@ export const defaultConfig: SceneConfig = {
   temples: {
     outer: {
       radius: 1.25,
-      height: 1.5,
+      height: 8.5,
       count: 10
     },
     middle: {
       size: 1.2,
-      height: 1.5,
+      height: 8.5,
       count: 5
     },
     inner: {
       size: 1.0,
-      height: 1.5,
+      height: 8.5,
       count: 5
     }
   },

@@ -19,7 +19,7 @@ const props = withDefaults(defineProps<Props>(), {
   position: () => [0, 0, 0],
   scale: () => [1, 1, 1],
   rotationSpeed: 0,
-  baseArgs: () => [[1.5, 3.0, 4.8], 0.25, 0.75], // [inner radius, middle radius, outer radius], sink depth, outer ring height
+  baseArgs: () => [[1.5, 3.0, 4.8], 0.4, 1.0], // [inner radius, middle radius, outer radius], sink depth, outer ring height
 })
 
 const material = shallowRef()

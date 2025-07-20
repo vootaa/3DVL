@@ -9,8 +9,8 @@ import ConcentricBase from './components/scene/ConcentricBase.vue'
 import ProceduralTerrain from './components/scene/ProceduralTerrain.vue'
 import HemisphereDome from './components/scene/HemisphereDome.vue'
 import OrbitalRings from './components/scene/OrbitalRings.vue'
+import Temples from './components/scene/Temples.vue'
 
-//import Temples from './components/scene/Temples.vue'
 //import TetherBridges from './components/scene/TetherBridges.vue'
 //import Staircases from './components/scene/Staircases.vue'
 
@@ -104,12 +104,12 @@ watchEffect(() => {
 
       <TresGroup>
         <!-- BandedCylinder shader effect -->
-        <BandedCylinder v-if="bandedCylinderOn" :position="[0.5, 7.5, -0.5]" :rotation-speed="-0.75"
+        <BandedCylinder v-if="bandedCylinderOn" :position="[0.5, 8.5, -0.5]" :rotation-speed="-0.75"
           :cylinder-args="[0.75, 7.5, 48, 0.5, 0.15]" />
-        <BandedCylinder v-if="bandedCylinderOn" :position="[-0.5, 6.5, 0.5]" :rotation-speed="0.75"
+        <BandedCylinder v-if="bandedCylinderOn" :position="[-0.5, 7.5, 0.5]" :rotation-speed="0.75"
           :cylinder-args="[0.75, 7.5, 48, 0.5, -0.15]" />
 
-        <ConcentricBase v-if="concentricBaseOn" :position="[0, 0.5, 0]" :rotation-speed="0.1" />
+        <ConcentricBase v-if="concentricBaseOn" :position="[0, 0.75, 0]" :rotation-speed="0.1" />
 
         <PetersenGraphPlane :position="[0, 20, 20]" :rotation="[0, 0, 0]" :scale="1" />
 
@@ -122,17 +122,18 @@ watchEffect(() => {
       <TresGroup>
         <ProceduralTerrain :config="sceneConfig" />
         <HemisphereDome :config="sceneConfig" />
-        <OrbitalRings :config="sceneConfig"/>
+        <OrbitalRings :config="sceneConfig" />
+        <Temples :config="sceneConfig" />
 
         <!--
-        <Temples :config="sceneConfig" />
+        
         <TetherBridges :config="sceneConfig" />
         <Staircases :config="sceneConfig" />
         -->
       </TresGroup>
 
       <KeyboardCameraControls v-if="firstPersonOn" :config="sceneConfig" :moveSpeed="0.1" :rotate-speed="0.005"
-        :minHeight="0.5" :maxHeight="12" />
+        :minHeight="0.25" :maxHeight="40" />
 
       <!-- Debug helpers -->
       <TresGridHelper v-if="gridOn" :args="[150, 150, '#113366', '#224488']" :position="[0, 0.25, 0]" />
