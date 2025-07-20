@@ -1,59 +1,11 @@
 import { BufferGeometry, BufferAttribute, Vector3 } from 'three'
 
-interface BridgePatch {
-    top: Vector3[]
-    bottom: Vector3[]
-    patchType: number
-    patchId: number
-    colorSeed: number
-    bridgeId: number
-}
-
-function createPatch(
-    from: Vector3,
-    to: Vector3,
-    width: number,
-    archHeight: number,
-    thickness: number,
-    t0: number,
-    t1: number,
-    patchType: number,
-    patchId: number,
-    bridgeId: number
-): BridgePatch {
-    const dir = to.clone().sub(from).normalize()
-    const up = new Vector3(0, 1, 0)
-    const side = new Vector3().crossVectors(dir, up).normalize().multiplyScalar(width / 2)
-    const top: Vector3[] = []
-    const bottom: Vector3[] = []
-    for (let i = 0; i < patchType; i++) {
-        const theta = (i / patchType) * Math.PI
-        const tt = t0 * (1 - theta / Math.PI) + t1 * (theta / Math.PI)
-        const center = from.clone().lerp(to, tt)
-        center.y += archHeight * Math.sin(Math.PI * tt)
-        const offset = side.clone().multiplyScalar(Math.cos(theta))
-        const posTop = center.clone().add(offset)
-        const posBottom = posTop.clone().add(new Vector3(0, -thickness, 0))
-        top.push(posTop)
-        bottom.push(posBottom)
-    }
-    return {
-        top,
-        bottom,
-        patchType,
-        patchId,
-        colorSeed: Math.random(),
-        bridgeId
-    }
-}
-
 export function createAllIrregularBridgesGeometry(
     bridges: Array<{ from: Vector3, to: Vector3 }>,
     width: number,
     archHeight: number,
     thickness: number,
-    minEdge: number = 0.5,
-    maxEdge: number = 1.2
+    segmentLength: number = 0.5
 ) {
     const positions: number[] = []
     const indices: number[] = []
@@ -69,54 +21,83 @@ export function createAllIrregularBridgesGeometry(
         const from = bridge.from
         const to = bridge.to
         const length = from.distanceTo(to)
-        let t = 0
-        while (t < 1.0) {
-            const patchType = 3 + Math.floor(Math.random() * 4)
-            const edgeLen = minEdge + Math.random() * (maxEdge - minEdge)
-            const dt = Math.min(edgeLen / length, 1.0 - t)
-            const t1 = t + dt
-            const patch = createPatch(
-                from, to, width, archHeight, thickness,
-                t, t1, patchType, patchId, bridgeIdx
-            )
-
-            for (let v of patch.top) {
-                positions.push(v.x, v.y, v.z)
-                patchTypes.push(patch.patchType)
-                patchIds.push(patch.patchId)
-                colorSeeds.push(patch.colorSeed)
-                bridgeIds.push(patch.bridgeId)
-            }
-            for (let v of patch.bottom) {
-                positions.push(v.x, v.y, v.z)
-                patchTypes.push(patch.patchType)
-                patchIds.push(patch.patchId)
-                colorSeeds.push(patch.colorSeed)
-                bridgeIds.push(patch.bridgeId)
-            }
-            for (let i = 1; i < patchType - 1; i++) {
-                indices.push(vertexOffset, vertexOffset + i, vertexOffset + i + 1)
-            }
-            for (let i = 1; i < patchType - 1; i++) {
-                indices.push(
-                    vertexOffset + patchType,
-                    vertexOffset + patchType + i + 1,
-                    vertexOffset + patchType + i
-                )
-            }
-            for (let i = 0; i < patchType; i++) {
-                const next = (i + 1) % patchType
-                const a = vertexOffset + i
-                const b = vertexOffset + next
-                const c = vertexOffset + patchType + next
-                const d = vertexOffset + patchType + i
-                indices.push(a, b, c)
-                indices.push(a, c, d)
-            }
-            vertexOffset += patchType * 2
-            patchId++
-            t = t1
+        const segmentCount = Math.max(2, Math.ceil(length / segmentLength))
+        // Sample points
+        const topRows: Vector3[][] = []
+        const bottomRows: Vector3[][] = []
+        for (let i = 0; i <= segmentCount; i++) {
+            const t = i / segmentCount
+            const center = from.clone().lerp(to, t)
+            center.y += archHeight * Math.sin(Math.PI * t)
+            // Cross-section rectangle 4 points (can be changed to polygon)
+            const dir = to.clone().sub(from).normalize()
+            const up = new Vector3(0, 1, 0)
+            const side = new Vector3().crossVectors(dir, up).normalize().multiplyScalar(width / 2)
+            const cross = [
+                side.clone(),
+                side.clone().negate()
+            ]
+            // Top and bottom surfaces
+            const topRow = cross.map(s => center.clone().add(s))
+            const bottomRow = cross.map(s => center.clone().add(s).add(new Vector3(0, -thickness, 0)))
+            topRows.push(topRow)
+            bottomRows.push(bottomRow)
         }
+        // Generate faces
+        for (let i = 0; i < segmentCount; i++) {
+            // Top face
+            for (let j = 0; j < 1; j++) {
+                const a = vertexOffset + i * 2 + j
+                const b = vertexOffset + (i + 1) * 2 + j
+                const c = vertexOffset + (i + 1) * 2 + j + 1
+                const d = vertexOffset + i * 2 + j + 1
+                indices.push(a, b, d)
+                indices.push(b, c, d)
+            }
+            // Bottom face (reversed)
+            for (let j = 0; j < 1; j++) {
+                const a = vertexOffset + (segmentCount + 1) * 2 + i * 2 + j
+                const b = vertexOffset + (segmentCount + 1) * 2 + (i + 1) * 2 + j
+                const c = vertexOffset + (segmentCount + 1) * 2 + (i + 1) * 2 + j + 1
+                const d = vertexOffset + (segmentCount + 1) * 2 + i * 2 + j + 1
+                indices.push(a, d, b)
+                indices.push(b, d, c)
+            }
+            // Side faces
+            for (let j = 0; j < 2; j++) {
+                const a = vertexOffset + i * 2 + j
+                const b = vertexOffset + (i + 1) * 2 + j
+                const c = vertexOffset + (segmentCount + 1) * 2 + (i + 1) * 2 + j
+                const d = vertexOffset + (segmentCount + 1) * 2 + i * 2 + j
+                indices.push(a, b, d)
+                indices.push(b, c, d)
+            }
+        }
+        // Fill attributes and vertices
+        for (let i = 0; i <= segmentCount; i++) {
+            for (let j = 0; j < 2; j++) {
+                // Top face
+                const v = topRows[i][j]
+                positions.push(v.x, v.y, v.z)
+                patchTypes.push(4)
+                patchIds.push(patchId + i)
+                colorSeeds.push(Math.random())
+                bridgeIds.push(bridgeIdx)
+            }
+        }
+        for (let i = 0; i <= segmentCount; i++) {
+            for (let j = 0; j < 2; j++) {
+                // Bottom face
+                const v = bottomRows[i][j]
+                positions.push(v.x, v.y, v.z)
+                patchTypes.push(4)
+                patchIds.push(patchId + i)
+                colorSeeds.push(Math.random())
+                bridgeIds.push(bridgeIdx)
+            }
+        }
+        vertexOffset += (segmentCount + 1) * 2 * 2
+        patchId += segmentCount + 1
     })
 
     const geometry = new BufferGeometry()

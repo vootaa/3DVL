@@ -162,10 +162,10 @@ export const defaultConfig: SceneConfig = {
     }
   },
   bridges: {
-    width: 0.8,        // Bridge width
-    thickness: 0.25,   // Bridge thickness
+    width: 1.2,        // Bridge width
+    thickness: 0.4,   // Bridge thickness
     height: 6.5,       // Bridge height
-    archHeight: 0.5,   // Maximum bridge arch height
+    archHeight: 2.5,   // Maximum bridge arch height
   },
   stairs: {
     count: 5,
