@@ -124,11 +124,11 @@ export const defaultConfig: SceneConfig = {
     },
     middle: {
       radius: 30,
-      width: 7,
+      width: 5,
     },
     outer: {
       radius: 48,
-      width: 9,
+      width: 5,
     }
   },
   temples: {

@@ -28,11 +28,11 @@ onMounted(() => {
 
     // Create boundary ring geometry using movable boundary radius
     geometry.value = createBoundaryRingGeometry({
-        radius: props.config.movement.boundaryRadius + 5.0,
-        height: props.config.rings.height, // Moderate height to be visible but not dominant
-        thickness: 0.75, // Thick enough to show grid pattern clearly
-        segments: 128, // High resolution for smooth curves
-        gridDivisions: 32 // Clear grid pattern
+        radius: props.config.movement.boundaryRadius + 1.0, // Slightly larger than boundary radius for visibility
+        height: props.config.rings.height/2, // Moderate height to be visible but not dominant
+        thickness: 1.0, // Thick enough to show grid pattern clearly
+        segments: 64, // High resolution for smooth curves
+        gridDivisions: 16 // Clear grid pattern
     })
 
     material.value = new ShaderMaterial({
