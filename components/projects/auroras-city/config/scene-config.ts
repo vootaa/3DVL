@@ -94,7 +94,7 @@ export const defaultConfig: SceneConfig = {
 
     // High-precision grid
     size: 200,
-    segments: 48,          // Higher subdivisions for smoother terrain and shader effects
+    segments: 64,          // Higher subdivisions for smoother terrain and shader effects
 
     // Optimized noise parameters
     noiseScale: 0.02,
@@ -117,7 +117,7 @@ export const defaultConfig: SceneConfig = {
   },
   rings: {
     thickness: 0.4,
-    height: 4.5,
+    height: 5.5,
     inner: {
       radius: 15,
       width: 5,
