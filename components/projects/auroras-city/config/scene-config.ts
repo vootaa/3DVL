@@ -32,19 +32,12 @@ export interface TerrainConfig {
   enableEnergyEffects: boolean  // Control energy field visibility in plain area
 }
 
-export interface ShaderTVComponentConfig {
-  // TV structure parameters
-  screenSize: number        // Screen size (square side length)
-  frameThickness: number    // Frame thickness
-  supportHeight: number     // Support height
-  supportRadius: number     // Support radius
-
-  // Position parameters
-  radius: number           // Distance from center
-  angle: number            // Angle (degrees)
-
-  // Shader parameters
-  resolution: [number, number] // Screen resolution
+export interface ShaderTVConfig {
+  radius: number      // Distance from the center
+  angle: number       // Angle (degrees)
+  screenSize: number  // Screen size
+  baseWidth: number   // Base width
+  baseHeight: number  // Base height
 }
 
 export interface ShaderTVMaterialUniforms {
@@ -56,7 +49,7 @@ export interface ShaderTVMaterialUniforms {
 
 export interface SceneConfig {
   terrain: TerrainConfig
-  shaderTV: ShaderTVComponentConfig
+  shaderTV: ShaderTVConfig
   dome: {
     radius: number
     segments: number
@@ -105,13 +98,11 @@ export interface SceneConfig {
 }
 export const defaultConfig: SceneConfig = {
   shaderTV: {
-    screenSize: 3.0,
-    frameThickness: 0.2,
-    supportHeight: 0.5,
-    supportRadius: 0.1,
-    radius: (15 + 30) / 2, // Between inner and middle ring
-    angle: 36, // Default angle
-    resolution: [800, 800] // Screen resolution
+    radius: 22.5,        // Default radius
+    angle: 252,         // Default angle
+    screenSize: 5.0,   // square screen
+    baseWidth: 0.2,    // wide base
+    baseHeight: 0.6    // high base
   },
   terrain: {
     plainRadius: 55,        // Plain area - player activity area
@@ -141,7 +132,7 @@ export const defaultConfig: SceneConfig = {
     segments: 32,
     energyShield: {
       intensity: 0.18,                 // Overall intensity
-      edgeGlow: 1.0,                    // Edge glow intensity
+      edgeGlow: 1.0,                   // Edge glow intensity
       pulseSpeed: 0.5,                 // Pulse speed
       noiseScale: 0.8                  // Energy noise detail
     }
@@ -164,11 +155,11 @@ export const defaultConfig: SceneConfig = {
   },
   temples: {
     height: 12.5,  // Height of the temple structure
-    baseSize: 1.5  // Base size of the temple structure,
+    baseSize: 1.5  // Base size of the temple structure
   },
   bridges: {
     width: 1.2,        // Bridge width
-    thickness: 0.4,   // Bridge thickness
+    thickness: 0.4,    // Bridge thickness
     height: 6.5,       // Bridge height
     archHeight: 2.5,   // Maximum bridge arch height
   },

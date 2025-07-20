@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { ShaderMaterial, Clock, Vector2, Vector3 } from 'three'
+import { ShaderMaterial, Clock, Vector2 } from 'three'
 import { useLoop } from '@tresjs/core'
 
 import type { SceneConfig } from '../../config/scene-config'
@@ -20,32 +20,32 @@ const material = ref()
 const meshRef = ref()
 
 const clock = new Clock()
-
 // Calculate TV position
 const tvPosition = computed(() => {
-    const pos3d = polarToCartesian(props.config.shaderTV.radius, props.config.shaderTV.angle, 0)
+    const pos3d = polarToCartesian(
+        props.config.shaderTV.radius,
+        props.config.shaderTV.angle,
+        0
+    )
     return { x: pos3d.x, z: pos3d.z }
 })
 
-// Create uniforms
+// Create uniforms - minimal configuration
 const uniforms = {
     iTime: { value: 0 },
-    iResolution: { value: new Vector2(props.config.shaderTV.screenSize * 100, props.config.shaderTV.screenSize * 100) },
-    uLightPosition: { value: new Vector3(10, 10, 10) },
-    uCameraPosition: { value: new Vector3(0, 5, 0) }
+    iResolution: { value: new Vector2(800, 800) } // Fixed resolution for simplicity
 }
 
 onMounted(() => {
     clock.start()
 
-    // Create geometry
+    // Create geometry - use config parameters
     geometry.value = createShaderTVGeometry({
         tv: {
             positions: [tvPosition.value],
             screenSize: props.config.shaderTV.screenSize,
-            frameThickness: props.config.shaderTV.frameThickness,
-            supportHeight: props.config.shaderTV.supportHeight,
-            supportRadius: props.config.shaderTV.supportRadius
+            baseWidth: props.config.shaderTV.baseWidth,
+            baseHeight: props.config.shaderTV.baseHeight
         }
     })
 
@@ -57,20 +57,15 @@ onMounted(() => {
         transparent: false,
         depthWrite: true,
         depthTest: true,
-        side: 2, // DoubleSide
+        side: 2, // DoubleSide for screen
     })
 })
 
 const { onBeforeRender } = useLoop()
 
-onBeforeRender(({ camera }) => {
+onBeforeRender(() => {
     const elapsed = clock.getElapsedTime()
     uniforms.iTime.value = elapsed
-
-    // Update camera position for lighting calculation
-    if (camera) {
-        uniforms.uCameraPosition.value.copy(camera.position)
-    }
 })
 
 onUnmounted(() => {
