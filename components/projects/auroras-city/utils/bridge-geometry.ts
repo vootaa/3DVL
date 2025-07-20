@@ -120,7 +120,6 @@ export function createAllIrregularBridgesGeometry(
         createEndFace(topOutlines[segmentCount], bottomOutlines[segmentCount], bridgeIdx, patchId + 5, false)
 
         patchId += 6 // Reserve IDs for side, bottom, and end faces
-
         function generateIrregularPolygons(outlines: Vector3[][], segmentCount: number, width: number): Polygon[] {
             const polygons: Polygon[] = []
 
@@ -128,52 +127,114 @@ export function createAllIrregularBridgesGeometry(
                 const currentOutline = outlines[i]
                 const nextOutline = outlines[i + 1]
 
-                // Generate random polygons across the bridge width
-                const polygonCount = Math.floor(Math.random() * 3) + 2 // 2-4 polygons per segment
+                // Create irregular splits in each bridge segment
+                const polygonCount = Math.floor(Math.random() * 2) + 2 // 2-3 polygons per segment
 
-                for (let p = 0; p < polygonCount; p++) {
-                    const polygonType = Math.floor(Math.random() * 3) + 3 // 3, 4, or 5 sides
-                    const vertices: Vector3[] = []
+                // Create transverse split points
+                const widthDivisions: number[] = [0] // Start point
+                for (let p = 1; p < polygonCount; p++) {
+                    // Add some randomness to split points
+                    const baseT = p / polygonCount
+                    const randomOffset = (Math.random() - 0.5) * 0.2 / polygonCount
+                    widthDivisions.push(Math.max(0.05, Math.min(0.95, baseT + randomOffset)))
+                }
+                widthDivisions.push(1) // End point
+                widthDivisions.sort()
 
-                    // Calculate center position across bridge width
-                    const centerT = (p + 0.5) / polygonCount // This determines width position
+                // Create polygons for each width interval
+                for (let w = 0; w < widthDivisions.length - 1; w++) {
+                    const leftT = widthDivisions[w]
+                    const rightT = widthDivisions[w + 1]
 
-                    // Generate irregular polygon vertices
-                    for (let v = 0; v < polygonType; v++) {
-                        const angle = (v / polygonType) * Math.PI * 2
-                        const radius = (Math.random() * 0.3 + 0.2) * width / 2
-                        const segmentT = (i + Math.random()) / segmentCount
-
-                        // Use centerT to interpolate across bridge width
-                        const leftEdge = currentOutline[0].clone().lerp(nextOutline[0], segmentT - i)
-                        const rightEdge = currentOutline[currentOutline.length - 1].clone().lerp(nextOutline[nextOutline.length - 1], segmentT - i)
-                        const basePos = leftEdge.clone().lerp(rightEdge, centerT) // Use centerT here
-
-                        // Add polygon vertex offset
-                        const offsetX = Math.cos(angle) * radius
-                        const offsetZ = Math.sin(angle) * radius
-                        const side = nextOutline[0].clone().sub(currentOutline[0]).normalize()
-                        const cross = new Vector3().crossVectors(side, new Vector3(0, 1, 0)).normalize()
-
-                        const vertex = basePos.clone()
-                            .add(side.clone().multiplyScalar(offsetZ))
-                            .add(cross.clone().multiplyScalar(offsetX))
-
-                        vertices.push(vertex)
+                    // Create irregular length splits between current and next segment
+                    const lengthDivisions: number[] = [0]
+                    const lengthSegments = Math.floor(Math.random() * 2) + 1 // 1-2 segments in length
+                    for (let l = 1; l < lengthSegments; l++) {
+                        const baseT = l / lengthSegments
+                        const randomOffset = (Math.random() - 0.5) * 0.3 / lengthSegments
+                        lengthDivisions.push(Math.max(0.1, Math.min(0.9, baseT + randomOffset)))
                     }
+                    lengthDivisions.push(1)
+                    lengthDivisions.sort()
 
-                    const center = vertices.reduce((sum, v) => sum.add(v), new Vector3()).divideScalar(vertices.length)
+                    // Create polygons for each length interval
+                    for (let l = 0; l < lengthDivisions.length - 1; l++) {
+                        const startLengthT = lengthDivisions[l]
+                        const endLengthT = lengthDivisions[l + 1]
 
-                    polygons.push({
-                        vertices,
-                        center,
-                        type: polygonType,
-                        id: polygons.length
-                    })
+                        // Create four corners of the quad
+                        const vertices: Vector3[] = []
+
+                        // Calculate positions of the four corners
+                        const corners = [
+                            [startLengthT, leftT],   // left front
+                            [endLengthT, leftT],     // left back
+                            [endLengthT, rightT],    // right back
+                            [startLengthT, rightT]   // right front
+                        ]
+
+                        corners.forEach(([lengthT, widthT]) => {
+                            // Interpolate between current and next outline
+                            const frontPos = interpolateAlongOutline(currentOutline, widthT)
+                            const backPos = interpolateAlongOutline(nextOutline, widthT)
+                            const vertex = frontPos.clone().lerp(backPos, lengthT)
+
+                            // Add slight height variation for irregularity
+                            const heightVariation = (Math.random() - 0.5) * 0.05
+                            vertex.y += heightVariation
+
+                            vertices.push(vertex)
+                        })
+
+                        // Randomly decide whether to convert quad to triangle or pentagon
+                        const polygonType = Math.random()
+                        if (polygonType < 0.3 && vertices.length === 4) {
+                            // Convert to triangle (remove one vertex)
+                            const removeIndex = Math.floor(Math.random() * 4)
+                            vertices.splice(removeIndex, 1)
+                        } else if (polygonType > 0.7 && vertices.length === 4) {
+                            // Convert to pentagon (add a vertex on one edge)
+                            const edgeIndex = Math.floor(Math.random() * 4)
+                            const nextIndex = (edgeIndex + 1) % 4
+                            const midPoint = vertices[edgeIndex].clone().lerp(vertices[nextIndex], 0.5)
+
+                            // Offset inward to create pentagon
+                            const center = vertices.reduce((sum, v) => sum.add(v), new Vector3()).divideScalar(4)
+                            const toCenter = center.clone().sub(midPoint).normalize()
+                            midPoint.add(toCenter.multiplyScalar(width * 0.1))
+
+                            vertices.splice(nextIndex, 0, midPoint)
+                        }
+
+                        const center = vertices.reduce((sum, v) => sum.add(v), new Vector3()).divideScalar(vertices.length)
+
+                        polygons.push({
+                            vertices,
+                            center,
+                            type: vertices.length,
+                            id: polygons.length
+                        })
+                    }
                 }
             }
 
             return polygons
+        }
+
+        // Helper function: interpolate along outline
+        function interpolateAlongOutline(outline: Vector3[], t: number): Vector3 {
+            if (t <= 0) return outline[0].clone()
+            if (t >= 1) return outline[outline.length - 1].clone()
+
+            const scaledT = t * (outline.length - 1)
+            const index = Math.floor(scaledT)
+            const localT = scaledT - index
+
+            if (index >= outline.length - 1) {
+                return outline[outline.length - 1].clone()
+            }
+
+            return outline[index].clone().lerp(outline[index + 1], localT)
         }
 
         function triangulatePolygon(vertices: Vector3[]): Vector3[][] {
