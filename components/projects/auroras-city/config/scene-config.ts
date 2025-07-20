@@ -1,4 +1,4 @@
-import { Vector3 } from 'three'
+import { Vector2, Vector3 } from 'three'
 
 export interface PetersenNode {
   id: number
@@ -32,8 +32,31 @@ export interface TerrainConfig {
   enableEnergyEffects: boolean  // Control energy field visibility in plain area
 }
 
+export interface ShaderTVComponentConfig {
+  // TV structure parameters
+  screenSize: number        // Screen size (square side length)
+  frameThickness: number    // Frame thickness
+  supportHeight: number     // Support height
+  supportRadius: number     // Support radius
+
+  // Position parameters
+  radius: number           // Distance from center
+  angle: number            // Angle (degrees)
+
+  // Shader parameters
+  resolution: [number, number] // Screen resolution
+}
+
+export interface ShaderTVMaterialUniforms {
+  iTime: { value: number }
+  iResolution: { value: Vector2 }
+  uLightPosition: { value: Vector3 }
+  uCameraPosition: { value: Vector3 }
+}
+
 export interface SceneConfig {
   terrain: TerrainConfig
+  shaderTV: ShaderTVComponentConfig
   dome: {
     radius: number
     segments: number
@@ -80,8 +103,16 @@ export interface SceneConfig {
     boundaryRadius: number
   }
 }
-
 export const defaultConfig: SceneConfig = {
+  shaderTV: {
+    screenSize: 3.0,
+    frameThickness: 0.2,
+    supportHeight: 0.5,
+    supportRadius: 0.1,
+    radius: (15 + 30) / 2, // Between inner and middle ring
+    angle: 36, // Default angle
+    resolution: [800, 800] // Screen resolution
+  },
   terrain: {
     plainRadius: 55,        // Plain area - player activity area
     transitionRadius: 70,   // Transition area - gradual hills

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BasicShadowMap, SRGBColorSpace, ACESFilmicToneMapping, Vector3, Object3D } from 'three'
+import { BasicShadowMap, SRGBColorSpace, ACESFilmicToneMapping, Vector3 } from 'three'
 import { ref, provide } from 'vue'
 
 //import ChainwebSimple from './components/scene/ChainwebSimple.vue'
@@ -12,6 +12,7 @@ import OrbitalRings from './components/scene/OrbitalRings.vue'
 import Temples from './components/scene/Temples.vue'
 import TetherBridges from './components/scene/TetherBridges.vue'
 import BoundaryRing from './components/scene/BoundaryRing.vue'
+import ShaderTV from './components/scene/ShaderTV.vue'
 
 //import Staircases from './components/scene/Staircases.vue'
 
@@ -27,6 +28,7 @@ import PostEffects from '../../utils/PostEffects.vue'
 
 import RendererStatsCollector from '../../utils/RendererStatsCollector.vue'
 
+import { petersenGraphDCC } from './shaders/petersen-graph-shader'
 
 import { defaultConfig } from './config/scene-config'
 
@@ -127,6 +129,8 @@ watchEffect(() => {
         <Temples :config="sceneConfig" />
         <TetherBridges :config="sceneConfig" />
         <BoundaryRing :config="sceneConfig" />
+
+        <ShaderTV :config="sceneConfig" :shader-source="petersenGraphDCC"/>
 
         <!--<Staircases :config="sceneConfig" />-->
       </TresGroup>
