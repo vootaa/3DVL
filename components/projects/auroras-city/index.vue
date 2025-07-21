@@ -117,7 +117,7 @@ watchEffect(() => {
         <PetersenGraphPlane :position="[0, 20, 20]" :rotation="[0, 0, 0]" :scale="1" />
 
         <!-- Post-processing effects -->
-        <PostEffects :bloom-strength="0.5" :bloom-radius="0.3" :bloom-threshold="0.35" :noise-shader="false" />
+        <PostEffects :bloom-strength="0.4" :bloom-radius="0.25" :bloom-threshold="0.1" :noise-shader="false" />
 
       </TresGroup>
 

@@ -97,9 +97,10 @@ export interface SceneConfig {
 }
 export const defaultConfig: SceneConfig = {
   shaderTV: {
-    defaultScreenSize: 5.0,
-    defaultBaseWidth: 0.2,
-    defaultBaseHeight: 0.6,
+    defaultScreenSize: 5.5, // Default screen size for TVs
+    defaultBaseWidth: 0.5, // Default base width for TVs
+    defaultBaseHeight: 0.2, // Default base height for TVs
+    // List of TVs with shader sources and parameters
     tvs: [
       { shaderSource: 'default-shader', angle: 252, radius: 22.5 },
       { shaderSource: 'petersen-graph', angle: 120, radius: 20.0 }
