@@ -155,7 +155,7 @@ export const defaultConfig: SceneConfig = {
     }
   },
   temples: {
-    height: 12.5,  // Height of the temple structure
+    height: 15.8,  // Height of the temple structure
     baseSize: 1.5  // Base size of the temple structure
   },
   bridges: {

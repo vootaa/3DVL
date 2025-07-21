@@ -39,14 +39,14 @@ export function createTemplesGeometry(config: TemplesConfig): BufferGeometry {
   
   // Define temple structure proportions
   const structure: TempleStructure = {
-    baseRadius: temples.baseSize * 0.8,     // Pentagon base
-    baseHeight: temples.height * 0.15,
-    pillarRadius: temples.baseSize * 0.3,   // Decagon pillar
-    pillarHeight: temples.height * 0.5,
-    plateRadius: temples.baseSize * 0.5,    // Hexadecagon plate
-    plateHeight: temples.height * 0.1,
-    coneRadius: temples.baseSize * 0.4,     // Cone cap
-    coneHeight: temples.height * 0.25
+    baseRadius: temples.baseSize * 1.2,     // Pentagon base
+    baseHeight: temples.height * 0.25,
+    pillarRadius: temples.baseSize * 0.5,   // Decagon pillar
+    pillarHeight: temples.height * 0.3,
+    plateRadius: temples.baseSize * 0.75,    // Hexadecagon plate
+    plateHeight: temples.height * 0.08,
+    coneRadius: temples.baseSize * 0.6,     // Cone cap
+    coneHeight: temples.height * 0.35
   }
   
   // Helper function to create a face with consistent attributes
