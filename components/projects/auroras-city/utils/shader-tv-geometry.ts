@@ -2,7 +2,7 @@ import { BufferGeometry, BufferAttribute, Vector3 } from 'three'
 
 export interface ShaderTVConfig {
   tv: {
-    positions: Array<{ x: number, z: number }>
+    positions: Vector3[] // Array of positions for each TV
     screenSize: number
     baseWidth: number
     baseHeight: number

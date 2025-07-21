@@ -20,14 +20,14 @@ const material = ref()
 const meshRef = ref()
 
 const clock = new Clock()
+
 // Calculate TV position
 const tvPosition = computed(() => {
-    const pos3d = polarToCartesian(
+    return polarToCartesian(
         props.config.shaderTV.radius,
         props.config.shaderTV.angle,
         0
     )
-    return { x: pos3d.x, z: pos3d.z }
 })
 
 // Create uniforms - minimal configuration
