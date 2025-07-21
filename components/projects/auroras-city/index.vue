@@ -130,7 +130,7 @@ watchEffect(() => {
         <TetherBridges :config="sceneConfig" />
         <BoundaryRing :config="sceneConfig" />
 
-        <ShaderTV :config="sceneConfig" :shader-source="petersenGraphDCC"/>
+        <ShaderTV :config="sceneConfig"/>
 
         <!--<Staircases :config="sceneConfig" />-->
       </TresGroup>

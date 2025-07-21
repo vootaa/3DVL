@@ -1,4 +1,6 @@
-import { Vector2, Vector3 } from 'three'
+import { Vector3 } from 'three'
+
+import type { ValidShaderName } from '../shaders/shader-registry'
 
 export interface PetersenNode {
   id: number
@@ -32,24 +34,27 @@ export interface TerrainConfig {
   enableEnergyEffects: boolean  // Control energy field visibility in plain area
 }
 
-export interface ShaderTVConfig {
-  radius: number      // Distance from the center
-  angle: number       // Angle (degrees)
-  screenSize: number  // Screen size
-  baseWidth: number   // Base width
-  baseHeight: number  // Base height
+export interface ShaderTVItem {
+  shaderSource: ValidShaderName  // Shader source name
+  angle: number         // Angle (degrees)
+  radius: number        // Radius
+  screenSize?: number   // Optional: screen size, uses default if not provided
+  baseWidth?: number    // Optional: base width
+  baseHeight?: number   // Optional: base height
 }
 
-export interface ShaderTVMaterialUniforms {
-  iTime: { value: number }
-  iResolution: { value: Vector2 }
-  uLightPosition: { value: Vector3 }
-  uCameraPosition: { value: Vector3 }
+export interface ShaderTVConfig {
+  // Default configuration
+  defaultScreenSize: number
+  defaultBaseWidth: number
+  defaultBaseHeight: number
+  // TV list
+  tvs: ShaderTVItem[]
 }
 
 export interface SceneConfig {
-  terrain: TerrainConfig
   shaderTV: ShaderTVConfig
+  terrain: TerrainConfig
   dome: {
     radius: number
     segments: number
@@ -86,23 +91,19 @@ export interface SceneConfig {
     height: number
     archHeight: number
   }
-  stairs: {
-    count: number
-    width: number
-    height: number
-    steps: number
-  }
   movement: {
     boundaryRadius: number
   }
 }
 export const defaultConfig: SceneConfig = {
   shaderTV: {
-    radius: 22.5,        // Default radius
-    angle: 252,         // Default angle
-    screenSize: 5.0,   // square screen
-    baseWidth: 0.2,    // wide base
-    baseHeight: 0.6    // high base
+    defaultScreenSize: 5.0,
+    defaultBaseWidth: 0.2,
+    defaultBaseHeight: 0.6,
+    tvs: [
+      { shaderSource: 'default-shader', angle: 252, radius: 22.5 },
+      { shaderSource: 'petersen-graph', angle: 120, radius: 20.0 }
+    ]
   },
   terrain: {
     plainRadius: 55,        // Plain area - player activity area
@@ -162,12 +163,6 @@ export const defaultConfig: SceneConfig = {
     thickness: 0.4,    // Bridge thickness
     height: 6.5,       // Bridge height
     archHeight: 2.5,   // Maximum bridge arch height
-  },
-  stairs: {
-    count: 5,
-    width: 0.4,
-    height: 2,
-    steps: 10
   },
   movement: {
     boundaryRadius: 55  // Radius for movement boundary

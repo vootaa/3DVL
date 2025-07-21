@@ -6,11 +6,13 @@ import { useLoop } from '@tresjs/core'
 import type { SceneConfig } from '../../config/scene-config'
 import { polarToCartesian } from '../../config/scene-config'
 import { createShaderTVGeometry } from '../../utils/shader-tv-geometry'
-import { shaderTVVertexShader, getShaderTVFragmentShader } from '../../shaders/shader-tv-shader'
+import { shaderTVVertexShader, getMultiShaderTVFragmentShader } from '../../shaders/shader-tv-shader'
+import { isValidShaderName } from '../../shaders/shader-registry'
+
+import { Logger } from '~/components/utils/logger'
 
 interface Props {
     config: SceneConfig
-    shaderSource: string
 }
 
 const props = defineProps<Props>()
@@ -21,39 +23,49 @@ const meshRef = ref()
 
 const clock = new Clock()
 
-// Calculate TV position
-const tvPosition = computed(() => {
-    return polarToCartesian(
-        props.config.shaderTV.radius,
-        props.config.shaderTV.angle,
-        0
-    )
+const tvConfigs = computed(() => {
+    // Calculate all TV configs
+    return props.config.shaderTV.tvs.map((tv, index) => ({
+        position: polarToCartesian(tv.radius, tv.angle, 0),
+        screenSize: tv.screenSize ?? props.config.shaderTV.defaultScreenSize,
+        baseWidth: tv.baseWidth ?? props.config.shaderTV.defaultBaseWidth,
+        baseHeight: tv.baseHeight ?? props.config.shaderTV.defaultBaseHeight,
+        tvIndex: index
+    }))
 })
 
-// Create uniforms - minimal configuration
+const shaderSources = computed(() => {
+    // Extract and validate all shader names
+    return props.config.shaderTV.tvs.map(tv => {
+        if (!isValidShaderName(tv.shaderSource)) {
+            Logger.warn('ShaderValidate', `Invalid shader name: ${tv.shaderSource}, using default shader`)
+            return 'default-shader'
+        }
+        return tv.shaderSource
+    })
+})
+
+// Create uniforms - support multiple TVs
 const uniforms = {
     iTime: { value: 0 },
-    iResolution: { value: new Vector2(800, 800) } // Fixed resolution for simplicity
+    iResolution: { value: new Vector2(800, 800) },
+    uTVCount: { value: 0 } // TV count
 }
 
 onMounted(() => {
     clock.start()
 
-    // Create geometry - use config parameters
-    geometry.value = createShaderTVGeometry({
-        tv: {
-            positions: [tvPosition.value],
-            screenSize: props.config.shaderTV.screenSize,
-            baseWidth: props.config.shaderTV.baseWidth,
-            baseHeight: props.config.shaderTV.baseHeight
-        }
-    })
+    // Create geometry - pass all TV configs
+    geometry.value = createShaderTVGeometry(tvConfigs.value)
 
-    // Create material
+    // Create material - pass all shader sources
     material.value = new ShaderMaterial({
         vertexShader: shaderTVVertexShader,
-        fragmentShader: getShaderTVFragmentShader(props.shaderSource),
-        uniforms,
+        fragmentShader: getMultiShaderTVFragmentShader(shaderSources.value),
+        uniforms: {
+            ...uniforms,
+            uTVCount: { value: props.config.shaderTV.tvs.length }
+        },
         transparent: false,
         depthWrite: true,
         depthTest: true,
@@ -76,5 +88,6 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <TresMesh v-if="shaderSource && geometry && material" ref="meshRef" :material="material" :geometry="geometry" />
+    <TresMesh v-if="tvConfigs.length > 0 && geometry && material" ref="meshRef" :material="material"
+        :geometry="geometry" />
 </template>

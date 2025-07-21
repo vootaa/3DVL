@@ -1,12 +1,11 @@
 import { BufferGeometry, BufferAttribute, Vector3 } from 'three'
 
-export interface ShaderTVConfig {
-  tv: {
-    positions: Vector3[] // Array of positions for each TV
-    screenSize: number
-    baseWidth: number
-    baseHeight: number
-  }
+export interface ShaderTVGeometryConfig {
+  position: Vector3
+  screenSize: number
+  baseWidth: number
+  baseHeight: number
+  tvIndex: number  // Index of the TV, used in the shader to distinguish different TVs
 }
 
 export const ComponentType = {
@@ -14,18 +13,16 @@ export const ComponentType = {
   BASE: 1
 } as const
 
-export function createShaderTVGeometry(config: ShaderTVConfig): BufferGeometry {
-  const { tv } = config
-  
+export function createShaderTVGeometry(configs: ShaderTVGeometryConfig[]): BufferGeometry {
   const positions: number[] = []
   const normals: number[] = []
   const indices: number[] = []
   const uvs: number[] = []
   const componentIds: number[] = []
   const tvIds: number[] = []
-  
+
   let vertexIndex = 0
-  
+
   function createQuad(
     v1: Vector3, v2: Vector3, v3: Vector3, v4: Vector3,
     normal: Vector3, componentId: number, tvId: number,
@@ -34,7 +31,7 @@ export function createShaderTVGeometry(config: ShaderTVConfig): BufferGeometry {
   ) {
     const vertices = [v1, v2, v3, v4]
     const uvCoords = [uv1, uv2, uv3, uv4]
-    
+
     vertices.forEach((v, i) => {
       positions.push(v.x, v.y, v.z)
       normals.push(normal.x, normal.y, normal.z)
@@ -42,27 +39,24 @@ export function createShaderTVGeometry(config: ShaderTVConfig): BufferGeometry {
       componentIds.push(componentId)
       tvIds.push(tvId)
     })
-    
+
     indices.push(
       vertexIndex, vertexIndex + 1, vertexIndex + 2,
       vertexIndex, vertexIndex + 2, vertexIndex + 3
     )
     vertexIndex += 4
   }
-  
-  tv.positions.forEach((pos, tvIndex) => {
-    const centerX = pos.x
-    const centerZ = pos.z
-    
-    const screenSize = tv.screenSize
-    const baseWidth = tv.baseWidth
-    const baseHeight = tv.baseHeight
+
+  configs.forEach((config) => {
+    const { position, screenSize, baseWidth, baseHeight, tvIndex } = config
+    const centerX = position.x
+    const centerZ = position.z
+
     const screenThickness = 0.02
-    
     const screenHalf = screenSize / 2
     const baseHalfLength = screenSize / 2
     const baseHalfWidth = baseWidth / 2
-    
+
     // 1. Create the screen (vertical square, very thin)
     const screenBottom = baseHeight
     const screenTop = baseHeight + screenSize
@@ -153,6 +147,6 @@ export function createShaderTVGeometry(config: ShaderTVConfig): BufferGeometry {
   geometry.setAttribute('componentId', new BufferAttribute(new Float32Array(componentIds), 1))
   geometry.setAttribute('tvId', new BufferAttribute(new Float32Array(tvIds), 1))
   geometry.setIndex(indices)
-  
+
   return geometry
 }
