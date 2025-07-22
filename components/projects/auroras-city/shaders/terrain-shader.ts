@@ -54,12 +54,12 @@ export const terrainFragmentShader = `
     
     // Plain area - energy field
     if (vDistance <= uPlainRadius) {
+      float gridPattern = step(0.9, fract(vPosition.x * 0.5)) + step(0.9, fract(vPosition.z * 0.5));
       if (uEnergyEffects) {
         baseColor = vec3(0.1, 0.15, 0.2);  // Dark blue-gray
-        
+
         // Animated energy lines
         float energyPattern = energyWave(vPosition.xz, uTime);
-        float gridPattern = step(0.9, fract(vPosition.x * 0.5)) + step(0.9, fract(vPosition.z * 0.5));
         
         emissiveColor = mix(
           vec3(0.0, 1.0, 0.8),    // Cyan
@@ -69,11 +69,9 @@ export const terrainFragmentShader = `
         
         energyIntensity = (energyPattern * 0.4 + gridPattern * 0.2) * (1.0 + sin(uTime * 4.0) * 0.1);
       } else {
-        baseColor = vec3(0.05, 0.08, 0.06);  // Very dark green-gray
-          emissiveColor = vec3(0.1, 0.15, 0.1); // Subtle dark green
-
-          float subtleNoise = noise(vPosition.xz * 0.1) * 0.02;
-          energyIntensity = subtleNoise;
+        baseColor = vec3(0.12, 0.11, 0.10);  // Stone-like gray-beige color
+        emissiveColor = vec3(0.1, 0.1, 0.1);
+        energyIntensity = (gridPattern * 0.2) * (1.0 + sin(uTime * 4.0) * 0.1);
       }
     }
     // Transition area
@@ -118,8 +116,7 @@ export const terrainFragmentShader = `
     float NdotL = max(dot(vNormal, lightDir), 0.0);
     
     // Final color composition
-    vec3 finalColor = baseColor * (0.3 + NdotL * 0.7) + 
-                     emissiveColor * energyIntensity;
+    vec3 finalColor = baseColor * (0.3 + NdotL * 0.7) + emissiveColor * energyIntensity;
     
     gl_FragColor = vec4(finalColor, 1.0);
   }
