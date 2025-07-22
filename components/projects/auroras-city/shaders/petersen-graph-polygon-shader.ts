@@ -1,20 +1,47 @@
+/**
+ * Returns a GLSL fragment shader string that renders a dynamic visualization of the Petersen graph using polygonal distance fields.
+ *
+ * The shader features:
+ * - Construction of the Petersen graph using triangles, quadrilaterals, and heptagons with 5-fold rotational symmetry.
+ * - Animated spacetime distortion effects, including radial ripples and spiral distortions.
+ * - A grid overlay and chromatic aberration for enhanced visual effects.
+ * - Customizable colors and edge smoothing for aesthetic control.
+ *
+ * @returns {string} GLSL fragment shader code for rendering the animated Petersen graph polygon visualization.
+ */
+/**
+ * Returns a GLSL shader string that renders a stylized Petersen graph polygon with dynamic spacetime distortion effects.
+ *
+ * ## Colors
+ * - `baseColor`: Main shape color (purple, `vec3(0.5, 0.0, 1.0)`)
+ * - `gridColor`: Spacetime grid color (cyan-blue, `vec3(0.1, 0.7, 1.0)`)
+ * - `warpColor`: Distortion visualization color (yellow, `vec3(1.0, 0.9, 0.2)`)
+ *
+ * The shader features:
+ * - Distance field rendering for triangles, quadrilaterals, and heptagons.
+ * - 5-fold rotational symmetry to construct the Petersen graph.
+ * - Animated spacetime warping and spiral/ripple effects.
+ * - Chromatic aberration on edges for visual enhancement.
+ *
+ * @returns {string} GLSL shader code for rendering the Petersen graph polygon with dynamic effects.
+ */
 export function getPetersenGraphPolygonShader(): string {
     return `
     float gTime = 0.;
     const float PI = 3.14159265;
 
-    const vec3 baseColor = vec3(0.5, 0.0, 1.0);
-    const vec3 gridColor = vec3(0.05, 0.0, 0.12);
-    const vec3 warpColor = vec3(1.0, 0.8, 0.2);
+    const vec3 baseColor = vec3(0.5, 0.0, 1.0); // Neon purple
+    const vec3 gridColor = vec3(0.1, 0.7, 1.0); // Neon blue
+    const vec3 warpColor = vec3(1.0, 0.9, 0.2); // Neon yellow
 
-    const float gridStrength = 0.1;
+    const float gridStrength = 0.15;
     const float warpStrength = 0.3;
     const float warpVisScale = 10.0;
     const float gridFreq = 20.0;
     const float edgeBase = 0.8;
     const float edgeStep = 0.2;
     const float edgeSmoothA = 0.01;
-    const float edgeSmoothB = 0.0;
+    const float edgeSmoothB = 0.005;
     const float chromaOffset = 0.002;
 
     // Efficient rotation function
