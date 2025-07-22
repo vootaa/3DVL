@@ -28,8 +28,6 @@ import PostEffects from '../../utils/PostEffects.vue'
 
 import RendererStatsCollector from '../../utils/RendererStatsCollector.vue'
 
-import { petersenGraphDCC } from './shaders/petersen-graph-shader'
-
 import { defaultConfig } from './config/scene-config'
 
 const sceneConfig = ref(defaultConfig)
