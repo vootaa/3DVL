@@ -102,8 +102,8 @@ export const defaultConfig: SceneConfig = {
     defaultBaseHeight: 0.2, // Default base height for TVs
     // List of TVs with shader sources and parameters
     tvs: [
-      { shaderSource: 'default-shader', angle: 252, radius: 22.5 },
-      { shaderSource: 'petersen-graph', angle: 120, radius: 20.0 }
+      { shaderSource: 'petersen-graph', angle: 180, radius: 22.5 },
+      { shaderSource: 'petersen-graph-polygon', angle: 324, radius: 39.0 }
     ]
   },
   terrain: {

@@ -1,5 +1,6 @@
 import { testShader } from './default-shader'
 import { getPetersenGraphShader } from './petersen-graph-shader'
+import { getPetersenGraphPolygonShader } from './petersen-graph-polygon-shader'
 import { Logger } from '~/components/utils/logger'
 
 export interface ShaderInfo {
@@ -15,6 +16,10 @@ export const shaderRegistry = {
     'petersen-graph': {
         name: 'petersenGraphMultiEffect',
         fragmentCode: getPetersenGraphShader(),
+    },
+    'petersen-graph-polygon': {
+        name: 'petersenGraphPolygonMultiEffect',
+        fragmentCode: getPetersenGraphPolygonShader(),
     }
 } as const
 
