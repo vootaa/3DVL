@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { ShaderMaterial, Clock, Vector2 } from 'three'
+import { ShaderMaterial, Clock, Vector2, DoubleSide } from 'three'
 import { useLoop } from '@tresjs/core'
 
 import type { SceneConfig } from '../../config/scene-config'
@@ -46,11 +46,11 @@ const shaderSources = computed(() => {
 })
 
 // Create uniforms - support multiple TVs
-const uniforms = {
+const uniforms = ref({
     iTime: { value: 0 },
     iResolution: { value: new Vector2(800, 800) },
     uTVCount: { value: 0 } // TV count
-}
+})
 
 onMounted(() => {
     clock.start()
@@ -58,26 +58,28 @@ onMounted(() => {
     // Create geometry - pass all TV configs
     geometry.value = createShaderTVGeometry(tvConfigs.value)
 
+    // Update uniforms
+    uniforms.value.uTVCount.value = props.config.shaderTV.tvs.length
+
     // Create material - pass all shader sources
     material.value = new ShaderMaterial({
         vertexShader: shaderTVVertexShader,
         fragmentShader: getMultiShaderTVFragmentShader(shaderSources.value),
-        uniforms: {
-            ...uniforms,
-            uTVCount: { value: props.config.shaderTV.tvs.length }
-        },
+        uniforms: uniforms.value,
         transparent: false,
         depthWrite: true,
         depthTest: true,
-        side: 2, // DoubleSide for screen
+        side: DoubleSide, // Use Three.js constant
     })
 })
 
 const { onBeforeRender } = useLoop()
 
 onBeforeRender(() => {
-    const elapsed = clock.getElapsedTime()
-    uniforms.iTime.value = elapsed
+    if (uniforms.value) {
+        const elapsed = clock.getElapsedTime()
+        uniforms.value.iTime.value = elapsed
+    }
 })
 
 onUnmounted(() => {

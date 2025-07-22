@@ -1,389 +1,196 @@
-export const petersenGraphDCC = `
-    float gTime = 0.;
-    const float PI = 3.14159265;
+export function getPetersenGraphShader(): string {
+    return `
+    const float INNER_ORBIT_RADIUS = 0.15;
+    const float MIDDLE_ORBIT_RADIUS = 0.30;
+    const float OUTER_ORBIT_RADIUS = 0.48;
+    const float LINE_THICKNESS = 0.002;
+    const float CIRCLE_THICKNESS = 0.005;
+    const float NODE_SIZE = 0.018;
 
-    // Efficient rotation function
-    mat2 rot(float a) {
-        float c = cos(a), s = sin(a);
-        return mat2(c, s, -s, c);
+    const float NODE_RADIUS[20] = float[20](
+    0.30,  0.30,  0.30,  0.30,  0.30,
+    0.15, 0.15, 0.15, 0.15, 0.15,
+    0.48, 0.48, 0.48, 0.48, 0.48, 0.48, 0.48, 0.48, 0.48, 0.48);
+
+    const float NODE_THETA[20] = float[20](
+    // Middle orbit
+    288.0, 0.0, 72.0, 144.0, 216.0,
+    // Inner orbit
+    288.0, 0.0, 72.0, 144.0, 216.0,
+    // Outer orbit
+    278.0, 10.0, 62.0, 154.0, 206.0, 298.0, 350.0, 82.0, 134.0, 226.0);
+
+    // Connection lookup table
+    const ivec2 CONNECTIONS[30] = ivec2[30](
+    // Inner to Middle orbit connections
+    ivec2(5, 0), ivec2(6, 1), ivec2(7, 2), ivec2(8, 3), ivec2(9, 4),
+    // Middle to Outer orbit connections
+    ivec2(0, 10), ivec2(1, 11), ivec2(2, 12), ivec2(3, 13), ivec2(4, 14), ivec2(0, 15), ivec2(1, 16), ivec2(2, 17), ivec2(3, 18), ivec2(4, 19),
+    // Inner orbit internal connections
+    ivec2(5, 7), ivec2(6, 8), ivec2(7, 9), ivec2(8, 5), ivec2(9, 6),
+    // Outer orbit ring connections
+    ivec2(10, 11), ivec2(11, 12), ivec2(12, 13), ivec2(13, 14), ivec2(14, 15), ivec2(15, 16), ivec2(16, 17), ivec2(17, 18), ivec2(18, 19), ivec2(19, 10));
+
+    // Connection types for different styling
+    const int CONN_TYPE[30] = int[30](0, 0, 0, 0, 0,  // Inner to Middle
+    1, 1, 1, 1, 1,  // Middle to Outer (first set)
+    2, 2, 2, 2, 2,  // Middle to Outer (second set)
+    3, 3, 3, 3, 3,  // Inner circle connections
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4  // Outer ring connections
+    );
+
+    // Convert degrees to radians
+    float degToRad(float degrees) {
+        return degrees * 3.14159265359 / 180.0;
     }
 
-    // Polar to Cartesian coordinate conversion
-    vec2 polar(float r, float a) {
-        return vec2(r * cos(a), r * sin(a));
+    mat2 rotate2D(float angle) {
+        float c = cos(angle);
+        float s = sin(angle);
+        return mat2(c, -s, s, c);
     }
 
-    // Simplified noise function
-    float noise(vec2 p) {
-        return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+    vec2 getNodePosition(int nodeId) {
+        float radius = NODE_RADIUS[nodeId];
+        float theta = NODE_THETA[nodeId];
+
+        float thetaRad = degToRad(theta);
+        return vec2(radius * cos(thetaRad), radius * sin(thetaRad));
     }
 
-    // Dynamic Color Palette System
-    struct ColorScheme {
-        vec3 primary;      // Primary color
-        vec3 secondary;    // Secondary color
-        vec3 accent;       // Accent color
-        vec3 dark;         // Dark tone
-    };
-
-    // Get color scheme by index
-    ColorScheme getColorScheme(int index) {
-        ColorScheme scheme;
-        
-        if(index == 0) { // Neon Magenta
-            scheme.primary = vec3(1.0, 0.0, 0.5);    // Magenta
-            scheme.secondary = vec3(0.6, 0.0, 0.8);  // Purple
-            scheme.accent = vec3(1.0, 0.2, 0.6);     // Light magenta
-            scheme.dark = vec3(0.2, 0.0, 0.15);      // Deep purple
-        } else if(index == 1) { // Electronic Cyan-Blue
-            scheme.primary = vec3(0.0, 0.8, 1.0);    // Cyan
-            scheme.secondary = vec3(0.0, 0.4, 0.8);  // Blue
-            scheme.accent = vec3(0.2, 0.9, 1.0);     // Light cyan
-            scheme.dark = vec3(0.0, 0.1, 0.2);       // Deep blue
-        } else if(index == 2) { // Matrix Green
-            scheme.primary = vec3(0.0, 1.0, 0.3);    // Neon green
-            scheme.secondary = vec3(0.0, 0.8, 0.2);  // Matrix green
-            scheme.accent = vec3(0.5, 1.0, 0.0);     // Lime green
-            scheme.dark = vec3(0.0, 0.15, 0.05);     // Deep green
-        } else if(index == 3) { // Orange-Red Warning
-            scheme.primary = vec3(1.0, 0.5, 0.0);    // Orange
-            scheme.secondary = vec3(1.0, 0.0, 0.0);  // Red
-            scheme.accent = vec3(1.0, 0.75, 0.0);    // Amber
-            scheme.dark = vec3(0.2, 0.05, 0.0);      // Deep orange-red
-        } else if(index == 4) { // Golden Data
-            scheme.primary = vec3(1.0, 0.84, 0.0);   // Gold
-            scheme.secondary = vec3(1.0, 1.0, 0.0);  // Yellow
-            scheme.accent = vec3(1.0, 0.6, 0.0);     // Amber
-            scheme.dark = vec3(0.2, 0.15, 0.0);      // Deep gold
-        } else { // Violet (index == 5)
-            scheme.primary = vec3(0.5, 0.0, 1.0);    // Violet
-            scheme.secondary = vec3(0.3, 0.0, 0.5);  // Indigo
-            scheme.accent = vec3(0.7, 0.5, 1.0);     // Lavender
-            scheme.dark = vec3(0.1, 0.0, 0.2);       // Deep violet
-        }
-        
-        return scheme;
+    int getOrbitType(int nodeId) {
+        if(nodeId < 5)
+            return 0;  // Middle
+        else if(nodeId < 10)
+            return 1; // Inner
+        else
+            return 2;  // Outer
     }
 
-    // Smooth interpolation between two color schemes
-    ColorScheme interpolateSchemes(ColorScheme a, ColorScheme b, float t) {
-        ColorScheme result;
-        result.primary = mix(a.primary, b.primary, t);
-        result.secondary = mix(a.secondary, b.secondary, t);
-        result.accent = mix(a.accent, b.accent, t);
-        result.dark = mix(a.dark, b.dark, t);
-        return result;
+    vec4 drawNode(vec2 uv, vec2 pos, int nodeId) {
+        float dist = length(uv - pos);
+        int orbitType = getOrbitType(nodeId);
+
+        float nodeSize = NODE_SIZE;
+
+        vec3 nodeColor;
+        if(orbitType == 0)
+            nodeColor = vec3(1.0, 0.4, 0.7);  // Pink - Middle
+        else if(orbitType == 1)
+            nodeColor = vec3(0.2, 0.6, 1.0); // Blue - Inner
+        else
+            nodeColor = vec3(1.0, 0.8, 0.2);        // Gold - Outer
+
+        float circle = smoothstep(nodeSize, nodeSize * 0.7, dist);
+
+        return vec4(nodeColor, circle);
     }
 
-    // Get current dynamic color scheme based on time
-    ColorScheme getCurrentColorScheme(float time) {
-        float cycleDuration = 15.0; // Switch color scheme every 15 seconds
-        float totalCycles = 6.0; // 6 color schemes total
-        
-        float globalTime = mod(time, cycleDuration * totalCycles);
-        float schemeTime = globalTime / cycleDuration;
-        
-        int currentScheme = int(floor(schemeTime));
-        int nextScheme = (currentScheme + 1) % 6;
-        float blendFactor = fract(schemeTime);
-        
-        // Use smoothstep for smoother transitions
-        float smoothBlend = smoothstep(0.0, 1.0, blendFactor);
-        
-        ColorScheme current = getColorScheme(currentScheme);
-        ColorScheme next = getColorScheme(nextScheme);
-        
-        return interpolateSchemes(current, next, smoothBlend);
+    vec4 drawConcentricCircles(vec2 uv) {
+        float dist = length(uv);
+
+        float innerRadius = INNER_ORBIT_RADIUS;
+        float middleRadius = MIDDLE_ORBIT_RADIUS;
+        float outerRadius = OUTER_ORBIT_RADIUS;
+
+        float thickness = CIRCLE_THICKNESS;
+
+        float innerCircle = smoothstep(thickness, 0.0, abs(dist - innerRadius));
+        float middleCircle = smoothstep(thickness, 0.0, abs(dist - middleRadius));
+        float outerCircle = smoothstep(thickness, 0.0, abs(dist - outerRadius));
+
+        vec3 innerColor = vec3(0.1, 0.3, 0.5) * 0.8;   // Dim blue
+        vec3 middleColor = vec3(0.5, 0.2, 0.35) * 0.8; // Dim pink
+        vec3 outerColor = vec3(0.5, 0.4, 0.1) * 0.8;   // Dim gold
+
+        vec3 circleColor = innerColor * innerCircle +
+            middleColor * middleCircle +
+            outerColor * outerCircle;
+
+        float alpha = innerCircle + middleCircle + outerCircle;
+
+        return vec4(circleColor, alpha * 0.6);
     }
 
-    // Enhanced color functions for different elements
-    vec3 getBackgroundColor(ColorScheme scheme, bool isTop) {
-        return isTop ? scheme.dark * 2.0 : scheme.dark * 0.5;
-    }
+    vec4 drawConnection(vec2 uv, vec2 p1, vec2 p2, int connType) {
+        vec2 dir = p2 - p1;
+        float len = length(dir);
+        if(len < 0.001)
+            return vec4(0.0);
 
-    vec3 getCityscapeColor(ColorScheme scheme) {
-        return scheme.dark * 1.5;
-    }
+        dir = normalize(dir);
+        vec2 normal = vec2(-dir.y, dir.x);
 
-    vec3 getCityLightsColor(ColorScheme scheme) {
-        return scheme.accent;
-    }
+        vec2 uv_rel = uv - p1;
+        float alongLine = dot(uv_rel, dir);
+        float perpDist = abs(dot(uv_rel, normal));
 
-    vec3 getDistortionColor(ColorScheme scheme) {
-        return scheme.primary;
-    }
+        if(alongLine < -0.01 || alongLine > len + 0.01)
+            return vec4(0.0);
 
-    vec3 getNeonInnerColor(ColorScheme scheme) {
-        return scheme.primary;
-    }
+        float thickness = LINE_THICKNESS;
 
-    vec3 getNeonOuterColor(ColorScheme scheme) {
-        return scheme.secondary;
-    }
-
-    vec3 getSpectrumColor(ColorScheme scheme, int index) {
-        if(index == 0) return scheme.primary;
-        else return mix(scheme.secondary, scheme.accent, 0.5);
-    }
-
-    vec3 getEdgeColor(ColorScheme scheme) {
-        return mix(scheme.primary, scheme.accent, 0.7);
-    }
-
-    vec3 getFillColor(ColorScheme scheme) {
-        return scheme.dark * 0.8;
-    }
-
-    vec3 getCircuitColor(ColorScheme scheme) {
-        return scheme.secondary * 0.6;
-    }
-
-    // Simplified spacetime warp
-    vec2 spacetimeWarp(vec2 p) {
-        float dist = length(p);
-        float ripple = sin(dist * 12.0 - gTime * 6.0) * 0.08;
-        return p * (1.0 + ripple);
-    }
-
-    // Simplified neon glow
-    float balancedNeonGlow(float d, float width, float intensity) {
-        return width / (abs(d) + width) * intensity;
-    }
-
-    // Fixed polygon distance field
-    float sdPolygon(vec2 p, vec2 vertices[7], int n) {
-        float d = dot(p - vertices[0], p - vertices[0]);
-        float s = 1.0;
-
-        for(int i = 0, j = n - 1; i < n; j = i, i++) {
-            vec2 e = vertices[j] - vertices[i];
-            vec2 w = p - vertices[i];
-            vec2 b = w - e * clamp(dot(w, e) / dot(e, e), 0.0, 1.0);
-            d = min(d, dot(b, b));
-
-            bvec3 c = bvec3(p.y >= vertices[i].y, p.y < vertices[j].y, e.x * w.y > e.y * w.x);
-            if(all(c) || all(not(c)))
-                s *= -1.0;
+        vec3 lineColor;
+        switch(connType) {
+            case 0:
+                lineColor = vec3(0.7, 0.3, 0.7);
+                break;  // Purple - Inner to Middle
+            case 1:
+                lineColor = vec3(0.3, 0.7, 0.3);
+                break;  // Green - Middle to Outer (set 1)
+            case 2:
+                lineColor = vec3(0.3, 0.5, 0.9);
+                break;  // Blue - Middle to Outer (set 2)
+            case 3:
+                lineColor = vec3(0.9, 0.6, 0.2);
+                break;  // Orange - Inner circle
+            case 4:
+                lineColor = vec3(0.9, 0.4, 0.4);
+                break;  // Red - Outer ring
+            default:
+                lineColor = vec3(0.6, 0.6, 0.6);
+                break; // Gray
         }
 
-        return s * sqrt(d);
-    }
-
-    // Triangle distance field
-    float sdTriangle(vec2 p, vec2 a, vec2 b, vec2 c) {
-        vec2 vertices[7];
-        vertices[0] = a; vertices[1] = b; vertices[2] = c;
-        return sdPolygon(p, vertices, 3);
-    }
-
-    // Quadrilateral distance field
-    float sdQuad(vec2 p, vec2 a, vec2 b, vec2 c, vec2 d) {
-        vec2 vertices[7];
-        vertices[0] = a; vertices[1] = b; vertices[2] = c; vertices[3] = d;
-        return sdPolygon(p, vertices, 4);
-    }
-
-    // Pentagon distance field
-    float sdPentagon(vec2 p, vec2 a, vec2 b, vec2 c, vec2 d, vec2 e) {
-        vec2 vertices[7];
-        vertices[0] = a; vertices[1] = b; vertices[2] = c; vertices[3] = d; vertices[4] = e;
-        return sdPolygon(p, vertices, 5);
-    }
-
-    // Heptagon distance field
-    float sdHeptagon(vec2 p, vec2 a, vec2 b, vec2 c, vec2 d, vec2 e, vec2 f, vec2 g) {
-        vec2 vertices[7];
-        vertices[0] = a; vertices[1] = b; vertices[2] = c; vertices[3] = d;
-        vertices[4] = e; vertices[5] = f; vertices[6] = g;
-        return sdPolygon(p, vertices, 7);
-    }
-
-    // Shrink shape to create gaps
-    float shrinkShape(float d, float amount) {
-        return d + amount;
-    }
-
-    // Central pentagon of the Petersen graph
-    float petersenCenterPentagon(vec2 p) {
-        float scale = 2.0;
-        p /= scale;
-        float shrink = 0.005;
-
-        vec2 pentagon_a = polar(0.06, radians(36.0));
-        vec2 pentagon_b = polar(0.06, radians(108.0));
-        vec2 pentagon_c = polar(0.06, radians(180.0));
-        vec2 pentagon_d = polar(0.06, radians(252.0));
-        vec2 pentagon_e = polar(0.06, radians(324.0));
-
-        return shrinkShape(sdPentagon(p, pentagon_a, pentagon_b, pentagon_c, pentagon_d, pentagon_e), shrink);
-    }
-
-    // 1/5 part of the Petersen graph
-    float petersenPart(vec2 p) {
-        float scale = 2.0;
-        p /= scale;
-        float shrink = 0.005;
-
-        // P1 Triangle
-        vec2 p1a = polar(0.060, radians(36.0));
-        vec2 p1b = polar(0.060, radians(324.0));
-        vec2 p1c = polar(0.150, 0.0);
-        float d1 = shrinkShape(sdTriangle(p, p1a, p1b, p1c), shrink);
-
-        // P2 Heptagon
-        vec2 p2a = polar(0.060, radians(36.0));
-        vec2 p2b = polar(0.150, 0.0);
-        vec2 p2c = polar(0.300, 0.0);
-        vec2 p2d = polar(0.390, radians(6.0));
-        vec2 p2e = polar(0.390, radians(66.0));
-        vec2 p2f = polar(0.300, radians(72.0));
-        vec2 p2g = polar(0.150, radians(72.0));
-        float d2 = shrinkShape(sdHeptagon(p, p2a, p2b, p2c, p2d, p2e, p2f, p2g), shrink);
-
-        // P3 Quadrilateral
-        vec2 p3a = polar(0.300, 0.0);
-        vec2 p3b = polar(0.390, radians(354.0));
-        vec2 p3c = polar(0.416, 0.0);
-        vec2 p3d = polar(0.390, radians(6.0));
-        float d3 = shrinkShape(sdQuad(p, p3a, p3b, p3c, p3d), shrink);
-
-        // P4 Triangle
-        vec2 p4a = polar(0.390, radians(6.0));
-        vec2 p4b = polar(0.416, 0.0);
-        vec2 p4c = polar(0.480, radians(10.0));
-        float d4 = shrinkShape(sdTriangle(p, p4a, p4b, p4c), shrink);
-
-        // P5 Quadrilateral
-        vec2 p5a = polar(0.390, radians(6.0));
-        vec2 p5b = polar(0.480, radians(10.0));
-        vec2 p5c = polar(0.480, radians(62.0));
-        vec2 p5d = polar(0.390, radians(66.0));
-        float d5 = shrinkShape(sdQuad(p, p5a, p5b, p5c, p5d), shrink);
-
-        // P6 Triangle
-        vec2 p6a = polar(0.390, radians(66.0));
-        vec2 p6b = polar(0.480, radians(62.0));
-        vec2 p6c = polar(0.416, radians(72.0));
-        float d6 = shrinkShape(sdTriangle(p, p6a, p6b, p6c), shrink);
-
-        return min(min(min(min(min(d1, d2), d3), d4), d5), d6);
-    }
-
-    // Complete Petersen graph
-    float petersenGraph(vec2 p) {
-        float d = 1e6;
-
-        // Slow rotation
-        p *= rot(gTime * 0.08);
-
-        // Central pentagon
-        float centerPentagon = petersenCenterPentagon(p);
-        d = min(d, centerPentagon);
-
-        // 5-fold rotational symmetry
-        for(int i = 0; i < 5; i++) {
-            float angle = float(i) * 72.0 * PI / 180.0;
-            vec2 rotP = p * rot(-angle);
-            d = min(d, petersenPart(rotP));
-        }
-
-        return d;
+        float line = smoothstep(thickness, thickness * 0.5, perpDist);
+        return vec4(lineColor, line * 0.7);
     }
 
     void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-        vec2 p = (fragCoord.xy * 2.0 - iResolution.xy) / min(iResolution.x, iResolution.y);
-        gTime = iTime;
+        vec2 uv = (fragCoord - 0.5 * iResolution.xy) / min(iResolution.x, iResolution.y);
 
-        // Get current dynamic color scheme
-        ColorScheme currentScheme = getCurrentColorScheme(gTime);
+        float rotation = iTime * 0.1;
+        mat2 rotMat = rotate2D(rotation);
+        uv = rotMat * uv;
 
-        // Apply simplified spacetime distortion
-        vec2 warpedP = spacetimeWarp(p);
-        float d = petersenGraph(warpedP);
+        vec3 bgColor = vec3(0.05, 0.05, 0.08);
+        fragColor = vec4(bgColor, 1.0);
 
-        // Dynamic background gradient
-        vec3 bottomColor = getBackgroundColor(currentScheme, false);
-        vec3 topColor = getBackgroundColor(currentScheme, true);
-        vec3 col = mix(bottomColor, topColor, p.y * 0.2 + 0.5);
+        vec4 circles = drawConcentricCircles(uv);
+        fragColor.rgb = mix(fragColor.rgb, circles.rgb, circles.a);
 
-        // Dynamic cityscape
-        float cityHeight = 0.4 + sin(p.x * 8.0) * 0.03;
-        float cityscape = smoothstep(0.0, 0.01, p.y + cityHeight);
-        vec3 cityscapeColor = getCityscapeColor(currentScheme);
-        col = mix(col, cityscapeColor, 1.0 - cityscape);
+        for(int i = 0; i < 30; i++) {
+            int fromId = CONNECTIONS[i].x;
+            int toId = CONNECTIONS[i].y;
+            int connType = CONN_TYPE[i];
 
-        // Dynamic city lights
-        float cityLights = pow(noise(p * 30.0), 8.0) * (1.0 - cityscape);
-        vec3 lightsColor = getCityLightsColor(currentScheme);
-        col += cityLights * lightsColor * 0.15;
+            vec2 fromPos = getNodePosition(fromId);
+            vec2 toPos = getNodePosition(toId);
 
-        // Dynamic distortion visualization
-        float warpVis = length(warpedP - p) * 8.0;
-        vec3 distortionColor = getDistortionColor(currentScheme);
-        col += warpVis * distortionColor * 0.15;
-
-        // Dynamic neon glow layers
-        float neonInner = balancedNeonGlow(d, 0.01, 1.5);
-        float neonOuter = balancedNeonGlow(d, 0.03, 0.6);
-
-        vec3 neonInnerColor = getNeonInnerColor(currentScheme);
-        vec3 neonOuterColor = getNeonOuterColor(currentScheme);
-
-        col += neonInner * neonInnerColor;
-        col += neonOuter * neonOuterColor;
-
-        // Dynamic chromatic aberration
-        vec3 rgbSplit = vec3(0.0);
-        for(int i = 0; i < 2; i++) {
-            float offset = float(i) * 0.0015;
-            vec2 chromaP = warpedP + vec2(offset, -offset);
-            float chromaD = petersenGraph(chromaP);
-
-            float edge = smoothstep(0.005, 0.0, abs(chromaD));
-            vec3 spectrumColor = getSpectrumColor(currentScheme, i);
-
-            rgbSplit += edge * spectrumColor * 0.5;
+            vec4 lineColor = drawConnection(uv, fromPos, toPos, connType);
+            fragColor.rgb = mix(fragColor.rgb, lineColor.rgb, lineColor.a);
         }
 
-        col += rgbSplit;
+        for(int i = 0; i < 20; i++) {
+            vec2 pos = getNodePosition(i);
+            vec4 nodeColor = drawNode(uv, pos, i);
+            fragColor.rgb = mix(fragColor.rgb, nodeColor.rgb, nodeColor.a);
+        }
 
-        // Dynamic main edge
-        float edge = smoothstep(0.005, 0.0, abs(d));
-        vec3 edgeColor = getEdgeColor(currentScheme);
-        col += edge * edgeColor * 0.6;
+        float vignette = 1.0 - smoothstep(0.6, 1.2, length(uv));
+        fragColor.rgb *= vignette;
 
-        // Dynamic fill
-        float solid = smoothstep(0.002, -0.002, d);
-        vec3 fillColor = getFillColor(currentScheme);
-
-        // Dynamic circuit pattern
-        float circuit = step(0.7, noise(warpedP * 25.0));
-        vec3 circuitColor = getCircuitColor(currentScheme);
-        fillColor += circuit * circuitColor * 0.2;
-
-        col += solid * fillColor;
-
-        // Enhanced visual feedback for color transitions
-        float transitionIndicator = abs(sin(gTime * 2.0 * PI / 15.0)) * 0.05;
-        col += transitionIndicator * currentScheme.accent;
-
-        // Standard post-processing
-        col = pow(col, vec3(0.85));
-        col *= 1.4;
-
-        // Vignette effect
-        float vignette = 1.0 - length(p) * 0.3;
-        col *= clamp(vignette, 0.0, 1.0);
-
-        fragColor = vec4(col, 1.0);
+        fragColor.a = 1.0;
     }
-
-/** SHADERDATA
-    {
-        "title": "Petersen Graph - Dynamic Color Cycling System - Ripple Cyberpunk",
-        "author": "Vootaa Labs",
-        "description": "6-scheme cyberpunk color palette with smooth transitions",
-        "href": "https://github.com/vootaa/PetersenGraph-Effects"
-    }
-*/
-`
+    `;
+}

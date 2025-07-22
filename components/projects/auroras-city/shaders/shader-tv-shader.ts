@@ -1,5 +1,4 @@
-import { getShaderCode } from './shader-registry'
-import { Logger } from '~/components/utils/logger'
+import { getShaderCodeWithRenamedMainImage, getMainImageFunctionName } from './shader-registry'
 
 export const shaderTVVertexShader = `
   attribute float componentId;
@@ -16,61 +15,23 @@ export const shaderTVVertexShader = `
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `
-
 export function getMultiShaderTVFragmentShader(shaderNames: string[]): string {
-  // Safely get shader code, fallback to default-shader if failed
-  const safeGetShaderCode = (name: string): string => {
-    try {
-      return getShaderCode(name)
-    } catch (error) {
-      Logger.warn('ShaderTV', `Failed to get shader "${name}", falling back to default-shader`)
-      return getShaderCode('default-shader')
-    }
-  }
+  // Get the shader code with renamed mainImage
+  const renamedShaderCodes = shaderNames.map(name =>
+    getShaderCodeWithRenamedMainImage(name)
+  )
 
-  // Get full code for each shader
-  const shaderCodes = shaderNames.map(name => safeGetShaderCode(name))
-  
-  // Wrap each shader in a function
-  const shaderFunctions = shaderCodes.map((code, index) => {
-    // Simple code cleanup, remove possible mainImage function declaration
-    const cleanCode = code.replace(/void\s+mainImage\s*\([^)]*\)\s*\{/, '')
-                         .replace(/}\s*$/, '') // Remove closing bracket
-    
-    return `
-      // Shader ${index}: ${shaderNames[index]}
-      void shader${index}MainImage(out vec4 fragColor, in vec2 fragCoord) {
-        ${cleanCode}
-        
-        // If the above code fails, use a simple fallback
-        if (fragColor.a <= 0.0) {
-          fragColor = vec4(0.5, 0.5, 0.5, 1.0); // Gray fallback
-        }
-      }
-    `
-  }).join('\n')
+  // Get the renamed function names
+  const functionNames = shaderNames.map(name =>
+    getMainImageFunctionName(name)
+  )
 
   // Generate conditional call code
-  const conditionalCalls = shaderNames.map((_, index) =>
+  const conditionalCalls = functionNames.map((funcName, index) =>
     `${index > 0 ? 'else ' : ''}if (vTvId < ${index + 0.5}) {
-        shader${index}MainImage(color, fragCoord);
+        ${funcName}(color, fragCoord);
       }`
   ).join(' ')
-
-  // Add final fallback
-  const fallbackCall = `
-    else {
-      // Final fallback - simple plasma effect
-      vec2 uv = fragCoord / iResolution.xy;
-      float time = iTime * 0.5;
-      color = vec4(
-        0.5 + 0.5 * sin(time + uv.x * 10.0),
-        0.5 + 0.5 * sin(time + uv.y * 10.0 + 2.0),
-        0.5 + 0.5 * sin(time + (uv.x + uv.y) * 5.0 + 4.0),
-        1.0
-      );
-    }
-  `
 
   return `
     uniform float iTime;
@@ -81,16 +42,16 @@ export function getMultiShaderTVFragmentShader(shaderNames: string[]): string {
     varying float vComponentId;
     varying float vTvId;
 
-    ${shaderFunctions}
+    // Embed all renamed shader codes
+    ${renamedShaderCodes.join('\n')}
 
     void main() {
       if (vComponentId < 0.5) { // SCREEN
-        vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
+        vec4 color = vec4(0.0);
         vec2 fragCoord = vUv * iResolution.xy;
 
-        // Call corresponding shader function according to tvId
+        // Call the corresponding renamed function according to tvId
         ${conditionalCalls}
-        ${fallbackCall}
  
         gl_FragColor = color;
       } else { // BASE
