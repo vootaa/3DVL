@@ -48,7 +48,7 @@ const shaderSources = computed(() => {
 // Create uniforms - support multiple TVs
 const uniforms = ref({
     iTime: { value: 0 },
-    iResolution: { value: new Vector2(800, 800) },
+    iResolution: { value: new Vector2(600, 600) },
     uTVCount: { value: 0 } // TV count
 })
 
