@@ -110,7 +110,7 @@ watchEffect(() => {
         <BandedCylinder v-if="bandedCylinderOn" :position="[-0.5, 7.5, 0.5]" :rotation-speed="0.75"
           :cylinder-args="[0.75, 7.5, 48, 0.5, -0.15]" />
 
-        <ConcentricBase v-if="concentricBaseOn" :position="[0, 0.75, 0]" :rotation-speed="0.1" />
+        <ConcentricBase v-if="concentricBaseOn" :rotation-speed="0.1" />
 
         <PetersenGraphPlane :position="[0, 20, 20]" :rotation="[0, 0, 0]" :scale="1" />
 
@@ -128,7 +128,7 @@ watchEffect(() => {
         <TetherBridges :config="sceneConfig" />
         <BoundaryRing :config="sceneConfig" />
 
-        <ShaderTV :config="sceneConfig"/>
+        <ShaderTV :config="sceneConfig" />
 
         <!--<Staircases :config="sceneConfig" />-->
       </TresGroup>

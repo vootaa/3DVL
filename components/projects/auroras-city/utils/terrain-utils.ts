@@ -51,9 +51,10 @@ export function calculateTerrainHeight(x: number, z: number, config: TerrainConf
   
   // Plain area - flat with energy field undulations
   if (distance <= config.plainRadius) {
-    const energyWave = Math.sin(distance * 0.3 + angle * 2) * 0.05
-    const plainNoise = fractalNoiseWithAngular(x, z, 2) * 0.1
-    return energyWave + plainNoise
+    //const energyWave = Math.sin(distance * 0.3 + angle * 2) * 0.05
+    //const plainNoise = fractalNoiseWithAngular(x, z, 2) * 0.1
+    //return energyWave + plainNoise
+    return 0
   }
   
   // Transition area - rising hills with angular variation

@@ -55,27 +55,15 @@ export function getMultiShaderTVFragmentShader(shaderNames: string[]): string {
  
         gl_FragColor = color;
       } else { // BASE
-        // Sample screen color at bottom three positions and blend
-        vec4 screenColorLeft = vec4(0.0);
-        vec4 screenColorCenter = vec4(0.0);
-        vec4 screenColorRight = vec4(0.0);
-
-        vec2 bottomLeftCoord = vec2(0.0, 0.0) * iResolution.xy;    // Bottom left corner
-        vec2 bottomCenterCoord = vec2(0.5, 0.0) * iResolution.xy;  // Bottom center
-        vec2 bottomRightCoord = vec2(1.0, 0.0) * iResolution.xy;   // Bottom right corner
-
-        // Get screen color from the same TV
-        ${conditionalCalls.replace(/fragCoord/g, 'bottomLeftCoord').replace(/color/g, 'screenColorLeft')}
-        ${conditionalCalls.replace(/fragCoord/g, 'bottomCenterCoord').replace(/color/g, 'screenColorCenter')}
-        ${conditionalCalls.replace(/fragCoord/g, 'bottomRightCoord').replace(/color/g, 'screenColorRight')}
-
-        // Blend the three sampled colors
-        vec3 blendedColor = (screenColorLeft.rgb + screenColorCenter.rgb + screenColorRight.rgb) / 3.0;
-
-        // Create base color based on blended screen color
-        vec3 baseColor = blendedColor * 0.3 + vec3(0.1); // Darker version with minimum brightness
-
-        gl_FragColor = vec4(baseColor, 1.0);
+        vec2 uv = vUv;
+        
+        vec3 color = vec3(
+            0.5 + 0.5 * sin(iTime + uv.y * 4.0), 
+            0.5 + 0.5 * sin(iTime + uv.y * 3.0 + 2.0),
+            0.5 + 0.5 * sin(iTime + uv.y * 2.0 + 4.0)
+        );
+        
+        gl_FragColor = vec4(color, 0.7);
       }
     }
     `
