@@ -1,11 +1,9 @@
 export function getPetersenGraphPolygonShader(): string {
     return `
-    precision highp float;
-
     float gTime = 0.;
     const float PI = 3.14159265;
 
-    const vec3 baseColor = vec3(0.95, 0.05, 0.35);
+    const vec3 baseColor = vec3(0.5, 0.0, 1.0);
     const vec3 gridColor = vec3(0.05, 0.0, 0.12);
     const vec3 warpColor = vec3(1.0, 0.8, 0.2);
 
