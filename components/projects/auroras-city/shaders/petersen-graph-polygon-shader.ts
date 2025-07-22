@@ -1,7 +1,23 @@
 export function getPetersenGraphPolygonShader(): string {
     return `
+    precision highp float;
+
     float gTime = 0.;
     const float PI = 3.14159265;
+
+    const vec3 baseColor = vec3(0.95, 0.05, 0.35);
+    const vec3 gridColor = vec3(0.05, 0.0, 0.12);
+    const vec3 warpColor = vec3(1.0, 0.8, 0.2);
+
+    const float gridStrength = 0.1;
+    const float warpStrength = 0.3;
+    const float warpVisScale = 10.0;
+    const float gridFreq = 20.0;
+    const float edgeBase = 0.8;
+    const float edgeStep = 0.2;
+    const float edgeSmoothA = 0.01;
+    const float edgeSmoothB = 0.0;
+    const float chromaOffset = 0.002;
 
     // Efficient rotation function
     mat2 rot(float a) {
@@ -27,7 +43,8 @@ export function getPetersenGraphPolygonShader(): string {
 
             // Improved inside/outside determination
             bvec3 c = bvec3(p.y >= vertices[i].y, p.y < vertices[j].y, e.x * w.y > e.y * w.x);
-            if(all(c) || all(not(c))) s *= -1.0;
+            if(all(c) || all(not(c)))
+                s *= -1.0;
         }
 
         return s * sqrt(d);
@@ -36,22 +53,32 @@ export function getPetersenGraphPolygonShader(): string {
     // Triangle distance field
     float sdTriangle(vec2 p, vec2 a, vec2 b, vec2 c) {
         vec2 vertices[7];
-        vertices[0] = a; vertices[1] = b; vertices[2] = c;
+        vertices[0] = a;
+        vertices[1] = b;
+        vertices[2] = c;
         return sdPolygon(p, vertices, 3);
     }
 
     // Quadrilateral distance field
     float sdQuad(vec2 p, vec2 a, vec2 b, vec2 c, vec2 d) {
         vec2 vertices[7];
-        vertices[0] = a; vertices[1] = b; vertices[2] = c; vertices[3] = d;
+        vertices[0] = a;
+        vertices[1] = b;
+        vertices[2] = c;
+        vertices[3] = d;
         return sdPolygon(p, vertices, 4);
     }
 
     // Heptagon distance field
     float sdHeptagon(vec2 p, vec2 a, vec2 b, vec2 c, vec2 d, vec2 e, vec2 f, vec2 g) {
         vec2 vertices[7];
-        vertices[0] = a; vertices[1] = b; vertices[2] = c; vertices[3] = d;
-        vertices[4] = e; vertices[5] = f; vertices[6] = g;
+        vertices[0] = a;
+        vertices[1] = b;
+        vertices[2] = c;
+        vertices[3] = d;
+        vertices[4] = e;
+        vertices[5] = f;
+        vertices[6] = g;
         return sdPolygon(p, vertices, 7);
     }
 
@@ -152,24 +179,24 @@ export function getPetersenGraphPolygonShader(): string {
         vec2 warpedP = spacetimeWarp(p);
         float d = petersenGraph(warpedP);
 
-        vec3 col = vec3(0.1, 0.05, 0.2);
+        vec3 col = baseColor;
 
         // Spacetime grid
-        float grid = abs(sin(p.x * 20.0)) * abs(sin(p.y * 20.0));
-        col += grid * 0.1 * vec3(0.3, 0.6, 1.0);
+        float grid = abs(sin(p.x * gridFreq)) * abs(sin(p.y * gridFreq));
+        col += grid * gridStrength * gridColor;
 
         // Distortion visualization
-        float warpVis = length(warpedP - p) * 10.0;
-        col += warpVis * vec3(1.0, 0.5, 0.0) * 0.3;
+        float warpVis = length(warpedP - p) * warpVisScale;
+        col += warpVis * warpColor * warpStrength;
 
         // Main shape with chromatic aberration
         for(int i = 0; i < 3; i++) {
-            float offset = float(i) * 0.002;
+            float offset = float(i) * chromaOffset;
             vec2 chromaP = warpedP + vec2(offset, -offset);
             float chromaD = petersenGraph(chromaP);
 
-            float edge = smoothstep(0.01, 0.0, abs(chromaD));
-            col[i] += edge * (0.8 + float(i) * 0.2);
+            float edge = smoothstep(edgeSmoothA, edgeSmoothB, abs(chromaD));
+            col[i] += edge * (edgeBase + float(i) * edgeStep);
         }
 
         fragColor = vec4(col, 1.0);
