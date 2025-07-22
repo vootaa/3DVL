@@ -1,4 +1,4 @@
-import { plasmaShader } from './plasma-shader'
+import { testShader } from './default-shader'
 import { getPetersenGraphShader } from './petersen-graph-shader'
 import { Logger } from '~/components/utils/logger'
 
@@ -9,8 +9,8 @@ export interface ShaderInfo {
 
 export const shaderRegistry = {
     'default-shader': {
-        name: 'plasmaShader',
-        fragmentCode: plasmaShader,
+        name: 'testShader',
+        fragmentCode: testShader(),
     },
     'petersen-graph': {
         name: 'petersenGraphMultiEffect',
