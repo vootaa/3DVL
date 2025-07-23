@@ -38,7 +38,7 @@ importers:
         version: 3.5.2(magicast@0.3.5)
       '@tresjs/cientos':
         specifier: 4.3.1
-        version: 4.3.1(@tresjs/core@4.3.6(three@0.178.0)(typescript@5.8.3)(vue@3.5.17(typescript@5.8.3)))(@types/three@0.178.0)(three@0.178.0)(typescript@5.8.3)(vue@3.5.17(typescript@5.8.3))
+        version: 4.3.1(@tresjs/core@4.3.6(three@0.178.0)(typescript@5.8.3)(vue@3.5.17(typescript@5.8.3)))(@types/three@0.178.1)(three@0.178.0)(typescript@5.8.3)(vue@3.5.17(typescript@5.8.3))
       '@tresjs/core':
         specifier: 4.3.6
         version: 4.3.6(three@0.178.0)(typescript@5.8.3)(vue@3.5.17(typescript@5.8.3))
@@ -53,7 +53,7 @@ importers:
         version: 2.1.3
       '@types/three':
         specifier: ^0.178.0
-        version: 0.178.0
+        version: 0.178.1
       '@unocss/nuxt':
         specifier: ^66.3.2
         version: 66.3.3(magicast@0.3.5)(postcss@8.5.6)(vite@6.3.5(@types/node@24.1.0)(jiti@2.4.2)(terser@5.43.1)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))(webpack@5.99.9)
@@ -1264,8 +1264,8 @@ packages:
   '@types/stats.js@0.17.4':
     resolution: {integrity: sha512-jIBvWWShCvlBqBNIZt0KAshWpvSjhkwkEu4ZUcASoAvhmrgAUI2t1dXrjSL4xXVLB4FznPrIsX3nKXFl/Dt4vA==}
 
-  '@types/three@0.178.0':
-    resolution: {integrity: sha512-1IpVbMKbEAAWjyn0VTdVcNvI1h1NlTv3CcnwMr3NNBv/gi3PL0/EsWROnXUEkXBxl94MH5bZvS8h0WnBRmR/pQ==}
+  '@types/three@0.178.1':
+    resolution: {integrity: sha512-WSabew1mgWgRx2RfLfKY+9h4wyg6U94JfLbZEGU245j/WY2kXqU0MUfghS+3AYMV5ET1VlILAgpy77cB6a3Itw==}
 
   '@types/triple-beam@1.3.5':
     resolution: {integrity: sha512-6WaYesThRMCl19iryMYP7/x2OVgCtbIVflDGFpWnb9irXI3UjYE4AzmYuiUKY1AJstGijoY+MgUszMgRxIYTYw==}
@@ -1618,8 +1618,8 @@ packages:
   '@webassemblyjs/wast-printer@1.14.1':
     resolution: {integrity: sha512-kPSSXE6De1XOR820C90RIo2ogvZG+c3KiHzqUoO/F34Y2shGzesfqv7o57xrxovZJH/MetF5UjroJ/R/3isoiw==}
 
-  '@webgpu/types@0.1.63':
-    resolution: {integrity: sha512-s9Kuh0nE/2+nKrvmKNMB2fE5Zlr3DL2t3OFKM55v5jRcfCOxbkOHhQoshoFum5mmXIfEtRXtLCWmkeTJsVjE9w==}
+  '@webgpu/types@0.1.64':
+    resolution: {integrity: sha512-84kRIAGV46LJTlJZWxShiOrNL30A+9KokD7RB3dRCIqODFjodS5tCD5yyiZ8kIReGVZSDfA3XkkwyyOIF6K62A==}
 
   '@whatwg-node/disposablestack@0.0.6':
     resolution: {integrity: sha512-LOtTn+JgJvX8WfBVJtF08TGrdjuFzGJc4mkP8EdDI8ADbvO7kiexYep1o8dwnt0okb0jYclCDXF13xU7Ge4zSw==}
@@ -6652,12 +6652,12 @@ snapshots:
 
   '@speed-highlight/core@1.2.7': {}
 
-  '@tresjs/cientos@4.3.1(@tresjs/core@4.3.6(three@0.178.0)(typescript@5.8.3)(vue@3.5.17(typescript@5.8.3)))(@types/three@0.178.0)(three@0.178.0)(typescript@5.8.3)(vue@3.5.17(typescript@5.8.3))':
+  '@tresjs/cientos@4.3.1(@tresjs/core@4.3.6(three@0.178.0)(typescript@5.8.3)(vue@3.5.17(typescript@5.8.3)))(@types/three@0.178.1)(three@0.178.0)(typescript@5.8.3)(vue@3.5.17(typescript@5.8.3))':
     dependencies:
       '@tresjs/core': 4.3.6(three@0.178.0)(typescript@5.8.3)(vue@3.5.17(typescript@5.8.3))
       '@vueuse/core': 12.8.2(typescript@5.8.3)
       camera-controls: 2.10.1(three@0.178.0)
-      stats-gl: 2.4.2(@types/three@0.178.0)(three@0.178.0)
+      stats-gl: 2.4.2(@types/three@0.178.1)(three@0.178.0)
       stats.js: 0.17.0
       three: 0.178.0
       three-custom-shader-material: 5.4.0(three@0.178.0)
@@ -6810,13 +6810,13 @@ snapshots:
 
   '@types/stats.js@0.17.4': {}
 
-  '@types/three@0.178.0':
+  '@types/three@0.178.1':
     dependencies:
       '@dimforge/rapier3d-compat': 0.12.0
       '@tweenjs/tween.js': 23.1.3
       '@types/stats.js': 0.17.4
       '@types/webxr': 0.5.22
-      '@webgpu/types': 0.1.63
+      '@webgpu/types': 0.1.64
       fflate: 0.8.2
       meshoptimizer: 0.18.1
 
@@ -7421,7 +7421,7 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@xtuc/long': 4.2.2
 
-  '@webgpu/types@0.1.63': {}
+  '@webgpu/types@0.1.64': {}
 
   '@whatwg-node/disposablestack@0.0.6':
     dependencies:
@@ -10882,9 +10882,9 @@ snapshots:
 
   standard-as-callback@2.1.0: {}
 
-  stats-gl@2.4.2(@types/three@0.178.0)(three@0.178.0):
+  stats-gl@2.4.2(@types/three@0.178.1)(three@0.178.0):
     dependencies:
-      '@types/three': 0.178.0
+      '@types/three': 0.178.1
       three: 0.178.0
 
   stats.js@0.17.0: {}
