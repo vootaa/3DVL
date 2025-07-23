@@ -31,7 +31,7 @@
     "eslint": "9.31.0",
     "eslint-plugin-import": "^2.32.0",
     "jsonc-eslint-parser": "^2.4.0",
-    "nuxt": "^3.17.6",
+    "nuxt": "^4.0.0",
     "nuxt-svgo": "^4.2.3",
     "typescript": "^5.8.3",
     "vite-svg-loader": "^5.1.0",
