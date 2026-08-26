@@ -21,7 +21,7 @@
     "@nuxt/devtools": "^2.6.2",
     "@nuxt/image": "^1.10.0",
     "@nuxtjs/color-mode": "^3.5.2",
-    "@tresjs/cientos": "4.3.1",
+    "@tresjs/cientos": "5.8.1",
     "@tresjs/core": "4.3.6",
     "@tresjs/eslint-config-vue": "^0.2.1",
     "@tresjs/nuxt": "^4.0.0",
