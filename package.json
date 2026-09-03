@@ -24,7 +24,7 @@
     "@tresjs/cientos": "4.3.1",
     "@tresjs/core": "4.3.6",
     "@tresjs/eslint-config-vue": "^0.2.1",
-    "@tresjs/nuxt": "^4.0.0",
+    "@tresjs/nuxt": "^5.0.0",
     "@types/fontfaceobserver": "^2.1.3",
     "@types/three": "^0.179.0",
     "@unocss/nuxt": "^66.3.2",
